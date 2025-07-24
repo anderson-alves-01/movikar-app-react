@@ -2,6 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertVehicleSchema, insertBookingSchema, insertReviewSchema, insertMessageSchema, insertVehicleBrandSchema, insertVehicleAvailabilitySchema, insertWaitingQueueSchema, type User, type VehicleBrand } from "@shared/schema";
+import { ZodError } from "zod";
 // import { contractService } from "./services/contractService.js";
 // import { processSignatureWebhook } from "./services/signatureService.js";
 import bcrypt from "bcrypt";
@@ -196,7 +197,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Create vehicle error:", error);
       
       // Retorna erros de validação específicos
-      if (error instanceof z.ZodError) {
+      if (error instanceof ZodError) {
         const validationErrors = error.errors.map(err => ({
           field: err.path.join('.'),
           message: err.message
