@@ -344,7 +344,11 @@ export const insertVehicleSchema = createInsertSchema(vehicles).omit({
   updatedAt: true,
 }).extend({
   model: vehicleModelValidation,
-  brand: vehicleBrandValidation
+  brand: vehicleBrandValidation,
+  // Allow both string and number for price fields
+  pricePerDay: z.union([z.string(), z.number()]).transform(val => String(val)),
+  pricePerWeek: z.union([z.string(), z.number()]).optional().transform(val => val ? String(val) : undefined),
+  pricePerMonth: z.union([z.string(), z.number()]).optional().transform(val => val ? String(val) : undefined),
 }).refine((data) => {
   // Validação cruzada de marca e modelo
   return vehicleBrandModelValidation.safeParse({ brand: data.brand, model: data.model }).success;
