@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Edit3, Trash2, Car, MapPin, Star, Eye, EyeOff, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import Header from "@/components/header";
+import AddVehicleModal from "@/components/add-vehicle-modal";
 import VehicleAvailabilityManager from "@/components/vehicle-availability-manager";
 
 interface Vehicle {
@@ -31,9 +33,10 @@ export default function Vehicles() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedVehicleForAvailability, setSelectedVehicleForAvailability] = useState<number | null>(null);
+  const [showAddVehicleModal, setShowAddVehicleModal] = useState(false);
 
   const { data: vehicles, isLoading } = useQuery<Vehicle[]>({
-    queryKey: ["/api/users", user?.id, "vehicles"],
+    queryKey: ["/api/users/" + user?.id + "/vehicles"],
     enabled: !!user,
   });
 
@@ -41,7 +44,7 @@ export default function Vehicles() {
     mutationFn: ({ vehicleId, isAvailable }: { vehicleId: number; isAvailable: boolean }) =>
       apiRequest(`/api/vehicles/${vehicleId}`, "PUT", { isAvailable }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/users", user?.id, "vehicles"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users/" + user?.id + "/vehicles"] });
       toast({
         title: "Sucesso",
         description: "Disponibilidade atualizada com sucesso",
@@ -60,7 +63,7 @@ export default function Vehicles() {
     mutationFn: (vehicleId: number) =>
       apiRequest(`/api/vehicles/${vehicleId}`, "DELETE"),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/users", user?.id, "vehicles"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users/" + user?.id + "/vehicles"] });
       toast({
         title: "Sucesso",
         description: "Veículo excluído com sucesso",
@@ -97,11 +100,14 @@ export default function Vehicles() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="text-center py-12">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Acesso Restrito</h1>
-            <p className="text-gray-600">Faça login para gerenciar seus veículos.</p>
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="py-8">
+          <div className="max-w-4xl mx-auto px-4">
+            <div className="text-center py-12">
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">Acesso Restrito</h1>
+              <p className="text-gray-600">Faça login para gerenciar seus veículos.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -109,15 +115,17 @@ export default function Vehicles() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Meus Veículos</h1>
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            Adicionar Veículo
-          </Button>
-        </div>
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="py-8">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">Meus Veículos</h1>
+            <Button onClick={() => setShowAddVehicleModal(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Adicionar Veículo
+            </Button>
+          </div>
 
         {isLoading ? (
           <div className="text-center py-12">
@@ -256,13 +264,19 @@ export default function Vehicles() {
               <p className="text-gray-600 mb-6">
                 Comece adicionando seu primeiro veículo para aluguel.
               </p>
-              <Button>
+              <Button onClick={() => setShowAddVehicleModal(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Adicionar Primeiro Veículo
               </Button>
             </CardContent>
           </Card>
         )}
+
+        {/* Add Vehicle Modal */}
+        <AddVehicleModal 
+          open={showAddVehicleModal} 
+          onOpenChange={setShowAddVehicleModal} 
+        />
 
         {/* Vehicle Availability Manager Modal */}
         {selectedVehicleForAvailability && (
@@ -284,6 +298,7 @@ export default function Vehicles() {
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
