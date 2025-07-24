@@ -39,9 +39,22 @@ export default function MessageCenter({
         params.append('bookingId', bookingId.toString());
       }
       
+      // Get token from auth storage
+      const authStorage = localStorage.getItem('auth-storage');
+      let authToken = null;
+      
+      if (authStorage) {
+        try {
+          const authData = JSON.parse(authStorage);
+          authToken = authData.state?.token;
+        } catch (error) {
+          console.error('Error parsing auth token:', error);
+        }
+      }
+
       const response = await fetch(`/api/messages?${params}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json',
         },
       });
@@ -55,12 +68,12 @@ export default function MessageCenter({
 
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
-      const response = await apiRequest('/api/messages', 'POST', {
+      const response = await apiRequest('POST', '/api/messages', {
         receiverId: otherUserId,
         content,
         bookingId,
       });
-      return response;
+      return response.json();
     },
     onSuccess: () => {
       setNewMessage('');
@@ -79,10 +92,10 @@ export default function MessageCenter({
 
   const markAsReadMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('/api/messages/read', 'PUT', {
+      const response = await apiRequest('PUT', '/api/messages/read', {
         senderId: otherUserId,
       });
-      return response;
+      return response.json();
     },
   });
 
