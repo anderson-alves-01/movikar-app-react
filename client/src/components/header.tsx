@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Search, Menu, User, MessageCircle, Car, LogOut } from "lucide-react";
+import { Search, Menu, User, MessageCircle, Car, LogOut, Shield } from "lucide-react";
 import { useAuthStore } from "@/lib/auth";
 // import AddVehicleModal from "./add-vehicle-modal";
 
@@ -120,6 +120,15 @@ export default function Header() {
                         <MessageCircle className="h-4 w-4 mr-2" />
                         Mensagens
                       </DropdownMenuItem>
+                      {user.role === 'admin' && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => setLocation('/admin')}>
+                            <Shield className="h-4 w-4 mr-2" />
+                            Painel Admin
+                          </DropdownMenuItem>
+                        </>
+                      )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleLogout}>
                         <LogOut className="h-4 w-4 mr-2" />
