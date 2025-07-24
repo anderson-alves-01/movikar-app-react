@@ -552,6 +552,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Vehicle Release and Notification Routes
+  app.post("/api/vehicles/release-expired", authenticateToken, async (req, res) => {
+    try {
+      // This endpoint can be called by a cron job or manually by admins
+      if (req.user!.role !== 'admin') {
+        return res.status(403).json({ message: "Only admins can trigger vehicle releases" });
+      }
+
+      const result = await storage.releaseExpiredVehicleBlocks();
+      
+      res.json({
+        message: `Released ${result.releasedBlocks.length} expired blocks and notified ${result.notifiedUsers.length} users`,
+        releasedBlocks: result.releasedBlocks.length,
+        notifiedUsers: result.notifiedUsers.length,
+        notifications: result.notifiedUsers
+      });
+    } catch (error) {
+      console.error("Release expired blocks error:", error);
+      res.status(500).json({ message: "Failed to release expired blocks" });
+    }
+  });
+
+  // Auto-release endpoint (can be called daily by a scheduler)
+  app.get("/api/vehicles/auto-release", async (req, res) => {
+    try {
+      // This endpoint can be called by external schedulers without authentication
+      // You might want to add a secret token for security
+      const result = await storage.releaseExpiredVehicleBlocks();
+      
+      console.log(`🚗 Auto-release: ${result.releasedBlocks.length} vehicles released, ${result.notifiedUsers.length} users notified`);
+      
+      res.json({
+        success: true,
+        releasedCount: result.releasedBlocks.length,
+        notifiedCount: result.notifiedUsers.length
+      });
+    } catch (error) {
+      console.error("Auto-release error:", error);
+      res.status(500).json({ message: "Auto-release failed" });
+    }
+  });
+
   // Waiting Queue Routes
   app.post("/api/vehicles/:vehicleId/waiting-queue", authenticateToken, async (req, res) => {
     try {

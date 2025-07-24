@@ -9,7 +9,7 @@ import {
   type WaitingQueue, type InsertWaitingQueue
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gte, lte, desc, asc, or, like, ilike, sql } from "drizzle-orm";
+import { eq, and, gte, lte, desc, asc, or, like, ilike, sql, lt } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -43,6 +43,8 @@ export interface IStorage {
   checkVehicleAvailability(vehicleId: number, startDate: Date, endDate: Date): Promise<boolean>;
   blockVehicleDatesForBooking(vehicleId: number, startDate: string, endDate: string, bookingId: number): Promise<VehicleAvailability>;
   checkAndBlockCompletedBooking(bookingId: number): Promise<boolean>;
+  releaseExpiredVehicleBlocks(): Promise<{ releasedBlocks: VehicleAvailability[], notifiedUsers: any[] }>;
+  notifyWaitingQueueUsers(vehicleId: number, availableStartDate: string, availableEndDate: string): Promise<any[]>;
 
   // Reviews
   getReviewsByVehicle(vehicleId: number): Promise<Review[]>;
@@ -362,6 +364,100 @@ export class DatabaseStorage implements IStorage {
     }
     
     return false;
+  }
+
+  async releaseExpiredVehicleBlocks(): Promise<{ releasedBlocks: VehicleAvailability[], notifiedUsers: any[] }> {
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Find all blocks that have expired (end date is before today)
+    const expiredBlocks = await db
+      .select()
+      .from(vehicleAvailability)
+      .where(
+        and(
+          eq(vehicleAvailability.isAvailable, false),
+          sql`${vehicleAvailability.endDate} < ${today}`,
+          ilike(vehicleAvailability.reason, '%Reservado - Booking #%')
+        )
+      );
+
+    const releasedBlocks: VehicleAvailability[] = [];
+    const notifiedUsers: any[] = [];
+
+    for (const block of expiredBlocks) {
+      // Remove the expired block
+      await db
+        .delete(vehicleAvailability)
+        .where(eq(vehicleAvailability.id, block.id));
+
+      releasedBlocks.push(block);
+
+      // Notify waiting queue users for this vehicle
+      const queueNotifications = await this.notifyWaitingQueueUsers(
+        block.vehicleId,
+        block.startDate,
+        block.endDate
+      );
+      
+      notifiedUsers.push(...queueNotifications);
+    }
+
+    return { releasedBlocks, notifiedUsers };
+  }
+
+  async notifyWaitingQueueUsers(vehicleId: number, availableStartDate: string, availableEndDate: string): Promise<any[]> {
+    // Get all users waiting for this vehicle
+    const waitingUsers = await db
+      .select()
+      .from(waitingQueue)
+      .leftJoin(users, eq(waitingQueue.userId, users.id))
+      .leftJoin(vehicles, eq(waitingQueue.vehicleId, vehicles.id))
+      .where(eq(waitingQueue.vehicleId, vehicleId))
+      .orderBy(waitingQueue.createdAt); // First come, first served
+
+    const notifiedUsers = [];
+
+    for (const queueEntry of waitingUsers) {
+      const user = queueEntry.users;
+      const vehicle = queueEntry.vehicles;
+      const queue = queueEntry.waiting_queue;
+
+      if (!user || !vehicle || !queue) continue;
+
+      // Check if the available dates overlap with the user's desired dates
+      const userStartDate = queue.desiredStartDate;
+      const userEndDate = queue.desiredEndDate;
+      
+      // Simple date overlap check
+      const hasOverlap = userStartDate <= availableEndDate && userEndDate >= availableStartDate;
+      
+      if (hasOverlap) {
+        // Create a notification record (you can extend this to send emails, SMS, etc.)
+        const notification = {
+          userId: user.id,
+          vehicleId: vehicle.id,
+          queueId: queue.id,
+          message: `Boa notícia! O veículo ${vehicle.brand} ${vehicle.model} está disponível para suas datas desejadas (${queue.desiredStartDate} - ${queue.desiredEndDate}). Reserve agora!`,
+          type: 'vehicle_available',
+          createdAt: new Date().toISOString(),
+          userEmail: user.email,
+          userName: user.name,
+          vehicleName: `${vehicle.brand} ${vehicle.model}`,
+          desiredDates: `${queue.desiredStartDate} - ${queue.desiredEndDate}`
+        };
+
+        notifiedUsers.push(notification);
+        
+        // Here you could implement actual notification sending:
+        // - Email notification
+        // - SMS notification  
+        // - In-app notification
+        // For now, we'll just log it
+        console.log(`🔔 Notification sent to ${user.name} (${user.email}) about available vehicle ${vehicle.brand} ${vehicle.model}`);
+      }
+    }
+
+    return notifiedUsers;
   }
 
   async checkVehicleAvailability(vehicleId: number, startDate: Date, endDate: Date): Promise<boolean> {

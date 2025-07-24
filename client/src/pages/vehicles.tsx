@@ -9,6 +9,7 @@ import { Plus, Edit3, Trash2, Car, MapPin, Star, Eye, EyeOff, Calendar } from "l
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import VehicleAvailabilityManager from "@/components/vehicle-availability-manager";
+import SimpleReleaseDemo from "@/components/simple-release-demo";
 
 interface Vehicle {
   id: number;
