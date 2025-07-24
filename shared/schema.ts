@@ -93,6 +93,145 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Contracts table
+export const contracts = pgTable("contracts", {
+  id: serial("id").primaryKey(),
+  bookingId: integer("booking_id").references(() => bookings.id).notNull(),
+  contractNumber: varchar("contract_number", { length: 50 }).notNull().unique(),
+  status: varchar("status", { length: 20 }).notNull().default("draft"), // draft, sent, signed, completed, cancelled
+  
+  // Contract content
+  templateId: varchar("template_id", { length: 50 }),
+  contractData: jsonb("contract_data").$type<{
+    vehicle: any;
+    renter: any;
+    owner: any;
+    booking: any;
+    terms: any;
+  }>().notNull(),
+  
+  // Digital signature platform integration
+  signaturePlatform: varchar("signature_platform", { length: 20 }).default("autentique"), // autentique, d4sign, clicksign
+  externalDocumentId: varchar("external_document_id", { length: 100 }),
+  
+  // Signatures
+  renterSigned: boolean("renter_signed").default(false),
+  renterSignedAt: timestamp("renter_signed_at"),
+  renterSignatureIp: varchar("renter_signature_ip", { length: 45 }),
+  renterSignatureEvidence: jsonb("renter_signature_evidence").$type<{
+    ip: string;
+    userAgent: string;
+    timestamp: string;
+    location?: string;
+  }>(),
+  
+  ownerSigned: boolean("owner_signed").default(false),
+  ownerSignedAt: timestamp("owner_signed_at"),
+  ownerSignatureIp: varchar("owner_signature_ip", { length: 45 }),
+  ownerSignatureEvidence: jsonb("owner_signature_evidence").$type<{
+    ip: string;
+    userAgent: string;
+    timestamp: string;
+    location?: string;
+  }>(),
+  
+  // Document storage
+  pdfUrl: text("pdf_url"),
+  signedPdfUrl: text("signed_pdf_url"),
+  cloudStorageId: varchar("cloud_storage_id", { length: 100 }),
+  
+  // Admin audit
+  createdBy: integer("created_by").references(() => users.id),
+  reviewedBy: integer("reviewed_by").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Contract templates table
+export const contractTemplates = pgTable("contract_templates", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description"),
+  category: varchar("category", { length: 50 }).notNull(), // standard, premium, commercial
+  
+  // Template content
+  htmlTemplate: text("html_template").notNull(),
+  fields: jsonb("fields").$type<{
+    name: string;
+    type: string;
+    required: boolean;
+    defaultValue?: string;
+  }[]>().default([]),
+  
+  // Signature configuration
+  signaturePoints: jsonb("signature_points").$type<{
+    renter: { x: number; y: number; page: number };
+    owner: { x: number; y: number; page: number };
+  }>().notNull(),
+  
+  isActive: boolean("is_active").default(true),
+  version: integer("version").default(1),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Contract audit log
+export const contractAuditLog = pgTable("contract_audit_log", {
+  id: serial("id").primaryKey(),
+  contractId: integer("contract_id").references(() => contracts.id).notNull(),
+  action: varchar("action", { length: 50 }).notNull(), // created, sent, viewed, signed, downloaded
+  performedBy: integer("performed_by").references(() => users.id),
+  details: jsonb("details").$type<{
+    ip?: string;
+    userAgent?: string;
+    previousStatus?: string;
+    newStatus?: string;
+    metadata?: any;
+  }>(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Contract relations
+export const contractsRelations = relations(contracts, ({ one, many }) => ({
+  booking: one(bookings, {
+    fields: [contracts.bookingId],
+    references: [bookings.id],
+  }),
+  template: one(contractTemplates, {
+    fields: [contracts.templateId],
+    references: [contractTemplates.id],
+  }),
+  createdByUser: one(users, {
+    fields: [contracts.createdBy],
+    references: [users.id],
+    relationName: "createdContracts",
+  }),
+  reviewedByUser: one(users, {
+    fields: [contracts.reviewedBy],
+    references: [users.id],
+    relationName: "reviewedContracts",
+  }),
+  auditLogs: many(contractAuditLog),
+}));
+
+export const contractTemplatesRelations = relations(contractTemplates, ({ many }) => ({
+  contracts: many(contracts),
+}));
+
+export const contractAuditLogRelations = relations(contractAuditLog, ({ one }) => ({
+  contract: one(contracts, {
+    fields: [contractAuditLog.contractId],
+    references: [contracts.id],
+  }),
+  performedByUser: one(users, {
+    fields: [contractAuditLog.performedBy],
+    references: [users.id],
+  }),
+}));
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   ownedVehicles: many(vehicles),
@@ -102,6 +241,9 @@ export const usersRelations = relations(users, ({ many }) => ({
   receivedMessages: many(messages, { relationName: "receivedMessages" }),
   givenReviews: many(reviews, { relationName: "givenReviews" }),
   receivedReviews: many(reviews, { relationName: "receivedReviews" }),
+  createdContracts: many(contracts, { relationName: "createdContracts" }),
+  reviewedContracts: many(contracts, { relationName: "reviewedContracts" }),
+  auditActions: many(contractAuditLog),
 }));
 
 export const vehiclesRelations = relations(vehicles, ({ one, many }) => ({
@@ -130,6 +272,10 @@ export const bookingsRelations = relations(bookings, ({ one, many }) => ({
   }),
   messages: many(messages),
   reviews: many(reviews),
+  contract: one(contracts, {
+    fields: [bookings.id],
+    references: [contracts.bookingId],
+  }),
 }));
 
 export const reviewsRelations = relations(reviews, ({ one }) => ({
@@ -199,6 +345,23 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
   createdAt: true,
 });
 
+export const insertContractSchema = createInsertSchema(contracts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertContractTemplateSchema = createInsertSchema(contractTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertContractAuditLogSchema = createInsertSchema(contractAuditLog).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -210,6 +373,12 @@ export type Review = typeof reviews.$inferSelect;
 export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type Message = typeof messages.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
+export type Contract = typeof contracts.$inferSelect;
+export type InsertContract = z.infer<typeof insertContractSchema>;
+export type ContractTemplate = typeof contractTemplates.$inferSelect;
+export type InsertContractTemplate = z.infer<typeof insertContractTemplateSchema>;
+export type ContractAuditLog = typeof contractAuditLog.$inferSelect;
+export type InsertContractAuditLog = z.infer<typeof insertContractAuditLogSchema>;
 
 // Extended types with relations
 export type VehicleWithOwner = Vehicle & {
@@ -221,6 +390,15 @@ export type BookingWithDetails = Booking & {
   vehicle: VehicleWithOwner;
   renter: User;
   owner: User;
+  contract?: Contract;
+};
+
+export type ContractWithDetails = Contract & {
+  booking: BookingWithDetails;
+  template?: ContractTemplate;
+  createdByUser?: User;
+  reviewedByUser?: User;
+  auditLogs?: ContractAuditLog[];
 };
 
 export type UserWithStats = User & {

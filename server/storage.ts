@@ -1,8 +1,10 @@
 import { 
-  users, vehicles, bookings, reviews, messages,
+  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog,
   type User, type InsertUser, type Vehicle, type InsertVehicle, 
   type Booking, type InsertBooking, type Review, type InsertReview,
-  type Message, type InsertMessage, type VehicleWithOwner, type BookingWithDetails
+  type Message, type InsertMessage, type VehicleWithOwner, type BookingWithDetails,
+  type Contract, type InsertContract, type ContractTemplate, type InsertContractTemplate,
+  type ContractAuditLog, type InsertContractAuditLog, type ContractWithDetails
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, desc, asc, or, like, ilike, sql } from "drizzle-orm";
@@ -47,6 +49,34 @@ export interface IStorage {
   getMessagesBetweenUsers(userId1: number, userId2: number, bookingId?: number): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
   markMessagesAsRead(receiverId: number, senderId: number): Promise<void>;
+
+  // Contracts
+  getContract(id: number): Promise<Contract | undefined>;
+  getContractWithDetails(id: number): Promise<ContractWithDetails | undefined>;
+  getContractByExternalId(externalDocumentId: string): Promise<Contract | undefined>;
+  getContractsByBooking(bookingId: number): Promise<Contract[]>;
+  getContractsWithFilters(filters: {
+    status?: string;
+    dateFrom?: Date;
+    dateTo?: Date;
+    limit?: number;
+    offset?: number;
+  }): Promise<ContractWithDetails[]>;
+  createContract(contract: InsertContract): Promise<Contract>;
+  updateContract(id: number, contract: Partial<InsertContract>): Promise<Contract | undefined>;
+
+  // Contract Templates
+  getContractTemplate(id: string): Promise<ContractTemplate | undefined>;
+  getDefaultContractTemplate(): Promise<ContractTemplate | undefined>;
+  createContractTemplate(template: InsertContractTemplate): Promise<ContractTemplate>;
+  updateContractTemplate(id: number, template: Partial<InsertContractTemplate>): Promise<ContractTemplate | undefined>;
+
+  // Contract Audit
+  getContractAuditLogs(contractId: number): Promise<ContractAuditLog[]>;
+  createContractAuditLog(log: InsertContractAuditLog): Promise<ContractAuditLog>;
+
+  // Extended methods
+  getBookingWithDetails(id: number): Promise<BookingWithDetails | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -347,6 +377,226 @@ export class DatabaseStorage implements IStorage {
           eq(messages.senderId, senderId)
         )
       );
+  }
+
+  // Contracts
+  async getContract(id: number): Promise<Contract | undefined> {
+    const [contract] = await db.select().from(contracts).where(eq(contracts.id, id));
+    return contract || undefined;
+  }
+
+  async getContractWithDetails(id: number): Promise<ContractWithDetails | undefined> {
+    const [result] = await db
+      .select()
+      .from(contracts)
+      .leftJoin(bookings, eq(contracts.bookingId, bookings.id))
+      .leftJoin(vehicles, eq(bookings.vehicleId, vehicles.id))
+      .leftJoin(users, eq(vehicles.ownerId, users.id))
+      .where(eq(contracts.id, id));
+
+    if (!result) return undefined;
+
+    // Get renter details
+    const [renterResult] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, result.bookings!.renterId));
+
+    return {
+      ...result.contracts,
+      booking: {
+        ...result.bookings!,
+        vehicle: {
+          ...result.vehicles!,
+          owner: result.users!,
+        },
+        renter: renterResult,
+        owner: result.users!,
+      }
+    } as ContractWithDetails;
+  }
+
+  async getContractByExternalId(externalDocumentId: string): Promise<Contract | undefined> {
+    const [contract] = await db
+      .select()
+      .from(contracts)
+      .where(eq(contracts.externalDocumentId, externalDocumentId));
+    return contract || undefined;
+  }
+
+  async getContractsByBooking(bookingId: number): Promise<Contract[]> {
+    return await db
+      .select()
+      .from(contracts)
+      .where(eq(contracts.bookingId, bookingId))
+      .orderBy(desc(contracts.createdAt));
+  }
+
+  async getContractsWithFilters(filters: {
+    status?: string;
+    dateFrom?: Date;
+    dateTo?: Date;
+    limit?: number;
+    offset?: number;
+  }): Promise<ContractWithDetails[]> {
+    const conditions = [];
+
+    if (filters.status) {
+      conditions.push(eq(contracts.status, filters.status));
+    }
+
+    if (filters.dateFrom) {
+      conditions.push(gte(contracts.createdAt, filters.dateFrom));
+    }
+
+    if (filters.dateTo) {
+      conditions.push(lte(contracts.createdAt, filters.dateTo));
+    }
+
+    let query = db
+      .select()
+      .from(contracts)
+      .leftJoin(bookings, eq(contracts.bookingId, bookings.id))
+      .leftJoin(vehicles, eq(bookings.vehicleId, vehicles.id))
+      .leftJoin(users, eq(vehicles.ownerId, users.id))
+      .orderBy(desc(contracts.createdAt));
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+
+    if (filters.limit) {
+      query = query.limit(filters.limit);
+    }
+
+    if (filters.offset) {
+      query = query.offset(filters.offset);
+    }
+
+    const results = await query;
+
+    // Transform results to include renter details
+    const contractsWithDetails: ContractWithDetails[] = [];
+
+    for (const result of results) {
+      const [renterResult] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, result.bookings!.renterId));
+
+      contractsWithDetails.push({
+        ...result.contracts,
+        booking: {
+          ...result.bookings!,
+          vehicle: {
+            ...result.vehicles!,
+            owner: result.users!,
+          },
+          renter: renterResult,
+          owner: result.users!,
+        }
+      } as ContractWithDetails);
+    }
+
+    return contractsWithDetails;
+  }
+
+  async createContract(insertContract: InsertContract): Promise<Contract> {
+    const [contract] = await db
+      .insert(contracts)
+      .values(insertContract)
+      .returning();
+    return contract;
+  }
+
+  async updateContract(id: number, updateContract: Partial<InsertContract>): Promise<Contract | undefined> {
+    const [contract] = await db
+      .update(contracts)
+      .set({ ...updateContract, updatedAt: new Date() })
+      .where(eq(contracts.id, id))
+      .returning();
+    return contract || undefined;
+  }
+
+  // Contract Templates
+  async getContractTemplate(id: string): Promise<ContractTemplate | undefined> {
+    const [template] = await db
+      .select()
+      .from(contractTemplates)
+      .where(eq(contractTemplates.id, parseInt(id)));
+    return template || undefined;
+  }
+
+  async getDefaultContractTemplate(): Promise<ContractTemplate | undefined> {
+    const [template] = await db
+      .select()
+      .from(contractTemplates)
+      .where(and(eq(contractTemplates.isActive, true), eq(contractTemplates.category, "standard")))
+      .orderBy(desc(contractTemplates.version))
+      .limit(1);
+    return template || undefined;
+  }
+
+  async createContractTemplate(insertTemplate: InsertContractTemplate): Promise<ContractTemplate> {
+    const [template] = await db
+      .insert(contractTemplates)
+      .values(insertTemplate)
+      .returning();
+    return template;
+  }
+
+  async updateContractTemplate(id: number, updateTemplate: Partial<InsertContractTemplate>): Promise<ContractTemplate | undefined> {
+    const [template] = await db
+      .update(contractTemplates)
+      .set({ ...updateTemplate, updatedAt: new Date() })
+      .where(eq(contractTemplates.id, id))
+      .returning();
+    return template || undefined;
+  }
+
+  // Contract Audit
+  async getContractAuditLogs(contractId: number): Promise<ContractAuditLog[]> {
+    return await db
+      .select()
+      .from(contractAuditLog)
+      .where(eq(contractAuditLog.contractId, contractId))
+      .orderBy(desc(contractAuditLog.createdAt));
+  }
+
+  async createContractAuditLog(insertLog: InsertContractAuditLog): Promise<ContractAuditLog> {
+    const [log] = await db
+      .insert(contractAuditLog)
+      .values(insertLog)
+      .returning();
+    return log;
+  }
+
+  // Extended method for booking with details
+  async getBookingWithDetails(id: number): Promise<BookingWithDetails | undefined> {
+    const [result] = await db
+      .select()
+      .from(bookings)
+      .leftJoin(vehicles, eq(bookings.vehicleId, vehicles.id))
+      .leftJoin(users, eq(vehicles.ownerId, users.id))
+      .where(eq(bookings.id, id));
+
+    if (!result) return undefined;
+
+    // Get renter details
+    const [renterResult] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, result.bookings.renterId));
+
+    return {
+      ...result.bookings,
+      vehicle: {
+        ...result.vehicles!,
+        owner: result.users!,
+      },
+      renter: renterResult,
+      owner: result.users!,
+    } as BookingWithDetails;
   }
 }
 

@@ -24,11 +24,13 @@ import {
   MessageCircle,
   CheckCircle,
   XCircle,
-  Clock
+  Clock,
+  FileText
 } from "lucide-react";
 import { useAuthStore } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import ContractManager from "@/components/contract-manager";
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
@@ -37,6 +39,8 @@ export default function Profile() {
     phone: '',
     location: '',
   });
+  const [contractManagerOpen, setContractManagerOpen] = useState(false);
+  const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
 
   const { user, setAuth } = useAuthStore();
   const { toast } = useToast();
@@ -373,6 +377,19 @@ export default function Profile() {
                                 <MessageCircle className="h-4 w-4 mr-2" />
                                 Conversar
                               </Button>
+                              {(booking.status === 'approved' || booking.status === 'active' || booking.status === 'completed') && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedBookingId(booking.id);
+                                    setContractManagerOpen(true);
+                                  }}
+                                >
+                                  <FileText className="h-4 w-4 mr-2" />
+                                  Contratos
+                                </Button>
+                              )}
                             </div>
                             
                             {booking.status === 'pending' && (
@@ -452,6 +469,19 @@ export default function Profile() {
                                 <MessageCircle className="h-4 w-4 mr-2" />
                                 Conversar
                               </Button>
+                              {(booking.status === 'approved' || booking.status === 'active' || booking.status === 'completed') && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedBookingId(booking.id);
+                                    setContractManagerOpen(true);
+                                  }}
+                                >
+                                  <FileText className="h-4 w-4 mr-2" />
+                                  Contratos
+                                </Button>
+                              )}
                             </div>
                             
                             {booking.status === 'pending' && (
@@ -555,6 +585,18 @@ export default function Profile() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Contract Manager Modal */}
+      {selectedBookingId && (
+        <ContractManager
+          bookingId={selectedBookingId}
+          open={contractManagerOpen}
+          onOpenChange={(open) => {
+            setContractManagerOpen(open);
+            if (!open) setSelectedBookingId(null);
+          }}
+        />
+      )}
     </div>
   );
 }

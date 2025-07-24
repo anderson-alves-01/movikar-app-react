@@ -7,6 +7,7 @@ import Home from "@/pages/home";
 import Auth from "@/pages/auth";
 import Profile from "@/pages/profile";
 import VehicleDetail from "@/pages/vehicle-detail";
+import AdminContracts from "@/pages/admin-contracts";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -16,6 +17,7 @@ function Router() {
       <Route path="/auth" component={Auth} />
       <Route path="/profile" component={Profile} />
       <Route path="/vehicle/:id" component={VehicleDetail} />
+      <Route path="/admin/contracts" component={AdminContracts} />
       <Route component={NotFound} />
     </Switch>
   );
