@@ -42,7 +42,7 @@ export default function Vehicles() {
 
   const toggleAvailabilityMutation = useMutation({
     mutationFn: ({ vehicleId, isAvailable }: { vehicleId: number; isAvailable: boolean }) =>
-      apiRequest(`/api/vehicles/${vehicleId}`, "PUT", { isAvailable }),
+      apiRequest("PUT", `/api/vehicles/${vehicleId}`, { isAvailable }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users/" + user?.id + "/vehicles"] });
       toast({
@@ -61,7 +61,7 @@ export default function Vehicles() {
 
   const deleteVehicleMutation = useMutation({
     mutationFn: (vehicleId: number) =>
-      apiRequest(`/api/vehicles/${vehicleId}`, "DELETE"),
+      apiRequest("DELETE", `/api/vehicles/${vehicleId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users/" + user?.id + "/vehicles"] });
       toast({

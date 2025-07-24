@@ -91,7 +91,7 @@ export const queryClient = new QueryClient({
       refetchInterval: false,
       refetchOnWindowFocus: false,
       staleTime: 0, // Make messages always fresh
-      cacheTime: 1000 * 60 * 5, // 5 minutes cache time
+      gcTime: 1000 * 60 * 5, // 5 minutes cache time
       retry: false,
     },
     mutations: {
