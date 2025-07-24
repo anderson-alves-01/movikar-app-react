@@ -121,6 +121,28 @@ The application uses PostgreSQL with the following main entities:
 
 ## Recent Changes (January 2025)
 
+### Vehicle Model Validation System
+- **Implementation Date**: January 24, 2025
+- **Functionality**: Comprehensive validation system for vehicle model field to prevent invalid data entry
+- **Key Features**:
+  - Multi-layer validation with Zod schema
+  - Brand-model cross-validation with extensive database
+  - Rejection of test data, spam, and invalid entries
+  - Automatic data normalization (trim spaces, format consistency)
+  - Detailed validation error messages
+  - Audit logging for security and debugging
+- **Technical Details**:
+  - Created `shared/vehicle-validation.ts` with comprehensive validation rules
+  - Enhanced `insertVehicleSchema` with robust model validation
+  - Added proper error handling in vehicle creation/update endpoints
+  - Implemented validation for both create and update operations
+- **Validation Rules**:
+  - Length: 2-50 characters
+  - Characters: Only letters, numbers, spaces, hyphens, dots
+  - Prohibited: Test words, spam patterns, number-only models
+  - Cross-validation: Model must be valid for selected brand
+  - Auto-formatting: Normalizes spaces and formatting
+
 ### Automatic Date Blocking System
 - **Implementation Date**: January 24, 2025
 - **Functionality**: System automatically blocks vehicle dates when:

@@ -2,6 +2,7 @@ import { pgTable, text, serial, integer, boolean, timestamp, decimal, varchar, j
 import { relations } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
+import { vehicleModelValidation, vehicleBrandValidation, vehicleBrandModelValidation } from "./vehicle-validation";
 
 // Users table
 export const users = pgTable("users", {
@@ -336,10 +337,20 @@ export const insertUserSchema = createInsertSchema(users).omit({
   updatedAt: true,
 });
 
+// Vehicle schemas with enhanced validation
 export const insertVehicleSchema = createInsertSchema(vehicles).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  model: vehicleModelValidation,
+  brand: vehicleBrandValidation
+}).refine((data) => {
+  // Validação cruzada de marca e modelo
+  return vehicleBrandModelValidation.safeParse({ brand: data.brand, model: data.model }).success;
+}, {
+  message: "Combinação de marca e modelo inválida. Verifique se o modelo existe para esta marca.",
+  path: ["model"]
 });
 
 export const insertBookingSchema = createInsertSchema(bookings).omit({

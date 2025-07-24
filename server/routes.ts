@@ -187,11 +187,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ownerId: req.user!.id,
       });
 
+      // Log para auditoria de dados válidos
+      console.log(`✅ Veículo validado: ${vehicleData.brand} ${vehicleData.model} (usuário: ${req.user!.id})`);
+
       const vehicle = await storage.createVehicle(vehicleData);
       res.status(201).json(vehicle);
     } catch (error) {
       console.error("Create vehicle error:", error);
-      res.status(400).json({ message: "Failed to create vehicle" });
+      
+      // Retorna erros de validação específicos
+      if (error instanceof z.ZodError) {
+        const validationErrors = error.errors.map(err => ({
+          field: err.path.join('.'),
+          message: err.message
+        }));
+        
+        console.log(`❌ Dados inválidos rejeitados:`, validationErrors);
+        
+        return res.status(400).json({ 
+          message: "Dados do veículo inválidos",
+          errors: validationErrors
+        });
+      }
+      
+      res.status(400).json({ message: "Falha ao criar veículo" });
     }
   });
 
