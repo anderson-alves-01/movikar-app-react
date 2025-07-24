@@ -8,6 +8,9 @@ import Auth from "@/pages/auth";
 import Profile from "@/pages/profile";
 import VehicleDetail from "@/pages/vehicle-detail";
 import AdminContracts from "@/pages/admin-contracts";
+import AdminVehicleBrands from "@/pages/admin-vehicle-brands";
+import Reservations from "@/pages/reservations";
+import Vehicles from "@/pages/vehicles";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -18,6 +21,9 @@ function Router() {
       <Route path="/profile" component={Profile} />
       <Route path="/vehicle/:id" component={VehicleDetail} />
       <Route path="/admin/contracts" component={AdminContracts} />
+      <Route path="/admin/vehicle-brands" component={AdminVehicleBrands} />
+      <Route path="/reservations" component={Reservations} />
+      <Route path="/vehicles" component={Vehicles} />
       <Route component={NotFound} />
     </Switch>
   );

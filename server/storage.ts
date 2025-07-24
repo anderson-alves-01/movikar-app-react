@@ -1,10 +1,11 @@
 import { 
-  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog,
+  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands,
   type User, type InsertUser, type Vehicle, type InsertVehicle, 
   type Booking, type InsertBooking, type Review, type InsertReview,
   type Message, type InsertMessage, type VehicleWithOwner, type BookingWithDetails,
   type Contract, type InsertContract, type ContractTemplate, type InsertContractTemplate,
-  type ContractAuditLog, type InsertContractAuditLog, type ContractWithDetails
+  type ContractAuditLog, type InsertContractAuditLog, type ContractWithDetails,
+  type VehicleBrand, type InsertVehicleBrand
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, desc, asc, or, like, ilike, sql } from "drizzle-orm";
@@ -74,6 +75,12 @@ export interface IStorage {
   // Contract Audit
   getContractAuditLogs(contractId: number): Promise<ContractAuditLog[]>;
   createContractAuditLog(log: InsertContractAuditLog): Promise<ContractAuditLog>;
+
+  // Vehicle Brands
+  getVehicleBrands(): Promise<VehicleBrand[]>;
+  createVehicleBrand(brand: InsertVehicleBrand): Promise<VehicleBrand>;
+  updateVehicleBrand(id: number, brand: Partial<InsertVehicleBrand>): Promise<VehicleBrand | undefined>;
+  deleteVehicleBrand(id: number): Promise<boolean>;
 
   // Extended methods
   getBookingWithDetails(id: number): Promise<BookingWithDetails | undefined>;
@@ -597,6 +604,35 @@ export class DatabaseStorage implements IStorage {
       renter: renterResult,
       owner: result.users!,
     } as BookingWithDetails;
+  }
+
+  // Vehicle Brands
+  async getVehicleBrands(): Promise<VehicleBrand[]> {
+    return await db.select().from(vehicleBrands).orderBy(asc(vehicleBrands.name));
+  }
+
+  async createVehicleBrand(brand: InsertVehicleBrand): Promise<VehicleBrand> {
+    const [newBrand] = await db
+      .insert(vehicleBrands)
+      .values(brand)
+      .returning();
+    return newBrand;
+  }
+
+  async updateVehicleBrand(id: number, brand: Partial<InsertVehicleBrand>): Promise<VehicleBrand | undefined> {
+    const [updatedBrand] = await db
+      .update(vehicleBrands)
+      .set(brand)
+      .where(eq(vehicleBrands.id, id))
+      .returning();
+    return updatedBrand || undefined;
+  }
+
+  async deleteVehicleBrand(id: number): Promise<boolean> {
+    const result = await db
+      .delete(vehicleBrands)
+      .where(eq(vehicleBrands.id, id));
+    return result.rowCount > 0;
   }
 }
 

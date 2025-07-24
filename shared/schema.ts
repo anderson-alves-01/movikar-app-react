@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, decimal, varchar, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, decimal, varchar, jsonb, unique } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -233,6 +233,18 @@ export const contractAuditLogRelations = relations(contractAuditLog, ({ one }) =
   }),
 }));
 
+// Vehicle brands table for admin management
+export const vehicleBrands = pgTable("vehicle_brands", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 50 }).notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => {
+  return {
+    nameUnique: unique().on(table.name),
+  };
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   ownedVehicles: many(vehicles),
@@ -380,6 +392,14 @@ export type ContractTemplate = typeof contractTemplates.$inferSelect;
 export type InsertContractTemplate = z.infer<typeof insertContractTemplateSchema>;
 export type ContractAuditLog = typeof contractAuditLog.$inferSelect;
 export type InsertContractAuditLog = z.infer<typeof insertContractAuditLogSchema>;
+
+export const insertVehicleBrandSchema = createInsertSchema(vehicleBrands).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type VehicleBrand = typeof vehicleBrands.$inferSelect;
+export type InsertVehicleBrand = z.infer<typeof insertVehicleBrandSchema>;
 
 // Extended types with relations
 export type VehicleWithOwner = Vehicle & {

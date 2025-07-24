@@ -1,0 +1,245 @@
+import { useQuery } from "@tanstack/react-query";
+import { useAuthStore } from "@/lib/auth";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CalendarDays, MapPin, Car, User } from "lucide-react";
+
+interface Booking {
+  id: number;
+  vehicleId: number;
+  startDate: string;
+  endDate: string;
+  totalAmount: number;
+  status: string;
+  paymentStatus: string;
+  vehicle: {
+    id: number;
+    brand: string;
+    model: string;
+    year: number;
+    imageUrl?: string;
+    location: string;
+  };
+  owner?: {
+    id: number;
+    name: string;
+    profileImage?: string;
+  };
+  renter?: {
+    id: number;
+    name: string;
+    profileImage?: string;
+  };
+}
+
+export default function Reservations() {
+  const { user } = useAuthStore();
+
+  const { data: renterBookings, isLoading: loadingRenter } = useQuery<Booking[]>({
+    queryKey: ["/api/bookings", { type: "renter" }],
+    enabled: !!user,
+  });
+
+  const { data: ownerBookings, isLoading: loadingOwner } = useQuery<Booking[]>({
+    queryKey: ["/api/bookings", { type: "owner" }],
+    enabled: !!user,
+  });
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "approved":
+        return "bg-green-100 text-green-800";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
+      case "completed":
+        return "bg-blue-100 text-blue-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("pt-BR");
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(amount);
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="text-center py-12">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Acesso Restrito</h1>
+            <p className="text-gray-600">Faça login para ver suas reservas.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-6xl mx-auto px-4">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Minhas Reservas</h1>
+
+        {/* Reservas como Locatário */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-6 flex items-center">
+            <User className="w-6 h-6 mr-2" />
+            Como Locatário
+          </h2>
+          
+          {loadingRenter ? (
+            <div className="text-center py-8">
+              <div className="text-lg text-gray-600">Carregando reservas...</div>
+            </div>
+          ) : renterBookings?.length ? (
+            <div className="grid gap-6 md:grid-cols-2">
+              {renterBookings.map((booking) => (
+                <Card key={booking.id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader className="pb-3">
+                    <div className="flex justify-between items-start">
+                      <CardTitle className="text-lg flex items-center">
+                        <Car className="w-5 h-5 mr-2" />
+                        {booking.vehicle.brand} {booking.vehicle.model} ({booking.vehicle.year})
+                      </CardTitle>
+                      <Badge className={getStatusColor(booking.status)}>
+                        {booking.status === "pending" && "Pendente"}
+                        {booking.status === "approved" && "Aprovado"}
+                        {booking.status === "rejected" && "Rejeitado"}
+                        {booking.status === "completed" && "Concluído"}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-center text-sm text-gray-600">
+                        <CalendarDays className="w-4 h-4 mr-2" />
+                        {formatDate(booking.startDate)} - {formatDate(booking.endDate)}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <MapPin className="w-4 h-4 mr-2" />
+                        {booking.vehicle.location}
+                      </div>
+                      {booking.owner && (
+                        <div className="flex items-center text-sm text-gray-600">
+                          <User className="w-4 h-4 mr-2" />
+                          Proprietário: {booking.owner.name}
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center pt-3 border-t">
+                        <span className="text-lg font-semibold text-green-600">
+                          {formatCurrency(booking.totalAmount)}
+                        </span>
+                        <Button size="sm" variant="outline">
+                          Ver Detalhes
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="text-center py-12">
+                <Car className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma reserva encontrada</h3>
+                <p className="text-gray-600">Você ainda não fez nenhuma reserva.</p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Reservas como Proprietário */}
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-6 flex items-center">
+            <Car className="w-6 h-6 mr-2" />
+            Como Proprietário
+          </h2>
+          
+          {loadingOwner ? (
+            <div className="text-center py-8">
+              <div className="text-lg text-gray-600">Carregando reservas...</div>
+            </div>
+          ) : ownerBookings?.length ? (
+            <div className="grid gap-6 md:grid-cols-2">
+              {ownerBookings.map((booking) => (
+                <Card key={booking.id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader className="pb-3">
+                    <div className="flex justify-between items-start">
+                      <CardTitle className="text-lg flex items-center">
+                        <Car className="w-5 h-5 mr-2" />
+                        {booking.vehicle.brand} {booking.vehicle.model} ({booking.vehicle.year})
+                      </CardTitle>
+                      <Badge className={getStatusColor(booking.status)}>
+                        {booking.status === "pending" && "Pendente"}
+                        {booking.status === "approved" && "Aprovado"}
+                        {booking.status === "rejected" && "Rejeitado"}
+                        {booking.status === "completed" && "Concluído"}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-center text-sm text-gray-600">
+                        <CalendarDays className="w-4 h-4 mr-2" />
+                        {formatDate(booking.startDate)} - {formatDate(booking.endDate)}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <MapPin className="w-4 h-4 mr-2" />
+                        {booking.vehicle.location}
+                      </div>
+                      {booking.renter && (
+                        <div className="flex items-center text-sm text-gray-600">
+                          <User className="w-4 h-4 mr-2" />
+                          Locatário: {booking.renter.name}
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center pt-3 border-t">
+                        <span className="text-lg font-semibold text-green-600">
+                          {formatCurrency(booking.totalAmount)}
+                        </span>
+                        <div className="flex gap-2">
+                          {booking.status === "pending" && (
+                            <>
+                              <Button size="sm" variant="outline" className="text-green-600 border-green-600">
+                                Aprovar
+                              </Button>
+                              <Button size="sm" variant="outline" className="text-red-600 border-red-600">
+                                Rejeitar
+                              </Button>
+                            </>
+                          )}
+                          <Button size="sm" variant="outline">
+                            Ver Detalhes
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="text-center py-12">
+                <Car className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma reserva encontrada</h3>
+                <p className="text-gray-600">Seus veículos ainda não foram reservados.</p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

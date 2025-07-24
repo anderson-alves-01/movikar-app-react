@@ -1,9 +1,9 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertVehicleSchema, insertBookingSchema, insertReviewSchema, insertMessageSchema, insertContractSchema, type User } from "@shared/schema";
-import { contractService } from "./services/contractService.js";
-import { processSignatureWebhook } from "./services/signatureService.js";
+import { insertUserSchema, insertVehicleSchema, insertBookingSchema, insertReviewSchema, insertMessageSchema, insertVehicleBrandSchema, type User, type VehicleBrand } from "@shared/schema";
+// import { contractService } from "./services/contractService.js";
+// import { processSignatureWebhook } from "./services/signatureService.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import path from "path";
@@ -76,7 +76,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate token
       const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '24h' });
 
-      const { password, ...userWithoutPassword } = user;
+      const { password: _, ...userWithoutPassword } = user;
       res.status(201).json({ user: userWithoutPassword, token });
     } catch (error) {
       console.error("Registration error:", error);
@@ -109,7 +109,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/auth/me", authenticateToken, async (req, res) => {
-    const { password, ...userWithoutPassword } = req.user;
+    const { password: _, ...userWithoutPassword } = req.user!;
     res.json({ user: userWithoutPassword });
   });
 
@@ -120,7 +120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      const { password, ...userWithoutPassword } = user;
+      const { password: _, ...userWithoutPassword } = user;
       res.json(userWithoutPassword);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch user" });
@@ -130,7 +130,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/users/:id", authenticateToken, async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
-      if (req.user.id !== userId) {
+      if (req.user!.id !== userId) {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
@@ -140,7 +140,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const { password, ...userWithoutPassword } = user;
+      const { password: _, ...userWithoutPassword } = user;
       res.json(userWithoutPassword);
     } catch (error) {
       res.status(400).json({ message: "Failed to update user" });
@@ -184,7 +184,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const vehicleData = insertVehicleSchema.parse({
         ...req.body,
-        ownerId: req.user.id,
+        ownerId: req.user!.id,
       });
 
       const vehicle = await storage.createVehicle(vehicleData);
@@ -200,7 +200,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const vehicleId = parseInt(req.params.id);
       const vehicle = await storage.getVehicle(vehicleId);
       
-      if (!vehicle || vehicle.ownerId !== req.user.id) {
+      if (!vehicle || vehicle.ownerId !== req.user!.id) {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
@@ -220,7 +220,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const vehicleId = parseInt(req.params.id);
       const vehicle = await storage.getVehicle(vehicleId);
       
-      if (!vehicle || vehicle.ownerId !== req.user.id) {
+      if (!vehicle || vehicle.ownerId !== req.user!.id) {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
@@ -248,7 +248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/bookings", authenticateToken, async (req, res) => {
     try {
       const type = req.query.type as 'renter' | 'owner' || 'renter';
-      const bookings = await storage.getBookingsByUser(req.user.id, type);
+      const bookings = await storage.getBookingsByUser(req.user!.id, type);
       res.json(bookings);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch bookings" });
@@ -263,7 +263,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if user is involved in this booking
-      if (booking.renterId !== req.user.id && booking.ownerId !== req.user.id) {
+      if (booking.renterId !== req.user!.id && booking.ownerId !== req.user!.id) {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
@@ -277,7 +277,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const bookingData = insertBookingSchema.parse({
         ...req.body,
-        renterId: req.user.id,
+        renterId: req.user!.id,
       });
 
       // Check vehicle availability
@@ -309,7 +309,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Only owner can approve/reject, only renter can cancel
-      if (booking.ownerId !== req.user.id && booking.renterId !== req.user.id) {
+      if (booking.ownerId !== req.user!.id && booking.renterId !== req.user!.id) {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
@@ -338,7 +338,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const reviewData = insertReviewSchema.parse({
         ...req.body,
-        reviewerId: req.user.id,
+        reviewerId: req.user!.id,
       });
 
       const review = await storage.createReview(reviewData);
@@ -355,7 +355,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const otherUserId = parseInt(req.query.userId as string);
       const bookingId = req.query.bookingId ? parseInt(req.query.bookingId as string) : undefined;
       
-      const messages = await storage.getMessagesBetweenUsers(req.user.id, otherUserId, bookingId);
+      const messages = await storage.getMessagesBetweenUsers(req.user!.id, otherUserId, bookingId);
       res.json(messages);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch messages" });
@@ -366,7 +366,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const messageData = insertMessageSchema.parse({
         ...req.body,
-        senderId: req.user.id,
+        senderId: req.user!.id,
       });
 
       const message = await storage.createMessage(messageData);
@@ -380,187 +380,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/messages/read", authenticateToken, async (req, res) => {
     try {
       const { senderId } = req.body;
-      await storage.markMessagesAsRead(req.user.id, senderId);
+      await storage.markMessagesAsRead(req.user!.id, senderId);
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ message: "Failed to mark messages as read" });
     }
   });
 
-  // Contract Routes
-  
-  // Generate contract from booking
-  app.post("/api/contracts/generate", authenticateToken, async (req, res) => {
+  // Vehicle Brands Management (Admin)
+  app.get("/api/vehicle-brands", async (req, res) => {
     try {
-      const { bookingId, templateId } = req.body;
-      
-      if (!bookingId) {
-        return res.status(400).json({ message: "ID da reserva é obrigatório" });
-      }
-
-      const contract = await contractService.createContractFromBooking(
-        bookingId, 
-        templateId, 
-        req.user?.id
-      );
-
-      res.status(201).json(contract);
-    } catch (error: any) {
-      console.error("Generate contract error:", error);
-      res.status(400).json({ message: error.message || "Falha ao gerar contrato" });
-    }
-  });
-
-  // Get contract preview (PDF)
-  app.get("/api/contracts/:id/preview", authenticateToken, async (req, res) => {
-    try {
-      const contractId = parseInt(req.params.id);
-      const pdfUrl = await contractService.generateContractPreview(contractId);
-      res.json({ pdfUrl });
-    } catch (error: any) {
-      console.error("Contract preview error:", error);
-      res.status(400).json({ message: error.message || "Falha ao gerar preview" });
-    }
-  });
-
-  // Send contract for signature
-  app.post("/api/contracts/:id/send", authenticateToken, async (req, res) => {
-    try {
-      const contractId = parseInt(req.params.id);
-      const externalDocumentId = await contractService.sendForSignature(contractId, req.user?.id);
-      res.json({ 
-        message: "Contrato enviado para assinatura",
-        externalDocumentId 
-      });
-    } catch (error: any) {
-      console.error("Send contract error:", error);
-      res.status(400).json({ message: error.message || "Falha ao enviar contrato" });
-    }
-  });
-
-  // Download contract PDF
-  app.get("/api/contracts/:id/download", authenticateToken, async (req, res) => {
-    try {
-      const contractId = parseInt(req.params.id);
-      const pdfUrl = await contractService.downloadContract(contractId, req.user!.id);
-      
-      // Serve the PDF file
-      const fileName = path.basename(pdfUrl);
-      const filePath = path.join(process.cwd(), 'uploads', fileName);
-      
-      if (fs.existsSync(filePath)) {
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-        const fileStream = fs.createReadStream(filePath);
-        fileStream.pipe(res);
-      } else {
-        res.status(404).json({ message: "Arquivo não encontrado" });
-      }
-    } catch (error: any) {
-      console.error("Download contract error:", error);
-      res.status(400).json({ message: error.message || "Falha ao baixar contrato" });
-    }
-  });
-
-  // Get contracts for booking
-  app.get("/api/bookings/:id/contracts", authenticateToken, async (req, res) => {
-    try {
-      const bookingId = parseInt(req.params.id);
-      const contracts = await storage.getContractsByBooking(bookingId);
-      res.json(contracts);
+      const brands = await storage.getVehicleBrands();
+      res.json(brands);
     } catch (error) {
-      console.error("Get booking contracts error:", error);
-      res.status(500).json({ message: "Falha ao buscar contratos" });
+      console.error("Get vehicle brands error:", error);
+      res.status(500).json({ message: "Failed to fetch vehicle brands" });
     }
   });
 
-  // Get contract with details
-  app.get("/api/contracts/:id", authenticateToken, async (req, res) => {
+  app.post("/api/vehicle-brands", authenticateToken, requireAdmin, async (req, res) => {
     try {
-      const contractId = parseInt(req.params.id);
-      const contract = await storage.getContractWithDetails(contractId);
-      
-      if (!contract) {
-        return res.status(404).json({ message: "Contrato não encontrado" });
+      const brandData = insertVehicleBrandSchema.parse(req.body);
+      const brand = await storage.createVehicleBrand(brandData);
+      res.status(201).json(brand);
+    } catch (error) {
+      console.error("Create vehicle brand error:", error);
+      res.status(400).json({ message: "Failed to create vehicle brand" });
+    }
+  });
+
+  app.put("/api/vehicle-brands/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const brandId = parseInt(req.params.id);
+      const brandData = req.body;
+      const brand = await storage.updateVehicleBrand(brandId, brandData);
+      if (!brand) {
+        return res.status(404).json({ message: "Vehicle brand not found" });
       }
+      res.json(brand);
+    } catch (error) {
+      console.error("Update vehicle brand error:", error);
+      res.status(400).json({ message: "Failed to update vehicle brand" });
+    }
+  });
 
-      // Check permissions
-      const hasPermission = contract.contractData.renter.id === req.user?.id || 
-                           contract.contractData.owner.id === req.user?.id ||
-                           contract.createdBy === req.user?.id;
-
-      if (!hasPermission) {
-        return res.status(403).json({ message: "Sem permissão para acessar este contrato" });
+  app.delete("/api/vehicle-brands/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const brandId = parseInt(req.params.id);
+      const deleted = await storage.deleteVehicleBrand(brandId);
+      if (!deleted) {
+        return res.status(404).json({ message: "Vehicle brand not found" });
       }
-
-      res.json(contract);
+      res.status(204).send();
     } catch (error) {
-      console.error("Get contract error:", error);
-      res.status(500).json({ message: "Falha ao buscar contrato" });
-    }
-  });
-
-  // Admin: Get all contracts with filters
-  app.get("/api/admin/contracts", authenticateToken, async (req, res) => {
-    try {
-      // For now, allow any authenticated user - in production add admin role check
-      const filters = {
-        status: req.query.status as string,
-        dateFrom: req.query.dateFrom ? new Date(req.query.dateFrom as string) : undefined,
-        dateTo: req.query.dateTo ? new Date(req.query.dateTo as string) : undefined,
-        limit: req.query.limit ? parseInt(req.query.limit as string) : 50,
-        offset: req.query.offset ? parseInt(req.query.offset as string) : 0,
-      };
-
-      const contracts = await contractService.getContractsForAdmin(filters);
-      res.json(contracts);
-    } catch (error) {
-      console.error("Get admin contracts error:", error);
-      res.status(500).json({ message: "Falha ao buscar contratos" });
-    }
-  });
-
-  // Get contract audit trail
-  app.get("/api/contracts/:id/audit", authenticateToken, async (req, res) => {
-    try {
-      const contractId = parseInt(req.params.id);
-      const auditTrail = await contractService.getContractAuditTrail(contractId);
-      res.json(auditTrail);
-    } catch (error) {
-      console.error("Get audit trail error:", error);
-      res.status(500).json({ message: "Falha ao buscar histórico" });
-    }
-  });
-
-  // Webhook for signature platforms
-  app.post("/api/contracts/webhook/:platform", async (req, res) => {
-    try {
-      const platform = req.params.platform;
-      const webhookData = processSignatureWebhook(platform, req.body);
-      
-      await contractService.processSignatureWebhook(
-        webhookData.externalDocumentId,
-        webhookData
-      );
-
-      res.status(200).json({ message: "Webhook processado com sucesso" });
-    } catch (error: any) {
-      console.error("Webhook processing error:", error);
-      res.status(400).json({ message: error.message || "Falha ao processar webhook" });
-    }
-  });
-
-  // Cancel contract
-  app.post("/api/contracts/:id/cancel", authenticateToken, async (req, res) => {
-    try {
-      const contractId = parseInt(req.params.id);
-      const { reason } = req.body;
-      
-      await contractService.cancelContract(contractId, reason, req.user?.id);
-      res.json({ message: "Contrato cancelado com sucesso" });
-    } catch (error: any) {
-      console.error("Cancel contract error:", error);
-      res.status(400).json({ message: error.message || "Falha ao cancelar contrato" });
+      console.error("Delete vehicle brand error:", error);
+      res.status(500).json({ message: "Failed to delete vehicle brand" });
     }
   });
 

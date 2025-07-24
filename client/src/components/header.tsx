@@ -12,12 +12,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Search, Menu, User, MessageCircle, Car, LogOut } from "lucide-react";
 import { useAuthStore } from "@/lib/auth";
-import AddVehicleModal from "./add-vehicle-modal";
+// import AddVehicleModal from "./add-vehicle-modal";
 
 export default function Header() {
   const [, setLocation] = useLocation();
   const [showSearch, setShowSearch] = useState(false);
-  const [showAddVehicle, setShowAddVehicle] = useState(false);
+  // const [showAddVehicle, setShowAddVehicle] = useState(false);
   const { user, clearAuth } = useAuthStore();
 
   const handleLogout = () => {
@@ -77,7 +77,7 @@ export default function Header() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setShowAddVehicle(true)}
+                    onClick={() => setLocation('/vehicles')}
                     className="hidden sm:flex"
                   >
                     <Car className="h-4 w-4 mr-2" />
@@ -108,15 +108,15 @@ export default function Header() {
                           Meu Perfil
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setLocation('/reservations')}>
                         <Car className="h-4 w-4 mr-2" />
                         Minhas Reservas
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setLocation('/vehicles')}>
                         <Car className="h-4 w-4 mr-2" />
                         Meus Veículos
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setLocation('/messages')}>
                         <MessageCircle className="h-4 w-4 mr-2" />
                         Mensagens
                       </DropdownMenuItem>
@@ -152,7 +152,7 @@ export default function Header() {
         </div>
       </header>
 
-      <AddVehicleModal open={showAddVehicle} onOpenChange={setShowAddVehicle} />
+
     </>
   );
 }
