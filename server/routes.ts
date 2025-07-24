@@ -295,9 +295,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/bookings", authenticateToken, async (req, res) => {
     try {
+      // Get vehicle to find owner ID
+      const vehicle = await storage.getVehicle(req.body.vehicleId);
+      if (!vehicle) {
+        return res.status(404).json({ message: "Vehicle not found" });
+      }
+
+      // Parse dates and calculate fees
+      const startDate = new Date(req.body.startDate);
+      const endDate = new Date(req.body.endDate);
+      const totalPrice = parseFloat(req.body.totalPrice || "0");
+      const serviceFee = (totalPrice * 0.1).toFixed(2); // 10% service fee
+      const insuranceFee = (totalPrice * 0.05).toFixed(2); // 5% insurance fee
+
       const bookingData = insertBookingSchema.parse({
         ...req.body,
         renterId: req.user!.id,
+        ownerId: vehicle.ownerId,
+        startDate,
+        endDate,
+        servicefee: serviceFee,
+        insuranceFee: insuranceFee,
       });
 
       // Check vehicle availability
