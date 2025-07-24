@@ -46,13 +46,15 @@ The application uses PostgreSQL with the following main entities:
 - Image gallery support for vehicle photos
 - Location-based search with coordinates
 - Pricing tiers (daily, weekly, monthly)
-- Availability calendar system
+- Availability calendar system with manual and automatic blocking
+- Waiting queue system for unavailable vehicles
 
 ### Booking System
 - Real-time availability checking
 - Status workflow (pending → approved/rejected → active → completed)
 - Payment status tracking
 - Booking history for both renters and owners
+- Automatic date blocking when bookings are completed and contracts signed
 
 ### Search and Filtering
 - Location-based vehicle search
@@ -114,5 +116,28 @@ The application uses PostgreSQL with the following main entities:
 - **Server**: Express backend in `server/` directory  
 - **Shared**: Common types and schemas in `shared/` directory
 - **Database**: Migrations in `migrations/` directory
+
+## Recent Changes (January 2025)
+
+### Automatic Date Blocking System
+- **Implementation Date**: January 24, 2025
+- **Functionality**: System automatically blocks vehicle dates when:
+  - Booking status is marked as "completed" AND
+  - Contract is digitally signed by both parties
+- **Technical Details**:
+  - Added `blockVehicleDatesForBooking()` method to storage layer
+  - Added `checkAndBlockCompletedBooking()` helper function
+  - Integrated blocking logic into booking and contract update endpoints
+  - Prevents duplicate blocking for same dates/booking
+- **Integration**: Works seamlessly with existing availability management system
+
+### Waiting Queue System
+- **Implementation Date**: January 24, 2025  
+- **Functionality**: Users can join waiting queues for unavailable vehicles
+- **Features**:
+  - Queue management for specific date ranges
+  - User notification system (planned)
+  - Queue removal capabilities
+  - Integration with reservations page
 
 The architecture emphasizes type safety, modern development practices, and scalable design patterns suitable for a production car rental platform.

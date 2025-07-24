@@ -41,6 +41,8 @@ export interface IStorage {
   createBooking(booking: InsertBooking): Promise<Booking>;
   updateBooking(id: number, booking: Partial<InsertBooking>): Promise<Booking | undefined>;
   checkVehicleAvailability(vehicleId: number, startDate: Date, endDate: Date): Promise<boolean>;
+  blockVehicleDatesForBooking(vehicleId: number, startDate: string, endDate: string, bookingId: number): Promise<VehicleAvailability>;
+  checkAndBlockCompletedBooking(bookingId: number): Promise<boolean>;
 
   // Reviews
   getReviewsByVehicle(vehicleId: number): Promise<Review[]>;
@@ -302,6 +304,64 @@ export class DatabaseStorage implements IStorage {
       .where(eq(bookings.id, id))
       .returning();
     return booking || undefined;
+  }
+
+  async blockVehicleDatesForBooking(vehicleId: number, startDate: string, endDate: string, bookingId: number): Promise<VehicleAvailability> {
+    // Check if dates are already blocked for this booking
+    const existingBlock = await db
+      .select()
+      .from(vehicleAvailability)
+      .where(
+        and(
+          eq(vehicleAvailability.vehicleId, vehicleId),
+          eq(vehicleAvailability.startDate, startDate),
+          eq(vehicleAvailability.endDate, endDate),
+          ilike(vehicleAvailability.reason, `%Booking #${bookingId}%`)
+        )
+      )
+      .limit(1);
+
+    if (existingBlock.length > 0) {
+      return existingBlock[0];
+    }
+
+    // Create a blocked availability period for the booking
+    const [result] = await db
+      .insert(vehicleAvailability)
+      .values({
+        vehicleId,
+        startDate,
+        endDate,
+        isAvailable: false,
+        reason: `Reservado - Booking #${bookingId}`,
+      })
+      .returning();
+    return result;
+  }
+
+  async checkAndBlockCompletedBooking(bookingId: number): Promise<boolean> {
+    // Get booking details
+    const booking = await this.getBooking(bookingId);
+    if (!booking || booking.status !== "completed") {
+      return false;
+    }
+
+    // Check if there's a signed contract for this booking
+    const contracts = await this.getContractsByBooking(bookingId);
+    const signedContract = contracts.find(contract => contract.status === "signed");
+    
+    if (signedContract) {
+      // Block the vehicle dates automatically
+      await this.blockVehicleDatesForBooking(
+        booking.vehicleId,
+        booking.startDate,
+        booking.endDate,
+        bookingId
+      );
+      return true;
+    }
+    
+    return false;
   }
 
   async checkVehicleAvailability(vehicleId: number, startDate: Date, endDate: Date): Promise<boolean> {

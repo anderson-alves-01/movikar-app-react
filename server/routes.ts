@@ -318,8 +318,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Booking not found" });
       }
 
+      // Auto-block vehicle dates when booking is completed and contract is signed
+      if (req.body.status === "completed") {
+        await storage.checkAndBlockCompletedBooking(bookingId);
+      }
+
       res.json(updatedBooking);
     } catch (error) {
+      console.error("Update booking error:", error);
       res.status(400).json({ message: "Failed to update booking" });
     }
   });
@@ -503,6 +509,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Delete vehicle availability error:", error);
       res.status(500).json({ message: "Failed to delete availability period" });
+    }
+  });
+
+  // Contract routes
+  app.get("/api/contracts/:id", authenticateToken, async (req, res) => {
+    try {
+      const contractId = parseInt(req.params.id);
+      const contract = await storage.getContractWithDetails(contractId);
+      
+      if (!contract) {
+        return res.status(404).json({ message: "Contract not found" });
+      }
+
+      res.json(contract);
+    } catch (error) {
+      console.error("Get contract error:", error);
+      res.status(500).json({ message: "Failed to fetch contract" });
+    }
+  });
+
+  app.put("/api/contracts/:id", authenticateToken, async (req, res) => {
+    try {
+      const contractId = parseInt(req.params.id);
+      const contract = await storage.getContract(contractId);
+      
+      if (!contract) {
+        return res.status(404).json({ message: "Contract not found" });
+      }
+
+      const updatedContract = await storage.updateContract(contractId, req.body);
+      
+      // Auto-block vehicle dates when contract is signed and booking is completed
+      if (req.body.status === "signed" && contract.bookingId) {
+        await storage.checkAndBlockCompletedBooking(contract.bookingId);
+      }
+      
+      res.json(updatedContract);
+    } catch (error) {
+      console.error("Update contract error:", error);
+      res.status(400).json({ message: "Failed to update contract" });
     }
   });
 
