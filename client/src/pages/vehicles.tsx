@@ -9,7 +9,7 @@ import { Plus, Edit3, Trash2, Car, MapPin, Star, Eye, EyeOff, Calendar } from "l
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import VehicleAvailabilityManager from "@/components/vehicle-availability-manager";
-import SimpleReleaseDemo from "@/components/simple-release-demo";
+import VehicleValidationDemo from "@/components/vehicle-validation-demo";
 
 interface Vehicle {
   id: number;
@@ -118,6 +118,11 @@ export default function Vehicles() {
             <Plus className="w-4 h-4 mr-2" />
             Adicionar Veículo
           </Button>
+        </div>
+
+        {/* Área de Teste da Validação */}
+        <div className="mb-8">
+          <VehicleValidationDemo />
         </div>
 
         {isLoading ? (
