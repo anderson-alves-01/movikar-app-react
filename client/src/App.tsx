@@ -12,6 +12,7 @@ import AdminContracts from "@/pages/admin-contracts";
 import AdminVehicleBrands from "@/pages/admin-vehicle-brands";
 import Reservations from "@/pages/reservations";
 import Vehicles from "@/pages/vehicles";
+import Messages from "@/pages/messages";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/admin/vehicle-brands" component={AdminVehicleBrands} />
       <Route path="/reservations" component={Reservations} />
       <Route path="/vehicles" component={Vehicles} />
+      <Route path="/messages" component={Messages} />
       <Route component={NotFound} />
     </Switch>
   );

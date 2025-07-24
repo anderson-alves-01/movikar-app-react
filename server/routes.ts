@@ -676,6 +676,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Message and Conversation routes
+  app.get("/api/conversations", authenticateToken, async (req, res) => {
+    try {
+      // Return mock conversations for now since we don't have a full messaging system implemented
+      const conversations = [
+        {
+          id: 1,
+          otherUser: {
+            id: 2,
+            name: "Maria Silva",
+            avatar: undefined
+          },
+          lastMessage: {
+            content: "Obrigado pela reserva! Quando você vai buscar o carro?",
+            createdAt: new Date().toISOString(),
+            isFromUser: false
+          },
+          unreadCount: 2,
+          booking: {
+            id: 1,
+            vehicle: {
+              brand: "Honda",
+              model: "Civic",
+              year: 2023
+            }
+          }
+        }
+      ];
+      res.json(conversations);
+    } catch (error) {
+      console.error("Get conversations error:", error);
+      res.status(500).json({ message: "Failed to fetch conversations" });
+    }
+  });
+
+  app.get("/api/messages", authenticateToken, async (req, res) => {
+    try {
+      const { userId, bookingId } = req.query;
+      
+      // Return mock messages for now
+      const messages = [
+        {
+          id: 1,
+          content: "Olá! Gostaria de alugar seu carro para o fim de semana.",
+          senderId: req.user!.id,
+          receiverId: parseInt(userId as string),
+          bookingId: bookingId ? parseInt(bookingId as string) : null,
+          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() // 2 hours ago
+        },
+        {
+          id: 2,
+          content: "Olá! Claro, seu carro está disponível. Quando você precisa?",
+          senderId: parseInt(userId as string),
+          receiverId: req.user!.id,
+          bookingId: bookingId ? parseInt(bookingId as string) : null,
+          createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString() // 1 hour ago
+        },
+        {
+          id: 3,
+          content: "Perfeito! Vou buscar no sábado pela manhã.",
+          senderId: req.user!.id,
+          receiverId: parseInt(userId as string),
+          bookingId: bookingId ? parseInt(bookingId as string) : null,
+          createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString() // 30 minutes ago
+        }
+      ];
+      
+      res.json(messages);
+    } catch (error) {
+      console.error("Get messages error:", error);
+      res.status(500).json({ message: "Failed to fetch messages" });
+    }
+  });
+
+  app.post("/api/messages", authenticateToken, async (req, res) => {
+    try {
+      const messageData = insertMessageSchema.parse({
+        ...req.body,
+        senderId: req.user!.id
+      });
+      
+      // For now, just return the message with an ID
+      const message = {
+        id: Date.now(), // Temporary ID
+        ...messageData,
+        createdAt: new Date().toISOString()
+      };
+      
+      res.status(201).json(message);
+    } catch (error) {
+      console.error("Send message error:", error);
+      res.status(400).json({ message: "Failed to send message" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
