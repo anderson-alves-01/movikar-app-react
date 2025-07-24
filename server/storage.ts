@@ -203,22 +203,30 @@ export class DatabaseStorage implements IStorage {
       .insert(vehicles)
       .values({
         ...insertVehicle,
-        features: insertVehicle.features || [],
-        images: insertVehicle.images || []
+        features: (insertVehicle.features as string[]) || [],
+        images: (insertVehicle.images as string[]) || []
       })
       .returning();
     return vehicle;
   }
 
   async updateVehicle(id: number, updateVehicle: Partial<InsertVehicle>): Promise<Vehicle | undefined> {
+    const updateData: any = { 
+      ...updateVehicle, 
+      updatedAt: new Date()
+    };
+    
+    if (updateVehicle.features !== undefined) {
+      updateData.features = updateVehicle.features as string[];
+    }
+    
+    if (updateVehicle.images !== undefined) {
+      updateData.images = updateVehicle.images as string[];
+    }
+    
     const [vehicle] = await db
       .update(vehicles)
-      .set({ 
-        ...updateVehicle, 
-        updatedAt: new Date(),
-        features: updateVehicle.features || [],
-        images: updateVehicle.images || []
-      })
+      .set(updateData)
       .where(eq(vehicles.id, id))
       .returning();
     return vehicle || undefined;
@@ -356,8 +364,8 @@ export class DatabaseStorage implements IStorage {
       // Block the vehicle dates automatically
       await this.blockVehicleDatesForBooking(
         booking.vehicleId,
-        booking.startDate,
-        booking.endDate,
+        booking.startDate.toISOString().split('T')[0],
+        booking.endDate.toISOString().split('T')[0],
         bookingId
       );
       return true;
@@ -644,15 +652,15 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(contracts.createdAt));
 
     if (conditions.length > 0) {
-      query = query.where(and(...conditions));
+      query = query.where(and(...conditions)) as any;
     }
 
     if (filters.limit) {
-      query = query.limit(filters.limit);
+      query = query.limit(filters.limit) as any;
     }
 
     if (filters.offset) {
-      query = query.offset(filters.offset);
+      query = query.offset(filters.offset) as any;
     }
 
     const results = await query;
@@ -686,15 +694,24 @@ export class DatabaseStorage implements IStorage {
   async createContract(insertContract: InsertContract): Promise<Contract> {
     const [contract] = await db
       .insert(contracts)
-      .values(insertContract)
+      .values([insertContract])
       .returning();
     return contract;
   }
 
   async updateContract(id: number, updateContract: Partial<InsertContract>): Promise<Contract | undefined> {
+    const updateData: any = { ...updateContract, updatedAt: new Date() };
+    
+    if (updateData.metadata && updateData.metadata.location !== undefined) {
+      updateData.metadata = {
+        ...updateData.metadata,
+        location: updateData.metadata.location as string
+      };
+    }
+    
     const [contract] = await db
       .update(contracts)
-      .set({ ...updateContract, updatedAt: new Date() })
+      .set(updateData)
       .where(eq(contracts.id, id))
       .returning();
     return contract || undefined;
@@ -722,15 +739,26 @@ export class DatabaseStorage implements IStorage {
   async createContractTemplate(insertTemplate: InsertContractTemplate): Promise<ContractTemplate> {
     const [template] = await db
       .insert(contractTemplates)
-      .values(insertTemplate)
+      .values([insertTemplate])
       .returning();
     return template;
   }
 
   async updateContractTemplate(id: number, updateTemplate: Partial<InsertContractTemplate>): Promise<ContractTemplate | undefined> {
+    const updateData: any = { ...updateTemplate, updatedAt: new Date() };
+    
+    if (updateData.fields && Array.isArray(updateData.fields)) {
+      updateData.fields = updateData.fields.map((field: any) => ({
+        name: field.name,
+        type: field.type,
+        required: field.required,
+        defaultValue: field.defaultValue as string | undefined
+      }));
+    }
+    
     const [template] = await db
       .update(contractTemplates)
-      .set({ ...updateTemplate, updatedAt: new Date() })
+      .set(updateData)
       .where(eq(contractTemplates.id, id))
       .returning();
     return template || undefined;
@@ -746,9 +774,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createContractAuditLog(insertLog: InsertContractAuditLog): Promise<ContractAuditLog> {
+    const logData: any = { ...insertLog };
+    
+    if (logData.details && typeof logData.details === 'object') {
+      logData.details = {
+        ip: logData.details.ip as string | undefined,
+        userAgent: logData.details.userAgent as string | undefined,
+        previousStatus: logData.details.previousStatus as string | undefined,
+        newStatus: logData.details.newStatus as string | undefined,
+        metadata: logData.details.metadata
+      };
+    }
+    
     const [log] = await db
       .insert(contractAuditLog)
-      .values(insertLog)
+      .values([logData])
       .returning();
     return log;
   }
@@ -807,7 +847,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(vehicleBrands)
       .where(eq(vehicleBrands.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   // Vehicle Availability Management
@@ -840,7 +880,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(vehicleAvailability)
       .where(eq(vehicleAvailability.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   async checkAvailabilityConflict(vehicleId: number, startDate: string, endDate: string, excludeId?: number): Promise<boolean> {
@@ -926,7 +966,7 @@ export class DatabaseStorage implements IStorage {
       .update(waitingQueue)
       .set({ isActive: false })
       .where(eq(waitingQueue.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   async updateWaitingQueueStatus(id: number, data: Partial<InsertWaitingQueue>): Promise<WaitingQueue | undefined> {

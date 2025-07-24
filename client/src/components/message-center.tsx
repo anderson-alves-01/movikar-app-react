@@ -64,7 +64,7 @@ export default function MessageCenter({
     },
     enabled: !!user,
     staleTime: 0, // Always consider data stale for messages
-    cacheTime: 0, // Don't cache messages
+    gcTime: 0, // Don't cache messages
   });
 
   const sendMessageMutation = useMutation({
