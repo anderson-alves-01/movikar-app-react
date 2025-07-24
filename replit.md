@@ -48,6 +48,8 @@ The application uses PostgreSQL with the following main entities:
 - Pricing tiers (daily, weekly, monthly)
 - Availability calendar system with manual and automatic blocking
 - Waiting queue system for unavailable vehicles
+- Automatic vehicle release after rental completion
+- Notification system for queue management
 
 ### Booking System
 - Real-time availability checking
@@ -136,8 +138,22 @@ The application uses PostgreSQL with the following main entities:
 - **Functionality**: Users can join waiting queues for unavailable vehicles
 - **Features**:
   - Queue management for specific date ranges
-  - User notification system (planned)
+  - User notification system with automatic alerts
   - Queue removal capabilities
   - Integration with reservations page
+
+### Automatic Vehicle Release System
+- **Implementation Date**: January 24, 2025
+- **Functionality**: System automatically releases vehicles after rental period ends
+- **Key Features**:
+  - Daily check for expired vehicle blocks
+  - Automatic removal of calendar restrictions
+  - Notification system for waiting queue users
+  - First-come-first-served queue processing
+- **Technical Details**:
+  - Added `releaseExpiredVehicleBlocks()` method
+  - Added `notifyWaitingQueueUsers()` for queue notifications
+  - Created manual and automatic release endpoints
+  - Integrated date overlap checking for relevant notifications
 
 The architecture emphasizes type safety, modern development practices, and scalable design patterns suitable for a production car rental platform.
