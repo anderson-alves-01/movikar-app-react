@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
-import { Camera, Loader2 } from "lucide-react";
+import { Camera, Loader2, X, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -35,6 +35,8 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
     features: [] as string[],
     images: [] as string[],
   });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -91,6 +93,70 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
     }));
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const maxFiles = 10;
+    const maxFileSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    
+    const validFiles = Array.from(files).filter(file => {
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          title: "Tipo de arquivo inválido",
+          description: `${file.name} não é um tipo de imagem válido. Use JPEG, PNG ou WebP.`,
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      if (file.size > maxFileSize) {
+        toast({
+          title: "Arquivo muito grande",
+          description: `${file.name} é muito grande. Tamanho máximo: 5MB.`,
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      return true;
+    });
+
+    if (vehicleData.images.length + validFiles.length > maxFiles) {
+      toast({
+        title: "Muitas imagens",
+        description: `Máximo de ${maxFiles} imagens permitidas.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Convert files to base64 URLs for preview
+    validFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        setVehicleData(prev => ({
+          ...prev,
+          images: [...prev.images, result]
+        }));
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setVehicleData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -101,6 +167,16 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
       toast({
         title: "Campos obrigatórios",
         description: "Preencha todos os campos obrigatórios",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Image validation
+    if (vehicleData.images.length < 3) {
+      toast({
+        title: "Fotos obrigatórias",
+        description: "Adicione pelo menos 3 fotos do seu veículo",
         variant: "destructive",
       });
       return;
@@ -140,21 +216,67 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
           {/* Vehicle Photos */}
           <div>
             <Label className="block text-sm font-medium text-gray-700 mb-3">
-              Fotos do veículo *
+              Fotos do veículo * ({vehicleData.images.length}/10)
             </Label>
-            <Card className="border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors">
+            
+            {/* Upload Area */}
+            <Card 
+              className="border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors cursor-pointer mb-4"
+              onClick={triggerFileInput}
+            >
               <CardContent className="p-6 text-center">
-                <Camera className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-2">Clique para adicionar fotos ou arraste aqui</p>
-                <p className="text-sm text-gray-500">Adicione pelo menos 3 fotos (máx. 10)</p>
-                <Input 
-                  type="file" 
-                  multiple 
-                  accept="image/*" 
-                  className="hidden" 
-                />
+                <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 mb-2">Clique para adicionar fotos</p>
+                <p className="text-sm text-gray-500">Adicione pelo menos 3 fotos (máx. 10, 5MB cada)</p>
+                <p className="text-xs text-gray-400 mt-1">Formatos: JPEG, PNG, WebP</p>
               </CardContent>
             </Card>
+
+            {/* Hidden File Input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept="image/jpeg,image/jpg,image/png,image/webp"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+
+            {/* Image Preview Grid */}
+            {vehicleData.images.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {vehicleData.images.map((image, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={image}
+                      alt={`Preview ${index + 1}`}
+                      className="w-full h-24 object-cover rounded-lg border"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => removeImage(index)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                    {index === 0 && (
+                      <div className="absolute bottom-1 left-1 bg-blue-500 text-white text-xs px-1 rounded">
+                        Principal
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {vehicleData.images.length < 3 && (
+              <p className="text-amber-600 text-sm mt-2 flex items-center">
+                <Camera className="h-4 w-4 mr-1" />
+                Adicione pelo menos 3 fotos para continuar
+              </p>
+            )}
           </div>
 
           {/* Vehicle Info */}
