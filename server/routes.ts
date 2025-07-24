@@ -684,8 +684,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const otherUserId = parseInt(userId as string);
+      console.log(`Fetching messages between user ${req.user!.id} and user ${otherUserId}`);
+      
       const messages = await storage.getMessagesBetweenUsers(req.user!.id, otherUserId, bookingId ? parseInt(bookingId as string) : undefined);
       
+      console.log(`Found ${messages.length} messages:`, messages);
       res.json(messages);
     } catch (error) {
       console.error("Get messages error:", error);

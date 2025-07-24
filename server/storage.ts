@@ -519,21 +519,26 @@ export class DatabaseStorage implements IStorage {
 
   // Messages
   async getMessagesBetweenUsers(userId1: number, userId2: number, bookingId?: number): Promise<Message[]> {
-    let query = db
-      .select()
-      .from(messages)
-      .where(
-        or(
-          and(eq(messages.senderId, userId1), eq(messages.receiverId, userId2)),
-          and(eq(messages.senderId, userId2), eq(messages.receiverId, userId1))
-        )
-      );
+    console.log(`Storage: Getting messages between ${userId1} and ${userId2}, bookingId: ${bookingId}`);
+    
+    const baseCondition = or(
+      and(eq(messages.senderId, userId1), eq(messages.receiverId, userId2)),
+      and(eq(messages.senderId, userId2), eq(messages.receiverId, userId1))
+    );
 
+    let whereCondition = baseCondition;
     if (bookingId) {
-      query = query.where(eq(messages.bookingId, bookingId));
+      whereCondition = and(baseCondition, eq(messages.bookingId, bookingId));
     }
 
-    return await query.orderBy(asc(messages.createdAt));
+    const result = await db
+      .select()
+      .from(messages)
+      .where(whereCondition)
+      .orderBy(asc(messages.createdAt));
+      
+    console.log(`Storage: Found ${result.length} messages`);
+    return result;
   }
 
   async createMessage(insertMessage: InsertMessage): Promise<Message> {
