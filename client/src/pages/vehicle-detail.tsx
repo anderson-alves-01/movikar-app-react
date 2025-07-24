@@ -206,7 +206,7 @@ export default function VehicleDetail() {
                   
                   {/* Thumbnail Gallery */}
                   <div className="grid grid-cols-4 gap-2 p-4">
-                    {images.map((image, index) => (
+                    {images.map((image: string, index: number) => (
                       <img 
                         key={index}
                         src={image}

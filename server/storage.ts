@@ -111,12 +111,6 @@ export class DatabaseStorage implements IStorage {
     endDate?: Date;
     features?: string[];
   }): Promise<VehicleWithOwner[]> {
-    let query = db
-      .select()
-      .from(vehicles)
-      .leftJoin(users, eq(vehicles.ownerId, users.id))
-      .where(eq(vehicles.isAvailable, true));
-
     const conditions = [eq(vehicles.isAvailable, true)];
 
     if (filters.location) {
@@ -135,7 +129,12 @@ export class DatabaseStorage implements IStorage {
       conditions.push(lte(vehicles.pricePerDay, filters.priceMax.toString()));
     }
 
-    const results = await query.where(and(...conditions)).orderBy(desc(vehicles.createdAt));
+    const results = await db
+      .select()
+      .from(vehicles)
+      .leftJoin(users, eq(vehicles.ownerId, users.id))
+      .where(and(...conditions))
+      .orderBy(desc(vehicles.createdAt));
 
     return results.map(result => ({
       ...result.vehicles,
@@ -146,7 +145,11 @@ export class DatabaseStorage implements IStorage {
   async createVehicle(insertVehicle: InsertVehicle): Promise<Vehicle> {
     const [vehicle] = await db
       .insert(vehicles)
-      .values(insertVehicle)
+      .values({
+        ...insertVehicle,
+        features: insertVehicle.features || [],
+        images: insertVehicle.images || []
+      })
       .returning();
     return vehicle;
   }
@@ -154,7 +157,12 @@ export class DatabaseStorage implements IStorage {
   async updateVehicle(id: number, updateVehicle: Partial<InsertVehicle>): Promise<Vehicle | undefined> {
     const [vehicle] = await db
       .update(vehicles)
-      .set({ ...updateVehicle, updatedAt: new Date() })
+      .set({ 
+        ...updateVehicle, 
+        updatedAt: new Date(),
+        features: updateVehicle.features || [],
+        images: updateVehicle.images || []
+      })
       .where(eq(vehicles.id, id))
       .returning();
     return vehicle || undefined;
@@ -162,7 +170,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteVehicle(id: number): Promise<boolean> {
     const result = await db.delete(vehicles).where(eq(vehicles.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   // Bookings
@@ -303,21 +311,22 @@ export class DatabaseStorage implements IStorage {
 
   // Messages
   async getMessagesBetweenUsers(userId1: number, userId2: number, bookingId?: number): Promise<Message[]> {
-    let query = db
-      .select()
-      .from(messages)
-      .where(
-        or(
-          and(eq(messages.senderId, userId1), eq(messages.receiverId, userId2)),
-          and(eq(messages.senderId, userId2), eq(messages.receiverId, userId1))
-        )
-      );
+    const conditions = [
+      or(
+        and(eq(messages.senderId, userId1), eq(messages.receiverId, userId2)),
+        and(eq(messages.senderId, userId2), eq(messages.receiverId, userId1))
+      )
+    ];
 
     if (bookingId) {
-      query = query.where(eq(messages.bookingId, bookingId));
+      conditions.push(eq(messages.bookingId, bookingId));
     }
 
-    return await query.orderBy(asc(messages.createdAt));
+    return await db
+      .select()
+      .from(messages)
+      .where(and(...conditions))
+      .orderBy(asc(messages.createdAt));
   }
 
   async createMessage(insertMessage: InsertMessage): Promise<Message> {
