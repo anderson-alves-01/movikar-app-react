@@ -30,14 +30,12 @@ export default function MessageCenter({
   const queryClient = useQueryClient();
 
   const { data: messages, isLoading, refetch } = useQuery({
-    queryKey: ['/api/messages', { userId: otherUserId, bookingId }],
+    queryKey: ['/api/messages', { userId: otherUserId }],
     queryFn: async () => {
       const params = new URLSearchParams({
         userId: otherUserId.toString(),
       });
-      if (bookingId) {
-        params.append('bookingId', bookingId.toString());
-      }
+      // Don't include bookingId for general messaging
       
       // Get token from auth storage
       const authStorage = localStorage.getItem('auth-storage');
@@ -74,7 +72,7 @@ export default function MessageCenter({
       const response = await apiRequest('POST', '/api/messages', {
         receiverId: otherUserId,
         content,
-        bookingId,
+        // Don't include bookingId for general messaging
       });
       return response.json();
     },

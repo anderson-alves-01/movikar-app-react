@@ -185,7 +185,7 @@ export default function Messages() {
                   otherUserId={selectedConversation.otherUser.id}
                   otherUserName={selectedConversation.otherUser.name}
                   otherUserAvatar={selectedConversation.otherUser.avatar}
-                  bookingId={selectedConversation.booking?.id}
+                  bookingId={undefined}
                 />
               ) : (
                 <Card className="h-full flex items-center justify-center">
