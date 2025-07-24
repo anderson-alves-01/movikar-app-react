@@ -14,6 +14,7 @@ export const users = pgTable("users", {
   isOwner: boolean("is_owner").default(false),
   isRenter: boolean("is_renter").default(true),
   isVerified: boolean("is_verified").default(false),
+  role: varchar("role", { length: 20 }).default("user"), // user, admin
   rating: decimal("rating", { precision: 3, scale: 2 }).default("0"),
   totalRentals: integer("total_rentals").default(0),
   totalEarnings: decimal("total_earnings", { precision: 10, scale: 2 }).default("0"),

@@ -42,6 +42,17 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
   }
 };
 
+// Admin authentication middleware
+const requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Usuário não autenticado' });
+  }
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Acesso negado: privilégios de administrador necessários' });
+  }
+  next();
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
   app.post("/api/auth/register", async (req, res) => {
