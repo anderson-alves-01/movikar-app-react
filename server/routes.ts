@@ -374,43 +374,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Message routes
-  app.get("/api/messages", authenticateToken, async (req, res) => {
-    try {
-      const otherUserId = parseInt(req.query.userId as string);
-      const bookingId = req.query.bookingId ? parseInt(req.query.bookingId as string) : undefined;
-      
-      const messages = await storage.getMessagesBetweenUsers(req.user!.id, otherUserId, bookingId);
-      res.json(messages);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch messages" });
-    }
-  });
 
-  app.post("/api/messages", authenticateToken, async (req, res) => {
-    try {
-      const messageData = insertMessageSchema.parse({
-        ...req.body,
-        senderId: req.user!.id,
-      });
-
-      const message = await storage.createMessage(messageData);
-      res.status(201).json(message);
-    } catch (error) {
-      console.error("Create message error:", error);
-      res.status(400).json({ message: "Failed to send message" });
-    }
-  });
-
-  app.put("/api/messages/read", authenticateToken, async (req, res) => {
-    try {
-      const { senderId } = req.body;
-      await storage.markMessagesAsRead(req.user!.id, senderId);
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ message: "Failed to mark messages as read" });
-    }
-  });
 
   // Vehicle Brands Management (Admin)
   app.get("/api/vehicle-brands", async (req, res) => {
@@ -773,6 +737,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Send message error:", error);
       res.status(400).json({ message: "Failed to send message" });
+    }
+  });
+
+  app.put("/api/messages/read", authenticateToken, async (req, res) => {
+    try {
+      // Mock implementation for now
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to mark messages as read" });
     }
   });
 
