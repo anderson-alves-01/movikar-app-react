@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalendarDays, MapPin, Car, User, Clock, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import Header from "@/components/header";
 
 interface Booking {
   id: number;
@@ -60,17 +61,17 @@ export default function Reservations() {
   const queryClient = useQueryClient();
 
   const { data: renterBookings, isLoading: loadingRenter } = useQuery<Booking[]>({
-    queryKey: ["/api/bookings", { type: "renter" }],
+    queryKey: ["/api/bookings?type=renter"],
     enabled: !!user,
   });
 
   const { data: ownerBookings, isLoading: loadingOwner } = useQuery<Booking[]>({
-    queryKey: ["/api/bookings", { type: "owner" }],
+    queryKey: ["/api/bookings?type=owner"],
     enabled: !!user,
   });
 
   const { data: waitingQueue, isLoading: loadingQueue } = useQuery<WaitingQueueEntry[]>({
-    queryKey: ["/api/users", user?.id, "waiting-queue"],
+    queryKey: ["/api/users/" + user?.id + "/waiting-queue"],
     enabled: !!user,
   });
 
@@ -79,7 +80,7 @@ export default function Reservations() {
       apiRequest(`/api/waiting-queue/${queueId}`, "DELETE"),
     onSuccess: () => {
       queryClient.invalidateQueries({ 
-        queryKey: ["/api/users", user?.id, "waiting-queue"] 
+        queryKey: ["/api/users/" + user?.id + "/waiting-queue"] 
       });
       toast({
         title: "Sucesso",
@@ -94,6 +95,10 @@ export default function Reservations() {
       });
     },
   });
+
+  const handleRemoveFromQueue = (queueId: number) => {
+    removeFromQueueMutation.mutate(queueId);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -123,11 +128,14 @@ export default function Reservations() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="text-center py-12">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Acesso Restrito</h1>
-            <p className="text-gray-600">Faça login para ver suas reservas.</p>
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="py-8">
+          <div className="max-w-4xl mx-auto px-4">
+            <div className="text-center py-12">
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">Acesso Restrito</h1>
+              <p className="text-gray-600">Faça login para ver suas reservas.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -135,9 +143,11 @@ export default function Reservations() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Minhas Reservas</h1>
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="py-8">
+        <div className="max-w-6xl mx-auto px-4">
+          <h1 className="text-3xl font-bold text-gray-900 mb-8">Minhas Reservas</h1>
 
         <Tabs defaultValue="renter" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
@@ -375,6 +385,7 @@ export default function Reservations() {
             </div>
           </TabsContent>
         </Tabs>
+        </div>
       </div>
     </div>
   );
