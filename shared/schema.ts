@@ -89,7 +89,7 @@ export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
   senderId: integer("sender_id").references(() => users.id).notNull(),
   receiverId: integer("receiver_id").references(() => users.id).notNull(),
-  bookingId: integer("booking_id").references(() => bookings.id),
+  bookingId: integer("booking_id"), // Remove foreign key constraint
   content: text("content").notNull(),
   isRead: boolean("is_read").default(false),
   createdAt: timestamp("created_at").defaultNow(),

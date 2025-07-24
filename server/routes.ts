@@ -679,33 +679,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId, bookingId } = req.query;
       
-      // Return mock messages for now
-      const messages = [
-        {
-          id: 1,
-          content: "Olá! Gostaria de alugar seu carro para o fim de semana.",
-          senderId: req.user!.id,
-          receiverId: parseInt(userId as string),
-          bookingId: bookingId ? parseInt(bookingId as string) : null,
-          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() // 2 hours ago
-        },
-        {
-          id: 2,
-          content: "Olá! Claro, seu carro está disponível. Quando você precisa?",
-          senderId: parseInt(userId as string),
-          receiverId: req.user!.id,
-          bookingId: bookingId ? parseInt(bookingId as string) : null,
-          createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString() // 1 hour ago
-        },
-        {
-          id: 3,
-          content: "Perfeito! Vou buscar no sábado pela manhã.",
-          senderId: req.user!.id,
-          receiverId: parseInt(userId as string),
-          bookingId: bookingId ? parseInt(bookingId as string) : null,
-          createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString() // 30 minutes ago
-        }
-      ];
+      if (!userId) {
+        return res.status(400).json({ message: "userId is required" });
+      }
+      
+      const otherUserId = parseInt(userId as string);
+      const messages = await storage.getMessagesBetweenUsers(req.user!.id, otherUserId, bookingId ? parseInt(bookingId as string) : undefined);
       
       res.json(messages);
     } catch (error) {
@@ -716,23 +695,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/messages", authenticateToken, async (req, res) => {
     try {
-      // Validate input data but remove bookingId if it's invalid
       const { content, receiverId, bookingId } = req.body;
       
       if (!content || !receiverId) {
         return res.status(400).json({ message: "Content and receiverId are required" });
       }
 
-      // For now, create messages without database storage to avoid foreign key errors
-      const message = {
-        id: Date.now(), // Temporary ID
-        content,
+      // Create message data without bookingId to avoid foreign key constraint
+      const messageData = {
+        content: content.trim(),
         senderId: req.user!.id,
         receiverId: parseInt(receiverId),
-        bookingId: null, // Set to null to avoid foreign key constraint
-        createdAt: new Date().toISOString()
+        // Only include bookingId if it's explicitly provided and we want to use it
+        // For now, we'll omit it to avoid foreign key issues
       };
-      
+
+      const message = await storage.createMessage(messageData);
       res.status(201).json(message);
     } catch (error) {
       console.error("Send message error:", error);

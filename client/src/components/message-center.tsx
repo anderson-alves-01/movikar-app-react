@@ -77,7 +77,11 @@ export default function MessageCenter({
     },
     onSuccess: () => {
       setNewMessage('');
+      // Invalidate and refetch messages to show the new message
       queryClient.invalidateQueries({ 
+        queryKey: ['/api/messages', { userId: otherUserId, bookingId }] 
+      });
+      queryClient.refetchQueries({ 
         queryKey: ['/api/messages', { userId: otherUserId, bookingId }] 
       });
     },
