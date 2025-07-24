@@ -39,7 +39,12 @@ export default function MessageCenter({
         params.append('bookingId', bookingId.toString());
       }
       
-      const response = await fetch(`/api/messages?${params}`);
+      const response = await fetch(`/api/messages?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch messages');
       }
@@ -50,12 +55,12 @@ export default function MessageCenter({
 
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
-      const response = await apiRequest('POST', '/api/messages', {
+      const response = await apiRequest('/api/messages', 'POST', {
         receiverId: otherUserId,
         content,
         bookingId,
       });
-      return response.json();
+      return response;
     },
     onSuccess: () => {
       setNewMessage('');
@@ -74,10 +79,10 @@ export default function MessageCenter({
 
   const markAsReadMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('PUT', '/api/messages/read', {
+      const response = await apiRequest('/api/messages/read', 'PUT', {
         senderId: otherUserId,
       });
-      return response.json();
+      return response;
     },
   });
 
