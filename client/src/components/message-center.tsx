@@ -29,7 +29,7 @@ export default function MessageCenter({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: messages, isLoading } = useQuery({
+  const { data: messages, isLoading, refetch } = useQuery({
     queryKey: ['/api/messages', { userId: otherUserId, bookingId }],
     queryFn: async () => {
       const params = new URLSearchParams({
@@ -56,6 +56,7 @@ export default function MessageCenter({
         headers: {
           'Authorization': `Bearer ${authToken}`,
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
         },
       });
       if (!response.ok) {
@@ -64,6 +65,8 @@ export default function MessageCenter({
       return response.json();
     },
     enabled: !!user,
+    staleTime: 0, // Always consider data stale for messages
+    cacheTime: 0, // Don't cache messages
   });
 
   const sendMessageMutation = useMutation({
@@ -77,13 +80,8 @@ export default function MessageCenter({
     },
     onSuccess: () => {
       setNewMessage('');
-      // Invalidate and refetch messages to show the new message
-      queryClient.invalidateQueries({ 
-        queryKey: ['/api/messages', { userId: otherUserId, bookingId }] 
-      });
-      queryClient.refetchQueries({ 
-        queryKey: ['/api/messages', { userId: otherUserId, bookingId }] 
-      });
+      // Force immediate refetch
+      refetch();
     },
     onError: (error: any) => {
       toast({
