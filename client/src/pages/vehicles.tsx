@@ -5,9 +5,10 @@ import { useAuthStore } from "@/lib/auth";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit3, Trash2, Car, MapPin, Star, Eye, EyeOff } from "lucide-react";
+import { Plus, Edit3, Trash2, Car, MapPin, Star, Eye, EyeOff, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import VehicleAvailabilityManager from "@/components/vehicle-availability-manager";
 
 interface Vehicle {
   id: number;
@@ -29,6 +30,7 @@ export default function Vehicles() {
   const { user } = useAuthStore();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [selectedVehicleForAvailability, setSelectedVehicleForAvailability] = useState<number | null>(null);
 
   const { data: vehicles, isLoading } = useQuery<Vehicle[]>({
     queryKey: ["/api/users", user?.id, "vehicles"],
@@ -200,6 +202,15 @@ export default function Vehicles() {
                         <Button
                           size="sm"
                           variant="outline"
+                          onClick={() => setSelectedVehicleForAvailability(vehicle.id)}
+                          title="Gerenciar disponibilidade"
+                        >
+                          <Calendar className="w-4 h-4" />
+                        </Button>
+                        
+                        <Button
+                          size="sm"
+                          variant="outline"
                           onClick={() => handleToggleAvailability(vehicle.id, vehicle.isAvailable)}
                           disabled={toggleAvailabilityMutation.isPending}
                         >
@@ -251,6 +262,27 @@ export default function Vehicles() {
               </Button>
             </CardContent>
           </Card>
+        )}
+
+        {/* Vehicle Availability Manager Modal */}
+        {selectedVehicleForAvailability && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-4 border-b flex justify-between items-center">
+                <h2 className="text-xl font-semibold">Gerenciar Disponibilidade</h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedVehicleForAvailability(null)}
+                >
+                  Fechar
+                </Button>
+              </div>
+              <div className="p-6">
+                <VehicleAvailabilityManager vehicleId={selectedVehicleForAvailability} />
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, decimal, varchar, jsonb, unique } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, decimal, varchar, jsonb, unique, date } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -427,3 +427,62 @@ export type UserWithStats = User & {
   renterBookings?: Booking[];
   ownerBookings?: Booking[];
 };
+
+// Tabela para gerenciar disponibilidade de veículos
+export const vehicleAvailability = pgTable("vehicle_availability", {
+  id: serial("id").primaryKey(),
+  vehicleId: integer("vehicle_id").references(() => vehicles.id).notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  isAvailable: boolean("is_available").default(true),
+  reason: text("reason"), // "maintenance", "personal_use", "booked", etc.
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Tabela para fila de espera
+export const waitingQueue = pgTable("waiting_queue", {
+  id: serial("id").primaryKey(),
+  vehicleId: integer("vehicle_id").references(() => vehicles.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  desiredStartDate: date("desired_start_date").notNull(),
+  desiredEndDate: date("desired_end_date").notNull(),
+  notificationSent: boolean("notification_sent").default(false),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Relations para as novas tabelas
+export const vehicleAvailabilityRelations = relations(vehicleAvailability, ({ one }) => ({
+  vehicle: one(vehicles, {
+    fields: [vehicleAvailability.vehicleId],
+    references: [vehicles.id],
+  }),
+}));
+
+export const waitingQueueRelations = relations(waitingQueue, ({ one }) => ({
+  vehicle: one(vehicles, {
+    fields: [waitingQueue.vehicleId],
+    references: [vehicles.id],
+  }),
+  user: one(users, {
+    fields: [waitingQueue.userId],
+    references: [users.id],
+  }),
+}));
+
+// Schemas para as novas tabelas
+export const insertVehicleAvailabilitySchema = createInsertSchema(vehicleAvailability).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertWaitingQueueSchema = createInsertSchema(waitingQueue).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Types para as novas tabelas
+export type VehicleAvailability = typeof vehicleAvailability.$inferSelect;
+export type InsertVehicleAvailability = z.infer<typeof insertVehicleAvailabilitySchema>;
+export type WaitingQueue = typeof waitingQueue.$inferSelect;
+export type InsertWaitingQueue = z.infer<typeof insertWaitingQueueSchema>;

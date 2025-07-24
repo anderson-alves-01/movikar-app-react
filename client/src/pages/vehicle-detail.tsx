@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import WaitingQueueButton from "@/components/waiting-queue-button";
 
 export default function VehicleDetail() {
   const [, params] = useRoute("/vehicle/:id");
@@ -410,8 +411,15 @@ export default function VehicleDetail() {
 
           {/* Right Column - Booking Form */}
           <div className="lg:col-span-1">
-            <div className="sticky top-6">
+            <div className="sticky top-6 space-y-4">
               <BookingForm vehicle={vehicle} />
+              
+              {/* Waiting Queue Button (only if vehicle is not available) */}
+              <WaitingQueueButton 
+                vehicleId={vehicleId!}
+                vehicleName={`${vehicle.brand} ${vehicle.model}`}
+                isAvailable={vehicle.isAvailable}
+              />
             </div>
           </div>
         </div>

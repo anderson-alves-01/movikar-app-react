@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertVehicleSchema, insertBookingSchema, insertReviewSchema, insertMessageSchema, insertVehicleBrandSchema, type User, type VehicleBrand } from "@shared/schema";
+import { insertUserSchema, insertVehicleSchema, insertBookingSchema, insertReviewSchema, insertMessageSchema, insertVehicleBrandSchema, insertVehicleAvailabilitySchema, insertWaitingQueueSchema, type User, type VehicleBrand } from "@shared/schema";
 // import { contractService } from "./services/contractService.js";
 // import { processSignatureWebhook } from "./services/signatureService.js";
 import bcrypt from "bcrypt";
@@ -435,6 +435,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Delete vehicle brand error:", error);
       res.status(500).json({ message: "Failed to delete vehicle brand" });
+    }
+  });
+
+  // Vehicle Availability Routes
+  app.get("/api/vehicles/:vehicleId/availability", async (req, res) => {
+    try {
+      const vehicleId = parseInt(req.params.vehicleId);
+      const availability = await storage.getVehicleAvailability(vehicleId);
+      res.json(availability);
+    } catch (error) {
+      console.error("Get vehicle availability error:", error);
+      res.status(500).json({ message: "Failed to fetch vehicle availability" });
+    }
+  });
+
+  app.post("/api/vehicles/:vehicleId/availability", authenticateToken, async (req, res) => {
+    try {
+      const vehicleId = parseInt(req.params.vehicleId);
+      
+      // Check if user owns the vehicle
+      const vehicle = await storage.getVehicle(vehicleId);
+      if (!vehicle || vehicle.ownerId !== req.user!.id) {
+        return res.status(403).json({ message: "Only vehicle owner can manage availability" });
+      }
+
+      const availabilityData = insertVehicleAvailabilitySchema.parse({
+        ...req.body,
+        vehicleId,
+      });
+
+      // Check for conflicts
+      const hasConflict = await storage.checkAvailabilityConflict(
+        vehicleId,
+        availabilityData.startDate,
+        availabilityData.endDate
+      );
+
+      if (hasConflict) {
+        return res.status(400).json({ message: "Availability conflicts with existing periods" });
+      }
+
+      const availability = await storage.setVehicleAvailability(availabilityData);
+      res.status(201).json(availability);
+    } catch (error) {
+      console.error("Create vehicle availability error:", error);
+      res.status(400).json({ message: "Failed to create availability period" });
+    }
+  });
+
+  app.delete("/api/vehicles/:vehicleId/availability/:id", authenticateToken, async (req, res) => {
+    try {
+      const vehicleId = parseInt(req.params.vehicleId);
+      const availabilityId = parseInt(req.params.id);
+      
+      // Check if user owns the vehicle
+      const vehicle = await storage.getVehicle(vehicleId);
+      if (!vehicle || vehicle.ownerId !== req.user!.id) {
+        return res.status(403).json({ message: "Only vehicle owner can manage availability" });
+      }
+
+      const success = await storage.deleteVehicleAvailability(availabilityId);
+      if (!success) {
+        return res.status(404).json({ message: "Availability period not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Delete vehicle availability error:", error);
+      res.status(500).json({ message: "Failed to delete availability period" });
+    }
+  });
+
+  // Waiting Queue Routes
+  app.post("/api/vehicles/:vehicleId/waiting-queue", authenticateToken, async (req, res) => {
+    try {
+      const vehicleId = parseInt(req.params.vehicleId);
+      
+      const queueData = insertWaitingQueueSchema.parse({
+        ...req.body,
+        vehicleId,
+        userId: req.user!.id,
+      });
+
+      const queueEntry = await storage.addToWaitingQueue(queueData);
+      res.status(201).json(queueEntry);
+    } catch (error) {
+      console.error("Add to waiting queue error:", error);
+      res.status(400).json({ message: "Failed to join waiting queue" });
+    }
+  });
+
+  app.get("/api/users/:userId/waiting-queue", authenticateToken, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      // Users can only see their own queue or admin can see any
+      if (userId !== req.user!.id && req.user!.role !== 'admin') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const queue = await storage.getUserWaitingQueue(userId);
+      res.json(queue);
+    } catch (error) {
+      console.error("Get user waiting queue error:", error);
+      res.status(500).json({ message: "Failed to fetch user waiting queue" });
+    }
+  });
+
+  app.delete("/api/waiting-queue/:id", authenticateToken, async (req, res) => {
+    try {
+      const queueId = parseInt(req.params.id);
+      
+      // Get queue entry to verify ownership
+      const userQueue = await storage.getUserWaitingQueue(req.user!.id);
+      const queueEntry = userQueue.find(q => q.id === queueId);
+      
+      if (!queueEntry && req.user!.role !== 'admin') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const success = await storage.removeFromWaitingQueue(queueId);
+      if (!success) {
+        return res.status(404).json({ message: "Queue entry not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Remove from waiting queue error:", error);
+      res.status(500).json({ message: "Failed to remove from waiting queue" });
     }
   });
 

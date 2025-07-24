@@ -1,11 +1,12 @@
 import { 
-  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands,
+  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue,
   type User, type InsertUser, type Vehicle, type InsertVehicle, 
   type Booking, type InsertBooking, type Review, type InsertReview,
   type Message, type InsertMessage, type VehicleWithOwner, type BookingWithDetails,
   type Contract, type InsertContract, type ContractTemplate, type InsertContractTemplate,
   type ContractAuditLog, type InsertContractAuditLog, type ContractWithDetails,
-  type VehicleBrand, type InsertVehicleBrand
+  type VehicleBrand, type InsertVehicleBrand, type VehicleAvailability, type InsertVehicleAvailability,
+  type WaitingQueue, type InsertWaitingQueue
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, desc, asc, or, like, ilike, sql } from "drizzle-orm";
@@ -81,6 +82,20 @@ export interface IStorage {
   createVehicleBrand(brand: InsertVehicleBrand): Promise<VehicleBrand>;
   updateVehicleBrand(id: number, brand: Partial<InsertVehicleBrand>): Promise<VehicleBrand | undefined>;
   deleteVehicleBrand(id: number): Promise<boolean>;
+
+  // Vehicle availability management
+  getVehicleAvailability(vehicleId: number): Promise<VehicleAvailability[]>;
+  setVehicleAvailability(availability: InsertVehicleAvailability): Promise<VehicleAvailability>;
+  updateVehicleAvailability(id: number, availability: Partial<InsertVehicleAvailability>): Promise<VehicleAvailability | undefined>;
+  deleteVehicleAvailability(id: number): Promise<boolean>;
+  checkAvailabilityConflict(vehicleId: number, startDate: string, endDate: string, excludeId?: number): Promise<boolean>;
+
+  // Waiting queue management
+  getWaitingQueue(vehicleId: number): Promise<WaitingQueue[]>;
+  getUserWaitingQueue(userId: number): Promise<WaitingQueue[]>;
+  addToWaitingQueue(queueEntry: InsertWaitingQueue): Promise<WaitingQueue>;
+  removeFromWaitingQueue(id: number): Promise<boolean>;
+  updateWaitingQueueStatus(id: number, data: Partial<InsertWaitingQueue>): Promise<WaitingQueue | undefined>;
 
   // Extended methods
   getBookingWithDetails(id: number): Promise<BookingWithDetails | undefined>;
@@ -633,6 +648,134 @@ export class DatabaseStorage implements IStorage {
       .delete(vehicleBrands)
       .where(eq(vehicleBrands.id, id));
     return result.rowCount > 0;
+  }
+
+  // Vehicle Availability Management
+  async getVehicleAvailability(vehicleId: number): Promise<VehicleAvailability[]> {
+    return await db
+      .select()
+      .from(vehicleAvailability)
+      .where(eq(vehicleAvailability.vehicleId, vehicleId))
+      .orderBy(asc(vehicleAvailability.startDate));
+  }
+
+  async setVehicleAvailability(availability: InsertVehicleAvailability): Promise<VehicleAvailability> {
+    const [result] = await db
+      .insert(vehicleAvailability)
+      .values(availability)
+      .returning();
+    return result;
+  }
+
+  async updateVehicleAvailability(id: number, availability: Partial<InsertVehicleAvailability>): Promise<VehicleAvailability | undefined> {
+    const [result] = await db
+      .update(vehicleAvailability)
+      .set(availability)
+      .where(eq(vehicleAvailability.id, id))
+      .returning();
+    return result || undefined;
+  }
+
+  async deleteVehicleAvailability(id: number): Promise<boolean> {
+    const result = await db
+      .delete(vehicleAvailability)
+      .where(eq(vehicleAvailability.id, id));
+    return result.rowCount > 0;
+  }
+
+  async checkAvailabilityConflict(vehicleId: number, startDate: string, endDate: string, excludeId?: number): Promise<boolean> {
+    const conditions = [
+      eq(vehicleAvailability.vehicleId, vehicleId),
+      or(
+        and(
+          lte(vehicleAvailability.startDate, startDate),
+          gte(vehicleAvailability.endDate, startDate)
+        ),
+        and(
+          lte(vehicleAvailability.startDate, endDate),
+          gte(vehicleAvailability.endDate, endDate)
+        ),
+        and(
+          gte(vehicleAvailability.startDate, startDate),
+          lte(vehicleAvailability.endDate, endDate)
+        )
+      )
+    ];
+
+    if (excludeId) {
+      conditions.push(sql`${vehicleAvailability.id} != ${excludeId}`);
+    }
+
+    const conflicts = await db
+      .select()
+      .from(vehicleAvailability)
+      .where(and(...conditions));
+
+    return conflicts.length > 0;
+  }
+
+  // Waiting Queue Management
+  async getWaitingQueue(vehicleId: number): Promise<WaitingQueue[]> {
+    return await db
+      .select()
+      .from(waitingQueue)
+      .where(and(
+        eq(waitingQueue.vehicleId, vehicleId),
+        eq(waitingQueue.isActive, true)
+      ))
+      .orderBy(asc(waitingQueue.createdAt));
+  }
+
+  async getUserWaitingQueue(userId: number): Promise<WaitingQueue[]> {
+    return await db
+      .select()
+      .from(waitingQueue)
+      .where(and(
+        eq(waitingQueue.userId, userId),
+        eq(waitingQueue.isActive, true)
+      ))
+      .orderBy(desc(waitingQueue.createdAt));
+  }
+
+  async addToWaitingQueue(queueEntry: InsertWaitingQueue): Promise<WaitingQueue> {
+    // Check if user is already in queue for this vehicle and dates
+    const existingEntry = await db
+      .select()
+      .from(waitingQueue)
+      .where(and(
+        eq(waitingQueue.vehicleId, queueEntry.vehicleId),
+        eq(waitingQueue.userId, queueEntry.userId),
+        eq(waitingQueue.desiredStartDate, queueEntry.desiredStartDate),
+        eq(waitingQueue.desiredEndDate, queueEntry.desiredEndDate),
+        eq(waitingQueue.isActive, true)
+      ));
+
+    if (existingEntry.length > 0) {
+      return existingEntry[0];
+    }
+
+    const [result] = await db
+      .insert(waitingQueue)
+      .values(queueEntry)
+      .returning();
+    return result;
+  }
+
+  async removeFromWaitingQueue(id: number): Promise<boolean> {
+    const result = await db
+      .update(waitingQueue)
+      .set({ isActive: false })
+      .where(eq(waitingQueue.id, id));
+    return result.rowCount > 0;
+  }
+
+  async updateWaitingQueueStatus(id: number, data: Partial<InsertWaitingQueue>): Promise<WaitingQueue | undefined> {
+    const [result] = await db
+      .update(waitingQueue)
+      .set(data)
+      .where(eq(waitingQueue.id, id))
+      .returning();
+    return result || undefined;
   }
 }
 
