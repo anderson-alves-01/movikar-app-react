@@ -1,0 +1,93 @@
+A plataforma tem como objetivo conectar pessoas que desejam alugar um carro para uso pessoal ou como motoristas, com donos de veículos que queiram disponibilizá-los para locação. O sistema será composto por três grandes módulos: aplicativo mobile, back-end e painel administrativo.
+
+1. Cadastro e Autenticação
+Funcionalidades:
+Cadastro de usuários via e-mail, telefone ou redes sociais (Google, Apple, Facebook)
+Autenticação com JWT ou OAuth2
+Cada usuário pode acumular múltiplas funções (locador, dono de carro, motorista)
+Recuperação de senha e verificação de identidade (e-mail ou SMS)
+Tecnologias Sugeridas:
+Spring Security ou Firebase Auth
+Banco relacional com suporte a roles e permissões (PostgreSQL)
+
+2. Gerenciamento de Perfis
+Funcionalidades:
+Área de perfil do usuário unificada, com funções acumuláveis
+Upload de documentos:
+CNH, CRLV, comprovante de residência, foto do usuário
+Fotos e descrição do carro (caso atue como dono)
+Validação de documentos:
+Manual (admin)
+Automatizada (OCR, validação de CPF/CNPJ)
+Requisitos Técnicos:
+Armazenamento em nuvem (S3, Firebase Storage)
+Validação de formato de arquivos e tamanho
+
+3. Catálogo de Veículos
+Funcionalidades:
+Cadastro de veículos:
+Marca, modelo, ano, cor, tipo
+Preço por hora/dia/semana
+Fotos (galeria)
+Localização via mapa
+Filtros de busca:
+Região, data, tipo de veículo, preço, avaliação
+Requisitos Técnicos:
+Integração com API de geolocalização (Google Maps ou Mapbox)
+Banco relacional com índice geográfico (PostGIS opcional)
+
+4. Reserva e Pagamento
+Funcionalidades:
+Sistema de disponibilidade baseado em calendário
+Cálculo automático de valor total com taxas
+Processamento de pagamento:
+Cartão de crédito
+PIX (Brasil)
+Boleto bancário (opcional)
+Emissão de comprovante de pagamento
+Tecnologias Sugeridas:
+Integração com gateway (Mercado Pago, Pagar.me, Stripe)
+Módulo antifraude
+
+5. Contrato Eletrônico
+Funcionalidades:
+Geração automática de contrato com dados da reserva
+Visualização do contrato antes da assinatura
+Assinatura eletrônica pelas partes envolvidas (locador e dono)
+Registro de evidências (IP, data/hora, e-mail)
+Armazenamento em nuvem e download do contrato
+Painel administrativo para visualização e auditoria de contratos
+Tecnologias Sugeridas:
+Integração com Clicksign, D4Sign, DocuSign ou Autentique
+PDF Generator + Armazenamento em S3
+
+6. Chat ou Comunicação
+Funcionalidades:
+Mensageria entre locador e dono do carro
+Histórico de mensagens por aluguel
+Alternativa: redirecionamento para WhatsApp com link pré-formatado
+Requisitos Técnicos:
+WebSocket (chat embutido)
+Push notifications (Firebase Cloud Messaging)
+
+7. Avaliações
+Funcionalidades:
+Avaliação de usuários e donos ao fim da locação
+Sistema de estrelas (1 a 5)
+Comentários opcionais
+Exibição da reputação no perfil e anúncio
+Requisitos Técnicos:
+Banco relacional com relacionamento entre aluguéis e avaliações
+
+8. Painel Administrativo
+Funcionalidades:
+Visualização e moderação de:
+Cadastros
+Documentos
+Avaliações
+Anúncios
+Contratos
+Relatórios financeiros e estatísticas:
+Receita da plataforma
+Número de aluguéis
+Crescimento de usuários
