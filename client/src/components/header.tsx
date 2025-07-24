@@ -74,15 +74,16 @@ export default function Header() {
               {user ? (
                 <>
                   {/* Add Vehicle Button */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setLocation('/vehicles')}
-                    className="hidden sm:flex"
-                  >
-                    <Car className="h-4 w-4 mr-2" />
-                    Anunciar
-                  </Button>
+                  <Link href="/vehicles">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="hidden sm:flex"
+                    >
+                      <Car className="h-4 w-4 mr-2" />
+                      Anunciar
+                    </Button>
+                  </Link>
 
                   {/* User Menu */}
                   <DropdownMenu>
@@ -108,24 +109,32 @@ export default function Header() {
                           Meu Perfil
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setLocation('/reservations')}>
-                        <Car className="h-4 w-4 mr-2" />
-                        Minhas Reservas
+                      <DropdownMenuItem asChild>
+                        <Link href="/reservations" className="cursor-pointer">
+                          <Car className="h-4 w-4 mr-2" />
+                          Minhas Reservas
+                        </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setLocation('/vehicles')}>
-                        <Car className="h-4 w-4 mr-2" />
-                        Meus Veículos
+                      <DropdownMenuItem asChild>
+                        <Link href="/vehicles" className="cursor-pointer">
+                          <Car className="h-4 w-4 mr-2" />
+                          Meus Veículos
+                        </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setLocation('/messages')}>
-                        <MessageCircle className="h-4 w-4 mr-2" />
-                        Mensagens
+                      <DropdownMenuItem asChild>
+                        <Link href="/messages" className="cursor-pointer">
+                          <MessageCircle className="h-4 w-4 mr-2" />
+                          Mensagens
+                        </Link>
                       </DropdownMenuItem>
                       {user.role === 'admin' && (
                         <>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => setLocation('/admin')}>
-                            <Shield className="h-4 w-4 mr-2" />
-                            Painel Admin
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin" className="cursor-pointer">
+                              <Shield className="h-4 w-4 mr-2" />
+                              Painel Admin
+                            </Link>
                           </DropdownMenuItem>
                         </>
                       )}
