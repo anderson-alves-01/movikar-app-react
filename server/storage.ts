@@ -252,11 +252,11 @@ export class DatabaseStorage implements IStorage {
           v.price_per_day, v.price_per_week, v.price_per_month, v.description, 
           v.is_available, v.is_verified, v.rating, v.total_bookings, v.license_plate, 
           v.renavam, v.created_at, v.updated_at,
-          u.first_name as owner_first_name,
+          u.name as owner_name,
           u.email as owner_email,
           u.phone as owner_phone,
-          u.profile_image_url as owner_profile_image,
-          u.verification_status as owner_verification_status
+          u.avatar as owner_profile_image,
+          u.is_verified as owner_is_verified
         FROM vehicles v
         LEFT JOIN users u ON v.owner_id = u.id
         WHERE ${whereConditions.join(' AND ')}
@@ -296,11 +296,11 @@ export class DatabaseStorage implements IStorage {
         updatedAt: row.updated_at,
         owner: {
           id: row.owner_id,
-          name: row.owner_first_name || 'Proprietário',
+          name: row.owner_name || 'Proprietário',
           email: row.owner_email || '',
           phone: row.owner_phone || '',
           profileImage: row.owner_profile_image,
-          isVerified: row.owner_verification_status === 'verified'
+          isVerified: row.owner_is_verified || false
         }
       }));
     } catch (error) {
