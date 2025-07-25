@@ -55,6 +55,7 @@ function Router() {
       <Route path="/contract-preview/:bookingId" component={ContractPreview} />
       <Route path="/contract-signed-success" component={ContractSignedSuccess} />
       <Route path="/contract-signature-error" component={ContractSignatureError} />
+      <Route path="/contract-signature-callback" component={ContractSignedSuccess} />
       <Route component={NotFound} />
     </Switch>
   );

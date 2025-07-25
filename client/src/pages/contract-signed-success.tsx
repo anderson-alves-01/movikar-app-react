@@ -36,7 +36,7 @@ export default function ContractSignedSuccess() {
             </CardHeader>
             <CardContent className="space-y-4 text-center">
               <p className="text-green-700">
-                Seu contrato foi assinado digitalmente através da plataforma GOV.BR e possui validade jurídica completa.
+                Seu contrato foi assinado digitalmente através da plataforma DocuSign e possui validade jurídica internacional.
               </p>
               
               <div className="bg-white p-4 rounded-lg border border-green-200">
