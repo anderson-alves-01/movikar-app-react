@@ -45,7 +45,7 @@ export default function HeroSection({ onSearch }: HeroSectionProps) {
           </h1>
           <div className="bg-black bg-opacity-30 backdrop-blur-sm rounded-2xl p-6 mb-12 max-w-4xl mx-auto">
             <p className="text-xl md:text-2xl text-white font-semibold leading-relaxed">
-              <span className="text-green-400 font-bold">Conectamos pessoas que precisam de um carro</span> com <span className="text-green-400 font-bold">donos que querem compartilhar</span>. 
+              <span className="text-secondary font-bold">Conectamos pessoas que precisam de um carro</span> com <span className="text-secondary font-bold">donos que querem compartilhar</span>. 
               <br className="hidden md:block" />
               <span className="text-warning font-bold">Seguro, fácil e econômico.</span>
             </p>
