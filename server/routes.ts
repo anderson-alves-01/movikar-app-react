@@ -2040,6 +2040,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/simulate-govbr-signature", (req, res) => {
     const { documentId, returnUrl, cpf } = req.query;
     
+    // Log simulator access for debugging
+    console.log('🏛️ Simulador GOV.BR acessado:', {
+      documentId,
+      returnUrl,
+      cpf,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Set proper headers for better compatibility
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    
     res.send(`
       <!DOCTYPE html>
       <html lang="pt-BR">
@@ -2048,52 +2061,187 @@ export async function registerRoutes(app: Express): Promise<Server> {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Simulador GOV.BR - Assinatura Digital</title>
         <style>
-          body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; background: #f5f5f5; }
-          .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-          .header { text-align: center; margin-bottom: 30px; }
-          .logo { color: #1c4b82; font-size: 24px; font-weight: bold; }
-          .document { background: #f8f9fa; padding: 20px; border-radius: 4px; margin: 20px 0; }
-          .actions { text-align: center; margin-top: 30px; }
-          button { padding: 12px 24px; margin: 0 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
-          .btn-success { background: #28a745; color: white; }
-          .btn-danger { background: #dc3545; color: white; }
-          .btn-secondary { background: #6c757d; color: white; }
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+          }
+          .container { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 15px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1); 
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+          }
+          .header { margin-bottom: 30px; }
+          .logo { 
+            font-size: 3em; 
+            margin-bottom: 15px; 
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+          }
+          .header h1 { color: #1e40af; margin: 15px 0; font-size: 1.8em; }
+          .header p { color: #6b7280; font-size: 1.1em; }
+          .document { 
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); 
+            padding: 25px; 
+            border-radius: 10px; 
+            margin: 25px 0; 
+            border-left: 5px solid #1e40af;
+            text-align: left;
+          }
+          .document h3 { color: #1e40af; margin-bottom: 15px; text-align: center; }
+          .document p { margin: 10px 0; color: #374151; }
+          .actions { margin-top: 35px; }
+          button { 
+            padding: 15px 25px; 
+            margin: 10px 8px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            font-weight: 600;
+            transition: all 0.3s ease;
+            min-width: 160px;
+            font-family: inherit;
+          }
+          button:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2); 
+          }
+          button:active { transform: translateY(0); }
+          .btn-success { 
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%); 
+            color: white; 
+          }
+          .btn-danger { 
+            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%); 
+            color: white; 
+          }
+          .btn-secondary { 
+            background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%); 
+            color: white; 
+          }
+          .footer { 
+            margin-top: 30px; 
+            padding-top: 20px; 
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280; 
+            font-size: 0.9em; 
+          }
+          .processing {
+            display: none;
+            padding: 50px 20px;
+            text-align: center;
+          }
+          .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e5e7eb;
+            border-top: 4px solid #1e40af;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+          }
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+          @media (max-width: 600px) {
+            .container { padding: 25px; margin: 10px; }
+            button { width: 100%; margin: 8px 0; }
+            .logo { font-size: 2.5em; }
+            .header h1 { font-size: 1.5em; }
+          }
         </style>
       </head>
       <body>
         <div class="container">
-          <div class="header">
-            <div class="logo">🏛️ GOV.BR</div>
-            <h2>Assinatura Digital de Documento</h2>
-            <p>Simulador para Desenvolvimento</p>
+          <div id="main-content">
+            <div class="header">
+              <div class="logo">🇧🇷</div>
+              <h1>GOV.BR - Assinatura Digital</h1>
+              <p>Plataforma Oficial do Governo Federal</p>
+            </div>
+            
+            <div class="document">
+              <h3>📄 Contrato de Locação de Veículo</h3>
+              <p><strong>🆔 ID do Documento:</strong> ${documentId}</p>
+              <p><strong>👤 CPF/Email:</strong> ${cpf}</p>
+              <p><strong>📊 Status:</strong> Aguardando assinatura digital</p>
+              <p><strong>🕒 Válido até:</strong> ${new Date(Date.now() + 24*60*60*1000).toLocaleDateString('pt-BR')}</p>
+            </div>
+            
+            <div class="actions">
+              <button class="btn-success" onclick="signDocument('success')">
+                ✅ Assinar Documento
+              </button>
+              <button class="btn-danger" onclick="signDocument('user_cancelled')">
+                ❌ Recusar Assinatura
+              </button>
+              <button class="btn-secondary" onclick="signDocument('timeout')">
+                ⏰ Simular Timeout
+              </button>
+            </div>
+            
+            <div class="footer">
+              <p><strong>🔧 Simulador de Desenvolvimento</strong></p>
+              <p>Em produção, este seria o ambiente oficial GOV.BR</p>
+            </div>
           </div>
           
-          <div class="document">
-            <h3>📄 Contrato de Locação de Veículo</h3>
-            <p><strong>ID do Documento:</strong> ${documentId}</p>
-            <p><strong>CPF/Email:</strong> ${cpf}</p>
-            <p><strong>Status:</strong> Aguardando assinatura digital</p>
-          </div>
-          
-          <div class="actions">
-            <button class="btn-success" onclick="signDocument('success')">
-              ✅ Assinar Documento
-            </button>
-            <button class="btn-danger" onclick="signDocument('user_cancelled')">
-              ❌ Cancelar Assinatura
-            </button>
-            <button class="btn-secondary" onclick="signDocument('timeout')">
-              ⏰ Simular Timeout
-            </button>
+          <div id="processing" class="processing">
+            <div class="spinner"></div>
+            <h2 style="color: #1e40af; margin-bottom: 15px;">Processando assinatura...</h2>
+            <p style="color: #6b7280;">Aguarde, você será redirecionado automaticamente</p>
           </div>
         </div>
 
         <script>
+          console.log('🏛️ Simulador GOV.BR carregado');
+          console.log('📄 Documento:', '${documentId}');
+          console.log('🔗 Return URL:', '${returnUrl}');
+          
           function signDocument(status) {
+            console.log('🔄 Processando assinatura:', status);
+            
+            // Show processing state
+            document.getElementById('main-content').style.display = 'none';
+            document.getElementById('processing').style.display = 'block';
+            
             const returnUrl = "${returnUrl}";
             const finalUrl = returnUrl + "&status=" + status;
-            window.location.href = finalUrl;
+            
+            console.log('🔗 URL final:', finalUrl);
+            
+            // Redirect after delay
+            setTimeout(() => {
+              console.log('🚀 Redirecionando...');
+              window.location.href = finalUrl;
+            }, 2500);
           }
+          
+          // Log when page is ready
+          document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ Simulador pronto para uso');
+          });
+          
+          // Prevent accidental navigation
+          window.addEventListener('beforeunload', function(e) {
+            if (document.getElementById('processing').style.display === 'block') {
+              e.preventDefault();
+              e.returnValue = '';
+            }
+          });
         </script>
       </body>
       </html>
