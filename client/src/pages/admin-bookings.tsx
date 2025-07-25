@@ -43,8 +43,8 @@ interface Booking {
 
 export default function AdminBookingsPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [paymentStatusFilter, setPaymentStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState('all');
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -66,8 +66,8 @@ export default function AdminBookingsPage() {
         page: currentPage.toString(),
         limit: pageSize.toString(),
         search: searchTerm,
-        status: statusFilter,
-        paymentStatus: paymentStatusFilter,
+        status: statusFilter === 'all' ? '' : statusFilter,
+        paymentStatus: paymentStatusFilter === 'all' ? '' : paymentStatusFilter,
       });
       
       const response = await fetch(`/api/admin/bookings?${params}`, {
@@ -131,26 +131,8 @@ export default function AdminBookingsPage() {
     }
   };
 
-  const filteredBookings = (Array.isArray(bookings) ? bookings : []).filter((booking: Booking) => {
-    // Search filter
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      const matchesSearch = 
-        booking.id.toString().includes(searchLower) ||
-        booking.vehicle?.brand?.toLowerCase().includes(searchLower) ||
-        booking.vehicle?.model?.toLowerCase().includes(searchLower) ||
-        booking.vehicle?.owner?.name?.toLowerCase().includes(searchLower);
-
-      if (!matchesSearch) return false;
-    }
-
-    // Status filter
-    if (statusFilter && statusFilter !== 'all') {
-      if (booking.status !== statusFilter) return false;
-    }
-
-    return true;
-  });
+  // Filtering is now handled on the backend, no need for frontend filtering
+  const filteredBookings = bookings;
 
   // Update booking mutation
   const updateBookingMutation = useMutation({
@@ -244,7 +226,7 @@ export default function AdminBookingsPage() {
           <div className="flex items-center gap-2">
             <Calendar className="h-5 w-5 text-gray-400" />
             <span className="text-sm text-gray-600">
-              Total: {filteredBookings.length} reservas
+              Total: {total} reservas
             </span>
           </div>
         </div>
@@ -266,14 +248,20 @@ export default function AdminBookingsPage() {
                   <Input
                     placeholder="Buscar por ID, veículo, proprietário..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setCurrentPage(1); // Reset to first page when searching
+                    }}
                     className="pl-10"
                   />
                 </div>
               </div>
 
               {/* Status Filter */}
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select value={statusFilter} onValueChange={(value) => {
+                setStatusFilter(value);
+                setCurrentPage(1); // Reset to first page when filtering
+              }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Filtrar por status" />
                 </SelectTrigger>
@@ -293,7 +281,9 @@ export default function AdminBookingsPage() {
                 variant="outline"
                 onClick={() => {
                   setSearchTerm('');
-                  setStatusFilter('');
+                  setStatusFilter('all');
+                  setPaymentStatusFilter('all');
+                  setCurrentPage(1); // Reset to first page when clearing filters
                 }}
               >
                 Limpar Filtros
@@ -312,7 +302,7 @@ export default function AdminBookingsPage() {
               <div className="text-center py-8">
                 <p className="text-gray-600">Carregando reservas...</p>
               </div>
-            ) : filteredBookings.length === 0 ? (
+            ) : bookings.length === 0 ? (
               <div className="text-center py-8">
                 <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-400" />
                 <p className="text-gray-600">Nenhuma reserva encontrada</p>
@@ -333,7 +323,7 @@ export default function AdminBookingsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredBookings.map((booking: Booking) => (
+                    {bookings.map((booking: Booking) => (
                       <TableRow key={booking.id}>
                         <TableCell className="font-medium">
                           #{booking.id}
@@ -409,6 +399,73 @@ export default function AdminBookingsPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">
+                Mostrando {((currentPage - 1) * pageSize) + 1} - {Math.min(currentPage * pageSize, total)} de {total} reservas
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Select value={pageSize.toString()} onValueChange={(value) => {
+                setPageSize(parseInt(value));
+                setCurrentPage(1); // Reset to first page when changing page size
+              }}>
+                <SelectTrigger className="w-20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="25">25</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                </SelectContent>
+              </Select>
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (currentPage > 1) setCurrentPage(currentPage - 1);
+                      }}
+                      className={currentPage <= 1 ? 'pointer-events-none opacity-50' : ''}
+                    />
+                  </PaginationItem>
+                  
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setCurrentPage(page);
+                        }}
+                        isActive={currentPage === page}
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+                      }}
+                      className={currentPage >= totalPages ? 'pointer-events-none opacity-50' : ''}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          </div>
+        )}
 
         {/* Edit Booking Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

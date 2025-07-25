@@ -34,8 +34,8 @@ interface User {
 
 export default function AdminUsersPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('');
-  const [verificationFilter, setVerificationFilter] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [verificationFilter, setVerificationFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -68,8 +68,8 @@ export default function AdminUsersPage() {
         page: currentPage.toString(),
         limit: pageSize.toString(),
         search: searchTerm,
-        role: roleFilter,
-        verified: verificationFilter,
+        role: roleFilter === 'all' ? '' : roleFilter,
+        verified: verificationFilter === 'all' ? '' : verificationFilter,
       });
       
       const response = await fetch(`/api/admin/users?${params}`, {
@@ -315,7 +315,7 @@ export default function AdminUsersPage() {
                   <SelectValue placeholder="Filtrar por tipo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os tipos</SelectItem>
+                  <SelectItem value="all">Todos os tipos</SelectItem>
                   <SelectItem value="admin">Administradores</SelectItem>
                   <SelectItem value="user">Usuários</SelectItem>
                 </SelectContent>
@@ -330,7 +330,7 @@ export default function AdminUsersPage() {
                   <SelectValue placeholder="Filtrar por verificação" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="true">Verificados</SelectItem>
                   <SelectItem value="false">Não Verificados</SelectItem>
                 </SelectContent>
@@ -341,8 +341,8 @@ export default function AdminUsersPage() {
                 variant="outline"
                 onClick={() => {
                   setSearchTerm('');
-                  setRoleFilter('');
-                  setVerificationFilter('');
+                  setRoleFilter('all');
+                  setVerificationFilter('all');
                   setCurrentPage(1); // Reset to first page when clearing filters
                 }}
               >
