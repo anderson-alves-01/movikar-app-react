@@ -14,13 +14,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Search, Menu, User, MessageCircle, Car, LogOut, Shield, Bell, Gift, Sparkles, BarChart3 } from "lucide-react";
 import { useAuthStore } from "@/lib/auth";
+import { useSearch } from "@/contexts/SearchContext";
 // import AddVehicleModal from "./add-vehicle-modal";
 
 export default function Header() {
   const [, setLocation] = useLocation();
   const [showSearch, setShowSearch] = useState(false);
-  // const [showAddVehicle, setShowAddVehicle] = useState(false);
+  const [searchLocation, setSearchLocation] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const { user, token, clearAuth } = useAuthStore();
+  const { updateFilter } = useSearch();
 
   // Get unread message count
   const { data: unreadCount = 0 } = useQuery({
@@ -73,23 +77,38 @@ export default function Header() {
               <Input 
                 type="text" 
                 placeholder="Onde?" 
+                value={searchLocation}
                 className="border-none outline-none text-sm font-medium text-gray-800 bg-transparent w-32 focus-visible:ring-0" 
                 onChange={(e) => {
+                  setSearchLocation(e.target.value);
                   if (e.target.value.length > 2) {
-                    // Trigger search or filter logic here
-                    console.log('Searching for:', e.target.value);
+                    updateFilter('location', e.target.value);
+                  } else if (e.target.value.length === 0) {
+                    updateFilter('location', '');
                   }
                 }}
               />
               <div className="border-l border-gray-300 h-6 mx-4"></div>
               <Input 
                 type="date" 
+                value={startDate}
+                placeholder="Check-in"
                 className="border-none outline-none text-sm text-gray-600 bg-transparent focus-visible:ring-0" 
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  updateFilter('startDate', e.target.value);
+                }}
               />
               <div className="border-l border-gray-300 h-6 mx-4"></div>
               <Input 
                 type="date" 
+                value={endDate}
+                placeholder="Check-out"
                 className="border-none outline-none text-sm text-gray-600 bg-transparent focus-visible:ring-0" 
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  updateFilter('endDate', e.target.value);
+                }}
               />
               <Button size="sm" className="bg-primary text-white p-2 rounded-full ml-4 hover:bg-red-600 transition-colors">
                 <Search className="h-4 w-4" />

@@ -7,16 +7,21 @@ import { useQuery } from "@tanstack/react-query";
 import { SearchFilters } from "@/types";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSearch } from "@/contexts/SearchContext";
 
 export default function Home() {
-  const [filters, setFilters] = useState<SearchFilters>({});
+  const { filters } = useSearch();
+  const [localFilters, setLocalFilters] = useState<SearchFilters>({});
   const [showFilters, setShowFilters] = useState(false);
+  
+  // Combine global filters from header with local filters
+  const combinedFilters = { ...filters, ...localFilters };
 
   const { data: vehicles, isLoading, error } = useQuery({
-    queryKey: ['/api/vehicles', filters],
+    queryKey: ['/api/vehicles', combinedFilters],
     queryFn: async () => {
       const params = new URLSearchParams();
-      Object.entries(filters).forEach(([key, value]) => {
+      Object.entries(combinedFilters).forEach(([key, value]) => {
         if (value !== undefined && value !== '') {
           if (Array.isArray(value)) {
             params.append(key, value.join(','));
@@ -37,11 +42,11 @@ export default function Home() {
   });
 
   const handleSearch = (searchFilters: SearchFilters) => {
-    setFilters(searchFilters);
+    setLocalFilters(searchFilters);
   };
 
   const handleFilterChange = (newFilters: SearchFilters) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
+    setLocalFilters(prev => ({ ...prev, ...newFilters }));
   };
 
   return (
@@ -76,7 +81,7 @@ export default function Home() {
             
             {showFilters && (
               <VehicleFilters 
-                filters={filters} 
+                filters={combinedFilters} 
                 onFiltersChange={handleFilterChange} 
               />
             )}
@@ -118,7 +123,7 @@ export default function Home() {
               <Button 
                 variant="outline" 
                 className="mt-4"
-                onClick={() => setFilters({})}
+                onClick={() => setLocalFilters({})}
               >
                 Limpar filtros
               </Button>
