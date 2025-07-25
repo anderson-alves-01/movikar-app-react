@@ -38,6 +38,24 @@ export default function AdminDashboard() {
 
   const adminModules = [
     {
+      title: "Aprovar Veículos",
+      description: "Revisar e aprovar veículos cadastrados pelos usuários",
+      icon: Car,
+      href: "/admin/vehicle-approval",
+      color: "bg-red-500",
+      stats: "Aguardando aprovação",
+      priority: true
+    },
+    {
+      title: "Verificar Documentos",
+      description: "Analisar e validar documentos enviados pelos usuários",
+      icon: FileText,
+      href: "/admin/document-verification",
+      color: "bg-yellow-500",
+      stats: "Documentos pendentes",
+      priority: true
+    },
+    {
       title: "Gerenciar Contratos",
       description: "Visualizar e gerenciar todos os contratos da plataforma",
       icon: FileText,
@@ -48,7 +66,7 @@ export default function AdminDashboard() {
     {
       title: "Marcas de Veículos",
       description: "Administrar marcas e modelos de veículos aceitos",
-      icon: Car,
+      icon: Settings,
       href: "/admin/vehicle-brands",
       color: "bg-green-500",
       stats: "Marcas cadastradas"
