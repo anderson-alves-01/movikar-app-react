@@ -569,6 +569,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async checkVehicleAvailability(vehicleId: number, startDate: Date, endDate: Date): Promise<boolean> {
+    // Convert Date objects to ISO strings for database comparison
+    const startDateStr = startDate.toISOString();
+    const endDateStr = endDate.toISOString();
+    
     const conflictingBookings = await db
       .select()
       .from(bookings)
@@ -581,16 +585,16 @@ export class DatabaseStorage implements IStorage {
           ),
           or(
             and(
-              lte(bookings.startDate, startDate),
-              gte(bookings.endDate, startDate)
+              sql`${bookings.startDate} <= ${startDateStr}`,
+              sql`${bookings.endDate} >= ${startDateStr}`
             ),
             and(
-              lte(bookings.startDate, endDate),
-              gte(bookings.endDate, endDate)
+              sql`${bookings.startDate} <= ${endDateStr}`,
+              sql`${bookings.endDate} >= ${endDateStr}`
             ),
             and(
-              gte(bookings.startDate, startDate),
-              lte(bookings.endDate, endDate)
+              sql`${bookings.startDate} >= ${startDateStr}`,
+              sql`${bookings.endDate} <= ${endDateStr}`
             )
           )
         )

@@ -101,7 +101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check availability
-      const isAvailable = await storage.checkVehicleAvailability(vehicleId, startDate, endDate);
+      const isAvailable = await storage.checkVehicleAvailability(vehicleId, new Date(startDate), new Date(endDate));
       if (!isAvailable) {
         return res.status(400).json({ 
           message: "Veículo não disponível para as datas selecionadas" 
