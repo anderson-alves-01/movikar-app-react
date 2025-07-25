@@ -1981,8 +1981,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const signatureId = `GOVBR-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       const returnUrl = `${req.protocol}://${req.get('host')}/contract-signature-callback?bookingId=${bookingId}&signatureId=${signatureId}`;
       
-      // In a real implementation, you would integrate with GOV.BR API
-      const govbrUrl = `https://assinatura.iti.gov.br/mock-signature?` + 
+      // Development simulation of GOV.BR - replace with real API in production
+      const govbrUrl = `${req.protocol}://${req.get('host')}/simulate-govbr-signature?` + 
         `documentId=${signatureId}&` +
         `returnUrl=${encodeURIComponent(returnUrl)}&` +
         `cpf=${encodeURIComponent(booking.renter?.email || '')}`;
@@ -1999,7 +1999,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ 
         signatureUrl: govbrUrl,
         signatureId,
-        message: "Redirecionando para GOV.BR..."
+        message: "Modo desenvolvimento - simulando GOV.BR"
       });
     } catch (error) {
       console.error("GOV.BR signature error:", error);
@@ -2034,6 +2034,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Signature callback error:", error);
       res.redirect('/contract-signature-error?error=callback_failed');
     }
+  });
+
+  // GOV.BR signature simulator for development
+  app.get("/simulate-govbr-signature", (req, res) => {
+    const { documentId, returnUrl, cpf } = req.query;
+    
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Simulador GOV.BR - Assinatura Digital</title>
+        <style>
+          body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; background: #f5f5f5; }
+          .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+          .header { text-align: center; margin-bottom: 30px; }
+          .logo { color: #1c4b82; font-size: 24px; font-weight: bold; }
+          .document { background: #f8f9fa; padding: 20px; border-radius: 4px; margin: 20px 0; }
+          .actions { text-align: center; margin-top: 30px; }
+          button { padding: 12px 24px; margin: 0 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+          .btn-success { background: #28a745; color: white; }
+          .btn-danger { background: #dc3545; color: white; }
+          .btn-secondary { background: #6c757d; color: white; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="logo">🏛️ GOV.BR</div>
+            <h2>Assinatura Digital de Documento</h2>
+            <p>Simulador para Desenvolvimento</p>
+          </div>
+          
+          <div class="document">
+            <h3>📄 Contrato de Locação de Veículo</h3>
+            <p><strong>ID do Documento:</strong> ${documentId}</p>
+            <p><strong>CPF/Email:</strong> ${cpf}</p>
+            <p><strong>Status:</strong> Aguardando assinatura digital</p>
+          </div>
+          
+          <div class="actions">
+            <button class="btn-success" onclick="signDocument('success')">
+              ✅ Assinar Documento
+            </button>
+            <button class="btn-danger" onclick="signDocument('user_cancelled')">
+              ❌ Cancelar Assinatura
+            </button>
+            <button class="btn-secondary" onclick="signDocument('timeout')">
+              ⏰ Simular Timeout
+            </button>
+          </div>
+        </div>
+
+        <script>
+          function signDocument(status) {
+            const returnUrl = "${returnUrl}";
+            const finalUrl = returnUrl + "&status=" + status;
+            window.location.href = finalUrl;
+          }
+        </script>
+      </body>
+      </html>
+    `);
   });
 
   const httpServer = createServer(app);
