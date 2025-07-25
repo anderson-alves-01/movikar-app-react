@@ -1364,6 +1364,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get contracts for a specific booking
+  app.get("/api/bookings/:id/contracts", authenticateToken, async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      
+      // Verify user has access to this booking
+      const booking = await storage.getBooking(bookingId);
+      if (!booking) {
+        return res.status(404).json({ message: "Reserva não encontrada" });
+      }
+      
+      // Check if user is the renter, owner, or admin
+      if (booking.renterId !== req.user!.id && booking.ownerId !== req.user!.id && req.user!.role !== 'admin') {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+      
+      const contracts = await storage.getContractsByBookingId(bookingId);
+      res.json(contracts);
+    } catch (error) {
+      console.error("Get booking contracts error:", error);
+      res.status(500).json({ message: "Falha ao buscar contratos da reserva" });
+    }
+  });
+
   // Contract routes
   app.get("/api/contracts/:id", authenticateToken, async (req, res) => {
     try {

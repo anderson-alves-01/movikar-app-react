@@ -4,11 +4,13 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarDays, MapPin, Car, User, Clock, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { CalendarDays, MapPin, Car, User, Clock, X, FileText, Eye, PenTool } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency } from "@/lib/currency";
 import Header from "@/components/header";
+import { useState } from "react";
 
 interface Booking {
   id: number;
@@ -60,6 +62,8 @@ export default function Reservations() {
   const { user } = useAuthStore();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
 
   const { data: renterBookings, isLoading: loadingRenter } = useQuery<Booking[]>({
     queryKey: ["/api/bookings?type=renter"],
@@ -136,12 +140,53 @@ export default function Reservations() {
     updateBookingMutation.mutate({ bookingId, status });
   };
 
+  // Query para buscar contratos de uma reserva
+  const { data: bookingContracts, isLoading: contractsLoading } = useQuery({
+    queryKey: ['/api/bookings', selectedBooking?.id, 'contracts'],
+    queryFn: async () => {
+      if (!selectedBooking?.id) return [];
+      const response = await apiRequest('GET', `/api/bookings/${selectedBooking.id}/contracts`);
+      return response.json();
+    },
+    enabled: !!selectedBooking?.id,
+  });
+
   const handleViewDetails = (bookingId: number) => {
-    // Função para ver detalhes da reserva - pode ser implementada posteriormente
-    toast({
-      title: "Detalhes da Reserva",
-      description: `Visualizando detalhes da reserva ${bookingId}`,
-    });
+    const booking = [...(renterBookings || []), ...(ownerBookings || [])].find(b => b.id === bookingId);
+    if (booking) {
+      setSelectedBooking(booking);
+      setDetailsDialogOpen(true);
+    }
+  };
+
+  const handleSignContract = async (contractId: number) => {
+    try {
+      const response = await apiRequest('POST', `/api/contracts/${contractId}/sign-renter`);
+      const data = await response.json();
+      
+      if (data.signatureUrl) {
+        // Redirecionar para página de assinatura
+        window.location.href = data.signatureUrl;
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message || "Falha ao iniciar processo de assinatura",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleViewContract = async (contractId: number) => {
+    try {
+      window.open(`/contract-preview/${contractId}`, '_blank');
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: "Falha ao visualizar contrato",
+        variant: "destructive",
+      });
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -444,6 +489,142 @@ export default function Reservations() {
         </Tabs>
         </div>
       </div>
+
+      {/* Dialog para detalhes da reserva */}
+      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <FileText className="w-5 h-5 mr-2" />
+              Detalhes da Reserva #{selectedBooking?.id}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedBooking && (
+            <div className="space-y-6">
+              {/* Informações da Reserva */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Veículo</h3>
+                  <p className="text-gray-700">{selectedBooking.vehicle.brand} {selectedBooking.vehicle.model} ({selectedBooking.vehicle.year})</p>
+                  <p className="text-sm text-gray-600 flex items-center mt-1">
+                    <MapPin className="w-4 h-4 mr-1" />
+                    {selectedBooking.vehicle.location}
+                  </p>
+                </div>
+                
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Período</h3>
+                  <p className="text-gray-700 flex items-center">
+                    <CalendarDays className="w-4 h-4 mr-1" />
+                    {formatDate(selectedBooking.startDate)} - {formatDate(selectedBooking.endDate)}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Valor Total: {formatCurrency(selectedBooking.totalPrice)}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Status</h3>
+                <div className="flex items-center space-x-2">
+                  <Badge className={getStatusColor(selectedBooking.status)}>
+                    {selectedBooking.status === "pending" && "Pendente"}
+                    {selectedBooking.status === "approved" && "Aprovado"}
+                    {selectedBooking.status === "rejected" && "Rejeitado"}
+                    {selectedBooking.status === "completed" && "Concluído"}
+                  </Badge>
+                  <Badge variant="outline">
+                    Pagamento: {selectedBooking.paymentStatus === 'completed' ? 'Pago' : 'Pendente'}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Contratos */}
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
+                  <FileText className="w-4 h-4 mr-2" />
+                  Contratos
+                </h3>
+                
+                {contractsLoading ? (
+                  <div className="text-center py-4">
+                    <div className="text-sm text-gray-600">Carregando contratos...</div>
+                  </div>
+                ) : bookingContracts && bookingContracts.length > 0 ? (
+                  <div className="space-y-3">
+                    {bookingContracts.map((contract: any) => (
+                      <Card key={contract.id} className="border">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium">Contrato #{contract.contractNumber}</p>
+                              <p className="text-sm text-gray-600">
+                                Status: <span className="capitalize">{contract.status === 'draft' ? 'Rascunho' : 
+                                                                    contract.status === 'sent' ? 'Enviado' :
+                                                                    contract.status === 'signed' ? 'Assinado' : contract.status}</span>
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Criado em {new Date(contract.createdAt).toLocaleDateString('pt-BR')}
+                              </p>
+                            </div>
+                            
+                            <div className="flex space-x-2">
+                              {/* Botões específicos por tipo de usuário */}
+                              {user?.id === selectedBooking.renter?.id ? (
+                                // Locatário - pode assinar contratos pendentes
+                                contract.status === 'sent' && !contract.renterSigned ? (
+                                  <Button 
+                                    size="sm" 
+                                    onClick={() => handleSignContract(contract.id)}
+                                    className="bg-blue-600 hover:bg-blue-700"
+                                  >
+                                    <PenTool className="w-4 h-4 mr-1" />
+                                    Assinar
+                                  </Button>
+                                ) : (
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => handleViewContract(contract.id)}
+                                  >
+                                    <Eye className="w-4 h-4 mr-1" />
+                                    Visualizar
+                                  </Button>
+                                )
+                              ) : (
+                                // Proprietário - pode visualizar contratos
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => handleViewContract(contract.id)}
+                                >
+                                  <Eye className="w-4 h-4 mr-1" />
+                                  Visualizar
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-gray-600">
+                    <FileText className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+                    <p>Nenhum contrato encontrado para esta reserva</p>
+                    {selectedBooking.status === 'approved' && (
+                      <p className="text-sm text-gray-500 mt-1">
+                        Contratos são gerados automaticamente quando a reserva é aprovada
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
