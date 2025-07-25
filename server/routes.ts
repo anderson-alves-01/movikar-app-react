@@ -739,13 +739,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Content and receiverId are required" });
       }
 
+      const receiverIdNumber = parseInt(receiverId);
+      
+      // Prevent users from sending messages to themselves
+      if (req.user!.id === receiverIdNumber) {
+        return res.status(400).json({ message: "Você não pode enviar mensagens para si mesmo" });
+      }
+
       // Create message data without bookingId to avoid foreign key constraint
       const messageData = {
         content: content.trim(),
         senderId: req.user!.id,
-        receiverId: parseInt(receiverId),
+        receiverId: receiverIdNumber,
         // Only include bookingId if it's explicitly provided and we want to use it
-        // For now, we'll omit it to avoid foreign key issues
+        // For now, we'll omit it to avoid foreign key constraint issues
       };
 
       const message = await storage.createMessage(messageData);
@@ -758,10 +765,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/messages/read", authenticateToken, async (req, res) => {
     try {
-      // Mock implementation for now
-      res.status(204).send();
+      const { senderId } = req.body;
+      
+      if (!senderId) {
+        return res.status(400).json({ message: "senderId is required" });
+      }
+      
+      await storage.markMessagesAsRead(req.user!.id, parseInt(senderId));
+      res.json({ success: true });
     } catch (error) {
+      console.error("Mark messages as read error:", error);
       res.status(500).json({ message: "Failed to mark messages as read" });
+    }
+  });
+
+  // Get unread message count
+  app.get("/api/messages/unread-count", authenticateToken, async (req, res) => {
+    try {
+      const count = await storage.getUnreadMessageCount(req.user!.id);
+      res.json({ count });
+    } catch (error) {
+      console.error("Get unread message count error:", error);
+      res.status(500).json({ message: "Failed to fetch unread message count" });
     }
   });
 

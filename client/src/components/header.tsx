@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -10,7 +12,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Search, Menu, User, MessageCircle, Car, LogOut, Shield } from "lucide-react";
+import { Search, Menu, User, MessageCircle, Car, LogOut, Shield, Bell } from "lucide-react";
 import { useAuthStore } from "@/lib/auth";
 // import AddVehicleModal from "./add-vehicle-modal";
 
@@ -18,7 +20,31 @@ export default function Header() {
   const [, setLocation] = useLocation();
   const [showSearch, setShowSearch] = useState(false);
   // const [showAddVehicle, setShowAddVehicle] = useState(false);
-  const { user, clearAuth } = useAuthStore();
+  const { user, token, clearAuth } = useAuthStore();
+
+  // Get unread message count
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ['/api/messages/unread-count'],
+    queryFn: async () => {
+      if (!token) return 0;
+      
+      const response = await fetch('/api/messages/unread-count', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch unread count');
+      }
+      
+      const data = await response.json();
+      return data.count || 0;
+    },
+    enabled: !!user && !!token,
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
 
   const handleLogout = () => {
     clearAuth();
@@ -82,6 +108,21 @@ export default function Header() {
                     >
                       <Car className="h-4 w-4 mr-2" />
                       Anunciar
+                    </Button>
+                  </Link>
+
+                  {/* Message Notification Bell */}
+                  <Link href="/messages">
+                    <Button variant="ghost" size="sm" className="relative">
+                      <Bell className="h-5 w-5 text-gray-600" />
+                      {unreadCount > 0 && (
+                        <Badge 
+                          variant="destructive" 
+                          className="absolute -top-2 -right-2 px-1.5 py-0.5 text-xs min-w-[1.25rem] h-5 flex items-center justify-center rounded-full"
+                        >
+                          {unreadCount > 99 ? '99+' : unreadCount}
+                        </Badge>
+                      )}
                     </Button>
                   </Link>
 

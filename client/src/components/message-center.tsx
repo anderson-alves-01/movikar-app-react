@@ -104,6 +104,16 @@ export default function MessageCenter({
     
     if (!newMessage.trim()) return;
     
+    // Check if user is trying to send message to themselves
+    if (user && user.id === otherUserId) {
+      toast({
+        title: "Erro",
+        description: "Você não pode enviar mensagens para si mesmo",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     sendMessageMutation.mutate(newMessage.trim());
   };
 

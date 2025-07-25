@@ -55,6 +55,7 @@ export interface IStorage {
   getMessagesBetweenUsers(userId1: number, userId2: number, bookingId?: number): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
   markMessagesAsRead(receiverId: number, senderId: number): Promise<void>;
+  getUnreadMessageCount(userId: number): Promise<number>;
 
   // Contracts
   getContract(id: number): Promise<Contract | undefined>;
@@ -590,6 +591,20 @@ export class DatabaseStorage implements IStorage {
           eq(messages.senderId, senderId)
         )
       );
+  }
+
+  async getUnreadMessageCount(userId: number): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(messages)
+      .where(
+        and(
+          eq(messages.receiverId, userId),
+          eq(messages.isRead, false)
+        )
+      );
+    
+    return result[0]?.count || 0;
   }
 
   // Contracts
