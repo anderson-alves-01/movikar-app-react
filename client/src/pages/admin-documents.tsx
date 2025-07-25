@@ -280,7 +280,7 @@ export default function AdminDocuments() {
                         onClick={() => setSelectedDocument(document)}
                       >
                         <Eye className="h-4 w-4 mr-1" />
-                        Analisar
+                        Visualizar
                       </Button>
                       
                       {document.status === 'pending' && (
@@ -319,7 +319,7 @@ export default function AdminDocuments() {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <CardHeader>
-                <CardTitle>Análise de Documento</CardTitle>
+                <CardTitle>Visualização e Análise de Documento</CardTitle>
                 <CardDescription>
                   {getDocumentTypeName(selectedDocument.documentType)} - {selectedDocument.userName}
                 </CardDescription>
@@ -352,14 +352,39 @@ export default function AdminDocuments() {
                 <div className="border rounded-lg p-4 bg-gray-50">
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-medium">Documento</span>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        const link = document.createElement('a');
+                        link.href = selectedDocument.documentUrl;
+                        link.download = `${selectedDocument.documentType}_${selectedDocument.userName}.${selectedDocument.documentUrl.includes('pdf') ? 'pdf' : 'jpg'}`;
+                        link.click();
+                      }}
+                    >
                       <Download className="h-4 w-4 mr-1" />
                       Download
                     </Button>
                   </div>
-                  <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                    <p className="text-gray-500">Preview do documento não disponível</p>
-                    <p className="text-sm text-gray-400 mt-1">Clique em Download para visualizar o arquivo</p>
+                  <div className="bg-white border rounded-lg overflow-hidden max-h-96">
+                    {selectedDocument.documentUrl.includes('data:application/pdf') ? (
+                      <iframe
+                        src={selectedDocument.documentUrl}
+                        className="w-full h-96"
+                        title="Visualização do Documento PDF"
+                      />
+                    ) : selectedDocument.documentUrl.includes('data:image') ? (
+                      <img
+                        src={selectedDocument.documentUrl}
+                        alt="Visualização do Documento"
+                        className="w-full h-auto max-h-96 object-contain"
+                      />
+                    ) : (
+                      <div className="p-8 text-center">
+                        <p className="text-gray-500">Preview não disponível para este tipo de arquivo</p>
+                        <p className="text-sm text-gray-400 mt-1">Use o botão Download para visualizar</p>
+                      </div>
+                    )}
                   </div>
                 </div>
 

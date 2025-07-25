@@ -401,8 +401,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Arquivo é obrigatório" });
       }
       
-      // Simular upload de arquivo - em produção seria integrado com serviço de storage
-      const mockDocumentUrl = `https://storage.example.com/documents/${userId}/${documentType}/${Date.now()}.pdf`;
+      // Salvar arquivo em base64 para visualização no admin
+      const fileBase64 = req.file.buffer.toString('base64');
+      const mockDocumentUrl = `data:${req.file.mimetype};base64,${fileBase64}`;
       
       const result = await pool.query(`
         INSERT INTO user_documents (user_id, document_type, document_url, document_number, status)
