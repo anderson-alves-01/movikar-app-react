@@ -246,14 +246,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const booking = await storage.createBooking(bookingData);
       
-      // Create contract automatically
+      // Create and auto-sign contract
       try {
-        await storage.createContract({
+        const contract = await storage.createContract({
           bookingId: booking.id,
-          status: 'pending_signature',
+          status: 'signed',
           createdBy: parseInt(userId),
           templateId: "1",
+          renterSignedAt: new Date(),
+          ownerSignedAt: new Date(),
+          contractData: {
+            vehicle: { id: booking.vehicleId },
+            renter: { id: booking.renterId },
+            owner: { id: booking.ownerId },
+            booking: { id: booking.id },
+            terms: {
+              autoSigned: true,
+              signedAt: new Date().toISOString()
+            }
+          }
         });
+        console.log(`Contract auto-signed: ${contract.contractNumber}`);
       } catch (contractError) {
         console.error("Contract creation failed:", contractError);
       }

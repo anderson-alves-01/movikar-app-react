@@ -1630,9 +1630,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createContract(contractData: InsertContract): Promise<Contract> {
+    // Generate unique contract number
+    const contractNumber = `CNT-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+    
+    // Create basic contract data
+    const defaultContractData = {
+      vehicle: {},
+      renter: {},
+      owner: {},
+      booking: {},
+      terms: {
+        autoSigned: true,
+        signedAt: new Date().toISOString()
+      }
+    };
+    
     const [contract] = await db
       .insert(contracts)
-      .values(contractData)
+      .values({
+        ...contractData,
+        contractNumber,
+        contractData: contractData.contractData || defaultContractData,
+        renterSigned: contractData.renterSignedAt ? true : false,
+        ownerSigned: contractData.ownerSignedAt ? true : false,
+      })
       .returning();
     return contract;
   }

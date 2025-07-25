@@ -54,6 +54,17 @@ export default function PaymentSuccess() {
     }
   }, [paymentIntentId]);
 
+  // Auto-redirect to reservations after 3 seconds if successful
+  useEffect(() => {
+    if (confirmRentalMutation.isSuccess) {
+      const timer = setTimeout(() => {
+        setLocation('/reservations');
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [confirmRentalMutation.isSuccess, setLocation]);
+
   if (!paymentIntentId) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -108,9 +119,14 @@ export default function PaymentSuccess() {
                   <p className="text-gray-600">
                     Seu pagamento foi processado com sucesso e o aluguel foi confirmado!
                   </p>
-                  <p className="text-sm text-gray-500">
-                    O contrato foi gerado automaticamente. Agora você precisa assiná-lo para finalizar o processo.
-                  </p>
+                  <div className="bg-green-50 p-3 rounded-lg">
+                    <p className="text-sm text-green-700 font-medium">
+                      ✅ Contrato assinado automaticamente
+                    </p>
+                    <p className="text-xs text-green-600 mt-1">
+                      Redirecionando para suas reservas em 3 segundos...
+                    </p>
+                  </div>
                 </div>
               )}
               
@@ -126,19 +142,9 @@ export default function PaymentSuccess() {
               )}
               
               <div className="pt-4 space-y-2">
-                {confirmRentalMutation.isSuccess && confirmRentalMutation.data?.booking && (
-                  <Button
-                    onClick={() => setLocation(`/contracts/${confirmRentalMutation.data.booking.id}`)}
-                    className="w-full bg-green-600 hover:bg-green-700"
-                    disabled={confirmRentalMutation.isPending}
-                  >
-                    Assinar Contrato Agora
-                  </Button>
-                )}
-                
                 <Button
-                  onClick={() => setLocation('/profile?tab=bookings')}
-                  className="w-full"
+                  onClick={() => setLocation('/reservations')}
+                  className="w-full bg-green-600 hover:bg-green-700"
                   disabled={confirmRentalMutation.isPending}
                 >
                   Ver Minhas Reservas
