@@ -33,7 +33,7 @@ export default function AdminVehicleBrands() {
 
   const createMutation = useMutation({
     mutationFn: (data: { name: string; logoUrl?: string }) =>
-      apiRequest("/api/vehicle-brands", "POST", data),
+      apiRequest("POST", "/api/vehicle-brands", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/vehicle-brands"] });
       setIsAdding(false);
@@ -55,7 +55,7 @@ export default function AdminVehicleBrands() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: { name: string; logoUrl?: string } }) =>
-      apiRequest(`/api/vehicle-brands/${id}`, "PUT", data),
+      apiRequest("PUT", `/api/vehicle-brands/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/vehicle-brands"] });
       setEditingId(null);
@@ -75,7 +75,7 @@ export default function AdminVehicleBrands() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) =>
-      apiRequest(`/api/vehicle-brands/${id}`, "DELETE"),
+      apiRequest("DELETE", `/api/vehicle-brands/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/vehicle-brands"] });
       toast({
