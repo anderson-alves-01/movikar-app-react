@@ -9,6 +9,12 @@ export interface SearchFilters {
   transmission?: string;
   fuel?: string;
   rating?: number;
+  yearMin?: number;
+  yearMax?: number;
+  engineMin?: number;
+  engineMax?: number;
+  seatsMin?: number;
+  seatsMax?: number;
 }
 
 export interface AuthUser {

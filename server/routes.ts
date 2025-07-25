@@ -159,6 +159,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
         endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined,
         features: req.query.features ? (req.query.features as string).split(',') : undefined,
+        transmission: req.query.transmission as string,
+        fuel: req.query.fuel as string,
+        rating: req.query.rating ? parseFloat(req.query.rating as string) : undefined,
+        yearMin: req.query.yearMin ? parseInt(req.query.yearMin as string) : undefined,
+        yearMax: req.query.yearMax ? parseInt(req.query.yearMax as string) : undefined,
+        seatsMin: req.query.seatsMin ? parseInt(req.query.seatsMin as string) : undefined,
+        seatsMax: req.query.seatsMax ? parseInt(req.query.seatsMax as string) : undefined,
       };
 
       const vehicles = await storage.searchVehicles(filters);
