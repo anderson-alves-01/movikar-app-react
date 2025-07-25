@@ -97,8 +97,40 @@ export default function Reservations() {
     },
   });
 
+  const updateBookingMutation = useMutation({
+    mutationFn: ({ bookingId, status }: { bookingId: number; status: string }) =>
+      apiRequest(`/api/bookings/${bookingId}`, "PATCH", { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bookings?type=owner"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bookings?type=renter"] });
+      toast({
+        title: "Sucesso",
+        description: "Status da reserva atualizado",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Erro",
+        description: "Falha ao atualizar status da reserva",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleRemoveFromQueue = (queueId: number) => {
     removeFromQueueMutation.mutate(queueId);
+  };
+
+  const handleBookingAction = (bookingId: number, status: string) => {
+    updateBookingMutation.mutate({ bookingId, status });
+  };
+
+  const handleViewDetails = (bookingId: number) => {
+    // Função para ver detalhes da reserva - pode ser implementada posteriormente
+    toast({
+      title: "Detalhes da Reserva",
+      description: `Visualizando detalhes da reserva ${bookingId}`,
+    });
   };
 
   const getStatusColor = (status: string) => {
@@ -200,7 +232,11 @@ export default function Reservations() {
                         <span className="text-lg font-semibold text-green-600">
                           {formatCurrency(booking.totalPrice)}
                         </span>
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleViewDetails(booking.id)}
+                        >
                           Ver Detalhes
                         </Button>
                       </div>
@@ -274,15 +310,31 @@ export default function Reservations() {
                         <div className="flex gap-2">
                           {booking.status === "pending" && (
                             <>
-                              <Button size="sm" variant="outline" className="text-green-600 border-green-600">
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="text-green-600 border-green-600 hover:bg-green-50"
+                                onClick={() => handleBookingAction(booking.id, "approved")}
+                                disabled={updateBookingMutation.isPending}
+                              >
                                 Aprovar
                               </Button>
-                              <Button size="sm" variant="outline" className="text-red-600 border-red-600">
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="text-red-600 border-red-600 hover:bg-red-50"
+                                onClick={() => handleBookingAction(booking.id, "rejected")}
+                                disabled={updateBookingMutation.isPending}
+                              >
                                 Rejeitar
                               </Button>
                             </>
                           )}
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleViewDetails(booking.id)}
+                          >
                             Ver Detalhes
                           </Button>
                         </div>

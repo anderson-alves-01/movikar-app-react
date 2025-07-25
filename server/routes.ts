@@ -384,6 +384,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/bookings/:id", authenticateToken, async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      const booking = await storage.getBooking(bookingId);
+      
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+
+      // Only owner can approve/reject bookings they own
+      if (booking.ownerId !== req.user!.id) {
+        return res.status(403).json({ message: "Only the vehicle owner can approve/reject bookings" });
+      }
+
+      // Only allow status updates for pending bookings
+      if (booking.status !== "pending") {
+        return res.status(400).json({ message: "Can only update status of pending bookings" });
+      }
+
+      // Validate status change
+      const allowedStatuses = ["approved", "rejected"];
+      if (!allowedStatuses.includes(req.body.status)) {
+        return res.status(400).json({ message: "Invalid status. Allowed: approved, rejected" });
+      }
+
+      const updatedBooking = await storage.updateBooking(bookingId, { status: req.body.status });
+      if (!updatedBooking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+
+      res.json(updatedBooking);
+    } catch (error) {
+      console.error("Update booking status error:", error);
+      res.status(400).json({ message: "Failed to update booking status" });
+    }
+  });
+
   // Review routes
   app.get("/api/vehicles/:id/reviews", async (req, res) => {
     try {
