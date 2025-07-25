@@ -204,12 +204,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/vehicles/:id", async (req, res) => {
     try {
-      const vehicle = await storage.getVehicle(parseInt(req.params.id));
-      if (!vehicle) {
+      const vehicleId = parseInt(req.params.id);
+      
+      const result = await pool.query(`
+        SELECT 
+          id, owner_id, brand, model, year, color, transmission, fuel, seats, 
+          category, features, images, location, latitude, longitude, 
+          price_per_day, price_per_week, price_per_month, description, 
+          is_available, is_verified, rating, total_bookings, created_at, updated_at
+        FROM vehicles 
+        WHERE id = $1
+      `, [vehicleId]);
+      
+      if (result.rows.length === 0) {
         return res.status(404).json({ message: "Veículo não encontrado" });
       }
+      
+      const row = result.rows[0];
+      const vehicle = {
+        id: row.id,
+        ownerId: row.owner_id,
+        brand: row.brand,
+        model: row.model,
+        year: row.year,
+        color: row.color,
+        transmission: row.transmission,
+        fuel: row.fuel,
+        seats: row.seats,
+        category: row.category,
+        features: row.features,
+        images: row.images,
+        location: row.location,
+        latitude: row.latitude,
+        longitude: row.longitude,
+        pricePerDay: row.price_per_day,
+        pricePerWeek: row.price_per_week,
+        pricePerMonth: row.price_per_month,
+        description: row.description,
+        isAvailable: row.is_available,
+        isVerified: row.is_verified,
+        rating: row.rating,
+        totalBookings: row.total_bookings,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        owner: {
+          id: row.owner_id,
+          name: 'Proprietário',
+          email: '',
+          phone: '',
+          profileImage: null,
+          isVerified: false,
+        }
+      };
+      
       res.json(vehicle);
     } catch (error) {
+      console.error("Get vehicle error:", error);
       res.status(500).json({ message: "Falha ao buscar dados do veículo" });
     }
   });
