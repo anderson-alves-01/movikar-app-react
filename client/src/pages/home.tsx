@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useSearch } from "@/contexts/SearchContext";
 
 export default function Home() {
-  const { filters } = useSearch();
+  const { filters, clearFilters } = useSearch();
   const [localFilters, setLocalFilters] = useState<SearchFilters>({});
   const [showFilters, setShowFilters] = useState(false);
   
@@ -47,6 +47,11 @@ export default function Home() {
 
   const handleFilterChange = (newFilters: SearchFilters) => {
     setLocalFilters(prev => ({ ...prev, ...newFilters }));
+  };
+
+  const handleClearAllFilters = () => {
+    setLocalFilters({});
+    clearFilters();
   };
 
   return (
@@ -123,7 +128,7 @@ export default function Home() {
               <Button 
                 variant="outline" 
                 className="mt-4"
-                onClick={() => setLocalFilters({})}
+                onClick={handleClearAllFilters}
               >
                 Limpar filtros
               </Button>

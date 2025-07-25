@@ -24,7 +24,7 @@ export default function Header() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const { user, token, clearAuth } = useAuthStore();
-  const { updateFilter } = useSearch();
+  const { updateFilter, clearFilters } = useSearch();
 
   // Get unread message count
   const { data: unreadCount = 0 } = useQuery({
@@ -58,6 +58,13 @@ export default function Header() {
   const handleLogout = () => {
     clearAuth();
     setLocation('/');
+  };
+
+  const handleClearSearch = () => {
+    setSearchLocation("");
+    setStartDate("");
+    setEndDate("");
+    clearFilters();
   };
 
   return (
@@ -110,7 +117,12 @@ export default function Header() {
                   updateFilter('endDate', e.target.value);
                 }}
               />
-              <Button size="sm" className="bg-primary text-white p-2 rounded-full ml-4 hover:bg-red-600 transition-colors">
+              <Button 
+                size="sm" 
+                className="bg-primary text-white p-2 rounded-full ml-4 hover:bg-red-600 transition-colors"
+                onClick={handleClearSearch}
+                title="Limpar busca"
+              >
                 <Search className="h-4 w-4" />
               </Button>
             </div>
