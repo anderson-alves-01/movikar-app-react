@@ -10,6 +10,19 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### July 25, 2025 - Customizable Vehicle Search Filters with Visual Sliders
+✓ Implemented comprehensive visual filter system with interactive sliders
+✓ Added price range slider for precise budget control (R$50-500)
+✓ Created vehicle year range slider (2010-2024) for age preferences
+✓ Implemented rating slider for minimum review score filtering
+✓ Added seat count range slider (2-7 seats) for passenger capacity
+✓ Created expandable filter sections for better organization
+✓ Added detailed feature checkboxes (10 common vehicle features)
+✓ Implemented active filter badges with individual remove functionality
+✓ Enhanced backend search to support all new filter parameters
+✓ Fixed Select component empty value errors for better user experience
+✓ Created responsive design that works on mobile and desktop
+
 ### July 25, 2025 - Portuguese Error Messages & User Experience
 ✓ Translated all critical error messages from English to Portuguese
 ✓ Improved error message clarity for better user understanding

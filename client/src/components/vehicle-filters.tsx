@@ -115,12 +115,12 @@ export default function VehicleFilters({ filters, onFiltersChange }: VehicleFilt
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <Label className="text-sm font-medium text-gray-700 mb-2 block">Categoria</Label>
-            <Select value={filters.category || ''} onValueChange={(value) => handleFilterChange('category', value)}>
+            <Select value={filters.category || 'all'} onValueChange={(value) => handleFilterChange('category', value === 'all' ? undefined : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="hatch">Hatch</SelectItem>
                 <SelectItem value="sedan">Sedan</SelectItem>
                 <SelectItem value="suv">SUV</SelectItem>
@@ -131,12 +131,12 @@ export default function VehicleFilters({ filters, onFiltersChange }: VehicleFilt
 
           <div>
             <Label className="text-sm font-medium text-gray-700 mb-2 block">Combustível</Label>
-            <Select value={filters.fuel || ''} onValueChange={(value) => handleFilterChange('fuel', value)}>
+            <Select value={filters.fuel || 'all'} onValueChange={(value) => handleFilterChange('fuel', value === 'all' ? undefined : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Qualquer" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Qualquer</SelectItem>
+                <SelectItem value="all">Qualquer</SelectItem>
                 <SelectItem value="gasoline">Gasolina</SelectItem>
                 <SelectItem value="ethanol">Etanol</SelectItem>
                 <SelectItem value="flex">Flex</SelectItem>
@@ -148,12 +148,12 @@ export default function VehicleFilters({ filters, onFiltersChange }: VehicleFilt
 
           <div>
             <Label className="text-sm font-medium text-gray-700 mb-2 block">Transmissão</Label>
-            <Select value={filters.transmission || ''} onValueChange={(value) => handleFilterChange('transmission', value)}>
+            <Select value={filters.transmission || 'all'} onValueChange={(value) => handleFilterChange('transmission', value === 'all' ? undefined : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Qualquer" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Qualquer</SelectItem>
+                <SelectItem value="all">Qualquer</SelectItem>
                 <SelectItem value="manual">Manual</SelectItem>
                 <SelectItem value="automatic">Automático</SelectItem>
                 <SelectItem value="cvt">CVT</SelectItem>
