@@ -70,6 +70,16 @@ Preferred communication style: Simple, everyday language.
 ✓ Criadas colunas no banco de dados com constraints de unicidade
 ✓ Veículos existentes atualizados com placas e RENAVAMs temporários para testes
 
+### July 25, 2025 - Template de Contrato Atualizado com Modelo Brasileiro Profissional
+✓ Criado novo template "Contrato de Locação de Automóvel por Prazo Determinado"
+✓ Modelo baseado em padrões brasileiros de contratos de locação veicular
+✓ Incluídas seções: Partes Contratantes, Objeto do Contrato, Período e Valor
+✓ Adicionadas obrigações detalhadas do locatário e locador
+✓ Incluídos campos de placa e RENAVAM no contrato
+✓ Layout profissional com formatação adequada para impressão
+✓ Disposições gerais conforme legislação brasileira
+✓ Templates antigos removidos para usar o novo modelo automaticamente
+
 ### July 25, 2025 - Base de Dados Preparada para Testes
 ✓ Removidos todos os dados de teste do banco de dados
 ✓ Mantido apenas o usuário admin@carshare.com (ID: 4)

@@ -833,63 +833,117 @@ export class DatabaseStorage implements IStorage {
     // If no template exists, create a default one
     if (!template) {
       const defaultTemplate: InsertContractTemplate = {
-        name: "Contrato de Locação Padrão",
+        name: "Contrato de Locação de Automóvel por Prazo Determinado",
         category: "standard",
         htmlTemplate: `
-          <div style="font-family: Arial, sans-serif; padding: 20px;">
-            <h1 style="text-align: center;">CONTRATO DE LOCAÇÃO DE VEÍCULO</h1>
-            <p><strong>Contrato Nº:</strong> {{contract.number}}</p>
-            <p><strong>Data:</strong> {{contract.date}}</p>
+          <div style="font-family: Arial, sans-serif; padding: 30px; line-height: 1.6; max-width: 800px; margin: 0 auto;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="font-size: 18px; font-weight: bold; margin-bottom: 5px;">CONTRATO DE LOCAÇÃO DE AUTOMÓVEL POR PRAZO DETERMINADO</h1>
+              <p style="font-size: 12px; margin: 0;">Contrato Nº: {{contract.number}} | Data: {{contract.date}}</p>
+            </div>
             
-            <h2>DADOS DO VEÍCULO</h2>
-            <p><strong>Marca/Modelo:</strong> {{vehicle.brand}} {{vehicle.model}}</p>
-            <p><strong>Ano:</strong> {{vehicle.year}}</p>
-            <p><strong>Categoria:</strong> {{vehicle.category}}</p>
+            <div style="margin-bottom: 25px;">
+              <h2 style="font-size: 14px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">1. PARTES CONTRATANTES</h2>
+              
+              <div style="margin-bottom: 15px;">
+                <h3 style="font-size: 12px; font-weight: bold; margin-bottom: 8px;">LOCADOR (Proprietário):</h3>
+                <p style="font-size: 11px; margin: 3px 0;"><strong>Nome:</strong> {{owner.name}}</p>
+                <p style="font-size: 11px; margin: 3px 0;"><strong>E-mail:</strong> {{owner.email}}</p>
+                <p style="font-size: 11px; margin: 3px 0;"><strong>Telefone:</strong> {{owner.phone}}</p>
+              </div>
+              
+              <div>
+                <h3 style="font-size: 12px; font-weight: bold; margin-bottom: 8px;">LOCATÁRIO:</h3>
+                <p style="font-size: 11px; margin: 3px 0;"><strong>Nome:</strong> {{renter.name}}</p>
+                <p style="font-size: 11px; margin: 3px 0;"><strong>E-mail:</strong> {{renter.email}}</p>
+                <p style="font-size: 11px; margin: 3px 0;"><strong>Telefone:</strong> {{renter.phone}}</p>
+              </div>
+            </div>
             
-            <h2>LOCATÁRIO</h2>
-            <p><strong>Nome:</strong> {{renter.name}}</p>
-            <p><strong>Email:</strong> {{renter.email}}</p>
-            <p><strong>Telefone:</strong> {{renter.phone}}</p>
+            <div style="margin-bottom: 25px;">
+              <h2 style="font-size: 14px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">2. OBJETO DO CONTRATO</h2>
+              <p style="font-size: 11px; margin: 8px 0;"><strong>Veículo:</strong> {{vehicle.brand}} {{vehicle.model}}</p>
+              <p style="font-size: 11px; margin: 8px 0;"><strong>Ano de Fabricação:</strong> {{vehicle.year}}</p>
+              <p style="font-size: 11px; margin: 8px 0;"><strong>Placa:</strong> {{vehicle.licensePlate}}</p>
+              <p style="font-size: 11px; margin: 8px 0;"><strong>RENAVAM:</strong> {{vehicle.renavam}}</p>
+              <p style="font-size: 11px; margin: 8px 0;"><strong>Cor:</strong> {{vehicle.color}}</p>
+              <p style="font-size: 11px; margin: 8px 0;"><strong>Categoria:</strong> {{vehicle.category}}</p>
+            </div>
             
-            <h2>PROPRIETÁRIO</h2>
-            <p><strong>Nome:</strong> {{owner.name}}</p>
-            <p><strong>Email:</strong> {{owner.email}}</p>
-            <p><strong>Telefone:</strong> {{owner.phone}}</p>
+            <div style="margin-bottom: 25px;">
+              <h2 style="font-size: 14px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">3. PERÍODO E VALOR DA LOCAÇÃO</h2>
+              <p style="font-size: 11px; margin: 8px 0;"><strong>Data de Início:</strong> {{booking.startDate}}</p>
+              <p style="font-size: 11px; margin: 8px 0;"><strong>Data de Término:</strong> {{booking.endDate}}</p>
+              <p style="font-size: 11px; margin: 8px 0;"><strong>Valor Total da Locação:</strong> R$ {{booking.totalPrice}}</p>
+              <p style="font-size: 11px; margin: 8px 0;"><strong>Forma de Pagamento:</strong> Cartão de crédito via plataforma</p>
+            </div>
             
-            <h2>PERÍODO DE LOCAÇÃO</h2>
-            <p><strong>Data de Início:</strong> {{booking.startDate}}</p>
-            <p><strong>Data de Término:</strong> {{booking.endDate}}</p>
+            <div style="margin-bottom: 25px;">
+              <h2 style="font-size: 14px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">4. OBRIGAÇÕES DO LOCATÁRIO</h2>
+              <ul style="font-size: 11px; padding-left: 20px; margin: 0;">
+                <li style="margin: 8px 0;">Utilizar o veículo com cuidado e responsabilidade;</li>
+                <li style="margin: 8px 0;">Devolver o veículo no local, data e horário acordados;</li>
+                <li style="margin: 8px 0;">Manter o veículo em boas condições de uso;</li>
+                <li style="margin: 8px 0;">Responsabilizar-se por multas de trânsito durante o período de locação;</li>
+                <li style="margin: 8px 0;">Comunicar imediatamente ao locador qualquer acidente ou avaria;</li>
+                <li style="margin: 8px 0;">Não permitir que terceiros não autorizados conduzam o veículo;</li>
+                <li style="margin: 8px 0;">Devolver o veículo com o mesmo nível de combustível do recebimento.</li>
+              </ul>
+            </div>
             
-            <h2>VALORES</h2>
-            <p><strong>Valor Total:</strong> {{booking.totalPrice}}</p>
-            <p><strong>Taxa de Serviço:</strong> {{booking.serviceFee}}</p>
-            <p><strong>Taxa de Seguro:</strong> {{booking.insuranceFee}}</p>
+            <div style="margin-bottom: 25px;">
+              <h2 style="font-size: 14px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">5. OBRIGAÇÕES DO LOCADOR</h2>
+              <ul style="font-size: 11px; padding-left: 20px; margin: 0;">
+                <li style="margin: 8px 0;">Entregar o veículo em perfeitas condições de funcionamento;</li>
+                <li style="margin: 8px 0;">Fornecer toda a documentação necessária do veículo;</li>
+                <li style="margin: 8px 0;">Garantir que o veículo possui seguro e documentação em dia;</li>
+                <li style="margin: 8px 0;">Disponibilizar contato para emergências durante a locação.</li>
+              </ul>
+            </div>
             
-            <h2>TERMOS E CONDIÇÕES</h2>
-            <p>1. O locatário se compromete a devolver o veículo nas mesmas condições.</p>
-            <p>2. É proibido fumar no interior do veículo.</p>
-            <p>3. O locatário é responsável por multas e infrações durante o período de locação.</p>
+            <div style="margin-bottom: 25px;">
+              <h2 style="font-size: 14px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">6. DISPOSIÇÕES GERAIS</h2>
+              <p style="font-size: 11px; margin: 8px 0;">O presente contrato é celebrado em caráter irretratável e irrevogável, obrigando as partes e seus sucessores.</p>
+              <p style="font-size: 11px; margin: 8px 0;">Qualquer alteração deste contrato deverá ser feita por escrito e acordada entre as partes.</p>
+              <p style="font-size: 11px; margin: 8px 0;">Para dirimir quaisquer controvérsias oriundas deste contrato, fica eleito o foro da comarca de domicílio do locador.</p>
+            </div>
             
             <div style="margin-top: 50px;">
-              <div style="float: left; width: 45%;">
-                <p>________________________</p>
-                <p>Assinatura do Locatário</p>
-              </div>
-              <div style="float: right; width: 45%;">
-                <p>________________________</p>
-                <p>Assinatura do Proprietário</p>
-              </div>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="width: 50%; text-align: center; padding: 20px;">
+                    <div style="border-top: 1px solid #000; width: 200px; margin: 0 auto; padding-top: 5px;">
+                      <p style="font-size: 10px; margin: 0;"><strong>{{owner.name}}</strong></p>
+                      <p style="font-size: 10px; margin: 0;">LOCADOR</p>
+                    </div>
+                  </td>
+                  <td style="width: 50%; text-align: center; padding: 20px;">
+                    <div style="border-top: 1px solid #000; width: 200px; margin: 0 auto; padding-top: 5px;">
+                      <p style="font-size: 10px; margin: 0;"><strong>{{renter.name}}</strong></p>
+                      <p style="font-size: 10px; margin: 0;">LOCATÁRIO</p>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px; font-size: 10px; color: #666;">
+              <p>Este contrato foi gerado eletronicamente pela plataforma CarShare</p>
+              <p>Data e hora da geração: {{contract.generatedAt}}</p>
             </div>
           </div>
         `,
         fields: [
           { name: "vehicle.brand", type: "text", required: true },
           { name: "vehicle.model", type: "text", required: true },
+          { name: "vehicle.licensePlate", type: "text", required: true },
+          { name: "vehicle.renavam", type: "text", required: true },
+          { name: "vehicle.color", type: "text", required: true },
           { name: "renter.name", type: "text", required: true },
           { name: "owner.name", type: "text", required: true }
         ],
         isActive: true,
-        version: 1
+        version: 2
       };
       
       return await this.createContractTemplate(defaultTemplate);
