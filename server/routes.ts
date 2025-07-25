@@ -369,6 +369,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/user/documents/upload", authenticateToken, async (req, res) => {
     try {
       const userId = req.user!.id;
+      
+      console.log("Upload request received for user:", userId);
+      console.log("Request body:", req.body);
+      
       const { documentType, documentNumber } = req.body;
       
       // Simular upload de arquivo - em produção seria integrado com serviço de storage

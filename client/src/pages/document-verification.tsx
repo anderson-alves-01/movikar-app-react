@@ -64,11 +64,28 @@ export default function DocumentVerification() {
         formData.append('documentNumber', documentNumber);
       }
 
+      // Get token from localStorage
+      const authStorage = localStorage.getItem('auth-storage');
+      let token = null;
+      
+      if (authStorage) {
+        try {
+          const authData = JSON.parse(authStorage);
+          token = authData.state?.token;
+        } catch (error) {
+          console.error('Error parsing auth token:', error);
+        }
+      }
+      
+      if (!token) {
+        throw new Error('Token de autenticação não encontrado');
+      }
+
       const response = await fetch('/api/user/documents/upload', {
         method: 'POST',
         body: formData,
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
