@@ -785,6 +785,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin Users CRUD
   app.get("/api/admin/users", authenticateToken, requireAdmin, async (req, res) => {
     try {
       const users = await storage.getAllUsers();
@@ -795,6 +796,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/admin/users/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const user = await storage.getUserById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json(user);
+    } catch (error) {
+      console.error("Admin user by id error:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  app.put("/api/admin/users/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { password, ...userData } = req.body;
+      
+      // If password is provided, hash it
+      if (password) {
+        userData.password = await bcrypt.hash(password, 10);
+      }
+      
+      const user = await storage.updateUserAdmin(userId, userData);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Remove password from response
+      const { password: _, ...userResponse } = user;
+      res.json(userResponse);
+    } catch (error) {
+      console.error("Admin update user error:", error);
+      res.status(400).json({ message: "Failed to update user" });
+    }
+  });
+
+  app.delete("/api/admin/users/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      // Prevent admin from deleting themselves
+      if (userId === req.user!.id) {
+        return res.status(400).json({ message: "Cannot delete your own account" });
+      }
+      
+      const success = await storage.deleteUser(userId);
+      if (!success) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Admin delete user error:", error);
+      res.status(400).json({ message: "Failed to delete user" });
+    }
+  });
+
+  // Admin Bookings CRUD
   app.get("/api/admin/bookings", authenticateToken, requireAdmin, async (req, res) => {
     try {
       const bookings = await storage.getAllBookings();
@@ -802,6 +862,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Admin bookings error:", error);
       res.status(500).json({ message: "Failed to fetch bookings" });
+    }
+  });
+
+  app.get("/api/admin/bookings/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      const booking = await storage.getBookingById(bookingId);
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+      res.json(booking);
+    } catch (error) {
+      console.error("Admin booking by id error:", error);
+      res.status(500).json({ message: "Failed to fetch booking" });
+    }
+  });
+
+  app.put("/api/admin/bookings/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      if (!status || !['pending', 'approved', 'rejected', 'active', 'completed', 'cancelled'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+      
+      const booking = await storage.updateBookingStatus(bookingId, status);
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+      res.json(booking);
+    } catch (error) {
+      console.error("Admin update booking error:", error);
+      res.status(400).json({ message: "Failed to update booking" });
+    }
+  });
+
+  app.delete("/api/admin/bookings/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      const success = await storage.deleteBooking(bookingId);
+      if (!success) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Admin delete booking error:", error);
+      res.status(400).json({ message: "Failed to delete booking" });
+    }
+  });
+
+  // Admin Contracts CRUD
+  app.post("/api/admin/contracts", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const contract = await storage.createContract(req.body);
+      res.status(201).json(contract);
+    } catch (error) {
+      console.error("Admin create contract error:", error);
+      res.status(400).json({ message: "Failed to create contract" });
+    }
+  });
+
+  app.put("/api/admin/contracts/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const contractId = parseInt(req.params.id);
+      const contract = await storage.updateContract(contractId, req.body);
+      res.json(contract);
+    } catch (error) {
+      console.error("Admin update contract error:", error);
+      res.status(400).json({ message: "Failed to update contract" });
+    }
+  });
+
+  app.delete("/api/admin/contracts/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const contractId = parseInt(req.params.id);
+      const success = await storage.deleteContract(contractId);
+      if (!success) {
+        return res.status(404).json({ message: "Contract not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Admin delete contract error:", error);
+      res.status(400).json({ message: "Failed to delete contract" });
     }
   });
 

@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { Car, FileText, Settings, Users, Menu, X } from "lucide-react";
+import { Car, FileText, Settings, Users, Menu, X, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
@@ -24,6 +24,11 @@ const adminNavItems = [
     href: "/admin/users",
     label: "Usuários",
     icon: Users,
+  },
+  {
+    href: "/admin/bookings",
+    label: "Reservas",
+    icon: Calendar,
   },
   {
     href: "/admin/settings",

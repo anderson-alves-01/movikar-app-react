@@ -1,12 +1,18 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, Search, Filter, Shield, CheckCircle, XCircle, Edit, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { Users, Search, Filter, Shield, CheckCircle, XCircle, Edit, Trash2, Plus, Save } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import AdminLayout from "@/components/admin-layout";
@@ -28,6 +34,12 @@ export default function AdminUsersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [verificationFilter, setVerificationFilter] = useState('');
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Get all users
   const { data: users = [], isLoading } = useQuery({
@@ -101,6 +113,71 @@ export default function AdminUsersPage() {
 
     return true;
   });
+
+  // Update user mutation
+  const updateUserMutation = useMutation({
+    mutationFn: async (data: { id: number; userData: Partial<User> }) => {
+      return apiRequest(`/api/admin/users/${data.id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data.userData),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      toast({ title: "Usuário atualizado com sucesso!" });
+      setIsEditDialogOpen(false);
+      setSelectedUser(null);
+    },
+    onError: () => {
+      toast({ title: "Erro ao atualizar usuário", variant: "destructive" });
+    },
+  });
+
+  // Delete user mutation
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: number) => {
+      return apiRequest(`/api/admin/users/${userId}`, {
+        method: 'DELETE',
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      toast({ title: "Usuário excluído com sucesso!" });
+    },
+    onError: () => {
+      toast({ title: "Erro ao excluir usuário", variant: "destructive" });
+    },
+  });
+
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteUser = (userId: number) => {
+    if (confirm('Tem certeza que deseja excluir este usuário?')) {
+      deleteUserMutation.mutate(userId);
+    }
+  };
+
+  const handleUpdateUser = (formData: FormData) => {
+    if (!selectedUser) return;
+    
+    const userData = {
+      name: formData.get('name') as string,
+      email: formData.get('email') as string,
+      phone: formData.get('phone') as string,
+      isOwner: formData.get('isOwner') === 'on',
+      isRenter: formData.get('isRenter') === 'on',
+      isVerified: formData.get('isVerified') === 'on',
+      role: formData.get('role') as string,
+    };
+
+    updateUserMutation.mutate({
+      id: selectedUser.id,
+      userData,
+    });
+  };
 
   return (
     <AdminLayout>
@@ -268,10 +345,15 @@ export default function AdminUsersPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Button size="sm" variant="outline">
+                            <Button size="sm" variant="outline" onClick={() => handleEditUser(user)}>
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="text-red-600 hover:text-red-700"
+                              onClick={() => handleDeleteUser(user.id)}
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
@@ -284,6 +366,103 @@ export default function AdminUsersPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Edit User Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Editar Usuário</DialogTitle>
+            </DialogHeader>
+            {selectedUser && (
+              <form action={handleUpdateUser} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name">Nome</Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      defaultValue={selectedUser.name}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      defaultValue={selectedUser.email}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="phone">Telefone</Label>
+                  <Input
+                    id="phone"
+                    name="phone"
+                    defaultValue={selectedUser.phone || ''}
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="isOwner">Proprietário</Label>
+                    <Switch
+                      id="isOwner"
+                      name="isOwner"
+                      defaultChecked={selectedUser.isOwner}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="isRenter">Locatário</Label>
+                    <Switch
+                      id="isRenter"
+                      name="isRenter"
+                      defaultChecked={selectedUser.isRenter}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="isVerified">Verificado</Label>
+                    <Switch
+                      id="isVerified"
+                      name="isVerified"
+                      defaultChecked={selectedUser.isVerified}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="role">Papel do Usuário</Label>
+                  <Select name="role" defaultValue={selectedUser.role}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="user">Usuário</SelectItem>
+                      <SelectItem value="admin">Administrador</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsEditDialogOpen(false)}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button type="submit" disabled={updateUserMutation.isPending}>
+                    <Save className="h-4 w-4 mr-2" />
+                    {updateUserMutation.isPending ? 'Salvando...' : 'Salvar'}
+                  </Button>
+                </div>
+              </form>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
