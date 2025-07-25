@@ -73,7 +73,7 @@ export default function HeroSection({ onSearch }: HeroSectionProps) {
                   <div className="relative">
                     <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input 
-                      type="datetime-local" 
+                      type="date" 
                       className="pl-10 h-12 text-sm"
                       value={searchData.startDate}
                       onChange={(e) => setSearchData(prev => ({ ...prev, startDate: e.target.value }))}
@@ -85,7 +85,7 @@ export default function HeroSection({ onSearch }: HeroSectionProps) {
                   <div className="relative">
                     <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input 
-                      type="datetime-local" 
+                      type="date" 
                       className="pl-10 h-12 text-sm"
                       value={searchData.endDate}
                       onChange={(e) => setSearchData(prev => ({ ...prev, endDate: e.target.value }))}

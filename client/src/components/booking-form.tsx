@@ -169,7 +169,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
               <div>
                 <Label className="block text-sm font-medium text-gray-700 mb-2">Retirada</Label>
                 <Input 
-                  type="datetime-local" 
+                  type="date" 
                   required
                   className="h-12 text-sm"
                   value={bookingData.startDate}
@@ -179,7 +179,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
               <div>
                 <Label className="block text-sm font-medium text-gray-700 mb-2">Devolução</Label>
                 <Input 
-                  type="datetime-local" 
+                  type="date" 
                   required
                   className="h-12 text-sm"
                   value={bookingData.endDate}
