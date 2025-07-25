@@ -241,7 +241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const vehicle = await storage.getVehicle(vehicleId);
       
       if (!vehicle || vehicle.ownerId !== req.user!.id) {
-        return res.status(403).json({ message: "Unauthorized" });
+        return res.status(403).json({ message: "Acesso negado" });
       }
 
       // Check if vehicle has any bookings (due to foreign key constraint)
@@ -499,7 +499,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(brand);
     } catch (error) {
       console.error("Create vehicle brand error:", error);
-      res.status(400).json({ message: "Failed to create vehicle brand" });
+      res.status(400).json({ message: "Falha ao criar marca de veículo" });
     }
   });
 
@@ -509,12 +509,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const brandData = req.body;
       const brand = await storage.updateVehicleBrand(brandId, brandData);
       if (!brand) {
-        return res.status(404).json({ message: "Vehicle brand not found" });
+        return res.status(404).json({ message: "Marca de veículo não encontrada" });
       }
       res.json(brand);
     } catch (error) {
       console.error("Update vehicle brand error:", error);
-      res.status(400).json({ message: "Failed to update vehicle brand" });
+      res.status(400).json({ message: "Falha ao atualizar marca de veículo" });
     }
   });
 
@@ -523,12 +523,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const brandId = parseInt(req.params.id);
       const deleted = await storage.deleteVehicleBrand(brandId);
       if (!deleted) {
-        return res.status(404).json({ message: "Vehicle brand not found" });
+        return res.status(404).json({ message: "Marca de veículo não encontrada" });
       }
       res.status(204).send();
     } catch (error) {
       console.error("Delete vehicle brand error:", error);
-      res.status(500).json({ message: "Failed to delete vehicle brand" });
+      res.status(500).json({ message: "Falha ao excluir marca de veículo" });
     }
   });
 
@@ -540,7 +540,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(availability);
     } catch (error) {
       console.error("Get vehicle availability error:", error);
-      res.status(500).json({ message: "Failed to fetch vehicle availability" });
+      res.status(500).json({ message: "Falha ao buscar disponibilidade do veículo" });
     }
   });
 
@@ -574,7 +574,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(availability);
     } catch (error) {
       console.error("Create vehicle availability error:", error);
-      res.status(400).json({ message: "Failed to create availability period" });
+      res.status(400).json({ message: "Falha ao criar período de disponibilidade" });
     }
   });
 
@@ -591,12 +591,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const success = await storage.deleteVehicleAvailability(availabilityId);
       if (!success) {
-        return res.status(404).json({ message: "Availability period not found" });
+        return res.status(404).json({ message: "Período de disponibilidade não encontrado" });
       }
       res.status(204).send();
     } catch (error) {
       console.error("Delete vehicle availability error:", error);
-      res.status(500).json({ message: "Failed to delete availability period" });
+      res.status(500).json({ message: "Falha ao excluir período de disponibilidade" });
     }
   });
 
@@ -607,13 +607,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const contract = await storage.getContractWithDetails(contractId);
       
       if (!contract) {
-        return res.status(404).json({ message: "Contract not found" });
+        return res.status(404).json({ message: "Contrato não encontrado" });
       }
 
       res.json(contract);
     } catch (error) {
       console.error("Get contract error:", error);
-      res.status(500).json({ message: "Failed to fetch contract" });
+      res.status(500).json({ message: "Falha ao buscar contrato" });
     }
   });
 
@@ -623,7 +623,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const contract = await storage.getContract(contractId);
       
       if (!contract) {
-        return res.status(404).json({ message: "Contract not found" });
+        return res.status(404).json({ message: "Contrato não encontrado" });
       }
 
       const updatedContract = await storage.updateContract(contractId, req.body);
@@ -636,7 +636,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedContract);
     } catch (error) {
       console.error("Update contract error:", error);
-      res.status(400).json({ message: "Failed to update contract" });
+      res.status(400).json({ message: "Falha ao atualizar contrato" });
     }
   });
 
@@ -661,7 +661,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(result);
     } catch (error) {
       console.error("Release expired blocks error:", error);
-      res.status(500).json({ message: "Failed to release expired blocks" });
+      res.status(500).json({ message: "Falha ao liberar bloqueios expirados" });
     }
   });
 
@@ -682,7 +682,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(result);
     } catch (error) {
       console.error("Auto-release error:", error);
-      res.status(500).json({ message: "Auto-release failed" });
+      res.status(500).json({ message: "Falha na liberação automática" });
     }
   });
 
@@ -701,7 +701,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(queueEntry);
     } catch (error) {
       console.error("Add to waiting queue error:", error);
-      res.status(400).json({ message: "Failed to join waiting queue" });
+      res.status(400).json({ message: "Falha ao entrar na fila de espera" });
     }
   });
 
@@ -718,7 +718,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(queue);
     } catch (error) {
       console.error("Get user waiting queue error:", error);
-      res.status(500).json({ message: "Failed to fetch user waiting queue" });
+      res.status(500).json({ message: "Falha ao buscar fila de espera do usuário" });
     }
   });
 
@@ -736,12 +736,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const success = await storage.removeFromWaitingQueue(queueId);
       if (!success) {
-        return res.status(404).json({ message: "Queue entry not found" });
+        return res.status(404).json({ message: "Entrada da fila não encontrada" });
       }
       res.status(204).send();
     } catch (error) {
       console.error("Remove from waiting queue error:", error);
-      res.status(500).json({ message: "Failed to remove from waiting queue" });
+      res.status(500).json({ message: "Falha ao remover da fila de espera" });
     }
   });
 
@@ -776,7 +776,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(conversations);
     } catch (error) {
       console.error("Get conversations error:", error);
-      res.status(500).json({ message: "Failed to fetch conversations" });
+      res.status(500).json({ message: "Falha ao buscar conversas" });
     }
   });
 
@@ -797,7 +797,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(messages);
     } catch (error) {
       console.error("Get messages error:", error);
-      res.status(500).json({ message: "Failed to fetch messages" });
+      res.status(500).json({ message: "Falha ao buscar mensagens" });
     }
   });
 
@@ -829,7 +829,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(message);
     } catch (error) {
       console.error("Send message error:", error);
-      res.status(400).json({ message: "Failed to send message" });
+      res.status(400).json({ message: "Falha ao enviar mensagem" });
     }
   });
 
@@ -845,7 +845,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       console.error("Mark messages as read error:", error);
-      res.status(500).json({ message: "Failed to mark messages as read" });
+      res.status(500).json({ message: "Falha ao marcar mensagens como lidas" });
     }
   });
 
@@ -856,7 +856,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ count });
     } catch (error) {
       console.error("Get unread message count error:", error);
-      res.status(500).json({ message: "Failed to fetch unread message count" });
+      res.status(500).json({ message: "Falha ao buscar contagem de mensagens não lidas" });
     }
   });
 
@@ -876,7 +876,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(contracts);
     } catch (error) {
       console.error("Admin contracts error:", error);
-      res.status(500).json({ message: "Failed to fetch contracts" });
+      res.status(500).json({ message: "Falha ao buscar contratos" });
     }
   });
 
@@ -893,7 +893,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(result);
     } catch (error) {
       console.error("Admin users error:", error);
-      res.status(500).json({ message: "Failed to fetch users" });
+      res.status(500).json({ message: "Falha ao buscar usuários" });
     }
   });
 
@@ -902,12 +902,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = parseInt(req.params.id);
       const user = await storage.getUserById(userId);
       if (!user) {
-        return res.status(404).json({ message: "User not found" });
+        return res.status(404).json({ message: "Usuário não encontrado" });
       }
       res.json(user);
     } catch (error) {
       console.error("Admin user by id error:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
+      res.status(500).json({ message: "Falha ao buscar usuário" });
     }
   });
 
@@ -923,7 +923,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const user = await storage.updateUserAdmin(userId, userData);
       if (!user) {
-        return res.status(404).json({ message: "User not found" });
+        return res.status(404).json({ message: "Usuário não encontrado" });
       }
       
       // Remove password from response
@@ -931,7 +931,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(userResponse);
     } catch (error) {
       console.error("Admin update user error:", error);
-      res.status(400).json({ message: "Failed to update user" });
+      res.status(400).json({ message: "Falha ao atualizar usuário" });
     }
   });
 
@@ -946,12 +946,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const success = await storage.deleteUser(userId);
       if (!success) {
-        return res.status(404).json({ message: "User not found" });
+        return res.status(404).json({ message: "Usuário não encontrado" });
       }
       res.status(204).send();
     } catch (error) {
       console.error("Admin delete user error:", error);
-      res.status(400).json({ message: "Failed to delete user" });
+      res.status(400).json({ message: "Falha ao excluir usuário" });
     }
   });
 
@@ -968,7 +968,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(result);
     } catch (error) {
       console.error("Admin bookings error:", error);
-      res.status(500).json({ message: "Failed to fetch bookings" });
+      res.status(500).json({ message: "Falha ao buscar reservas" });
     }
   });
 
@@ -977,12 +977,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const bookingId = parseInt(req.params.id);
       const booking = await storage.getBookingById(bookingId);
       if (!booking) {
-        return res.status(404).json({ message: "Booking not found" });
+        return res.status(404).json({ message: "Reserva não encontrada" });
       }
       res.json(booking);
     } catch (error) {
       console.error("Admin booking by id error:", error);
-      res.status(500).json({ message: "Failed to fetch booking" });
+      res.status(500).json({ message: "Falha ao buscar reserva" });
     }
   });
 
@@ -997,12 +997,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const booking = await storage.updateBookingStatus(bookingId, status);
       if (!booking) {
-        return res.status(404).json({ message: "Booking not found" });
+        return res.status(404).json({ message: "Reserva não encontrada" });
       }
       res.json(booking);
     } catch (error) {
       console.error("Admin update booking error:", error);
-      res.status(400).json({ message: "Failed to update booking" });
+      res.status(400).json({ message: "Falha ao atualizar reserva" });
     }
   });
 
@@ -1011,12 +1011,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const bookingId = parseInt(req.params.id);
       const success = await storage.deleteBooking(bookingId);
       if (!success) {
-        return res.status(404).json({ message: "Booking not found" });
+        return res.status(404).json({ message: "Reserva não encontrada" });
       }
       res.status(204).send();
     } catch (error) {
       console.error("Admin delete booking error:", error);
-      res.status(400).json({ message: "Failed to delete booking" });
+      res.status(400).json({ message: "Falha ao excluir reserva" });
     }
   });
 
@@ -1027,7 +1027,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(contract);
     } catch (error) {
       console.error("Admin create contract error:", error);
-      res.status(400).json({ message: "Failed to create contract" });
+      res.status(400).json({ message: "Falha ao criar contrato" });
     }
   });
 
@@ -1038,7 +1038,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(contract);
     } catch (error) {
       console.error("Admin update contract error:", error);
-      res.status(400).json({ message: "Failed to update contract" });
+      res.status(400).json({ message: "Falha ao atualizar contrato" });
     }
   });
 
@@ -1047,12 +1047,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const contractId = parseInt(req.params.id);
       const success = await storage.deleteContract(contractId);
       if (!success) {
-        return res.status(404).json({ message: "Contract not found" });
+        return res.status(404).json({ message: "Contrato não encontrado" });
       }
       res.status(204).send();
     } catch (error) {
       console.error("Admin delete contract error:", error);
-      res.status(400).json({ message: "Failed to delete contract" });
+      res.status(400).json({ message: "Falha ao excluir contrato" });
     }
   });
 
@@ -1062,7 +1062,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(brands);
     } catch (error) {
       console.error("Vehicle brands error:", error);
-      res.status(500).json({ message: "Failed to fetch vehicle brands" });
+      res.status(500).json({ message: "Falha ao buscar marcas de veículos" });
     }
   });
 
@@ -1073,7 +1073,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(brand);
     } catch (error) {
       console.error("Create vehicle brand error:", error);
-      res.status(400).json({ message: "Failed to create vehicle brand" });
+      res.status(400).json({ message: "Falha ao criar marca de veículo" });
     }
   });
 
@@ -1085,7 +1085,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(brand);
     } catch (error) {
       console.error("Update vehicle brand error:", error);
-      res.status(400).json({ message: "Failed to update vehicle brand" });
+      res.status(400).json({ message: "Falha ao atualizar marca de veículo" });
     }
   });
 
@@ -1096,7 +1096,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       console.error("Delete vehicle brand error:", error);
-      res.status(400).json({ message: "Failed to delete vehicle brand" });
+      res.status(400).json({ message: "Falha ao excluir marca de veículo" });
     }
   });
 
