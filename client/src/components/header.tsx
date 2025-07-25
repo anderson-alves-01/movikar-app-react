@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Search, Menu, User, MessageCircle, Car, LogOut, Shield, Bell, Gift, Sparkles, BarChart3 } from "lucide-react";
+import { Search, Menu, User, MessageCircle, Car, LogOut, Shield, Bell, Gift, Sparkles, BarChart3, RotateCcw } from "lucide-react";
 import { useAuthStore } from "@/lib/auth";
 import { useSearch } from "@/contexts/SearchContext";
 // import AddVehicleModal from "./add-vehicle-modal";
@@ -119,11 +119,11 @@ export default function Header() {
               />
               <Button 
                 size="sm" 
-                className="bg-primary text-white p-2 rounded-full ml-4 hover:bg-red-600 transition-colors"
+                className="bg-gray-500 text-white p-2 rounded-full ml-4 hover:bg-gray-600 transition-colors"
                 onClick={handleClearSearch}
                 title="Limpar busca"
               >
-                <Search className="h-4 w-4" />
+                <RotateCcw className="h-4 w-4" />
               </Button>
             </div>
 
