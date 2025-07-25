@@ -1629,10 +1629,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { status, dateFrom, dateTo, limit = 50, offset = 0 } = req.query;
       
-      const contracts = await storage.getContracts({
+      const contracts = await storage.getContractsWithFilters({
         status: status as string,
-        dateFrom: dateFrom as string,
-        dateTo: dateTo as string,
+        dateFrom: dateFrom ? new Date(dateFrom as string) : undefined,
+        dateTo: dateTo ? new Date(dateTo as string) : undefined,
         limit: parseInt(limit as string),
         offset: parseInt(offset as string),
       });

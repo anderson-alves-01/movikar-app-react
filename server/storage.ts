@@ -1679,8 +1679,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getContracts(filters: any): Promise<ContractWithDetails[]> {
-    // Return empty array for now - contracts not implemented yet
-    return [];
+    return await this.getContractsWithFilters(filters);
   }
 
   async createContract(contractData: InsertContract): Promise<Contract> {

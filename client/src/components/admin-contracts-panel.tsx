@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FileText, Search, Download, Eye, Filter } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { useAuthStore } from "@/lib/auth";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function AdminContractsPanel() {
   const [filters, setFilters] = useState({
@@ -32,18 +32,7 @@ export default function AdminContractsPanel() {
       params.append('limit', filters.limit.toString());
       params.append('offset', filters.offset.toString());
 
-      const token = useAuthStore.getState().token;
-      const response = await fetch(`/api/admin/contracts?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch contracts');
-      }
-      
+      const response = await apiRequest('GET', `/api/admin/contracts?${params}`);
       return response.json();
     },
   });
