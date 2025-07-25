@@ -452,6 +452,135 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin Document Management Routes
+  app.get("/api/admin/documents", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const result = await pool.query(`
+        SELECT 
+          d.id,
+          d.user_id,
+          u.name as user_name,
+          u.email as user_email,
+          d.document_type,
+          d.document_url,
+          d.document_number,
+          d.status,
+          d.rejection_reason,
+          d.uploaded_at,
+          d.reviewed_at,
+          d.reviewed_by
+        FROM user_documents d
+        JOIN users u ON d.user_id = u.id
+        ORDER BY d.uploaded_at DESC
+      `);
+      
+      const documents = result.rows.map((row: any) => ({
+        id: row.id,
+        userId: row.user_id,
+        userName: row.user_name,
+        userEmail: row.user_email,
+        documentType: row.document_type,
+        documentUrl: row.document_url,
+        documentNumber: row.document_number,
+        status: row.status,
+        rejectionReason: row.rejection_reason,
+        uploadedAt: row.uploaded_at,
+        reviewedAt: row.reviewed_at,
+        reviewedBy: row.reviewed_by,
+      }));
+      
+      res.json(documents);
+    } catch (error) {
+      console.error("Get admin documents error:", error);
+      res.status(500).json({ message: "Falha ao buscar documentos" });
+    }
+  });
+
+  app.post("/api/admin/documents/:documentId/approve", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const documentId = parseInt(req.params.documentId);
+      const adminId = req.user!.id;
+      
+      // Update document status
+      await pool.query(`
+        UPDATE user_documents 
+        SET status = 'approved', reviewed_at = NOW(), reviewed_by = $1
+        WHERE id = $2
+      `, [adminId, documentId]);
+      
+      // Get document to check user and update user verification status
+      const docResult = await pool.query(`
+        SELECT user_id FROM user_documents WHERE id = $1
+      `, [documentId]);
+      
+      if (docResult.rows.length > 0) {
+        const userId = docResult.rows[0].user_id;
+        
+        // Check if user has all required documents approved
+        const approvedDocsResult = await pool.query(`
+          SELECT document_type FROM user_documents 
+          WHERE user_id = $1 AND status = 'approved'
+        `, [userId]);
+        
+        const approvedTypes = approvedDocsResult.rows.map((row: any) => row.document_type);
+        const requiredTypes = ['cnh', 'comprovante_residencia'];
+        const allApproved = requiredTypes.every(type => approvedTypes.includes(type));
+        
+        if (allApproved) {
+          await pool.query(`
+            UPDATE users 
+            SET verification_status = 'verified'
+            WHERE id = $1
+          `, [userId]);
+        }
+      }
+      
+      res.json({ message: "Documento aprovado com sucesso" });
+    } catch (error) {
+      console.error("Approve document error:", error);
+      res.status(500).json({ message: "Falha ao aprovar documento" });
+    }
+  });
+
+  app.post("/api/admin/documents/:documentId/reject", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const documentId = parseInt(req.params.documentId);
+      const adminId = req.user!.id;
+      const { reason } = req.body;
+      
+      if (!reason || !reason.trim()) {
+        return res.status(400).json({ message: "Motivo da rejeição é obrigatório" });
+      }
+      
+      // Update document status
+      await pool.query(`
+        UPDATE user_documents 
+        SET status = 'rejected', rejection_reason = $1, reviewed_at = NOW(), reviewed_by = $2
+        WHERE id = $3
+      `, [reason, adminId, documentId]);
+      
+      // Update user verification status to pending if any required document is rejected
+      const docResult = await pool.query(`
+        SELECT user_id FROM user_documents WHERE id = $1
+      `, [documentId]);
+      
+      if (docResult.rows.length > 0) {
+        const userId = docResult.rows[0].user_id;
+        
+        await pool.query(`
+          UPDATE users 
+          SET verification_status = 'pending'
+          WHERE id = $1
+        `, [userId]);
+      }
+      
+      res.json({ message: "Documento rejeitado" });
+    } catch (error) {
+      console.error("Reject document error:", error);
+      res.status(500).json({ message: "Falha ao rejeitar documento" });
+    }
+  });
+
   // Performance Dashboard Routes (Admin only)
   app.get("/api/dashboard/metrics", authenticateToken, requireAdmin, async (req, res) => {
     try {

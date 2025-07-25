@@ -196,6 +196,12 @@ export default function Header() {
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
+                            <Link href="/admin/documents" className="cursor-pointer">
+                              <Shield className="h-4 w-4 mr-2" />
+                              Verificar Documentos
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
                             <Link href="/performance" className="cursor-pointer">
                               <BarChart3 className="h-4 w-4 mr-2" />
                               Performance

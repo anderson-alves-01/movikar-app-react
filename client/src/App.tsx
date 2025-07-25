@@ -13,6 +13,7 @@ import AdminContracts from "@/pages/admin-contracts";
 import AdminVehicleBrands from "@/pages/admin-vehicle-brands";
 import AdminUsers from "@/pages/admin-users";
 import AdminBookings from "@/pages/admin-bookings";
+import AdminDocuments from "@/pages/admin-documents";
 import Reservations from "@/pages/reservations";
 import Vehicles from "@/pages/vehicles";
 import Messages from "@/pages/messages";
@@ -37,6 +38,7 @@ function Router() {
       <Route path="/admin/vehicle-brands" component={AdminVehicleBrands} />
       <Route path="/admin/users" component={AdminUsers} />
       <Route path="/admin/bookings" component={AdminBookings} />
+      <Route path="/admin/documents" component={AdminDocuments} />
       <Route path="/reservations" component={Reservations} />
       <Route path="/vehicles" component={Vehicles} />
       <Route path="/messages" component={Messages} />
