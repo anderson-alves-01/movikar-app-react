@@ -28,10 +28,10 @@ export default function ContractPreview() {
     enabled: !!bookingId,
   });
 
-  // Sign contract with GOV.BR
+  // Sign contract with DocuSign
   const signContractMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('POST', `/api/contracts/sign-govbr/${bookingId}`);
+      const response = await apiRequest('POST', `/api/contracts/sign-docusign/${bookingId}`);
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message);
@@ -39,16 +39,16 @@ export default function ContractPreview() {
       return response.json();
     },
     onSuccess: (data) => {
-      console.log('Resposta da assinatura:', data);
+      console.log('Resposta da assinatura DocuSign:', data);
       
       if (data.signatureUrl) {
-        console.log('Redirecionando para:', data.signatureUrl);
+        console.log('Redirecionando para DocuSign:', data.signatureUrl);
         // Redirect immediately
         window.location.href = data.signatureUrl;
       } else {
         toast({
           title: "Erro",
-          description: "URL de assinatura não recebida",
+          description: "URL de assinatura DocuSign não recebida",
           variant: "destructive",
         });
       }
@@ -57,7 +57,7 @@ export default function ContractPreview() {
       console.error('Erro na assinatura:', error);
       toast({
         title: "Erro",
-        description: error.message || "Falha ao iniciar assinatura digital",
+        description: error.message || "Falha ao iniciar assinatura digital DocuSign",
         variant: "destructive",
       });
     },
@@ -192,7 +192,7 @@ export default function ContractPreview() {
 
                     <div>
                       <h3 className="font-semibold mb-2">5. ASSINATURA DIGITAL</h3>
-                      <p>Este contrato será assinado digitalmente através da plataforma GOV.BR, garantindo autenticidade e validade jurídica.</p>
+                      <p>Este contrato será assinado digitalmente através da plataforma DocuSign, garantindo autenticidade e validade jurídica internacional.</p>
                     </div>
                   </div>
 
@@ -213,11 +213,11 @@ export default function ContractPreview() {
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <ExternalLink className="h-5 w-5 text-blue-600" />
-                    <span className="font-medium text-blue-800">Assinatura Digital GOV.BR</span>
+                    <span className="font-medium text-blue-800">Assinatura Digital DocuSign</span>
                   </div>
                   <p className="text-sm text-blue-700">
-                    Você será redirecionado para a plataforma oficial GOV.BR para realizar a assinatura digital do contrato.
-                    A assinatura será válida juridicamente e vinculante.
+                    Você será redirecionado para a plataforma DocuSign para realizar a assinatura digital do contrato.
+                    A assinatura será válida juridicamente e reconhecida internacionalmente.
                   </p>
                 </div>
 
@@ -235,7 +235,7 @@ export default function ContractPreview() {
                     ) : (
                       <>
                         <CheckCircle className="h-4 w-4 mr-2" />
-                        Assinar no GOV.BR
+                        Assinar com DocuSign
                       </>
                     )}
                   </Button>

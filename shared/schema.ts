@@ -143,7 +143,7 @@ export const contracts = pgTable("contracts", {
     booking: any;
     terms: any;
   }>().notNull(),
-  signaturePlatform: varchar("signature_platform", { length: 20 }).default("autentique"),
+  signaturePlatform: varchar("signature_platform", { length: 20 }).default("docusign"),
   externalDocumentId: varchar("external_document_id", { length: 100 }),
   renterSigned: boolean("renter_signed").default(false),
   renterSignedAt: timestamp("renter_signed_at"),

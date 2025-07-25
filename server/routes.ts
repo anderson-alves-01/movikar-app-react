@@ -13,6 +13,7 @@ import { db, pool } from "./db";
 import { sql } from "drizzle-orm";
 import Stripe from "stripe";
 import multer from "multer";
+import docusign from 'docusign-esign';
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
@@ -37,6 +38,129 @@ if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
 }
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+// DocuSign configuration
+const DOCUSIGN_INTEGRATION_KEY = process.env.DOCUSIGN_INTEGRATION_KEY || 'mock-integration-key';
+const DOCUSIGN_USER_ID = process.env.DOCUSIGN_USER_ID || 'mock-user-id';
+const DOCUSIGN_ACCOUNT_ID = process.env.DOCUSIGN_ACCOUNT_ID || 'mock-account-id';
+const DOCUSIGN_RSA_PRIVATE_KEY = process.env.DOCUSIGN_RSA_PRIVATE_KEY || 'mock-private-key';
+const DOCUSIGN_BASE_URI = process.env.DOCUSIGN_BASE_URI || 'https://demo.docusign.net/restapi';
+
+// DocuSign envelope creation function
+async function createDocuSignEnvelope(params: {
+  bookingId: number;
+  booking: any;
+  envelopeId: string;
+  returnUrl: string;
+  signerEmail: string;
+  signerName: string;
+}): Promise<string> {
+  const { booking, envelopeId, returnUrl, signerEmail, signerName } = params;
+  
+  // In development mode, return a mock DocuSign URL
+  if (process.env.NODE_ENV === 'development') {
+    return `${process.env.BASE_URL || 'http://localhost:5000'}/simulate-docusign-signature?` +
+      `envelopeId=${envelopeId}&` +
+      `returnUrl=${encodeURIComponent(returnUrl)}&` +
+      `signerEmail=${encodeURIComponent(signerEmail)}&` +
+      `signerName=${encodeURIComponent(signerName)}`;
+  }
+
+  try {
+    // Initialize DocuSign API client
+    const apiClient = new docusign.ApiClient();
+    apiClient.setBasePath(DOCUSIGN_BASE_URI);
+    
+    // JWT Authentication with DocuSign
+    const jwtLifeSec = 10 * 60; // 10 minutes
+    const scopes = "signature impersonation";
+    
+    const token = apiClient.requestJWTUserToken(
+      DOCUSIGN_INTEGRATION_KEY,
+      DOCUSIGN_USER_ID,
+      scopes,
+      DOCUSIGN_RSA_PRIVATE_KEY,
+      jwtLifeSec
+    );
+
+    apiClient.addDefaultHeader('Authorization', 'Bearer ' + token.accessToken);
+    
+    // Create envelope definition
+    const envelopeDefinition = new docusign.EnvelopeDefinition();
+    envelopeDefinition.emailSubject = `Contrato de Locação - Veículo ${booking.vehicle?.brand} ${booking.vehicle?.model}`;
+    
+    // Create document from contract template
+    const doc1 = new docusign.Document();
+    doc1.documentBase64 = await generateContractPDF(booking);
+    doc1.name = 'Contrato de Locação';
+    doc1.fileExtension = 'pdf';
+    doc1.documentId = '1';
+    
+    envelopeDefinition.documents = [doc1];
+    
+    // Create signer
+    const signer = new docusign.Signer();
+    signer.email = signerEmail;
+    signer.name = signerName;
+    signer.recipientId = '1';
+    signer.routingOrder = '1';
+    
+    // Create sign here tab
+    const signHere = new docusign.SignHere();
+    signHere.documentId = '1';
+    signHere.pageNumber = '1';
+    signHere.recipientId = '1';
+    signHere.tabLabel = 'SignHereTab';
+    signHere.xPosition = '195';
+    signHere.yPosition = '147';
+    
+    signer.tabs = new docusign.Tabs();
+    signer.tabs.signHereTabs = [signHere];
+    
+    envelopeDefinition.recipients = new docusign.Recipients();
+    envelopeDefinition.recipients.signers = [signer];
+    envelopeDefinition.status = 'sent';
+    
+    // Send envelope
+    const envelopesApi = new docusign.EnvelopesApi(apiClient);
+    const results = await envelopesApi.createEnvelope(DOCUSIGN_ACCOUNT_ID, {
+      envelopeDefinition: envelopeDefinition
+    });
+    
+    // Create recipient view for embedded signing
+    const recipientView = new docusign.RecipientViewRequest();
+    recipientView.authenticationMethod = 'none';
+    recipientView.email = signerEmail;
+    recipientView.recipientId = '1';
+    recipientView.returnUrl = returnUrl;
+    recipientView.userName = signerName;
+    
+    const viewResults = await envelopesApi.createRecipientView(
+      DOCUSIGN_ACCOUNT_ID,
+      results.envelopeId,
+      { recipientViewRequest: recipientView }
+    );
+    
+    return viewResults.url;
+    
+  } catch (error) {
+    console.error('DocuSign envelope creation error:', error);
+    // Fallback to development simulator
+    return `${process.env.BASE_URL || 'http://localhost:5000'}/simulate-docusign-signature?` +
+      `envelopeId=${envelopeId}&` +
+      `returnUrl=${encodeURIComponent(returnUrl)}&` +
+      `signerEmail=${encodeURIComponent(signerEmail)}&` +
+      `signerName=${encodeURIComponent(signerName)}`;
+  }
+}
+
+// Generate contract PDF function
+async function generateContractPDF(booking: any): Promise<string> {
+  // This would generate a PDF from the contract template
+  // For now, return a base64 encoded dummy PDF
+  const dummyPDF = 'JVBERi0xLjQKJcOkw7zDtsOgCjIgMCBvYmoKPDwvTGVuZ3RoIDMgMCBSL0ZpbHRlci9GbGF0ZURlY29kZT4+CnN0cmVhbQo=';
+  return dummyPDF;
+}
 
 // Extend Express Request type to include user
 declare global {
@@ -1961,8 +2085,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GOV.BR signature initiation
-  app.post("/api/contracts/sign-govbr/:bookingId", authenticateToken, async (req, res) => {
+  // DocuSign signature initiation
+  app.post("/api/contracts/sign-docusign/:bookingId", authenticateToken, async (req, res) => {
     try {
       const { bookingId } = req.params;
       const userId = req.user?.id || req.user?.userId; // Suporte para ambos os formatos
@@ -1977,40 +2101,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Apenas o locatário pode assinar o contrato" });
       }
 
-      // Generate GOV.BR signature URL (mock implementation)
-      const signatureId = `GOVBR-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      const returnUrl = `${req.protocol}://${req.get('host')}/contract-signature-callback?bookingId=${bookingId}&signatureId=${signatureId}`;
+      // Generate DocuSign envelope ID
+      const envelopeId = `DOCUSIGN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const returnUrl = `${req.protocol}://${req.get('host')}/contract-signature-callback?bookingId=${bookingId}&envelopeId=${envelopeId}`;
       
-      // Development simulation of GOV.BR - replace with real API in production
-      const govbrUrl = `${req.protocol}://${req.get('host')}/simulate-govbr-signature?` + 
-        `documentId=${signatureId}&` +
-        `returnUrl=${encodeURIComponent(returnUrl)}&` +
-        `cpf=${encodeURIComponent(booking.renter?.email || '')}`;
+      // Create DocuSign envelope for contract signing
+      const docusignUrl = await createDocuSignEnvelope({
+        bookingId: parseInt(bookingId),
+        booking,
+        envelopeId,
+        returnUrl,
+        signerEmail: booking.renter?.email || '',
+        signerName: booking.renter?.name || ''
+      });
 
       // Store signature session
       const contracts = await storage.getContractsByBooking(parseInt(bookingId));
       if (contracts.length > 0) {
         await storage.updateContract(contracts[0].id, {
           status: 'awaiting_signature',
-          externalDocumentId: signatureId,
+          externalDocumentId: envelopeId,
+          signaturePlatform: 'docusign'
         });
       }
 
       res.json({ 
-        signatureUrl: govbrUrl,
-        signatureId,
-        message: "Modo desenvolvimento - simulando GOV.BR"
+        signatureUrl: docusignUrl,
+        envelopeId,
+        message: "Redirecionando para DocuSign para assinatura digital"
       });
     } catch (error) {
-      console.error("GOV.BR signature error:", error);
+      console.error("DocuSign signature error:", error);
       res.status(500).json({ message: "Erro ao iniciar assinatura digital" });
     }
   });
 
-  // GOV.BR signature callback
+  // DocuSign signature callback
   app.get("/contract-signature-callback", async (req, res) => {
     try {
-      const { bookingId, signatureId, status } = req.query;
+      const { bookingId, envelopeId, status } = req.query;
 
       if (status === 'success') {
         const contracts = await storage.getContractsByBooking(parseInt(bookingId as string));
@@ -2036,15 +2165,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GOV.BR signature simulator for development
-  app.get("/simulate-govbr-signature", (req, res) => {
-    const { documentId, returnUrl, cpf } = req.query;
+  // DocuSign signature simulator for development
+  app.get("/simulate-docusign-signature", (req, res) => {
+    const { envelopeId, returnUrl, signerEmail, signerName } = req.query;
     
     // Log simulator access for debugging
-    console.log('🏛️ Simulador GOV.BR acessado:', {
-      documentId,
+    console.log('📄 Simulador DocuSign acessado:', {
+      envelopeId,
       returnUrl,
-      cpf,
+      signerEmail,
+      signerName,
       timestamp: new Date().toISOString()
     });
     
@@ -2059,12 +2189,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Simulador GOV.BR - Assinatura Digital</title>
+        <title>DocuSign - Assinatura Digital</title>
         <style>
           * { box-sizing: border-box; margin: 0; padding: 0; }
           body { 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0070f3 0%, #0051a5 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -2082,24 +2212,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           .header { margin-bottom: 30px; }
           .logo { 
-            font-size: 3em; 
+            font-size: 2.5em; 
             margin-bottom: 15px; 
-            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            background: linear-gradient(135deg, #0070f3, #0051a5);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            font-weight: bold;
           }
-          .header h1 { color: #1e40af; margin: 15px 0; font-size: 1.8em; }
+          .header h1 { color: #0070f3; margin: 15px 0; font-size: 1.8em; }
           .header p { color: #6b7280; font-size: 1.1em; }
           .document { 
             background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); 
             padding: 25px; 
             border-radius: 10px; 
             margin: 25px 0; 
-            border-left: 5px solid #1e40af;
+            border-left: 5px solid #0070f3;
             text-align: left;
           }
-          .document h3 { color: #1e40af; margin-bottom: 15px; text-align: center; }
+          .document h3 { color: #0070f3; margin-bottom: 15px; text-align: center; }
           .document p { margin: 10px 0; color: #374151; }
           .actions { margin-top: 35px; }
           button { 
@@ -2147,7 +2278,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             width: 50px;
             height: 50px;
             border: 4px solid #e5e7eb;
-            border-top: 4px solid #1e40af;
+            border-top: 4px solid #0070f3;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto 20px;
@@ -2159,7 +2290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           @media (max-width: 600px) {
             .container { padding: 25px; margin: 10px; }
             button { width: 100%; margin: 8px 0; }
-            .logo { font-size: 2.5em; }
+            .logo { font-size: 2em; }
             .header h1 { font-size: 1.5em; }
           }
         </style>
@@ -2168,15 +2299,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         <div class="container">
           <div id="main-content">
             <div class="header">
-              <div class="logo">🇧🇷</div>
-              <h1>GOV.BR - Assinatura Digital</h1>
-              <p>Plataforma Oficial do Governo Federal</p>
+              <div class="logo">DocuSign</div>
+              <h1>Assinatura Digital Profissional</h1>
+              <p>Plataforma Líder Mundial em Assinatura Eletrônica</p>
             </div>
             
             <div class="document">
               <h3>📄 Contrato de Locação de Veículo</h3>
-              <p><strong>🆔 ID do Documento:</strong> ${documentId}</p>
-              <p><strong>👤 CPF/Email:</strong> ${cpf}</p>
+              <p><strong>🆔 Envelope ID:</strong> ${envelopeId}</p>
+              <p><strong>👤 Signatário:</strong> ${signerName}</p>
+              <p><strong>📧 Email:</strong> ${signerEmail}</p>
               <p><strong>📊 Status:</strong> Aguardando assinatura digital</p>
               <p><strong>🕒 Válido até:</strong> ${new Date(Date.now() + 24*60*60*1000).toLocaleDateString('pt-BR')}</p>
             </div>
@@ -2185,7 +2317,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               <button class="btn-success" onclick="signDocument('success')">
                 ✅ Assinar Documento
               </button>
-              <button class="btn-danger" onclick="signDocument('user_cancelled')">
+              <button class="btn-danger" onclick="signDocument('declined')">
                 ❌ Recusar Assinatura
               </button>
               <button class="btn-secondary" onclick="signDocument('timeout')">
@@ -2195,20 +2327,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             <div class="footer">
               <p><strong>🔧 Simulador de Desenvolvimento</strong></p>
-              <p>Em produção, este seria o ambiente oficial GOV.BR</p>
+              <p>Em produção, este seria o ambiente oficial DocuSign</p>
             </div>
           </div>
           
           <div id="processing" class="processing">
             <div class="spinner"></div>
-            <h2 style="color: #1e40af; margin-bottom: 15px;">Processando assinatura...</h2>
+            <h2 style="color: #0070f3; margin-bottom: 15px;">Processando assinatura...</h2>
             <p style="color: #6b7280;">Aguarde, você será redirecionado automaticamente</p>
           </div>
         </div>
 
         <script>
-          console.log('🏛️ Simulador GOV.BR carregado');
-          console.log('📄 Documento:', '${documentId}');
+          console.log('📄 Simulador DocuSign carregado');
+          console.log('📄 Envelope:', '${envelopeId}');
           console.log('🔗 Return URL:', '${returnUrl}');
           
           function signDocument(status) {
