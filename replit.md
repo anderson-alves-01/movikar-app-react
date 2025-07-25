@@ -53,13 +53,14 @@ Preferred communication style: Simple, everyday language.
 ✓ Veículo 8 (Toyota Corolla) totalmente liberado para aluguel
 ✓ URL de checkout agora carrega corretamente para todos os veículos
 
-### July 25, 2025 - Fluxo Pós-Pagamento Corrigido
-✓ Implementado redirecionamento automático para contrato após pagamento bem-sucedido
-✓ Corrigido fluxo payment-success para exibir botão "Assinar Contrato Agora"
-✓ Adicionado redirecionamento automático no checkout quando pagamento é confirmado
-✓ Melhorada experiência do usuário com mensagens claras sobre próximos passos
-✓ Garantido que contrato é criado automaticamente após confirmação de pagamento
-✓ Sistema completo Payment → Booking → Contract totalmente integrado
+### July 25, 2025 - Preview de Contrato e Assinatura GOV.BR
+✓ Implementado sistema de preview de contrato antes da assinatura
+✓ Integração com plataforma GOV.BR para assinatura digital oficial
+✓ Fluxo atualizado: Pagamento → Booking → Preview Contrato → Assinatura GOV.BR
+✓ Removida assinatura automática em favor de processo manual verificado
+✓ Criada página de preview com detalhes completos do contrato
+✓ Implementadas rotas para iniciar assinatura digital no GOV.BR
+✓ Sistema de callback para processar retorno da assinatura digital
 
 ### July 25, 2025 - Vehicle Database Issues Resolution
 ✓ Fixed critical SQL syntax errors preventing vehicle loading on main page

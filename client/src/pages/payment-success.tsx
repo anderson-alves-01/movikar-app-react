@@ -54,16 +54,7 @@ export default function PaymentSuccess() {
     }
   }, [paymentIntentId]);
 
-  // Auto-redirect to reservations after 3 seconds if successful
-  useEffect(() => {
-    if (confirmRentalMutation.isSuccess) {
-      const timer = setTimeout(() => {
-        setLocation('/reservations');
-      }, 3000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [confirmRentalMutation.isSuccess, setLocation]);
+  // Remove auto-redirect, let user choose to preview contract or go to reservations
 
   if (!paymentIntentId) {
     return (
@@ -119,12 +110,12 @@ export default function PaymentSuccess() {
                   <p className="text-gray-600">
                     Seu pagamento foi processado com sucesso e o aluguel foi confirmado!
                   </p>
-                  <div className="bg-green-50 p-3 rounded-lg">
-                    <p className="text-sm text-green-700 font-medium">
-                      ✅ Contrato assinado automaticamente
+                  <div className="bg-blue-50 p-3 rounded-lg">
+                    <p className="text-sm text-blue-700 font-medium">
+                      📄 Contrato criado e pronto para assinatura
                     </p>
-                    <p className="text-xs text-green-600 mt-1">
-                      Redirecionando para suas reservas em 3 segundos...
+                    <p className="text-xs text-blue-600 mt-1">
+                      Clique em "Preview do Contrato" para revisar e assinar digitalmente
                     </p>
                   </div>
                 </div>
@@ -142,9 +133,19 @@ export default function PaymentSuccess() {
               )}
               
               <div className="pt-4 space-y-2">
+                {confirmRentalMutation.isSuccess && confirmRentalMutation.data?.booking && (
+                  <Button
+                    onClick={() => setLocation(`/contract-preview/${confirmRentalMutation.data.booking.id}`)}
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    disabled={confirmRentalMutation.isPending}
+                  >
+                    Preview do Contrato
+                  </Button>
+                )}
+                
                 <Button
                   onClick={() => setLocation('/reservations')}
-                  className="w-full bg-green-600 hover:bg-green-700"
+                  className="w-full"
                   disabled={confirmRentalMutation.isPending}
                 >
                   Ver Minhas Reservas

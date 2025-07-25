@@ -1681,6 +1681,13 @@ export class DatabaseStorage implements IStorage {
       .where(eq(contracts.id, id));
     return contract || undefined;
   }
+
+  async getContractsByBooking(bookingId: number): Promise<Contract[]> {
+    return await db
+      .select()
+      .from(contracts)
+      .where(eq(contracts.bookingId, bookingId));
+  }
 }
 
 export const storage = new DatabaseStorage();

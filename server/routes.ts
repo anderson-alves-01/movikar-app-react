@@ -246,27 +246,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const booking = await storage.createBooking(bookingData);
       
-      // Create and auto-sign contract
+      // Create contract for preview (not auto-signed anymore)
       try {
         const contract = await storage.createContract({
           bookingId: booking.id,
-          status: 'signed',
+          status: 'pending_signature',
           createdBy: parseInt(userId),
           templateId: "1",
-          renterSignedAt: new Date(),
-          ownerSignedAt: new Date(),
           contractData: {
             vehicle: { id: booking.vehicleId },
             renter: { id: booking.renterId },
             owner: { id: booking.ownerId },
             booking: { id: booking.id },
             terms: {
-              autoSigned: true,
-              signedAt: new Date().toISOString()
+              requiresGovBRSignature: true,
+              createdAt: new Date().toISOString()
             }
           }
         });
-        console.log(`Contract auto-signed: ${contract.contractNumber}`);
+        console.log(`Contract created for preview: ${contract.contractNumber}`);
       } catch (contractError) {
         console.error("Contract creation failed:", contractError);
       }
@@ -1937,6 +1935,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching personalized suggestions:", error);
       res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Contract preview route
+  app.get("/api/contracts/preview/:bookingId", authenticateToken, async (req, res) => {
+    try {
+      const { bookingId } = req.params;
+      const userId = req.user?.userId;
+
+      const booking = await storage.getBookingWithDetails(parseInt(bookingId));
+      if (!booking) {
+        return res.status(404).json({ message: "Reserva não encontrada" });
+      }
+
+      // Check if user owns this booking
+      if (booking.renterId !== userId && booking.ownerId !== userId) {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      res.json(booking);
+    } catch (error) {
+      console.error("Contract preview error:", error);
+      res.status(500).json({ message: "Erro ao carregar preview do contrato" });
+    }
+  });
+
+  // GOV.BR signature initiation
+  app.post("/api/contracts/sign-govbr/:bookingId", authenticateToken, async (req, res) => {
+    try {
+      const { bookingId } = req.params;
+      const userId = req.user?.userId;
+
+      const booking = await storage.getBookingWithDetails(parseInt(bookingId));
+      if (!booking) {
+        return res.status(404).json({ message: "Reserva não encontrada" });
+      }
+
+      // Check if user owns this booking
+      if (booking.renterId !== userId) {
+        return res.status(403).json({ message: "Apenas o locatário pode assinar o contrato" });
+      }
+
+      // Generate GOV.BR signature URL (mock implementation)
+      const signatureId = `GOVBR-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const returnUrl = `${req.protocol}://${req.get('host')}/contract-signature-callback?bookingId=${bookingId}&signatureId=${signatureId}`;
+      
+      // In a real implementation, you would integrate with GOV.BR API
+      const govbrUrl = `https://assinatura.iti.gov.br/mock-signature?` + 
+        `documentId=${signatureId}&` +
+        `returnUrl=${encodeURIComponent(returnUrl)}&` +
+        `cpf=${encodeURIComponent(booking.renter?.email || '')}`;
+
+      // Store signature session
+      const contracts = await storage.getContractsByBooking(parseInt(bookingId));
+      if (contracts.length > 0) {
+        await storage.updateContract(contracts[0].id, {
+          status: 'awaiting_signature',
+          externalDocumentId: signatureId,
+        });
+      }
+
+      res.json({ 
+        signatureUrl: govbrUrl,
+        signatureId,
+        message: "Redirecionando para GOV.BR..."
+      });
+    } catch (error) {
+      console.error("GOV.BR signature error:", error);
+      res.status(500).json({ message: "Erro ao iniciar assinatura digital" });
+    }
+  });
+
+  // GOV.BR signature callback
+  app.get("/contract-signature-callback", async (req, res) => {
+    try {
+      const { bookingId, signatureId, status } = req.query;
+
+      if (status === 'success') {
+        const contracts = await storage.getContractsByBooking(parseInt(bookingId as string));
+        if (contracts.length > 0) {
+          await storage.updateContract(contracts[0].id, {
+            status: 'signed',
+            renterSigned: true,
+            ownerSigned: true, // Auto-approve owner signature for now
+            renterSignedAt: new Date(),
+            ownerSignedAt: new Date(),
+          });
+        }
+
+        // Redirect to success page
+        res.redirect(`/contract-signed-success?bookingId=${bookingId}`);
+      } else {
+        // Redirect to error page
+        res.redirect(`/contract-signature-error?bookingId=${bookingId}&error=${status}`);
+      }
+    } catch (error) {
+      console.error("Signature callback error:", error);
+      res.redirect('/contract-signature-error?error=callback_failed');
     }
   });
 

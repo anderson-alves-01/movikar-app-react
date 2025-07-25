@@ -24,6 +24,9 @@ import DocumentVerification from "@/pages/document-verification";
 import PerformanceDashboard from "@/pages/performance-dashboard";
 import Checkout from "@/pages/checkout";
 import PaymentSuccess from "@/pages/payment-success";
+import ContractPreview from "@/pages/contract-preview";
+import ContractSignedSuccess from "@/pages/contract-signed-success";
+import ContractSignatureError from "@/pages/contract-signature-error";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -49,6 +52,9 @@ function Router() {
       <Route path="/performance" component={PerformanceDashboard} />
       <Route path="/checkout/:vehicleId" component={Checkout} />
       <Route path="/payment-success" component={PaymentSuccess} />
+      <Route path="/contract-preview/:bookingId" component={ContractPreview} />
+      <Route path="/contract-signed-success" component={ContractSignedSuccess} />
+      <Route path="/contract-signature-error" component={ContractSignatureError} />
       <Route component={NotFound} />
     </Switch>
   );
