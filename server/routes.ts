@@ -398,7 +398,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `, [userId]);
       
       const submittedTypes = docsResult.rows.map((row: any) => row.document_type);
-      const requiredTypes = ['cpf', 'rg', 'cnh', 'comprovante_residencia'];
+      const requiredTypes = ['cnh', 'comprovante_residencia'];
       const allSubmitted = requiredTypes.every(type => submittedTypes.includes(type));
       
       if (allSubmitted) {

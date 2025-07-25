@@ -78,14 +78,14 @@ Preferred communication style: Simple, everyday language.
 ✓ Enhanced user experience with real-time progress bars and status indicators
 
 ### July 25, 2025 - Document Verification System
-✓ Implemented comprehensive document verification system for new users
+✓ Implemented simplified document verification system for new users
 ✓ Created user_documents database table with verification status tracking
 ✓ Built document upload interface with progress indicators and validation
-✓ Added support for CPF, RG, CNH, and residence proof document types
+✓ Simplified to require only CNH and residence proof document types
 ✓ Integrated verification workflow with user account status management
 ✓ Created admin routes for document approval and rejection processes
 ✓ Added verification status indicators throughout the application
-✓ Enhanced user onboarding experience with clear document requirements
+✓ Enhanced user onboarding experience with streamlined document requirements
 
 ## System Architecture
 

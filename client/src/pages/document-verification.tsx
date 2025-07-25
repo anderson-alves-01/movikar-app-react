@@ -31,8 +31,6 @@ interface User {
 }
 
 const documentTypes = [
-  { id: 'cpf', name: 'CPF', required: true },
-  { id: 'rg', name: 'RG', required: true },
   { id: 'cnh', name: 'CNH (Carteira de Habilitação)', required: true },
   { id: 'comprovante_residencia', name: 'Comprovante de Residência', required: true },
 ];
@@ -195,7 +193,7 @@ export default function DocumentVerification() {
       <div className="text-center space-y-4">
         <h1 className="text-3xl font-bold">Verificação de Documentos</h1>
         <p className="text-gray-600">
-          Envie seus documentos para ser verificado e poder alugar veículos na plataforma
+          Envie sua CNH e comprovante de residência para ser verificado e poder alugar veículos na plataforma
         </p>
       </div>
 
