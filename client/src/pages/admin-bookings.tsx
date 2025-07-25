@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Calendar, Search, Filter, Edit, Trash2, Eye } from "lucide-react";
 import { format } from "date-fns";
@@ -130,10 +130,21 @@ export default function AdminBookingsPage() {
   // Update booking mutation
   const updateBookingMutation = useMutation({
     mutationFn: async (data: { id: number; status: string }) => {
-      return apiRequest(`/api/admin/bookings/${data.id}`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/admin/bookings/${data.id}`, {
         method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ status: data.status }),
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update booking');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/bookings'] });
@@ -149,9 +160,20 @@ export default function AdminBookingsPage() {
   // Delete booking mutation
   const deleteBookingMutation = useMutation({
     mutationFn: async (bookingId: number) => {
-      return apiRequest(`/api/admin/bookings/${bookingId}`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/admin/bookings/${bookingId}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete booking');
+      }
+      
+      return response.ok;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/bookings'] });
@@ -364,6 +386,9 @@ export default function AdminBookingsPage() {
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Alterar Status da Reserva</DialogTitle>
+              <DialogDescription>
+                Selecione o novo status para a reserva selecionada.
+              </DialogDescription>
             </DialogHeader>
             {selectedBooking && (
               <div className="space-y-4">

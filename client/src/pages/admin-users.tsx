@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,6 +37,16 @@ export default function AdminUsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newUserData, setNewUserData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    phone: '',
+    isOwner: false,
+    isRenter: true,
+    isVerified: false,
+    role: 'user',
+  });
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -117,10 +127,21 @@ export default function AdminUsersPage() {
   // Update user mutation
   const updateUserMutation = useMutation({
     mutationFn: async (data: { id: number; userData: Partial<User> }) => {
-      return apiRequest(`/api/admin/users/${data.id}`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/admin/users/${data.id}`, {
         method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(data.userData),
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update user');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
@@ -136,9 +157,20 @@ export default function AdminUsersPage() {
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: number) => {
-      return apiRequest(`/api/admin/users/${userId}`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/admin/users/${userId}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete user');
+      }
+      
+      return response.ok;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
@@ -146,6 +178,45 @@ export default function AdminUsersPage() {
     },
     onError: () => {
       toast({ title: "Erro ao excluir usuário", variant: "destructive" });
+    },
+  });
+
+  // Create user mutation
+  const createUserMutation = useMutation({
+    mutationFn: async (userData: typeof newUserData) => {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create user');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      toast({ title: "Usuário criado com sucesso!" });
+      setIsCreateDialogOpen(false);
+      setNewUserData({
+        name: '',
+        email: '',
+        password: '',
+        phone: '',
+        isOwner: false,
+        isRenter: true,
+        isVerified: false,
+        role: 'user',
+      });
+    },
+    onError: () => {
+      toast({ title: "Erro ao criar usuário", variant: "destructive" });
     },
   });
 
@@ -179,6 +250,11 @@ export default function AdminUsersPage() {
     });
   };
 
+  const handleCreateUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    createUserMutation.mutate(newUserData);
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -193,6 +269,10 @@ export default function AdminUsersPage() {
               Total: {filteredUsers.length} usuários
             </span>
           </div>
+          <Button onClick={() => setIsCreateDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Usuário
+          </Button>
         </div>
 
         {/* Filters and Search */}
@@ -372,9 +452,16 @@ export default function AdminUsersPage() {
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Editar Usuário</DialogTitle>
+              <DialogDescription>
+                Altere as informações do usuário selecionado.
+              </DialogDescription>
             </DialogHeader>
             {selectedUser && (
-              <form action={handleUpdateUser} className="space-y-4">
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                handleUpdateUser(formData);
+              }} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="name">Nome</Label>
@@ -461,6 +548,116 @@ export default function AdminUsersPage() {
                 </div>
               </form>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Create User Dialog */}
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Criar Novo Usuário</DialogTitle>
+              <DialogDescription>
+                Preencha os dados para criar um novo usuário.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleCreateUser} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="newName">Nome</Label>
+                  <Input
+                    id="newName"
+                    value={newUserData.name}
+                    onChange={(e) => setNewUserData({ ...newUserData, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="newEmail">Email</Label>
+                  <Input
+                    id="newEmail"
+                    type="email"
+                    value={newUserData.email}
+                    onChange={(e) => setNewUserData({ ...newUserData, email: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="newPassword">Senha</Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    value={newUserData.password}
+                    onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="newPhone">Telefone</Label>
+                  <Input
+                    id="newPhone"
+                    value={newUserData.phone}
+                    onChange={(e) => setNewUserData({ ...newUserData, phone: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="newIsOwner">Proprietário</Label>
+                  <Switch
+                    id="newIsOwner"
+                    checked={newUserData.isOwner}
+                    onCheckedChange={(checked) => setNewUserData({ ...newUserData, isOwner: checked })}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="newIsRenter">Locatário</Label>
+                  <Switch
+                    id="newIsRenter"
+                    checked={newUserData.isRenter}
+                    onCheckedChange={(checked) => setNewUserData({ ...newUserData, isRenter: checked })}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="newIsVerified">Verificado</Label>
+                  <Switch
+                    id="newIsVerified"
+                    checked={newUserData.isVerified}
+                    onCheckedChange={(checked) => setNewUserData({ ...newUserData, isVerified: checked })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="newRole">Papel do Usuário</Label>
+                <Select value={newUserData.role} onValueChange={(value) => setNewUserData({ ...newUserData, role: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">Usuário</SelectItem>
+                    <SelectItem value="admin">Administrador</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsCreateDialogOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={createUserMutation.isPending}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  {createUserMutation.isPending ? 'Criando...' : 'Criar Usuário'}
+                </Button>
+              </div>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
