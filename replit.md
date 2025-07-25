@@ -61,7 +61,7 @@ Preferred communication style: Simple, everyday language.
 ✓ Built progress tracking system with visual indicators and goal management
 ✓ Created responsive layout with tabs for different data categories
 ✓ Integrated dashboard with existing authentication system
-✓ Added performance link to user menu in header navigation
+✓ Added performance link to admin menu in header navigation (admin-only access)
 ✓ Implemented backend API endpoints for dashboard data and metrics
 ✓ Added achievement system showing recent milestones and goals
 ✓ Enhanced user experience with real-time progress bars and status indicators

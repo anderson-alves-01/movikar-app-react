@@ -235,8 +235,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Performance Dashboard Routes
-  app.get("/api/dashboard/metrics", authenticateToken, async (req, res) => {
+  // Performance Dashboard Routes (Admin only)
+  app.get("/api/dashboard/metrics", authenticateToken, requireAdmin, async (req, res) => {
     try {
       const timeRange = req.query.range || '30d';
       
@@ -273,7 +273,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/dashboard/charts", authenticateToken, async (req, res) => {
+  app.get("/api/dashboard/charts", authenticateToken, requireAdmin, async (req, res) => {
     try {
       // Dados simulados para os gráficos - em produção viria do banco
       const chartData = {
@@ -312,7 +312,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/dashboard/goals", authenticateToken, async (req, res) => {
+  app.get("/api/dashboard/goals", authenticateToken, requireAdmin, async (req, res) => {
     try {
       // Dados de metas - em produção viria de configuração ou banco
       const goals = {

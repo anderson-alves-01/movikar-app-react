@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import Header from "@/components/header";
+import { useAuthStore } from "@/lib/auth";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -64,9 +66,19 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 export default function PerformanceDashboard() {
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
+  const [, setLocation] = useLocation();
+  const { user } = useAuthStore();
+
+  // Verificar se o usuário é admin
+  useEffect(() => {
+    if (user && user.role !== 'admin') {
+      setLocation('/');
+    }
+  }, [user, setLocation]);
 
   const { data: metrics, isLoading: metricsLoading } = useQuery<PerformanceMetrics>({
     queryKey: ['/api/dashboard/metrics', timeRange],
+    enabled: user?.role === 'admin',
   });
 
   const { data: chartData, isLoading: chartLoading } = useQuery<{
@@ -76,6 +88,7 @@ export default function PerformanceDashboard() {
     userActivity: ChartData[];
   }>({
     queryKey: ['/api/dashboard/charts', timeRange],
+    enabled: user?.role === 'admin',
   });
 
   const { data: goals, isLoading: goalsLoading } = useQuery<{
@@ -85,7 +98,25 @@ export default function PerformanceDashboard() {
     satisfaction: { current: number; target: number };
   }>({
     queryKey: ['/api/dashboard/goals'],
+    enabled: user?.role === 'admin',
   });
+
+  // Verificar autorização
+  if (!user || user.role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="container mx-auto py-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-800 mb-4">Acesso Negado</h1>
+            <p className="text-gray-600">
+              Você não tem permissão para acessar o dashboard de performance.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (metricsLoading || chartLoading || goalsLoading) {
     return (
