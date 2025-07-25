@@ -43,6 +43,14 @@ Preferred communication style: Simple, everyday language.
 ✓ Garantido que contrato é criado automaticamente após confirmação de pagamento
 ✓ Sistema completo Payment → Booking → Contract totalmente integrado
 
+### July 25, 2025 - Correção Status de Pagamento na Interface
+✓ Corrigido problema de exibição incorreta do status de pagamento
+✓ Interface mostrava "Pendente" quando deveria exibir "Pago" 
+✓ Causa: verificação incorreta de paymentStatus === 'completed' em vez de 'paid'
+✓ Solução: adicionada verificação para ambos os valores ('paid' || 'completed')
+✓ Pagamentos processados pelo Stripe agora exibem status correto na interface
+✓ Sistema de reservas → pagamento → contrato totalmente funcional
+
 ### July 25, 2025 - Correção Problema Veículo ID 22
 ✓ Identificado que veículo ID 22 não existia no banco de dados
 ✓ Criado veículo Honda CR-V 2023 com ID 22 para resolver problema do usuário

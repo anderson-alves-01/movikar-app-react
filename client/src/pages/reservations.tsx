@@ -535,7 +535,7 @@ export default function Reservations() {
                     {selectedBooking.status === "completed" && "Concluído"}
                   </Badge>
                   <Badge variant="outline">
-                    Pagamento: {selectedBooking.paymentStatus === 'completed' ? 'Pago' : 'Pendente'}
+                    Pagamento: {selectedBooking.paymentStatus === 'paid' || selectedBooking.paymentStatus === 'completed' ? 'Pago' : 'Pendente'}
                   </Badge>
                 </div>
               </div>
