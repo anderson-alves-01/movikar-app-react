@@ -356,33 +356,54 @@ export default function AdminDocuments() {
                       variant="outline" 
                       size="sm"
                       onClick={() => {
-                        const link = document.createElement('a');
-                        link.href = selectedDocument.documentUrl;
-                        link.download = `${selectedDocument.documentType}_${selectedDocument.userName}.${selectedDocument.documentUrl.includes('pdf') ? 'pdf' : 'jpg'}`;
-                        link.click();
+                        if (selectedDocument.documentUrl.startsWith('data:')) {
+                          const link = document.createElement('a');
+                          link.href = selectedDocument.documentUrl;
+                          link.download = `${selectedDocument.documentType}_${selectedDocument.userName}.${selectedDocument.documentUrl.includes('pdf') ? 'pdf' : 'jpg'}`;
+                          link.click();
+                        } else {
+                          toast({
+                            title: "Download não disponível",
+                            description: "Este é um documento legado. O download direto não está disponível.",
+                            variant: "destructive",
+                          });
+                        }
                       }}
+                      disabled={!selectedDocument.documentUrl.startsWith('data:')}
                     >
                       <Download className="h-4 w-4 mr-1" />
                       Download
                     </Button>
                   </div>
                   <div className="bg-white border rounded-lg overflow-hidden max-h-96">
-                    {selectedDocument.documentUrl.includes('data:application/pdf') ? (
-                      <iframe
-                        src={selectedDocument.documentUrl}
-                        className="w-full h-96"
-                        title="Visualização do Documento PDF"
-                      />
-                    ) : selectedDocument.documentUrl.includes('data:image') ? (
-                      <img
-                        src={selectedDocument.documentUrl}
-                        alt="Visualização do Documento"
-                        className="w-full h-auto max-h-96 object-contain"
-                      />
+                    {selectedDocument.documentUrl.startsWith('data:') ? (
+                      selectedDocument.documentUrl.includes('application/pdf') ? (
+                        <iframe
+                          src={selectedDocument.documentUrl}
+                          className="w-full h-96"
+                          title="Visualização do Documento PDF"
+                        />
+                      ) : selectedDocument.documentUrl.includes('image/') ? (
+                        <img
+                          src={selectedDocument.documentUrl}
+                          alt="Visualização do Documento"
+                          className="w-full h-auto max-h-96 object-contain"
+                        />
+                      ) : (
+                        <div className="p-8 text-center">
+                          <p className="text-gray-500">Formato de documento não suportado</p>
+                          <p className="text-sm text-gray-400 mt-1">Use o botão Download para visualizar</p>
+                        </div>
+                      )
                     ) : (
-                      <div className="p-8 text-center">
-                        <p className="text-gray-500">Preview não disponível para este tipo de arquivo</p>
-                        <p className="text-sm text-gray-400 mt-1">Use o botão Download para visualizar</p>
+                      <div className="p-8 text-center bg-yellow-50 border border-yellow-200">
+                        <p className="text-yellow-700 font-medium">Documento Legado</p>
+                        <p className="text-sm text-yellow-600 mt-1">
+                          Este documento foi enviado antes da implementação do preview.
+                        </p>
+                        <p className="text-sm text-yellow-600">
+                          Peça ao usuário para reenviar o documento para visualização direta.
+                        </p>
                       </div>
                     )}
                   </div>

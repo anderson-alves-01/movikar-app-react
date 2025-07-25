@@ -195,6 +195,11 @@ export default function DocumentVerification() {
         <p className="text-gray-600">
           Envie sua CNH e comprovante de residência para ser verificado e poder alugar veículos na plataforma
         </p>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
+          <p className="text-blue-800">
+            <strong>Nova funcionalidade:</strong> Documentos enviados agora podem ser visualizados diretamente pelo admin durante a análise.
+          </p>
+        </div>
       </div>
 
       {/* Status Geral */}
