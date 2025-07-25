@@ -62,7 +62,7 @@ export default function HeroSection({ onSearch }: HeroSectionProps) {
                     <Input 
                       type="text" 
                       placeholder="São Paulo, SP" 
-                      className="pl-10"
+                      className="pl-10 h-12 text-sm"
                       value={searchData.location}
                       onChange={(e) => setSearchData(prev => ({ ...prev, location: e.target.value }))}
                     />
@@ -93,7 +93,7 @@ export default function HeroSection({ onSearch }: HeroSectionProps) {
                   </div>
                 </div>
                 <div className="flex items-end">
-                  <Button type="submit" className="w-full bg-primary text-white font-semibold hover:bg-red-600 transition-colors shadow-lg">
+                  <Button type="submit" className="w-full h-12 bg-primary text-white font-semibold hover:bg-red-600 transition-colors shadow-lg">
                     <Search className="h-4 w-4 mr-2" />
                     Buscar
                   </Button>
