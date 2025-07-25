@@ -30,6 +30,7 @@ import {
 import { useAuthStore } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { formatCurrency } from "@/lib/currency";
 import ContractManager from "@/components/contract-manager";
 
 export default function Profile() {
@@ -142,12 +143,7 @@ export default function Profile() {
     updateBookingMutation.mutate({ bookingId, status });
   };
 
-  const formatCurrency = (value: string) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(parseFloat(value));
-  };
+
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR');

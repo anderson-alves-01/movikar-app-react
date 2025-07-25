@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Edit3, Trash2, Car, MapPin, Star, Eye, EyeOff, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { formatCurrency } from "@/lib/currency";
 import Header from "@/components/header";
 import AddVehicleModal from "@/components/add-vehicle-modal";
 import VehicleAvailabilityManager from "@/components/vehicle-availability-manager";
@@ -91,12 +92,7 @@ export default function Vehicles() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(amount);
-  };
+
 
   if (!user) {
     return (

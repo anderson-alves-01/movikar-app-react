@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import { formatCurrency } from "@/lib/currency";
 import WaitingQueueButton from "@/components/waiting-queue-button";
 
 export default function VehicleDetail() {
@@ -65,12 +66,7 @@ export default function VehicleDetail() {
     enabled: !!vehicleId,
   });
 
-  const formatCurrency = (value: string) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(parseFloat(value));
-  };
+
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR');

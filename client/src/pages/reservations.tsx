@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalendarDays, MapPin, Car, User, Clock, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { formatCurrency } from "@/lib/currency";
 import Header from "@/components/header";
 
 interface Booking {
@@ -14,7 +15,7 @@ interface Booking {
   vehicleId: number;
   startDate: string;
   endDate: string;
-  totalAmount: number;
+  totalPrice: number;
   status: string;
   paymentStatus: string;
   vehicle: {
@@ -119,13 +120,6 @@ export default function Reservations() {
     return new Date(dateString).toLocaleDateString("pt-BR");
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(amount);
-  };
-
   if (!user) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -204,7 +198,7 @@ export default function Reservations() {
                       )}
                       <div className="flex justify-between items-center pt-3 border-t">
                         <span className="text-lg font-semibold text-green-600">
-                          {formatCurrency(booking.totalAmount)}
+                          {formatCurrency(booking.totalPrice)}
                         </span>
                         <Button size="sm" variant="outline">
                           Ver Detalhes
@@ -275,7 +269,7 @@ export default function Reservations() {
                       )}
                       <div className="flex justify-between items-center pt-3 border-t">
                         <span className="text-lg font-semibold text-green-600">
-                          {formatCurrency(booking.totalAmount)}
+                          {formatCurrency(booking.totalPrice)}
                         </span>
                         <div className="flex gap-2">
                           {booking.status === "pending" && (

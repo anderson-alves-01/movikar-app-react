@@ -10,6 +10,7 @@ import { useAuthStore } from "@/lib/auth";
 import { getAuthHeaders } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { formatCurrency } from "@/lib/currency";
 
 interface BookingFormProps {
   vehicle: {
@@ -123,12 +124,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
 
   const pricing = calculatePricing();
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
+
 
   return (
     <div className="space-y-6">
