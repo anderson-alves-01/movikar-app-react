@@ -32,18 +32,36 @@ export default function ContractPreview() {
   const signContractMutation = useMutation({
     mutationFn: async () => {
       const response = await apiRequest('POST', `/api/contracts/sign-govbr/${bookingId}`);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message);
+      }
       return response.json();
     },
     onSuccess: (data) => {
-      toast({
-        title: "Redirecionando para GOV.BR",
-        description: "Você será redirecionado para assinar digitalmente no GOV.BR",
-      });
+      console.log('Resposta da assinatura:', data);
       
-      // Redirect to GOV.BR signature platform
-      window.location.href = data.signatureUrl;
+      if (data.signatureUrl) {
+        toast({
+          title: "Redirecionando para GOV.BR",
+          description: data.message || "Você será redirecionado para assinar digitalmente no GOV.BR",
+        });
+        
+        // Add a small delay to show the toast, then redirect
+        setTimeout(() => {
+          console.log('Redirecionando para:', data.signatureUrl);
+          window.location.href = data.signatureUrl;
+        }, 1500);
+      } else {
+        toast({
+          title: "Erro",
+          description: "URL de assinatura não recebida",
+          variant: "destructive",
+        });
+      }
     },
     onError: (error: any) => {
+      console.error('Erro na assinatura:', error);
       toast({
         title: "Erro",
         description: error.message || "Falha ao iniciar assinatura digital",
