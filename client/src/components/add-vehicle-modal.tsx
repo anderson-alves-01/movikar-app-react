@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,12 @@ import { apiRequest } from "@/lib/queryClient";
 interface AddVehicleModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+interface VehicleBrand {
+  id: number;
+  name: string;
+  isActive: boolean;
 }
 
 export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalProps) {
@@ -42,6 +48,12 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Fetch vehicle brands
+  const { data: brands } = useQuery<VehicleBrand[]>({
+    queryKey: ["/api/vehicle-brands"],
+    select: (data) => data?.filter(brand => brand.isActive) || [],
+  });
 
   const vehicleMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -295,13 +307,11 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
                   <SelectValue placeholder="Selecione a marca" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Honda">Honda</SelectItem>
-                  <SelectItem value="Toyota">Toyota</SelectItem>
-                  <SelectItem value="Volkswagen">Volkswagen</SelectItem>
-                  <SelectItem value="Ford">Ford</SelectItem>
-                  <SelectItem value="Chevrolet">Chevrolet</SelectItem>
-                  <SelectItem value="BMW">BMW</SelectItem>
-                  <SelectItem value="Audi">Audi</SelectItem>
+                  {brands?.map((brand) => (
+                    <SelectItem key={brand.id} value={brand.name}>
+                      {brand.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
