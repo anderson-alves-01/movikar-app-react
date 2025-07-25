@@ -42,9 +42,12 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
     renavam: '',
     features: [] as string[],
     images: [] as string[],
+    crlvDocument: '',
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const crlvInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingCRLV, setUploadingCRLV] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -63,7 +66,7 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
     onSuccess: () => {
       toast({
         title: "Veículo cadastrado!",
-        description: "Seu veículo foi cadastrado com sucesso e será analisado em breve.",
+        description: "Seu veículo foi cadastrado e está aguardando aprovação da documentação.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/vehicles'] });
       onOpenChange(false);
@@ -97,7 +100,9 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
       renavam: '',
       features: [] as string[],
       images: [] as string[],
+      crlvDocument: '',
     });
+    setUploadingCRLV(false);
   };
 
   const handleFeatureToggle = (feature: string) => {
@@ -173,6 +178,58 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
     fileInputRef.current?.click();
   };
 
+  const handleCRLVUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Formato inválido",
+        description: "Apenas arquivos PDF, JPG ou PNG são permitidos",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Arquivo muito grande",
+        description: "O arquivo deve ter no máximo 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadingCRLV(true);
+
+    try {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setVehicleData(prev => ({
+          ...prev,
+          crlvDocument: result
+        }));
+        setUploadingCRLV(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      toast({
+        title: "Erro no upload",
+        description: "Falha ao carregar o documento",
+        variant: "destructive",
+      });
+      setUploadingCRLV(false);
+    }
+  };
+
+  const triggerCRLVInput = () => {
+    crlvInputRef.current?.click();
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -193,6 +250,16 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
       toast({
         title: "Fotos obrigatórias",
         description: "Adicione pelo menos 3 fotos do seu veículo",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // CRLV validation
+    if (!vehicleData.crlvDocument) {
+      toast({
+        title: "CRLV obrigatório",
+        description: "Faça o upload do documento CRLV do veículo",
         variant: "destructive",
       });
       return;
@@ -257,6 +324,15 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
               onChange={handleImageUpload}
               className="hidden"
             />
+            
+            {/* Hidden CRLV Input */}
+            <input 
+              ref={crlvInputRef}
+              type="file"
+              accept=".pdf,image/*"
+              onChange={handleCRLVUpload}
+              className="hidden"
+            />
 
             {/* Image Preview Grid */}
             {vehicleData.images.length > 0 && (
@@ -293,6 +369,43 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
                 Adicione pelo menos 3 fotos para continuar
               </p>
             )}
+          </div>
+
+          {/* CRLV Document Upload */}
+          <div>
+            <Label className="block text-sm font-medium text-gray-700 mb-3">
+              Documento CRLV *
+            </Label>
+            
+            <Card 
+              className="border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors cursor-pointer"
+              onClick={triggerCRLVInput}
+            >
+              <CardContent className="p-6 text-center">
+                {uploadingCRLV ? (
+                  <div className="flex items-center justify-center">
+                    <Loader2 className="h-6 w-6 animate-spin text-gray-400 mr-2" />
+                    <span className="text-gray-600">Carregando documento...</span>
+                  </div>
+                ) : vehicleData.crlvDocument ? (
+                  <div className="flex items-center justify-center text-green-600">
+                    <Upload className="h-6 w-6 mr-2" />
+                    <span>Documento CRLV carregado</span>
+                  </div>
+                ) : (
+                  <>
+                    <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600 mb-2">Clique para enviar o CRLV</p>
+                    <p className="text-sm text-gray-500">Documento obrigatório para aprovação</p>
+                    <p className="text-xs text-gray-400 mt-1">Formatos: PDF, JPEG, PNG (máx. 5MB)</p>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+            
+            <p className="text-sm text-gray-500 mt-2">
+              ⚠️ Seu veículo ficará com status "Pendente" até a aprovação da documentação pela equipe.
+            </p>
           </div>
 
           {/* Vehicle Info */}

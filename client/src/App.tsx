@@ -13,6 +13,7 @@ import VehicleEdit from "@/pages/vehicle-edit";
 import AdminDashboard from "@/pages/admin-dashboard";
 import AdminContracts from "@/pages/admin-contracts";
 import AdminVehicleBrands from "@/pages/admin-vehicle-brands";
+import AdminVehicleApproval from "@/pages/admin-vehicle-approval";
 import AdminUsers from "@/pages/admin-users";
 import AdminBookings from "@/pages/admin-bookings";
 import AdminDocuments from "@/pages/admin-documents";
@@ -42,6 +43,7 @@ function Router() {
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/contracts" component={AdminContracts} />
       <Route path="/admin/vehicle-brands" component={AdminVehicleBrands} />
+      <Route path="/admin/vehicle-approval" component={AdminVehicleApproval} />
       <Route path="/admin/users" component={AdminUsers} />
       <Route path="/admin/bookings" component={AdminBookings} />
       <Route path="/admin/documents" component={AdminDocuments} />

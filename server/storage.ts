@@ -148,6 +148,11 @@ export interface IStorage {
 
   // Contract methods for user
   getContractsByUser(userId: number): Promise<ContractWithDetails[]>;
+
+  // Vehicle approval methods
+  getVehiclesForApproval(): Promise<Vehicle[]>;
+  approveVehicle(vehicleId: number, adminId: number, reason?: string): Promise<Vehicle | undefined>;
+  rejectVehicle(vehicleId: number, adminId: number, reason: string): Promise<Vehicle | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -198,6 +203,40 @@ export class DatabaseStorage implements IStorage {
       .from(vehicles)
       .where(eq(vehicles.ownerId, ownerId))
       .orderBy(desc(vehicles.createdAt));
+  }
+
+  async getVehiclesForApproval(): Promise<Vehicle[]> {
+    return await db.select().from(vehicles).where(eq(vehicles.status, "pending"));
+  }
+
+  async approveVehicle(vehicleId: number, adminId: number, reason?: string): Promise<Vehicle | undefined> {
+    const [vehicle] = await db
+      .update(vehicles)
+      .set({
+        status: "approved",
+        statusReason: reason,
+        reviewedBy: adminId,
+        reviewedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(vehicles.id, vehicleId))
+      .returning();
+    return vehicle;
+  }
+
+  async rejectVehicle(vehicleId: number, adminId: number, reason: string): Promise<Vehicle | undefined> {
+    const [vehicle] = await db
+      .update(vehicles)
+      .set({
+        status: "rejected",
+        statusReason: reason,
+        reviewedBy: adminId,
+        reviewedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(vehicles.id, vehicleId))
+      .returning();
+    return vehicle;
   }
 
   async searchVehicles(filters: {

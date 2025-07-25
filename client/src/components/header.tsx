@@ -246,6 +246,12 @@ export default function Header() {
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
+                            <Link href="/admin/vehicle-approval" className="cursor-pointer">
+                              <Car className="h-4 w-4 mr-2" />
+                              Aprovar Veículos
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
                             <Link href="/performance" className="cursor-pointer">
                               <BarChart3 className="h-4 w-4 mr-2" />
                               Performance

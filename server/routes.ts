@@ -952,6 +952,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const vehicleData = insertVehicleSchema.parse({
         ...req.body,
         ownerId: req.user!.id,
+        status: "pending", // New vehicles start as pending for approval
       });
 
       // Log para auditoria de dados válidos
@@ -1771,6 +1772,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Admin delete user error:", error);
       res.status(400).json({ message: "Falha ao excluir usuário" });
+    }
+  });
+
+  // Admin Vehicle Approval endpoints
+  app.get("/api/admin/vehicles/pending", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const vehicles = await storage.getVehiclesForApproval();
+      res.json(vehicles);
+    } catch (error) {
+      console.error("Get pending vehicles error:", error);
+      res.status(500).json({ message: "Erro ao buscar veículos pendentes" });
+    }
+  });
+
+  app.post("/api/admin/vehicles/:id/approve", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const vehicleId = parseInt(req.params.id);
+      const { reason } = req.body;
+      
+      const vehicle = await storage.approveVehicle(vehicleId, req.user!.id, reason);
+      
+      if (!vehicle) {
+        return res.status(404).json({ message: "Veículo não encontrado" });
+      }
+      
+      res.json({ message: "Veículo aprovado com sucesso", vehicle });
+    } catch (error) {
+      console.error("Approve vehicle error:", error);
+      res.status(500).json({ message: "Erro ao aprovar veículo" });
+    }
+  });
+
+  app.post("/api/admin/vehicles/:id/reject", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const vehicleId = parseInt(req.params.id);
+      const { reason } = req.body;
+      
+      if (!reason) {
+        return res.status(400).json({ message: "Motivo da rejeição é obrigatório" });
+      }
+      
+      const vehicle = await storage.rejectVehicle(vehicleId, req.user!.id, reason);
+      
+      if (!vehicle) {
+        return res.status(404).json({ message: "Veículo não encontrado" });
+      }
+      
+      res.json({ message: "Veículo rejeitado", vehicle });
+    } catch (error) {
+      console.error("Reject vehicle error:", error);
+      res.status(500).json({ message: "Erro ao rejeitar veículo" });
     }
   });
 

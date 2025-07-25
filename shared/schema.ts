@@ -84,6 +84,11 @@ export const vehicles = pgTable("vehicles", {
   seats: integer("seats").default(5),
   rating: decimal("rating", { precision: 3, scale: 2 }).default('0'),
   totalBookings: integer("total_bookings").default(0),
+  crlvDocument: text("crlv_document"), // URL do documento CRLV
+  status: varchar("status", { length: 20 }).notNull().default("pending"), // pending, approved, rejected
+  statusReason: text("status_reason"), // Motivo da aprovação/rejeição
+  reviewedBy: integer("reviewed_by").references(() => users.id), // Admin que fez a revisão
+  reviewedAt: timestamp("reviewed_at"), // Data da revisão
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -535,6 +540,8 @@ export const insertVehicleSchema = createInsertSchema(vehicles).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+  reviewedBy: true,
+  reviewedAt: true,
 }).extend({
   model: z.string()
     .min(1, "Modelo é obrigatório")
@@ -554,6 +561,9 @@ export const insertVehicleSchema = createInsertSchema(vehicles).omit({
   renavam: z.string()
     .length(11, "RENAVAM deve ter exatamente 11 dígitos")
     .regex(/^[0-9]{11}$/, "RENAVAM deve conter apenas números"),
+  crlvDocument: z.string().optional(),
+  status: z.enum(["pending", "approved", "rejected"]).default("pending"),
+  statusReason: z.string().optional(),
 });
 
 export const insertBookingSchema = createInsertSchema(bookings).omit({

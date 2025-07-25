@@ -10,6 +10,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### July 25, 2025 - Sistema de Aprovação de Veículos Implementado
+✓ Implementado fluxo completo de aprovação de veículos com upload de CRLV
+✓ Criado formulário de cadastro com upload obrigatório de documento CRLV
+✓ Adicionadas colunas no banco: crlvDocument, status, statusReason, reviewedBy, reviewedAt
+✓ Desenvolvida página administrativa para aprovação/rejeição de veículos
+✓ Implementadas rotas API para aprovação e rejeição com validação de admin
+✓ Integrado sistema no menu administrativo com link "Aprovar Veículos"
+✓ Veículos novos iniciam com status "pending" até aprovação administrativa
+✓ Interface de preview de documentos CRLV na página administrativa
+✓ Sistema de notificações para proprietários sobre status de aprovação
+✓ Workflow completo: Cadastro → Upload CRLV → Aprovação Admin → Publicação
+
 ### July 25, 2025 - Stripe Payment Integration Complete System
 ✓ Implemented complete "Alugar Agora" button workflow with Stripe integration
 ✓ Added secure checkout page with payment processing via Stripe Elements
