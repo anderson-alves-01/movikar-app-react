@@ -54,6 +54,7 @@ export interface IStorage {
   blockVehicleDatesForBooking(vehicleId: number, startDate: string, endDate: string, bookingId: number): Promise<VehicleAvailability>;
   checkAndBlockCompletedBooking(bookingId: number): Promise<boolean>;
   releaseExpiredVehicleBlocks(): Promise<{ releasedBlocks: VehicleAvailability[], notifiedUsers: any[] }>;
+  releaseVehicleDatesForBooking(bookingId: number, vehicleId: number): Promise<boolean>;
   notifyWaitingQueueUsers(vehicleId: number, availableStartDate: string, availableEndDate: string): Promise<any[]>;
 
   // Reviews
@@ -566,6 +567,27 @@ export class DatabaseStorage implements IStorage {
     }
 
     return notifiedUsers;
+  }
+
+  async releaseVehicleDatesForBooking(bookingId: number, vehicleId: number): Promise<boolean> {
+    try {
+      // Remove blocked dates associated with this booking
+      const result = await db
+        .delete(vehicleAvailability)
+        .where(
+          and(
+            eq(vehicleAvailability.vehicleId, vehicleId),
+            eq(vehicleAvailability.bookingId, bookingId),
+            eq(vehicleAvailability.isAvailable, false)
+          )
+        );
+
+      console.log(`Released vehicle dates for booking ${bookingId}, affected rows: ${result.rowCount || 0}`);
+      return (result.rowCount || 0) > 0;
+    } catch (error) {
+      console.error('Error releasing vehicle dates:', error);
+      return false;
+    }
   }
 
   async checkVehicleAvailability(vehicleId: number, startDate: Date, endDate: Date): Promise<boolean> {

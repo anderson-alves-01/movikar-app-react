@@ -1844,6 +1844,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Cancel contract with refund and vehicle release
+  app.post("/api/admin/contracts/:id/cancel", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const contractId = parseInt(req.params.id);
+      const { reason } = req.body;
+
+      // Get contract details with booking info
+      const contract = await storage.getContract(contractId);
+      if (!contract) {
+        return res.status(404).json({ message: "Contrato não encontrado" });
+      }
+
+      // Get booking details
+      const booking = await storage.getBooking(contract.bookingId);
+      if (!booking) {
+        return res.status(404).json({ message: "Reserva não encontrada" });
+      }
+
+      // Process refund if payment was made
+      let refundId = null;
+      if (booking.paymentIntentId && booking.paymentStatus === 'paid') {
+        try {
+          const refund = await stripe.refunds.create({
+            payment_intent: booking.paymentIntentId,
+            reason: 'requested_by_customer',
+            metadata: {
+              contractId: contractId.toString(),
+              bookingId: booking.id.toString(),
+              reason: reason || 'Admin cancellation'
+            }
+          });
+          refundId = refund.id;
+          console.log(`Refund created: ${refundId} for payment intent: ${booking.paymentIntentId}`);
+        } catch (stripeError) {
+          console.error('Stripe refund error:', stripeError);
+          return res.status(400).json({ 
+            message: "Erro ao processar estorno no Stripe",
+            details: stripeError.message 
+          });
+        }
+      }
+
+      // Update contract status to cancelled
+      await storage.updateContract(contractId, { 
+        status: 'cancelled',
+        cancelledAt: new Date(),
+        cancellationReason: reason || 'Cancelado pelo administrador'
+      });
+
+      // Update booking status and payment status
+      await storage.updateBooking(booking.id, {
+        status: 'cancelled',
+        paymentStatus: refundId ? 'refunded' : booking.paymentStatus
+      });
+
+      // Release vehicle dates by removing blocked dates for this booking
+      await storage.releaseVehicleDatesForBooking(booking.id, booking.vehicleId);
+
+      // Log the cancellation
+      console.log(`Contract ${contractId} cancelled successfully. Refund: ${refundId || 'N/A'}`);
+
+      res.json({
+        message: "Contrato cancelado com sucesso",
+        refundId,
+        contractId,
+        bookingId: booking.id
+      });
+
+    } catch (error) {
+      console.error("Contract cancellation error:", error);
+      res.status(500).json({ 
+        message: "Erro interno ao cancelar contrato",
+        details: error.message 
+      });
+    }
+  });
+
   app.get("/api/vehicle-brands", async (req, res) => {
     try {
       const brands = await storage.getVehicleBrands();

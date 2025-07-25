@@ -1,14 +1,17 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FileText, Search, Download, Eye, Filter } from "lucide-react";
+import { FileText, Search, Download, Eye, Filter, X, AlertTriangle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { apiRequest } from "@/lib/queryClient";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function AdminContractsPanel() {
   const [filters, setFilters] = useState({
@@ -20,6 +23,17 @@ export default function AdminContractsPanel() {
   });
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [cancelDialog, setCancelDialog] = useState<{
+    isOpen: boolean;
+    contract: any;
+    reason: string;
+  }>({
+    isOpen: false,
+    contract: null,
+    reason: ''
+  });
+
+  const { toast } = useToast();
 
   // Get contracts with filters
   const { data: contracts = [], isLoading } = useQuery({
@@ -69,6 +83,46 @@ export default function AdminContractsPanel() {
       default:
         return status;
     }
+  };
+
+  // Cancel contract mutation
+  const cancelContractMutation = useMutation({
+    mutationFn: async ({ contractId, reason }: { contractId: number, reason: string }) => {
+      const response = await apiRequest('POST', `/api/admin/contracts/${contractId}/cancel`, {
+        reason
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Erro ao cancelar contrato');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Contrato cancelado com sucesso",
+        description: `Contrato cancelado. ${data.refundId ? `Estorno processado: ${data.refundId}` : 'Sem estorno necessário.'}`,
+      });
+      // Invalidate contracts query to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/contracts'] });
+      // Close dialog
+      setCancelDialog({ isOpen: false, contract: null, reason: '' });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao cancelar contrato",
+        description: error.message || "Erro interno do servidor",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleCancelContract = () => {
+    if (!cancelDialog.contract) return;
+    
+    cancelContractMutation.mutate({
+      contractId: cancelDialog.contract.id,
+      reason: cancelDialog.reason || 'Cancelado pelo administrador'
+    });
   };
 
   const filteredContracts = (Array.isArray(contracts) ? contracts : []).filter((contract: any) => {
@@ -289,6 +343,20 @@ export default function AdminContractsPanel() {
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
+                          {/* Cancel button - only show for non-cancelled contracts */}
+                          {contract.status !== 'cancelled' && (
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => setCancelDialog({
+                                isOpen: true,
+                                contract: contract,
+                                reason: ''
+                              })}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -318,6 +386,77 @@ export default function AdminContractsPanel() {
           </Button>
         </div>
       )}
+
+      {/* Cancel Contract Dialog */}
+      <Dialog open={cancelDialog.isOpen} onOpenChange={(open) => setCancelDialog({ ...cancelDialog, isOpen: open })}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              Cancelar Contrato
+            </DialogTitle>
+            <DialogDescription>
+              Esta ação cancelará o contrato permanentemente. O pagamento será estornado e o veículo ficará disponível novamente.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {cancelDialog.contract && (
+            <div className="space-y-4">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium mb-2">Detalhes do Contrato</h4>
+                <div className="text-sm space-y-1">
+                  <p><strong>Número:</strong> #{cancelDialog.contract.contractNumber}</p>
+                  <p><strong>Locatário:</strong> {cancelDialog.contract.contractData.renter.name}</p>
+                  <p><strong>Veículo:</strong> {cancelDialog.contract.contractData.vehicle.brand} {cancelDialog.contract.contractData.vehicle.model}</p>
+                  <p><strong>Status:</strong> {getStatusText(cancelDialog.contract.status)}</p>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="reason">Motivo do cancelamento (opcional)</Label>
+                <Textarea
+                  id="reason"
+                  placeholder="Descreva o motivo do cancelamento..."
+                  value={cancelDialog.reason}
+                  onChange={(e) => setCancelDialog({ ...cancelDialog, reason: e.target.value })}
+                  rows={3}
+                />
+              </div>
+              
+              <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5" />
+                  <div className="text-sm text-yellow-800">
+                    <p className="font-medium">Atenção:</p>
+                    <ul className="mt-1 space-y-1">
+                      <li>• O pagamento será estornado automaticamente</li>
+                      <li>• O veículo ficará disponível para novas reservas</li>
+                      <li>• Esta ação não pode ser desfeita</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setCancelDialog({ isOpen: false, contract: null, reason: '' })}
+                  disabled={cancelContractMutation.isPending}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleCancelContract}
+                  disabled={cancelContractMutation.isPending}
+                >
+                  {cancelContractMutation.isPending ? 'Cancelando...' : 'Confirmar Cancelamento'}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
