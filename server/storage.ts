@@ -205,8 +205,18 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(vehicles.createdAt));
   }
 
-  async getVehiclesForApproval(): Promise<Vehicle[]> {
-    return await db.select().from(vehicles).where(eq(vehicles.status, "pending"));
+  async getVehiclesForApproval(): Promise<VehicleWithOwner[]> {
+    const results = await db
+      .select()
+      .from(vehicles)
+      .leftJoin(users, eq(vehicles.ownerId, users.id))
+      .where(eq(vehicles.status, "pending"))
+      .orderBy(desc(vehicles.createdAt));
+
+    return results.map(result => ({
+      ...result.vehicles,
+      owner: result.users!,
+    }));
   }
 
   async approveVehicle(vehicleId: number, adminId: number, reason?: string): Promise<Vehicle | undefined> {

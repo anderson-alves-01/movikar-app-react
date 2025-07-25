@@ -1927,6 +1927,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+
+      res.status(400).json({ message: "Falha ao excluir contrato" });
+    }
+  });
+
   // Cancel contract with refund and vehicle release
   app.post("/api/admin/contracts/:id/cancel", authenticateToken, requireAdmin, async (req, res) => {
     try {

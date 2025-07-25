@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 
-interface Vehicle {
+interface VehicleWithOwner {
   id: number;
   brand: string;
   model: string;
@@ -50,7 +50,7 @@ interface Vehicle {
 }
 
 interface VehicleDetailsDialogProps {
-  vehicle: Vehicle;
+  vehicle: VehicleWithOwner;
   onApprove: (id: number, reason?: string) => void;
   onReject: (id: number, reason: string) => void;
   isApproving: boolean;
@@ -269,7 +269,7 @@ export default function AdminVehicleApproval() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: pendingVehicles = [], isLoading } = useQuery({
+  const { data: pendingVehicles = [], isLoading } = useQuery<VehicleWithOwner[]>({
     queryKey: ["/api/admin/vehicles/pending"],
   });
 
@@ -379,7 +379,7 @@ export default function AdminVehicleApproval() {
           </Card>
         ) : (
           <div className="space-y-6">
-            {pendingVehicles.map((vehicle: Vehicle) => (
+            {pendingVehicles.map((vehicle: VehicleWithOwner) => (
               <Card key={vehicle.id} className="overflow-hidden">
                 <CardContent className="p-6">
                   <div className="flex flex-col lg:flex-row gap-6">

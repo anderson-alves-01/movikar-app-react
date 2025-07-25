@@ -194,7 +194,7 @@ export default function AdminDocumentVerification() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: documents = [], isLoading } = useQuery({
+  const { data: documents = [], isLoading } = useQuery<Document[]>({
     queryKey: ["/api/admin/documents"],
   });
 
@@ -284,8 +284,8 @@ export default function AdminDocumentVerification() {
   };
 
   // Filter pending documents for priority display
-  const pendingDocuments = documents.filter((doc: Document) => doc.status === 'pending');
-  const reviewedDocuments = documents.filter((doc: Document) => doc.status !== 'pending');
+  const pendingDocuments = documents.filter(doc => doc.status === 'pending');
+  const reviewedDocuments = documents.filter(doc => doc.status !== 'pending');
 
   if (isLoading) {
     return (
@@ -345,7 +345,7 @@ export default function AdminDocumentVerification() {
               </h2>
             </div>
             <div className="space-y-4">
-              {pendingDocuments.map((document: Document) => (
+              {pendingDocuments.map(document => (
                 <Card key={document.id} className="border-red-200 bg-red-50">
                   <CardContent className="p-6">
                     <div className="flex flex-col lg:flex-row gap-6">
@@ -438,7 +438,7 @@ export default function AdminDocumentVerification() {
             </Card>
           ) : (
             <div className="space-y-4">
-              {documents.map((document: Document) => (
+              {documents.map(document => (
                 <Card key={document.id}>
                   <CardContent className="p-4">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
