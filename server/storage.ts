@@ -749,7 +749,73 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(contractTemplates.isActive, true), eq(contractTemplates.category, "standard")))
       .orderBy(desc(contractTemplates.version))
       .limit(1);
-    return template || undefined;
+    
+    // If no template exists, create a default one
+    if (!template) {
+      const defaultTemplate: InsertContractTemplate = {
+        name: "Contrato de Locação Padrão",
+        category: "standard",
+        htmlTemplate: `
+          <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <h1 style="text-align: center;">CONTRATO DE LOCAÇÃO DE VEÍCULO</h1>
+            <p><strong>Contrato Nº:</strong> {{contract.number}}</p>
+            <p><strong>Data:</strong> {{contract.date}}</p>
+            
+            <h2>DADOS DO VEÍCULO</h2>
+            <p><strong>Marca/Modelo:</strong> {{vehicle.brand}} {{vehicle.model}}</p>
+            <p><strong>Ano:</strong> {{vehicle.year}}</p>
+            <p><strong>Categoria:</strong> {{vehicle.category}}</p>
+            
+            <h2>LOCATÁRIO</h2>
+            <p><strong>Nome:</strong> {{renter.name}}</p>
+            <p><strong>Email:</strong> {{renter.email}}</p>
+            <p><strong>Telefone:</strong> {{renter.phone}}</p>
+            
+            <h2>PROPRIETÁRIO</h2>
+            <p><strong>Nome:</strong> {{owner.name}}</p>
+            <p><strong>Email:</strong> {{owner.email}}</p>
+            <p><strong>Telefone:</strong> {{owner.phone}}</p>
+            
+            <h2>PERÍODO DE LOCAÇÃO</h2>
+            <p><strong>Data de Início:</strong> {{booking.startDate}}</p>
+            <p><strong>Data de Término:</strong> {{booking.endDate}}</p>
+            
+            <h2>VALORES</h2>
+            <p><strong>Valor Total:</strong> {{booking.totalPrice}}</p>
+            <p><strong>Taxa de Serviço:</strong> {{booking.serviceFee}}</p>
+            <p><strong>Taxa de Seguro:</strong> {{booking.insuranceFee}}</p>
+            
+            <h2>TERMOS E CONDIÇÕES</h2>
+            <p>1. O locatário se compromete a devolver o veículo nas mesmas condições.</p>
+            <p>2. É proibido fumar no interior do veículo.</p>
+            <p>3. O locatário é responsável por multas e infrações durante o período de locação.</p>
+            
+            <div style="margin-top: 50px;">
+              <div style="float: left; width: 45%;">
+                <p>________________________</p>
+                <p>Assinatura do Locatário</p>
+              </div>
+              <div style="float: right; width: 45%;">
+                <p>________________________</p>
+                <p>Assinatura do Proprietário</p>
+              </div>
+            </div>
+          </div>
+        `,
+        fields: [
+          { name: "vehicle.brand", type: "text", required: true },
+          { name: "vehicle.model", type: "text", required: true },
+          { name: "renter.name", type: "text", required: true },
+          { name: "owner.name", type: "text", required: true }
+        ],
+        isActive: true,
+        version: 1
+      };
+      
+      return await this.createContractTemplate(defaultTemplate);
+    }
+    
+    return template;
   }
 
   async createContractTemplate(insertTemplate: InsertContractTemplate): Promise<ContractTemplate> {
@@ -1187,19 +1253,36 @@ export class DatabaseStorage implements IStorage {
     return [];
   }
 
-  async createContract(data: any): Promise<any> {
-    // Placeholder for contract creation
-    return { id: 1, ...data };
+  async createContract(contractData: InsertContract): Promise<Contract> {
+    const [contract] = await db
+      .insert(contracts)
+      .values(contractData)
+      .returning();
+    return contract;
   }
 
-  async updateContract(id: number, data: any): Promise<any> {
-    // Placeholder for contract update
-    return { id, ...data };
+  async updateContract(id: number, data: Partial<InsertContract>): Promise<Contract | undefined> {
+    const [contract] = await db
+      .update(contracts)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(contracts.id, id))
+      .returning();
+    return contract || undefined;
   }
 
   async deleteContract(id: number): Promise<boolean> {
-    // Placeholder for contract deletion
-    return true;
+    const result = await db
+      .delete(contracts)
+      .where(eq(contracts.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  async getContract(id: number): Promise<Contract | undefined> {
+    const [contract] = await db
+      .select()
+      .from(contracts)
+      .where(eq(contracts.id, id));
+    return contract || undefined;
   }
 }
 

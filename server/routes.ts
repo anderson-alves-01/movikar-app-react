@@ -414,6 +414,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Booking not found" });
       }
 
+      // Create contract automatically when booking is approved
+      if (req.body.status === "approved") {
+        try {
+          const contractService = await import("./services/contractService.js");
+          const service = new contractService.ContractService();
+          
+          // Check if contract already exists for this booking
+          const existingContracts = await storage.getContractsByBooking(bookingId);
+          
+          if (existingContracts.length === 0) {
+            // Create new contract
+            const contract = await service.createContractFromBooking(bookingId, undefined, req.user!.id);
+            
+            console.log(`✅ Contrato criado automaticamente para reserva ${bookingId}: ${contract.contractNumber}`);
+            
+            // Generate PDF preview
+            await service.generateContractPreview(contract.id);
+            
+            // Return booking with contract information
+            return res.json({
+              ...updatedBooking,
+              contractCreated: true,
+              contractId: contract.id,
+              contractNumber: contract.contractNumber
+            });
+          }
+        } catch (contractError) {
+          console.error("Erro ao criar contrato:", contractError);
+          // Don't fail the booking approval if contract creation fails
+          // Just log the error and continue
+        }
+      }
+
       res.json(updatedBooking);
     } catch (error) {
       console.error("Update booking status error:", error);

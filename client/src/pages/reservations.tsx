@@ -98,15 +98,26 @@ export default function Reservations() {
   });
 
   const updateBookingMutation = useMutation({
-    mutationFn: ({ bookingId, status }: { bookingId: number; status: string }) =>
-      apiRequest("PATCH", `/api/bookings/${bookingId}`, { status }),
-    onSuccess: () => {
+    mutationFn: async ({ bookingId, status }: { bookingId: number, status: string }) => {
+      const response = await apiRequest("PATCH", `/api/bookings/${bookingId}`, { status });
+      return response.json();
+    },
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/bookings?type=owner"] });
       queryClient.invalidateQueries({ queryKey: ["/api/bookings?type=renter"] });
-      toast({
-        title: "Sucesso",
-        description: "Status da reserva atualizado",
-      });
+      
+      // Check if a contract was created
+      if (data.contractCreated) {
+        toast({
+          title: "Reserva Aprovada com Sucesso!",
+          description: `Contrato ${data.contractNumber} criado automaticamente e pronto para assinatura.`,
+        });
+      } else {
+        toast({
+          title: "Sucesso",
+          description: "Status da reserva atualizado",
+        });
+      }
     },
     onError: () => {
       toast({
