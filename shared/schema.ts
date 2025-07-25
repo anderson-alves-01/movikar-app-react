@@ -65,6 +65,8 @@ export const vehicles = pgTable("vehicles", {
   model: varchar("model", { length: 50 }).notNull(),
   year: integer("year").notNull(),
   color: text("color"),
+  licensePlate: varchar("license_plate", { length: 8 }).notNull().unique(), // Placa do veículo (formato ABC-1234 ou ABC1D23)
+  renavam: varchar("renavam", { length: 11 }).notNull().unique(), // Código RENAVAM (11 dígitos)
   category: varchar("category", { length: 50 }).notNull(),
   pricePerDay: decimal("price_per_day", { precision: 8, scale: 2 }).notNull(),
   pricePerWeek: decimal("price_per_week", { precision: 8, scale: 2 }),
@@ -537,6 +539,13 @@ export const insertVehicleSchema = createInsertSchema(vehicles).omit({
   pricePerDay: z.union([z.string(), z.number()]).transform(val => String(val)),
   pricePerWeek: z.union([z.string(), z.number()]).optional().transform(val => val ? String(val) : undefined),
   pricePerMonth: z.union([z.string(), z.number()]).optional().transform(val => val ? String(val) : undefined),
+  licensePlate: z.string()
+    .min(7, "Placa deve ter pelo menos 7 caracteres")
+    .max(8, "Placa deve ter no máximo 8 caracteres")
+    .regex(/^[A-Z]{3}[-]?[0-9][A-Z0-9][0-9]{2}$/, "Formato de placa inválido. Use ABC-1234 ou ABC1D23"),
+  renavam: z.string()
+    .length(11, "RENAVAM deve ter exatamente 11 dígitos")
+    .regex(/^[0-9]{11}$/, "RENAVAM deve conter apenas números"),
 }).refine((data) => vehicleBrandModelValidation({ brand: data.brand, model: data.model }), {
   message: "Modelo inválido para a marca selecionada",
   path: ["model"]

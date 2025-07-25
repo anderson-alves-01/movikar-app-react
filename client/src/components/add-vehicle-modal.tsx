@@ -32,6 +32,8 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
     pricePerWeek: '',
     pricePerMonth: '',
     description: '',
+    licensePlate: '',
+    renavam: '',
     features: [] as string[],
     images: [] as string[],
   });
@@ -79,8 +81,10 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
       pricePerWeek: '',
       pricePerMonth: '',
       description: '',
-      features: [],
-      images: [],
+      licensePlate: '',
+      renavam: '',
+      features: [] as string[],
+      images: [] as string[],
     });
   };
 
@@ -329,6 +333,32 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
                 value={vehicleData.color}
                 onChange={(e) => setVehicleData(prev => ({ ...prev, color: e.target.value }))}
               />
+            </div>
+            <div>
+              <Label className="block text-sm font-medium text-gray-700 mb-2">Placa *</Label>
+              <Input 
+                type="text" 
+                placeholder="ABC-1234 ou ABC1D23"
+                value={vehicleData.licensePlate}
+                onChange={(e) => setVehicleData(prev => ({ ...prev, licensePlate: e.target.value.toUpperCase() }))}
+                maxLength={8}
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                Formato padrão (ABC-1234) ou Mercosul (ABC1D23)
+              </p>
+            </div>
+            <div>
+              <Label className="block text-sm font-medium text-gray-700 mb-2">RENAVAM *</Label>
+              <Input 
+                type="text" 
+                placeholder="12345678901"
+                value={vehicleData.renavam}
+                onChange={(e) => setVehicleData(prev => ({ ...prev, renavam: e.target.value.replace(/\D/g, '') }))}
+                maxLength={11}
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                Código de 11 dígitos do documento do veículo
+              </p>
             </div>
           </div>
 

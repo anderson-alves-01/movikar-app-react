@@ -61,6 +61,15 @@ Preferred communication style: Simple, everyday language.
 ✓ Redirecionamento automático funcionando perfeitamente
 ✓ Base de dados preparada com 10 veículos de teste para o usuário admin
 
+### July 25, 2025 - Campos Placa e RENAVAM Adicionados ao Cadastro de Veículos
+✓ Adicionados campos licensePlate (placa) e renavam ao schema da tabela vehicles
+✓ Implementada validação Zod para formato de placa brasileira (ABC-1234 ou ABC1D23)
+✓ Implementada validação RENAVAM com exatamente 11 dígitos numéricos
+✓ Atualizado formulário de cadastro de veículos com campos obrigatórios
+✓ Adicionada formatação automática: placa em maiúsculas, RENAVAM apenas números
+✓ Criadas colunas no banco de dados com constraints de unicidade
+✓ Veículos existentes atualizados com placas e RENAVAMs temporários para testes
+
 ### July 25, 2025 - Base de Dados Preparada para Testes
 ✓ Removidos todos os dados de teste do banco de dados
 ✓ Mantido apenas o usuário admin@carshare.com (ID: 4)
