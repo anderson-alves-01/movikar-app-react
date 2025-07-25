@@ -317,15 +317,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const serviceFee = (totalPrice * 0.1).toFixed(2); // 10% service fee
       const insuranceFee = (totalPrice * 0.05).toFixed(2); // 5% insurance fee
 
-      const bookingData = insertBookingSchema.parse({
-        ...req.body,
+      // Prepare booking data with proper type conversions
+      const bookingPayload = {
+        vehicleId: req.body.vehicleId,
         renterId: req.user!.id,
         ownerId: vehicle.ownerId,
         startDate,
         endDate,
+        totalPrice: totalPrice.toFixed(2), // Convert to string
         servicefee: serviceFee,
         insuranceFee: insuranceFee,
-      });
+        status: req.body.status || "pending",
+        paymentStatus: req.body.paymentStatus || "pending",
+        notes: req.body.notes || null,
+      };
+
+      const bookingData = insertBookingSchema.parse(bookingPayload);
 
       // Check vehicle availability
       const isAvailable = await storage.checkVehicleAvailability(
