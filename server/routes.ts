@@ -148,7 +148,20 @@ async function createDocuSignEnvelope(params: {
   } catch (error) {
     console.error('DocuSign envelope creation error:', error);
     // Fallback to development simulator
-    return `${process.env.BASE_URL || 'http://localhost:5000'}/simulate-docusign-signature?` +
+    // Use same host as the main application instead of localhost
+    const baseUrl = process.env.BASE_URL || 'http://localhost:5000';
+    // If we have a return URL, extract the base URL from it for consistency
+    if (returnUrl && returnUrl.includes('://')) {
+      const extractedBase = returnUrl.split('/contract-signature-callback')[0];
+      return `${extractedBase}/simulate-docusign-signature?` +
+        `envelopeId=${envelopeId}&` +
+        `returnUrl=${encodeURIComponent(returnUrl)}&` +
+        `signerEmail=${encodeURIComponent(signerEmail)}&` +
+        `signerName=${encodeURIComponent(signerName)}`;
+    }
+    
+    // Fallback to base URL if return URL is not available
+    return `${baseUrl}/simulate-docusign-signature?` +
       `envelopeId=${envelopeId}&` +
       `returnUrl=${encodeURIComponent(returnUrl)}&` +
       `signerEmail=${encodeURIComponent(signerEmail)}&` +
