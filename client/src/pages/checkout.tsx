@@ -54,7 +54,7 @@ const CheckoutForm = ({ checkoutData }: { checkoutData: CheckoutData }) => {
     setIsProcessing(true);
 
     try {
-      const { error } = await stripe.confirmPayment({
+      const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
           return_url: `${window.location.origin}/payment-success`,
@@ -68,12 +68,13 @@ const CheckoutForm = ({ checkoutData }: { checkoutData: CheckoutData }) => {
           description: error.message,
           variant: "destructive",
         });
-      } else {
-        // Payment succeeded - redirect will be handled by return_url
+      } else if (paymentIntent?.status === 'succeeded') {
+        // Payment succeeded - redirect to success page with payment intent ID
         toast({
           title: "Pagamento realizado!",
-          description: "Processando confirmação do aluguel...",
+          description: "Redirecionando para confirmação...",
         });
+        setLocation(`/payment-success?payment_intent=${paymentIntent.id}`);
       }
     } catch (error: any) {
       toast({

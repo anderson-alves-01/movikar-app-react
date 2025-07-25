@@ -109,7 +109,7 @@ export default function PaymentSuccess() {
                     Seu pagamento foi processado com sucesso e o aluguel foi confirmado!
                   </p>
                   <p className="text-sm text-gray-500">
-                    Você pode acompanhar o status do seu aluguel na área de reservas.
+                    O contrato foi gerado automaticamente. Agora você precisa assiná-lo para finalizar o processo.
                   </p>
                 </div>
               )}
@@ -126,6 +126,16 @@ export default function PaymentSuccess() {
               )}
               
               <div className="pt-4 space-y-2">
+                {confirmRentalMutation.isSuccess && confirmRentalMutation.data?.booking && (
+                  <Button
+                    onClick={() => setLocation(`/contracts/${confirmRentalMutation.data.booking.id}`)}
+                    className="w-full bg-green-600 hover:bg-green-700"
+                    disabled={confirmRentalMutation.isPending}
+                  >
+                    Assinar Contrato Agora
+                  </Button>
+                )}
+                
                 <Button
                   onClick={() => setLocation('/profile?tab=bookings')}
                   className="w-full"
