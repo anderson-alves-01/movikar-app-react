@@ -30,7 +30,18 @@ export default function AdminContractsPanel() {
       params.append('limit', filters.limit.toString());
       params.append('offset', filters.offset.toString());
 
-      const response = await fetch(`/api/admin/contracts?${params}`);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/admin/contracts?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch contracts');
+      }
+      
       return response.json();
     },
   });
@@ -69,16 +80,16 @@ export default function AdminContractsPanel() {
     }
   };
 
-  const filteredContracts = contracts.filter((contract: any) => {
+  const filteredContracts = (Array.isArray(contracts) ? contracts : []).filter((contract: any) => {
     if (!searchTerm) return true;
     
     const searchLower = searchTerm.toLowerCase();
     return (
-      contract.contractNumber.toLowerCase().includes(searchLower) ||
-      contract.contractData.renter.name.toLowerCase().includes(searchLower) ||
-      contract.contractData.owner.name.toLowerCase().includes(searchLower) ||
-      contract.contractData.vehicle.brand.toLowerCase().includes(searchLower) ||
-      contract.contractData.vehicle.model.toLowerCase().includes(searchLower)
+      contract.contractNumber?.toLowerCase().includes(searchLower) ||
+      contract.contractData?.renter?.name?.toLowerCase().includes(searchLower) ||
+      contract.contractData?.owner?.name?.toLowerCase().includes(searchLower) ||
+      contract.contractData?.vehicle?.brand?.toLowerCase().includes(searchLower) ||
+      contract.contractData?.vehicle?.model?.toLowerCase().includes(searchLower)
     );
   });
 
