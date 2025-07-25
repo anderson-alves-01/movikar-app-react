@@ -548,7 +548,14 @@ export const insertVehicleSchema = createInsertSchema(vehicles).omit({
   renavam: z.string()
     .length(11, "RENAVAM deve ter exatamente 11 dígitos")
     .regex(/^[0-9]{11}$/, "RENAVAM deve conter apenas números"),
-}).refine((data) => vehicleBrandModelValidation({ brand: data.brand, model: data.model }), {
+}).refine((data) => {
+  try {
+    vehicleBrandModelValidation.parse({ brand: data.brand, model: data.model });
+    return true;
+  } catch {
+    return false;
+  }
+}, {
   message: "Modelo inválido para a marca selecionada",
   path: ["model"]
 });
