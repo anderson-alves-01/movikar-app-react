@@ -11,7 +11,7 @@ import {
   type UserActivity, type InsertUserActivity
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gte, lte, desc, asc, or, like, ilike, sql, lt, ne, inArray } from "drizzle-orm";
+import { eq, and, gte, lte, desc, asc, or, like, ilike, sql, lt, ne, inArray, not } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -209,72 +209,63 @@ export class DatabaseStorage implements IStorage {
     seatsMin?: number;
     seatsMax?: number;
   }): Promise<VehicleWithOwner[]> {
-    const conditions = [eq(vehicles.isAvailable, true)];
-
-    if (filters.location) {
-      conditions.push(ilike(vehicles.location, `%${filters.location}%`));
+    try {
+      // Use raw SQL to avoid Drizzle schema issues
+      const query = `
+        SELECT 
+          v.*,
+          u.name as owner_name,
+          u.email as owner_email,
+          u.phone as owner_phone,
+          u.profile_image as owner_profile_image,
+          u.is_verified as owner_is_verified
+        FROM vehicles v
+        LEFT JOIN users u ON v.owner_id = u.id
+        WHERE v.is_available = true
+        ORDER BY v.created_at DESC
+      `;
+      
+      const results = await db.execute(sql.raw(query));
+      
+      return results.map((row: any) => ({
+        id: row.id,
+        ownerId: row.owner_id,
+        brand: row.brand,
+        model: row.model,
+        year: row.year,
+        color: row.color,
+        transmission: row.transmission,
+        fuel: row.fuel,
+        seats: row.seats,
+        category: row.category,
+        features: row.features,
+        images: row.images,
+        location: row.location,
+        latitude: row.latitude,
+        longitude: row.longitude,
+        pricePerDay: row.price_per_day,
+        pricePerWeek: row.price_per_week,
+        pricePerMonth: row.price_per_month,
+        description: row.description,
+        isAvailable: row.is_available,
+        isVerified: row.is_verified,
+        rating: row.rating,
+        totalBookings: row.total_bookings,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        owner: {
+          id: row.owner_id,
+          name: row.owner_name || '',
+          email: row.owner_email || '',
+          phone: row.owner_phone || '',
+          profileImage: row.owner_profile_image,
+          isVerified: row.owner_is_verified || false,
+        }
+      }));
+    } catch (error) {
+      console.error("Error in searchVehicles:", error);
+      throw error;
     }
-
-    if (filters.category) {
-      conditions.push(eq(vehicles.category, filters.category));
-    }
-
-    if (filters.priceMin) {
-      conditions.push(gte(vehicles.pricePerDay, filters.priceMin.toString()));
-    }
-
-    if (filters.priceMax) {
-      conditions.push(lte(vehicles.pricePerDay, filters.priceMax.toString()));
-    }
-
-    if (filters.transmission) {
-      conditions.push(eq(vehicles.transmission, filters.transmission));
-    }
-
-    if (filters.fuel) {
-      conditions.push(eq(vehicles.fuel, filters.fuel));
-    }
-
-    if (filters.yearMin) {
-      conditions.push(gte(vehicles.year, filters.yearMin));
-    }
-
-    if (filters.yearMax) {
-      conditions.push(lte(vehicles.year, filters.yearMax));
-    }
-
-    if (filters.seatsMin) {
-      conditions.push(gte(vehicles.seats, filters.seatsMin));
-    }
-
-    if (filters.seatsMax) {
-      conditions.push(lte(vehicles.seats, filters.seatsMax));
-    }
-
-    if (filters.rating) {
-      conditions.push(gte(vehicles.rating, filters.rating.toString()));
-    }
-
-    // Handle features array filtering
-    if (filters.features && filters.features.length > 0) {
-      // Filter vehicles that have at least one of the requested features
-      const featureConditions = filters.features.map(feature => 
-        sql`${vehicles.features} ? ${feature}`
-      );
-      conditions.push(or(...featureConditions));
-    }
-
-    const results = await db
-      .select()
-      .from(vehicles)
-      .leftJoin(users, eq(vehicles.ownerId, users.id))
-      .where(and(...conditions))
-      .orderBy(desc(vehicles.createdAt));
-
-    return results.map(result => ({
-      ...result.vehicles,
-      owner: result.users!,
-    }));
   }
 
   async createVehicle(insertVehicle: InsertVehicle): Promise<Vehicle> {
@@ -1365,7 +1356,7 @@ export class DatabaseStorage implements IStorage {
     const conditions = [eq(vehicles.isAvailable, true)];
     
     if (viewedVehicleIds.length > 0) {
-      conditions.push(sql`${vehicles.id} NOT IN (${viewedVehicleIds.join(',')})`);
+      conditions.push(not(inArray(vehicles.id, viewedVehicleIds)));
     }
     
     if (mostPreferredCategory) {
@@ -1377,7 +1368,7 @@ export class DatabaseStorage implements IStorage {
     }
     
     if (avgPrice) {
-      conditions.push(sql`${vehicles.pricePerDay} <= ${avgPrice * 1.2}`); // 20% above average preference
+      conditions.push(lte(vehicles.pricePerDay, (avgPrice * 1.2).toString()));
     }
 
     const results = await db

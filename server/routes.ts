@@ -9,6 +9,8 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import path from "path";
 import fs from "fs";
+import { db, pool } from "./db";
+import { sql } from "drizzle-orm";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
@@ -148,27 +150,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Vehicle routes
+  // Vehicle routes - simplified version
   app.get("/api/vehicles", async (req, res) => {
     try {
-      const filters = {
-        location: req.query.location as string,
-        category: req.query.category as string,
-        priceMin: req.query.priceMin ? parseFloat(req.query.priceMin as string) : undefined,
-        priceMax: req.query.priceMax ? parseFloat(req.query.priceMax as string) : undefined,
-        startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
-        endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined,
-        features: req.query.features ? (req.query.features as string).split(',') : undefined,
-        transmission: req.query.transmission as string,
-        fuel: req.query.fuel as string,
-        rating: req.query.rating ? parseFloat(req.query.rating as string) : undefined,
-        yearMin: req.query.yearMin ? parseInt(req.query.yearMin as string) : undefined,
-        yearMax: req.query.yearMax ? parseInt(req.query.yearMax as string) : undefined,
-        seatsMin: req.query.seatsMin ? parseInt(req.query.seatsMin as string) : undefined,
-        seatsMax: req.query.seatsMax ? parseInt(req.query.seatsMax as string) : undefined,
-      };
+      const result = await pool.query(`
+        SELECT * FROM vehicles 
+        WHERE is_available = true 
+        ORDER BY created_at DESC
+      `);
+      
+      const vehicles = result.rows.map((row: any) => ({
+        id: row.id,
+        ownerId: row.owner_id,
+        brand: row.brand,
+        model: row.model,
+        year: row.year,
+        color: row.color,
+        transmission: row.transmission,
+        fuel: row.fuel,
+        seats: row.seats,
+        category: row.category,
+        features: row.features,
+        images: row.images,
+        location: row.location,
+        latitude: row.latitude,
+        longitude: row.longitude,
+        pricePerDay: row.price_per_day,
+        pricePerWeek: row.price_per_week,
+        pricePerMonth: row.price_per_month,
+        description: row.description,
+        isAvailable: row.is_available,
+        isVerified: row.is_verified,
+        rating: row.rating,
+        totalBookings: row.total_bookings,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        owner: {
+          id: row.owner_id,
+          name: 'Proprietário',
+          email: '',
+          phone: '',
+          profileImage: null,
+          isVerified: false,
+        }
+      }));
 
-      const vehicles = await storage.searchVehicles(filters);
       res.json(vehicles);
     } catch (error) {
       console.error("Search vehicles error:", error);
