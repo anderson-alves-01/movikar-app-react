@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import Header from "@/components/header";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -161,7 +162,9 @@ export default function DocumentVerification() {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="container mx-auto py-8 space-y-6">
       <div className="text-center space-y-4">
         <h1 className="text-3xl font-bold">Verificação de Documentos</h1>
         <p className="text-gray-600">
@@ -352,6 +355,7 @@ export default function DocumentVerification() {
           <p>• Em caso de rejeição, você pode reenviar os documentos</p>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

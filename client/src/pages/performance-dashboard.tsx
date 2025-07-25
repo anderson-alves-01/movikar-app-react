@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import Header from "@/components/header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -208,8 +209,10 @@ export default function PerformanceDashboard() {
   };
 
   return (
-    <div className="container mx-auto py-8 space-y-8">
-      {/* Header */}
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="container mx-auto py-8 space-y-8">
+        {/* Header */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold flex items-center space-x-2">
@@ -497,6 +500,7 @@ export default function PerformanceDashboard() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
