@@ -959,7 +959,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const vehicle = await storage.createVehicle(vehicleData);
       res.status(201).json(vehicle);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Create vehicle error:", error);
       
       // Retorna erros de validação específicos
@@ -975,6 +975,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: "Dados do veículo inválidos",
           errors: validationErrors
         });
+      }
+      
+      // Trata erros de constraint de banco de dados
+      if (error.code === '23505') {
+        if (error.constraint === 'vehicles_renavam_key') {
+          return res.status(400).json({ 
+            message: "Este RENAVAM já está cadastrado no sistema"
+          });
+        }
+        if (error.constraint === 'vehicles_license_plate_key') {
+          return res.status(400).json({ 
+            message: "Esta placa já está cadastrada no sistema"
+          });
+        }
       }
       
       res.status(400).json({ message: "Falha ao criar veículo" });
