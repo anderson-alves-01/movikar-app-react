@@ -907,80 +907,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Vehicle routes - using Drizzle ORM
+  // Vehicle routes - simplified to avoid Drizzle issues
   app.get("/api/vehicles", async (req, res) => {
     try {
       const { category, location, minPrice, maxPrice } = req.query;
       
-      let query = db.select({
-        id: vehicles.id,
-        ownerId: vehicles.ownerId,
-        brand: vehicles.brand,
-        model: vehicles.model,
-        year: vehicles.year,
-        color: vehicles.color,
-        transmission: vehicles.transmission,
-        fuel: vehicles.fuel,
-        seats: vehicles.seats,
-        category: vehicles.category,
-        features: vehicles.features,
-        images: vehicles.images,
-        location: vehicles.location,
-        latitude: vehicles.latitude,
-        longitude: vehicles.longitude,
-        pricePerDay: vehicles.pricePerDay,
-        pricePerWeek: vehicles.pricePerWeek,
-        pricePerMonth: vehicles.pricePerMonth,
-        description: vehicles.description,
-        isAvailable: vehicles.isAvailable,
-        isVerified: vehicles.isVerified,
-        rating: vehicles.rating,
-        totalBookings: vehicles.totalBookings,
-        licensePlate: vehicles.licensePlate,
-        renavam: vehicles.renavam,
-        createdAt: vehicles.createdAt,
-        updatedAt: vehicles.updatedAt,
-        ownerName: users.firstName,
-        ownerEmail: users.email,
-        ownerPhone: users.phone,
-        ownerProfileImage: users.profileImageUrl,
-        ownerVerified: users.verificationStatus
-      })
-      .from(vehicles)
-      .leftJoin(users, eq(vehicles.ownerId, users.id))
-      .where(eq(vehicles.isAvailable, true));
-
-      // Apply filters
-      if (category) {
-        query = query.where(eq(vehicles.category, category as string));
-      }
-      if (location) {
-        query = query.where(ilike(vehicles.location, `%${location}%`));
-      }
-      if (minPrice) {
-        query = query.where(gte(vehicles.pricePerDay, parseFloat(minPrice as string)));
-      }
-      if (maxPrice) {
-        query = query.where(lte(vehicles.pricePerDay, parseFloat(maxPrice as string)));
-      }
-
-      query = query.orderBy(desc(vehicles.createdAt)).limit(50);
-
-      const vehiclesData = await query;
+      // Use storage layer instead of direct Drizzle queries
+      const filters = {
+        category: category as string || undefined,
+        location: location as string || undefined,
+        minPrice: minPrice ? parseFloat(minPrice as string) : undefined,
+        maxPrice: maxPrice ? parseFloat(maxPrice as string) : undefined
+      };
       
-      const formattedVehicles = vehiclesData.map(vehicle => ({
-        ...vehicle,
-        owner: {
-          id: vehicle.ownerId,
-          name: vehicle.ownerName || 'Proprietário',
-          email: vehicle.ownerEmail || '',
-          phone: vehicle.ownerPhone || '',
-          profileImage: vehicle.ownerProfileImage,
-          isVerified: vehicle.ownerVerified === 'verified'
-        }
-      }));
-
-      res.json(formattedVehicles);
+      const vehiclesData = await storage.searchVehicles(filters);
+      res.json(vehiclesData);
     } catch (error) {
       console.error("Search vehicles error:", error);
       res.status(500).json({ message: "Erro ao buscar veículos" });
@@ -991,63 +932,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const vehicleId = parseInt(req.params.id);
       
-      const vehicleData = await db.select({
-        id: vehicles.id,
-        ownerId: vehicles.ownerId,
-        brand: vehicles.brand,
-        model: vehicles.model,
-        year: vehicles.year,
-        color: vehicles.color,
-        transmission: vehicles.transmission,
-        fuel: vehicles.fuel,
-        seats: vehicles.seats,
-        category: vehicles.category,
-        features: vehicles.features,
-        images: vehicles.images,
-        location: vehicles.location,
-        latitude: vehicles.latitude,
-        longitude: vehicles.longitude,
-        pricePerDay: vehicles.pricePerDay,
-        pricePerWeek: vehicles.pricePerWeek,
-        pricePerMonth: vehicles.pricePerMonth,
-        description: vehicles.description,
-        isAvailable: vehicles.isAvailable,
-        isVerified: vehicles.isVerified,
-        rating: vehicles.rating,
-        totalBookings: vehicles.totalBookings,
-        licensePlate: vehicles.licensePlate,
-        renavam: vehicles.renavam,
-        createdAt: vehicles.createdAt,
-        updatedAt: vehicles.updatedAt,
-        ownerName: users.firstName,
-        ownerEmail: users.email,
-        ownerPhone: users.phone,
-        ownerProfileImage: users.profileImageUrl,
-        ownerVerified: users.verificationStatus
-      })
-      .from(vehicles)
-      .leftJoin(users, eq(vehicles.ownerId, users.id))
-      .where(eq(vehicles.id, vehicleId))
-      .limit(1);
+      // Use storage layer method instead
+      const vehicle = await storage.getVehicleWithOwner(vehicleId);
       
-      if (vehicleData.length === 0) {
+      if (!vehicle) {
         return res.status(404).json({ message: "Veículo não encontrado" });
       }
-      
-      const vehicle = vehicleData[0];
-      const formattedVehicle = {
-        ...vehicle,
-        owner: {
-          id: vehicle.ownerId,
-          name: vehicle.ownerName || 'Proprietário',
-          email: vehicle.ownerEmail || '',
-          phone: vehicle.ownerPhone || '',
-          profileImage: vehicle.ownerProfileImage,
-          isVerified: vehicle.ownerVerified === 'verified'
-        }
-      };
 
-      res.json(formattedVehicle);
+      res.json(vehicle);
     } catch (error) {
       console.error("Get vehicle error:", error);
       res.status(500).json({ message: "Erro ao buscar veículo" });

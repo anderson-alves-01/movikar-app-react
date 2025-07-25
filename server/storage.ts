@@ -10,7 +10,7 @@ import {
   type UserRewards, type InsertUserRewards, type RewardTransaction, type InsertRewardTransaction,
   type UserActivity, type InsertUserActivity
 } from "@shared/schema";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { eq, and, gte, lte, desc, asc, or, like, ilike, sql, lt, ne, inArray, not } from "drizzle-orm";
 
 export interface IStorage {
@@ -187,6 +187,10 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
+  async getVehicleWithOwner(id: number): Promise<VehicleWithOwner | undefined> {
+    return this.getVehicle(id);
+  }
+
   async getVehiclesByOwner(ownerId: number): Promise<Vehicle[]> {
     return await db
       .select()
@@ -198,8 +202,8 @@ export class DatabaseStorage implements IStorage {
   async searchVehicles(filters: {
     location?: string;
     category?: string;
-    priceMin?: number;
-    priceMax?: number;
+    minPrice?: number;
+    maxPrice?: number;
     startDate?: Date;
     endDate?: Date;
     features?: string[];
@@ -212,24 +216,57 @@ export class DatabaseStorage implements IStorage {
     seatsMax?: number;
   }): Promise<VehicleWithOwner[]> {
     try {
-      // Use raw SQL to avoid Drizzle schema issues
+      let whereConditions = ['v.is_available = true'];
+      const params: any[] = [];
+      let paramIndex = 1;
+
+      // Apply filters
+      if (filters.category) {
+        whereConditions.push(`v.category = $${paramIndex}`);
+        params.push(filters.category);
+        paramIndex++;
+      }
+
+      if (filters.location) {
+        whereConditions.push(`v.location ILIKE $${paramIndex}`);
+        params.push(`%${filters.location}%`);
+        paramIndex++;
+      }
+
+      if (filters.minPrice) {
+        whereConditions.push(`v.price_per_day >= $${paramIndex}`);
+        params.push(filters.minPrice);
+        paramIndex++;
+      }
+
+      if (filters.maxPrice) {
+        whereConditions.push(`v.price_per_day <= $${paramIndex}`);
+        params.push(filters.maxPrice);
+        paramIndex++;
+      }
+
       const query = `
         SELECT 
-          v.*,
-          u.name as owner_name,
+          v.id, v.owner_id, v.brand, v.model, v.year, v.color, v.transmission, v.fuel, 
+          v.seats, v.category, v.features, v.images, v.location, v.latitude, v.longitude,
+          v.price_per_day, v.price_per_week, v.price_per_month, v.description, 
+          v.is_available, v.is_verified, v.rating, v.total_bookings, v.license_plate, 
+          v.renavam, v.created_at, v.updated_at,
+          u.first_name as owner_first_name,
           u.email as owner_email,
           u.phone as owner_phone,
-          u.profile_image as owner_profile_image,
-          u.is_verified as owner_is_verified
+          u.profile_image_url as owner_profile_image,
+          u.verification_status as owner_verification_status
         FROM vehicles v
         LEFT JOIN users u ON v.owner_id = u.id
-        WHERE v.is_available = true
+        WHERE ${whereConditions.join(' AND ')}
         ORDER BY v.created_at DESC
+        LIMIT 50
       `;
       
-      const results = await db.execute(sql.raw(query));
+      const result = await pool.query(query, params);
       
-      return results.map((row: any) => ({
+      return result.rows.map((row: any) => ({
         id: row.id,
         ownerId: row.owner_id,
         brand: row.brand,
@@ -253,15 +290,17 @@ export class DatabaseStorage implements IStorage {
         isVerified: row.is_verified,
         rating: row.rating,
         totalBookings: row.total_bookings,
+        licensePlate: row.license_plate,
+        renavam: row.renavam,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
         owner: {
           id: row.owner_id,
-          name: row.owner_name || '',
+          name: row.owner_first_name || 'Proprietário',
           email: row.owner_email || '',
           phone: row.owner_phone || '',
           profileImage: row.owner_profile_image,
-          isVerified: row.owner_is_verified || false,
+          isVerified: row.owner_verification_status === 'verified'
         }
       }));
     } catch (error) {
