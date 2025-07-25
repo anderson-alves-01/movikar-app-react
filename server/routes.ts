@@ -157,7 +157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         startDate: new Date(startDate),
         endDate: new Date(endDate),
         totalPrice: totalPrice,
-        servicefee: serviceFee,
+        serviceFee: serviceFee,
         insuranceFee: insuranceFee,
         status: "approved" as const,
         paymentStatus: "paid" as const,
