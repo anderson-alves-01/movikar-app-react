@@ -31,7 +31,7 @@ export default function HeroSection({ onSearch }: HeroSectionProps) {
       {/* Background */}
       <div className="absolute inset-0 bg-black bg-opacity-40"></div>
       <div 
-        className="absolute inset-0 bg-cover bg-center" 
+        className="absolute inset-0 bg-cover bg-center filter blur-sm" 
         style={{
           backgroundImage: "url('https://images.unsplash.com/photo-1514316454349-750a7fd3da3a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1920&h=1080')"
         }}
@@ -43,9 +43,13 @@ export default function HeroSection({ onSearch }: HeroSectionProps) {
             Alugue o carro perfeito<br />
             <span className="text-primary">na sua cidade</span>
           </h1>
-          <p className="text-xl md:text-2xl mb-12 text-gray-300 max-w-3xl mx-auto">
-            Conectamos pessoas que precisam de um carro com donos que querem compartilhar. Seguro, fácil e econômico.
-          </p>
+          <div className="bg-black bg-opacity-30 backdrop-blur-sm rounded-2xl p-6 mb-12 max-w-4xl mx-auto">
+            <p className="text-xl md:text-2xl text-white font-semibold leading-relaxed">
+              <span className="text-primary font-bold">Conectamos pessoas que precisam de um carro</span> com <span className="text-secondary font-bold">donos que querem compartilhar</span>. 
+              <br className="hidden md:block" />
+              <span className="text-warning font-bold">Seguro, fácil e econômico.</span>
+            </p>
+          </div>
 
           {/* Search Form */}
           <Card className="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-4xl mx-auto text-gray-800">

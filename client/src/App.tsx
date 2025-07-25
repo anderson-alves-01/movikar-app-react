@@ -8,6 +8,7 @@ import Home from "@/pages/home";
 import Auth from "@/pages/auth";
 import Profile from "@/pages/profile";
 import VehicleDetail from "@/pages/vehicle-detail";
+import VehicleEdit from "@/pages/vehicle-edit";
 import AdminDashboard from "@/pages/admin-dashboard";
 import AdminContracts from "@/pages/admin-contracts";
 import AdminVehicleBrands from "@/pages/admin-vehicle-brands";
@@ -36,6 +37,7 @@ function Router() {
       <Route path="/auth" component={Auth} />
       <Route path="/profile" component={Profile} />
       <Route path="/vehicle/:id" component={VehicleDetail} />
+      <Route path="/vehicle/:id/edit" component={VehicleEdit} />
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/contracts" component={AdminContracts} />
       <Route path="/admin/vehicle-brands" component={AdminVehicleBrands} />
