@@ -2544,6 +2544,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     `);
   });
 
+  // Test upload endpoint to debug 413 errors
+  app.post('/api/test-upload', upload.single('file'), (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'Nenhum arquivo enviado' });
+      }
+      
+      res.json({ 
+        message: 'Upload realizado com sucesso',
+        filename: req.file.originalname,
+        size: req.file.size,
+        mimetype: req.file.mimetype
+      });
+    } catch (error) {
+      console.error('Upload test error:', error);
+      res.status(500).json({ message: 'Erro no upload de teste' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
