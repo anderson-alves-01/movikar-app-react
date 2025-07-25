@@ -36,14 +36,19 @@ export default function Header() {
       });
       
       if (!response.ok) {
+        // Se não autorizado, retorna 0 ao invés de error
+        if (response.status === 401 || response.status === 403) {
+          return 0;
+        }
         throw new Error('Failed to fetch unread count');
       }
       
       const data = await response.json();
-      return data.count || 0;
+      return parseInt(data.count) || 0;
     },
     enabled: !!user && !!token,
     refetchInterval: 30000, // Refetch every 30 seconds
+    retry: false, // Não tentar novamente em caso de erro de auth
   });
 
   const handleLogout = () => {
@@ -69,6 +74,12 @@ export default function Header() {
                 type="text" 
                 placeholder="Onde?" 
                 className="border-none outline-none text-sm font-medium text-gray-800 bg-transparent w-32 focus-visible:ring-0" 
+                onChange={(e) => {
+                  if (e.target.value.length > 2) {
+                    // Trigger search or filter logic here
+                    console.log('Searching for:', e.target.value);
+                  }
+                }}
               />
               <div className="border-l border-gray-300 h-6 mx-4"></div>
               <Input 
