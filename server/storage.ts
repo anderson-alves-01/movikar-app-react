@@ -73,6 +73,15 @@ export interface IStorage {
 
   // Contract Templates
   getContractTemplate(id: string): Promise<ContractTemplate | undefined>;
+
+  // Admin methods
+  getAllUsers(): Promise<User[]>;
+  getAllBookings(): Promise<BookingWithDetails[]>;
+  getContracts(filters: any): Promise<ContractWithDetails[]>;
+  getVehicleBrands(): Promise<VehicleBrand[]>;
+  createVehicleBrand(brand: InsertVehicleBrand): Promise<VehicleBrand>;
+  updateVehicleBrand(id: number, brand: Partial<InsertVehicleBrand>): Promise<VehicleBrand | undefined>;
+  deleteVehicleBrand(id: number): Promise<boolean>;
   getDefaultContractTemplate(): Promise<ContractTemplate | undefined>;
   createContractTemplate(template: InsertContractTemplate): Promise<ContractTemplate>;
   updateContractTemplate(id: number, template: Partial<InsertContractTemplate>): Promise<ContractTemplate | undefined>;
@@ -997,6 +1006,33 @@ export class DatabaseStorage implements IStorage {
       .where(eq(waitingQueue.id, id))
       .returning();
     return result || undefined;
+  }
+
+  // Admin methods
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(desc(users.createdAt));
+  }
+
+  async getAllBookings(): Promise<BookingWithDetails[]> {
+    const results = await db
+      .select()
+      .from(bookings)
+      .leftJoin(vehicles, eq(bookings.vehicleId, vehicles.id))
+      .leftJoin(users, eq(vehicles.ownerId, users.id))
+      .orderBy(desc(bookings.createdAt));
+
+    return results.map(result => ({
+      ...result.bookings,
+      vehicle: result.vehicles ? {
+        ...result.vehicles,
+        owner: result.users!
+      } : undefined
+    })) as BookingWithDetails[];
+  }
+
+  async getContracts(filters: any): Promise<ContractWithDetails[]> {
+    // Return empty array for now - contracts not implemented yet
+    return [];
   }
 }
 

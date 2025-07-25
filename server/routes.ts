@@ -765,6 +765,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin routes
+  app.get("/api/admin/contracts", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const { status, dateFrom, dateTo, limit = 50, offset = 0 } = req.query;
+      
+      const contracts = await storage.getContracts({
+        status: status as string,
+        dateFrom: dateFrom as string,
+        dateTo: dateTo as string,
+        limit: parseInt(limit as string),
+        offset: parseInt(offset as string),
+      });
+      
+      res.json(contracts);
+    } catch (error) {
+      console.error("Admin contracts error:", error);
+      res.status(500).json({ message: "Failed to fetch contracts" });
+    }
+  });
+
+  app.get("/api/admin/users", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Admin users error:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.get("/api/admin/bookings", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const bookings = await storage.getAllBookings();
+      res.json(bookings);
+    } catch (error) {
+      console.error("Admin bookings error:", error);
+      res.status(500).json({ message: "Failed to fetch bookings" });
+    }
+  });
+
+  app.get("/api/vehicle-brands", async (req, res) => {
+    try {
+      const brands = await storage.getVehicleBrands();
+      res.json(brands);
+    } catch (error) {
+      console.error("Vehicle brands error:", error);
+      res.status(500).json({ message: "Failed to fetch vehicle brands" });
+    }
+  });
+
+  app.post("/api/vehicle-brands", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const brandData = insertVehicleBrandSchema.parse(req.body);
+      const brand = await storage.createVehicleBrand(brandData);
+      res.status(201).json(brand);
+    } catch (error) {
+      console.error("Create vehicle brand error:", error);
+      res.status(400).json({ message: "Failed to create vehicle brand" });
+    }
+  });
+
+  app.put("/api/vehicle-brands/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const brandId = parseInt(req.params.id);
+      const brandData = insertVehicleBrandSchema.partial().parse(req.body);
+      const brand = await storage.updateVehicleBrand(brandId, brandData);
+      res.json(brand);
+    } catch (error) {
+      console.error("Update vehicle brand error:", error);
+      res.status(400).json({ message: "Failed to update vehicle brand" });
+    }
+  });
+
+  app.delete("/api/vehicle-brands/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const brandId = parseInt(req.params.id);
+      await storage.deleteVehicleBrand(brandId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Delete vehicle brand error:", error);
+      res.status(400).json({ message: "Failed to delete vehicle brand" });
+    }
+  });
+
+  // Webhooks and external integrations
+  app.post("/webhook/signatures", async (req, res) => {
+    res.status(200).json({ message: "Webhook received" });
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

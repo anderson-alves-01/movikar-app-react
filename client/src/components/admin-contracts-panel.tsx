@@ -150,7 +150,7 @@ export default function AdminContractsPanel() {
                 <SelectValue placeholder="Todos os status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os status</SelectItem>
+                <SelectItem value="all">Todos os status</SelectItem>
                 <SelectItem value="draft">Rascunho</SelectItem>
                 <SelectItem value="sent">Enviado</SelectItem>
                 <SelectItem value="signed">Assinado</SelectItem>

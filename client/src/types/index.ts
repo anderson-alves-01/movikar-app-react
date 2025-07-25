@@ -24,6 +24,7 @@ export interface AuthUser {
   totalRentals: number;
   totalEarnings: string;
   location?: string;
+  role?: 'admin' | 'user';
 }
 
 export interface AuthState {
