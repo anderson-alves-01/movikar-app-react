@@ -2,32 +2,18 @@ import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, MapPin, Heart } from "lucide-react";
+import { Star, MapPin, Heart, Plus, Check } from "lucide-react";
 import { useState } from "react";
+import { useComparisonStore } from "@/lib/comparison";
+import type { Vehicle } from "@/types";
 
 interface VehicleCardProps {
-  vehicle: {
-    id: number;
-    brand: string;
-    model: string;
-    year: number;
-    images: string[];
-    location: string;
-    pricePerDay: string;
-    transmission: string;
-    fuel: string;
-    seats: number;
-    rating: string;
-    isAvailable: boolean;
-    owner: {
-      name: string;
-      rating: string;
-    };
-  };
+  vehicle: Vehicle;
 }
 
 export default function VehicleCard({ vehicle }: VehicleCardProps) {
   const [isFavorite, setIsFavorite] = useState(false);
+  const { addVehicle, removeVehicle, isVehicleInComparison, vehicles } = useComparisonStore();
 
   const formatPrice = (price: string) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -66,7 +52,28 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
         <div className="absolute top-3 left-3">
           {getStatusBadge()}
         </div>
-        <div className="absolute top-3 right-3">
+        <div className="absolute top-3 right-3 flex gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-8 h-8 bg-white bg-opacity-80 rounded-full flex items-center justify-center hover:bg-opacity-100 transition-all p-0"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (isVehicleInComparison(vehicle.id)) {
+                removeVehicle(vehicle.id);
+              } else if (vehicles.length < 3) {
+                addVehicle(vehicle);
+              }
+            }}
+            title={isVehicleInComparison(vehicle.id) ? "Remover da comparação" : "Adicionar à comparação"}
+          >
+            {isVehicleInComparison(vehicle.id) ? (
+              <Check className="w-4 h-4 text-blue-600" />
+            ) : (
+              <Plus className="w-4 h-4 text-gray-600" />
+            )}
+          </Button>
           <Button
             variant="ghost"
             size="sm"

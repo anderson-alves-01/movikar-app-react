@@ -50,3 +50,36 @@ export type VehicleCategory = 'hatch' | 'sedan' | 'suv' | 'pickup';
 export type TransmissionType = 'manual' | 'automatic' | 'cvt';
 
 export type FuelType = 'flex' | 'gasoline' | 'ethanol' | 'diesel' | 'electric' | 'hybrid';
+
+export interface Vehicle {
+  id: number;
+  brand: string;
+  model: string;
+  year: number;
+  category: string;
+  pricePerDay: string;
+  location: string;
+  imageUrl?: string;
+  images: string[];
+  isAvailable: boolean;
+  rating: string;
+  reviewCount?: number;
+  description?: string;
+  features: string[];
+  transmission: string;
+  fuel: string;
+  seats: number;
+  engine?: string;
+  mileage?: string;
+  owner: {
+    id: number;
+    name: string;
+    rating: string;
+    avatar?: string;
+  };
+}
+
+export interface ComparisonState {
+  vehicles: Vehicle[];
+  isOpen: boolean;
+}

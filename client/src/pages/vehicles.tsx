@@ -13,21 +13,7 @@ import Header from "@/components/header";
 import AddVehicleModal from "@/components/add-vehicle-modal";
 import VehicleAvailabilityManager from "@/components/vehicle-availability-manager";
 
-interface Vehicle {
-  id: number;
-  brand: string;
-  model: string;
-  year: number;
-  category: string;
-  pricePerDay: number;
-  location: string;
-  imageUrl?: string;
-  isAvailable: boolean;
-  rating: number;
-  reviewCount: number;
-  description?: string;
-  features: string[];
-}
+import type { Vehicle } from "@/types";
 
 export default function Vehicles() {
   const { user } = useAuthStore();
@@ -36,7 +22,7 @@ export default function Vehicles() {
   const [selectedVehicleForAvailability, setSelectedVehicleForAvailability] = useState<number | null>(null);
   const [showAddVehicleModal, setShowAddVehicleModal] = useState(false);
 
-  const { data: vehicles, isLoading } = useQuery<Vehicle[]>({
+  const { data: vehicles, isLoading } = useQuery<any[]>({
     queryKey: ["/api/users/" + user?.id + "/vehicles"],
     enabled: !!user,
   });
@@ -197,7 +183,7 @@ export default function Vehicles() {
                     <div className="flex justify-between items-center pt-3 border-t">
                       <div>
                         <span className="text-lg font-semibold text-green-600">
-                          {formatCurrency(vehicle.pricePerDay)}
+                          {formatCurrency(parseFloat(vehicle.pricePerDay))}
                         </span>
                         <span className="text-sm text-gray-600">/dia</span>
                       </div>
