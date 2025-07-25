@@ -2360,7 +2360,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Redirect after delay
             setTimeout(() => {
               console.log('🚀 Redirecionando...');
-              window.location.href = finalUrl;
+              console.log('URL final para redirecionamento:', finalUrl);
+              try {
+                window.location.href = finalUrl;
+              } catch (error) {
+                console.error('Erro no redirecionamento:', error);
+                // Fallback: try direct navigation
+                window.location.replace(finalUrl);
+              }
             }, 2500);
           }
           
