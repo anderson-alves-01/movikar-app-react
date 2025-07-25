@@ -50,6 +50,7 @@ export interface IStorage {
   getBookingByPaymentIntent(paymentIntentId: string): Promise<Booking | undefined>;
   createBooking(booking: InsertBooking): Promise<Booking>;
   updateBooking(id: number, booking: Partial<InsertBooking>): Promise<Booking | undefined>;
+  deleteBooking(id: number): Promise<boolean>;
   checkVehicleAvailability(vehicleId: number, startDate: Date, endDate: Date): Promise<boolean>;
   blockVehicleDatesForBooking(vehicleId: number, startDate: string, endDate: string, bookingId: number): Promise<VehicleAvailability>;
   checkAndBlockCompletedBooking(bookingId: number): Promise<boolean>;

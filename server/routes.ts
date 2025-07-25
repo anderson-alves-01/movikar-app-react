@@ -1217,6 +1217,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/admin/bookings/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      
+      const deleted = await storage.deleteBooking(bookingId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Reserva não encontrada" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Delete booking error:", error);
+      res.status(500).json({ message: "Falha ao excluir reserva" });
+    }
+  });
+
   // Review routes
   app.get("/api/vehicles/:id/reviews", async (req, res) => {
     try {
@@ -1269,7 +1286,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/vehicle-brands/:id", authenticateToken, requireAdmin, async (req, res) => {
     try {
       const brandId = parseInt(req.params.id);
-      const brandData = req.body;
+      const brandData = insertVehicleBrandSchema.partial().parse(req.body);
       const brand = await storage.updateVehicleBrand(brandId, brandData);
       if (!brand) {
         return res.status(404).json({ message: "Marca de veículo não encontrada" });
@@ -1920,49 +1937,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/vehicle-brands", async (req, res) => {
-    try {
-      const brands = await storage.getVehicleBrands();
-      res.json(brands);
-    } catch (error) {
-      console.error("Vehicle brands error:", error);
-      res.status(500).json({ message: "Falha ao buscar marcas de veículos" });
-    }
-  });
 
-  app.post("/api/vehicle-brands", authenticateToken, requireAdmin, async (req, res) => {
-    try {
-      const brandData = insertVehicleBrandSchema.parse(req.body);
-      const brand = await storage.createVehicleBrand(brandData);
-      res.status(201).json(brand);
-    } catch (error) {
-      console.error("Create vehicle brand error:", error);
-      res.status(400).json({ message: "Falha ao criar marca de veículo" });
-    }
-  });
-
-  app.put("/api/vehicle-brands/:id", authenticateToken, requireAdmin, async (req, res) => {
-    try {
-      const brandId = parseInt(req.params.id);
-      const brandData = insertVehicleBrandSchema.partial().parse(req.body);
-      const brand = await storage.updateVehicleBrand(brandId, brandData);
-      res.json(brand);
-    } catch (error) {
-      console.error("Update vehicle brand error:", error);
-      res.status(400).json({ message: "Falha ao atualizar marca de veículo" });
-    }
-  });
-
-  app.delete("/api/vehicle-brands/:id", authenticateToken, requireAdmin, async (req, res) => {
-    try {
-      const brandId = parseInt(req.params.id);
-      await storage.deleteVehicleBrand(brandId);
-      res.status(204).send();
-    } catch (error) {
-      console.error("Delete vehicle brand error:", error);
-      res.status(400).json({ message: "Falha ao excluir marca de veículo" });
-    }
-  });
 
   // Webhooks and external integrations
   app.post("/webhook/signatures", async (req, res) => {
