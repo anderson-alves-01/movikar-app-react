@@ -108,6 +108,13 @@ Preferred communication style: Simple, everyday language.
 ✓ Disposições gerais conforme legislação brasileira
 ✓ Templates antigos removidos para usar o novo modelo automaticamente
 
+### July 25, 2025 - Simplificação da Validação de Veículos
+✓ Removida validação cruzada de marca e modelo para simplificar cadastro
+✓ Mantida validação básica de campos obrigatórios e formato
+✓ Campos de placa e RENAVAM continuam com validação rigorosa
+✓ Sistema de cadastro mais flexível e amigável ao usuário
+✓ Marcas carregadas dinamicamente do banco de dados
+
 ### July 25, 2025 - Base de Dados Preparada para Testes
 ✓ Removidos todos os dados de teste do banco de dados
 ✓ Mantido apenas o usuário admin@carshare.com (ID: 4)

@@ -536,8 +536,14 @@ export const insertVehicleSchema = createInsertSchema(vehicles).omit({
   createdAt: true,
   updatedAt: true,
 }).extend({
-  model: vehicleModelValidation,
-  brand: vehicleBrandValidation,
+  model: z.string()
+    .min(1, "Modelo é obrigatório")
+    .max(50, "Modelo não pode ter mais de 50 caracteres")
+    .transform(val => val.trim()),
+  brand: z.string()
+    .min(1, "Marca é obrigatória")
+    .max(30, "Marca não pode ter mais de 30 caracteres")
+    .transform(val => val.trim()),
   pricePerDay: z.union([z.string(), z.number()]).transform(val => String(val)),
   pricePerWeek: z.union([z.string(), z.number()]).optional().transform(val => val ? String(val) : undefined),
   pricePerMonth: z.union([z.string(), z.number()]).optional().transform(val => val ? String(val) : undefined),
@@ -548,16 +554,6 @@ export const insertVehicleSchema = createInsertSchema(vehicles).omit({
   renavam: z.string()
     .length(11, "RENAVAM deve ter exatamente 11 dígitos")
     .regex(/^[0-9]{11}$/, "RENAVAM deve conter apenas números"),
-}).refine((data) => {
-  try {
-    vehicleBrandModelValidation.parse({ brand: data.brand, model: data.model });
-    return true;
-  } catch {
-    return false;
-  }
-}, {
-  message: "Modelo inválido para a marca selecionada",
-  path: ["model"]
 });
 
 export const insertBookingSchema = createInsertSchema(bookings).omit({
