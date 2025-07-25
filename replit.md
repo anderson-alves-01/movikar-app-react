@@ -19,7 +19,8 @@ Preferred communication style: Simple, everyday language.
 ✓ Integrado sistema no menu administrativo com link "Aprovar Veículos"
 ✓ Veículos novos iniciam com status "pending" até aprovação administrativa
 ✓ Interface de preview de documentos CRLV na página administrativa
-✓ Sistema de notificações para proprietários sobre status de aprovação
+✓ Sistema de notificações para proprietários sobre status de aprovação  
+✓ Correção do erro 413 - aumentado limite de upload para 50MB
 ✓ Workflow completo: Cadastro → Upload CRLV → Aprovação Admin → Publicação
 
 ### July 25, 2025 - Stripe Payment Integration Complete System
