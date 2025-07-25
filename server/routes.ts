@@ -100,6 +100,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Veículo não encontrado" });
       }
 
+      // Prevent owner from renting their own vehicle
+      if (vehicle.ownerId === req.user!.id) {
+        return res.status(400).json({ message: "Você não pode alugar seu próprio veículo" });
+      }
+
       // Check availability
       const isAvailable = await storage.checkVehicleAvailability(vehicleId, new Date(startDate), new Date(endDate));
       if (!isAvailable) {
