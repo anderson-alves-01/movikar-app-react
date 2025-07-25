@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Users, Search, Filter, Shield, CheckCircle, XCircle, Edit, Trash2, Plus, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuthStore } from "@/lib/auth";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import AdminLayout from "@/components/admin-layout";
@@ -50,12 +51,16 @@ export default function AdminUsersPage() {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { token } = useAuthStore();
 
   // Get all users
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['/api/admin/users'],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token');
+      }
+      
       const response = await fetch('/api/admin/users', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -64,11 +69,15 @@ export default function AdminUsersPage() {
       });
       
       if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error('Token inválido ou expirado');
+        }
         throw new Error('Failed to fetch users');
       }
       
       return response.json();
     },
+    enabled: !!token, // Only run query if token exists
   });
 
   const getUserTypeText = (user: User) => {
@@ -127,11 +136,11 @@ export default function AdminUsersPage() {
   // Update user mutation
   const updateUserMutation = useMutation({
     mutationFn: async (data: { id: number; userData: Partial<User> }) => {
-      const token = localStorage.getItem('token');
+      const currentToken = useAuthStore.getState().token;
       const response = await fetch(`/api/admin/users/${data.id}`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${currentToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(data.userData),
@@ -157,11 +166,11 @@ export default function AdminUsersPage() {
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: number) => {
-      const token = localStorage.getItem('token');
+      const currentToken = useAuthStore.getState().token;
       const response = await fetch(`/api/admin/users/${userId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${currentToken}`,
           'Content-Type': 'application/json',
         },
       });

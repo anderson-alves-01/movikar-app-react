@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuthStore } from "@/lib/auth";
 import AdminLayout from "@/components/admin-layout";
 
 interface Booking {
@@ -47,12 +48,16 @@ export default function AdminBookingsPage() {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { token } = useAuthStore();
 
   // Get all bookings
   const { data: bookings = [], isLoading } = useQuery({
     queryKey: ['/api/admin/bookings'],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token');
+      }
+      
       const response = await fetch('/api/admin/bookings', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -61,11 +66,15 @@ export default function AdminBookingsPage() {
       });
       
       if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error('Token inválido ou expirado');
+        }
         throw new Error('Failed to fetch bookings');
       }
       
       return response.json();
     },
+    enabled: !!token, // Only run query if token exists
   });
 
   const getStatusColor = (status: string) => {
@@ -130,7 +139,7 @@ export default function AdminBookingsPage() {
   // Update booking mutation
   const updateBookingMutation = useMutation({
     mutationFn: async (data: { id: number; status: string }) => {
-      const token = localStorage.getItem('token');
+      const currentToken = useAuthStore.getState().token;
       const response = await fetch(`/api/admin/bookings/${data.id}`, {
         method: 'PUT',
         headers: {
@@ -160,11 +169,11 @@ export default function AdminBookingsPage() {
   // Delete booking mutation
   const deleteBookingMutation = useMutation({
     mutationFn: async (bookingId: number) => {
-      const token = localStorage.getItem('token');
+      const currentToken = useAuthStore.getState().token;
       const response = await fetch(`/api/admin/bookings/${bookingId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${currentToken}`,
           'Content-Type': 'application/json',
         },
       });
