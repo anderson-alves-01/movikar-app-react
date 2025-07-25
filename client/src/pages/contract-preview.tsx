@@ -42,16 +42,9 @@ export default function ContractPreview() {
       console.log('Resposta da assinatura:', data);
       
       if (data.signatureUrl) {
-        toast({
-          title: "Redirecionando para GOV.BR",
-          description: data.message || "Você será redirecionado para assinar digitalmente no GOV.BR",
-        });
-        
-        // Add a small delay to show the toast, then redirect
-        setTimeout(() => {
-          console.log('Redirecionando para:', data.signatureUrl);
-          window.location.href = data.signatureUrl;
-        }, 1500);
+        console.log('Redirecionando para:', data.signatureUrl);
+        // Redirect immediately
+        window.location.href = data.signatureUrl;
       } else {
         toast({
           title: "Erro",
