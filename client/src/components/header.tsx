@@ -15,6 +15,7 @@ import {
 import { Search, Menu, User, MessageCircle, Car, LogOut, Shield, Bell, Gift, Sparkles, BarChart3, RotateCcw } from "lucide-react";
 import { useAuthStore } from "@/lib/auth";
 import { useSearch } from "@/contexts/SearchContext";
+import { buildSearchParams } from "@/lib/searchUtils";
 // import AddVehicleModal from "./add-vehicle-modal";
 
 export default function Header() {
@@ -88,9 +89,10 @@ export default function Header() {
                 className="border-none outline-none text-sm font-medium text-gray-800 bg-transparent w-32 focus-visible:ring-0" 
                 onChange={(e) => {
                   setSearchLocation(e.target.value);
-                  if (e.target.value.length > 2) {
-                    updateFilter('location', e.target.value);
-                  } else if (e.target.value.length === 0) {
+                  const trimmedValue = e.target.value.trim();
+                  if (trimmedValue.length > 2) {
+                    updateFilter('location', trimmedValue);
+                  } else if (trimmedValue.length === 0) {
                     updateFilter('location', '');
                   }
                 }}

@@ -229,7 +229,10 @@ export class DatabaseStorage implements IStorage {
       }
 
       if (filters.location) {
-        whereConditions.push(`v.location ILIKE $${paramIndex}`);
+        whereConditions.push(`(
+          UNACCENT(LOWER(v.location)) ILIKE UNACCENT(LOWER($${paramIndex})) OR
+          LOWER(v.location) ILIKE LOWER($${paramIndex})
+        )`);
         params.push(`%${filters.location}%`);
         paramIndex++;
       }
