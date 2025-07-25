@@ -180,6 +180,12 @@ export default function Header() {
                           Sugestões
                         </Link>
                       </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/document-verification" className="cursor-pointer">
+                          <Shield className="h-4 w-4 mr-2" />
+                          Verificação
+                        </Link>
+                      </DropdownMenuItem>
                       {user.role === 'admin' && (
                         <>
                           <DropdownMenuSeparator />

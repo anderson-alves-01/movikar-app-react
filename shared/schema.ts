@@ -25,10 +25,36 @@ export const users = pgTable("users", {
   password: varchar("password", { length: 255 }).notNull(),
   phone: varchar("phone", { length: 20 }),
   role: varchar("role", { length: 20 }).notNull().default("renter"), // renter, owner, both, admin
-  profilePicture: text("profile_picture"),
-  verified: boolean("verified").default(false),
+  avatar: text("avatar"),
+  isOwner: boolean("is_owner").default(false),
+  isRenter: boolean("is_renter").default(true),
+  isVerified: boolean("is_verified").default(false),
+  rating: decimal("rating", { precision: 3, scale: 2 }).default('0'),
+  totalRentals: integer("total_rentals").default(0),
+  totalEarnings: decimal("total_earnings", { precision: 10, scale: 2 }).default('0'),
+  location: text("location"),
+  verificationStatus: varchar("verification_status", { length: 20 }).default("pending").notNull(), // pending, verified, rejected
+  documentsSubmitted: boolean("documents_submitted").default(false),
+  documentsSubmittedAt: timestamp("documents_submitted_at"),
+  verifiedAt: timestamp("verified_at"),
+  rejectionReason: text("rejection_reason"),
+  canRentVehicles: boolean("can_rent_vehicles").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Document verification table
+export const userDocuments = pgTable("user_documents", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  documentType: varchar("document_type", { length: 50 }).notNull(), // cpf, rg, cnh, comprovante_residencia
+  documentUrl: text("document_url").notNull(),
+  documentNumber: varchar("document_number", { length: 50 }),
+  status: varchar("status", { length: 20 }).default("pending").notNull(), // pending, approved, rejected
+  rejectionReason: text("rejection_reason"),
+  uploadedAt: timestamp("uploaded_at").defaultNow(),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewedBy: integer("reviewed_by").references(() => users.id), // admin user id
 });
 
 // Vehicles table  
@@ -290,6 +316,18 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   rewards: one(userRewards),
   rewardTransactions: many(rewardTransactions),
   activities: many(userActivity),
+  documents: many(userDocuments),
+}));
+
+export const userDocumentsRelations = relations(userDocuments, ({ one }) => ({
+  user: one(users, {
+    fields: [userDocuments.userId],
+    references: [users.id],
+  }),
+  reviewedByUser: one(users, {
+    fields: [userDocuments.reviewedBy],
+    references: [users.id],
+  }),
 }));
 
 export const vehiclesRelations = relations(vehicles, ({ one, many }) => ({
@@ -469,6 +507,15 @@ export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+  verifiedAt: true,
+  documentsSubmittedAt: true,
+});
+
+export const insertUserDocumentSchema = createInsertSchema(userDocuments).omit({
+  id: true,
+  uploadedAt: true,
+  reviewedAt: true,
+  reviewedBy: true,
 });
 
 export const insertVehicleSchema = createInsertSchema(vehicles).omit({
@@ -559,6 +606,8 @@ export const insertWaitingQueueSchema = createInsertSchema(waitingQueue).omit({
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type UserDocument = typeof userDocuments.$inferSelect;
+export type InsertUserDocument = z.infer<typeof insertUserDocumentSchema>;
 export type Vehicle = typeof vehicles.$inferSelect;
 export type InsertVehicle = z.infer<typeof insertVehicleSchema>;
 export type Booking = typeof bookings.$inferSelect;

@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertVehicleSchema, insertBookingSchema, insertReviewSchema, insertMessageSchema, insertVehicleBrandSchema, insertVehicleAvailabilitySchema, insertWaitingQueueSchema, type User, type VehicleBrand } from "@shared/schema";
+import { insertUserSchema, insertVehicleSchema, insertBookingSchema, insertReviewSchema, insertMessageSchema, insertVehicleBrandSchema, insertVehicleAvailabilitySchema, insertWaitingQueueSchema, insertUserDocumentSchema, type User, type VehicleBrand, type UserDocument } from "@shared/schema";
 import { ZodError } from "zod";
 // import { contractService } from "./services/contractService.js";
 // import { processSignatureWebhook } from "./services/signatureService.js";
@@ -147,6 +147,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(userWithoutPassword);
     } catch (error) {
       res.status(400).json({ message: "Falha ao atualizar dados do usuário" });
+    }
+  });
+
+  // Document verification routes
+  app.get("/api/user/documents", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const result = await pool.query(
+        'SELECT * FROM user_documents WHERE user_id = $1 ORDER BY uploaded_at DESC',
+        [userId]
+      );
+      
+      const documents = result.rows.map((row: any) => ({
+        id: row.id,
+        userId: row.user_id,
+        documentType: row.document_type,
+        documentUrl: row.document_url,
+        documentNumber: row.document_number,
+        status: row.status,
+        rejectionReason: row.rejection_reason,
+        uploadedAt: row.uploaded_at,
+        reviewedAt: row.reviewed_at,
+        reviewedBy: row.reviewed_by,
+      }));
+      
+      res.json(documents);
+    } catch (error) {
+      console.error("Get documents error:", error);
+      res.status(500).json({ message: "Falha ao buscar documentos" });
+    }
+  });
+
+  app.post("/api/user/documents/upload", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const { documentType, documentNumber } = req.body;
+      
+      // Simular upload de arquivo - em produção seria integrado com serviço de storage
+      const mockDocumentUrl = `https://storage.example.com/documents/${userId}/${documentType}/${Date.now()}.pdf`;
+      
+      const result = await pool.query(`
+        INSERT INTO user_documents (user_id, document_type, document_url, document_number, status)
+        VALUES ($1, $2, $3, $4, 'pending')
+        RETURNING *
+      `, [userId, documentType, mockDocumentUrl, documentNumber]);
+      
+      // Atualizar status do usuário
+      await pool.query(`
+        UPDATE users 
+        SET documents_submitted = true, documents_submitted_at = NOW()
+        WHERE id = $1
+      `, [userId]);
+      
+      // Verificar se todos os documentos obrigatórios foram enviados
+      const docsResult = await pool.query(`
+        SELECT document_type FROM user_documents 
+        WHERE user_id = $1 AND status != 'rejected'
+      `, [userId]);
+      
+      const submittedTypes = docsResult.rows.map((row: any) => row.document_type);
+      const requiredTypes = ['cpf', 'rg', 'cnh', 'comprovante_residencia'];
+      const allSubmitted = requiredTypes.every(type => submittedTypes.includes(type));
+      
+      if (allSubmitted) {
+        await pool.query(`
+          UPDATE users 
+          SET verification_status = 'pending'
+          WHERE id = $1
+        `, [userId]);
+      }
+      
+      const document = {
+        id: result.rows[0].id,
+        userId: result.rows[0].user_id,
+        documentType: result.rows[0].document_type,
+        documentUrl: result.rows[0].document_url,
+        documentNumber: result.rows[0].document_number,
+        status: result.rows[0].status,
+        uploadedAt: result.rows[0].uploaded_at,
+      };
+      
+      res.status(201).json(document);
+    } catch (error) {
+      console.error("Upload document error:", error);
+      res.status(500).json({ message: "Falha ao enviar documento" });
     }
   });
 

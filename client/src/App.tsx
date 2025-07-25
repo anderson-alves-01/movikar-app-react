@@ -19,6 +19,7 @@ import Messages from "@/pages/messages";
 import Contracts from "@/pages/contracts";
 import Rewards from "@/pages/rewards";
 import Suggestions from "@/pages/suggestions";
+import DocumentVerification from "@/pages/document-verification";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -39,6 +40,7 @@ function Router() {
       <Route path="/contracts" component={Contracts} />
       <Route path="/rewards" component={Rewards} />
       <Route path="/suggestions" component={Suggestions} />
+      <Route path="/document-verification" component={DocumentVerification} />
       <Route component={NotFound} />
     </Switch>
   );
