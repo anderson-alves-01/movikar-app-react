@@ -78,7 +78,7 @@ export default function Reservations() {
 
   const removeFromQueueMutation = useMutation({
     mutationFn: (queueId: number) =>
-      apiRequest(`/api/waiting-queue/${queueId}`, "DELETE"),
+      apiRequest("DELETE", `/api/waiting-queue/${queueId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ 
         queryKey: ["/api/users/" + user?.id + "/waiting-queue"] 
@@ -99,7 +99,7 @@ export default function Reservations() {
 
   const updateBookingMutation = useMutation({
     mutationFn: ({ bookingId, status }: { bookingId: number; status: string }) =>
-      apiRequest(`/api/bookings/${bookingId}`, "PATCH", { status }),
+      apiRequest("PATCH", `/api/bookings/${bookingId}`, { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/bookings?type=owner"] });
       queryClient.invalidateQueries({ queryKey: ["/api/bookings?type=renter"] });
