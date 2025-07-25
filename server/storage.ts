@@ -1,12 +1,14 @@
 import { 
-  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue,
+  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity,
   type User, type InsertUser, type Vehicle, type InsertVehicle, 
   type Booking, type InsertBooking, type Review, type InsertReview,
   type Message, type InsertMessage, type VehicleWithOwner, type BookingWithDetails,
   type Contract, type InsertContract, type ContractTemplate, type InsertContractTemplate,
   type ContractAuditLog, type InsertContractAuditLog, type ContractWithDetails,
   type VehicleBrand, type InsertVehicleBrand, type VehicleAvailability, type InsertVehicleAvailability,
-  type WaitingQueue, type InsertWaitingQueue
+  type WaitingQueue, type InsertWaitingQueue, type Referral, type InsertReferral,
+  type UserRewards, type InsertUserRewards, type RewardTransaction, type InsertRewardTransaction,
+  type UserActivity, type InsertUserActivity
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, desc, asc, or, like, ilike, sql, lt, ne, inArray } from "drizzle-orm";
@@ -120,6 +122,29 @@ export interface IStorage {
 
   // Extended methods
   getBookingWithDetails(id: number): Promise<BookingWithDetails | undefined>;
+
+  // Referral system methods
+  getReferralByCode(code: string): Promise<Referral | undefined>;
+  getUserReferrals(userId: number): Promise<Referral[]>;
+  createReferral(referral: InsertReferral): Promise<Referral>;
+  updateReferral(id: number, referral: Partial<InsertReferral>): Promise<Referral | undefined>;
+  generateReferralCode(): string;
+
+  // Rewards system methods
+  getUserRewards(userId: number): Promise<UserRewards | undefined>;
+  createUserRewards(rewards: InsertUserRewards): Promise<UserRewards>;
+  updateUserRewards(userId: number, rewards: Partial<InsertUserRewards>): Promise<UserRewards | undefined>;
+  addRewardTransaction(transaction: InsertRewardTransaction): Promise<RewardTransaction>;
+  getUserRewardTransactions(userId: number): Promise<RewardTransaction[]>;
+  processReferralReward(referralId: number): Promise<void>;
+
+  // User activity tracking methods
+  trackUserActivity(activity: InsertUserActivity): Promise<UserActivity>;
+  getUserActivity(userId: number, type?: string): Promise<UserActivity[]>;
+  getPersonalizedSuggestions(userId: number): Promise<VehicleWithOwner[]>;
+
+  // Contract methods for user
+  getContractsByUser(userId: number): Promise<ContractWithDetails[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1100,6 +1125,302 @@ export class DatabaseStorage implements IStorage {
       .set({ isActive: false })
       .where(eq(waitingQueue.id, id));
     return (result.rowCount || 0) > 0;
+  }
+
+  async updateWaitingQueueStatus(id: number, data: Partial<InsertWaitingQueue>): Promise<WaitingQueue | undefined> {
+    const [result] = await db
+      .update(waitingQueue)
+      .set(data)
+      .where(eq(waitingQueue.id, id))
+      .returning();
+    return result || undefined;
+  }
+
+  // Referral system methods
+  async getReferralByCode(code: string): Promise<Referral | undefined> {
+    const [referral] = await db
+      .select()
+      .from(referrals)
+      .where(eq(referrals.referralCode, code));
+    return referral || undefined;
+  }
+
+  async getUserReferrals(userId: number): Promise<Referral[]> {
+    return await db
+      .select()
+      .from(referrals)
+      .where(eq(referrals.referrerId, userId))
+      .orderBy(desc(referrals.createdAt));
+  }
+
+  async createReferral(referral: InsertReferral): Promise<Referral> {
+    const [newReferral] = await db
+      .insert(referrals)
+      .values(referral)
+      .returning();
+    return newReferral;
+  }
+
+  async updateReferral(id: number, referral: Partial<InsertReferral>): Promise<Referral | undefined> {
+    const [updatedReferral] = await db
+      .update(referrals)
+      .set(referral)
+      .where(eq(referrals.id, id))
+      .returning();
+    return updatedReferral || undefined;
+  }
+
+  generateReferralCode(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 8; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
+
+  // Rewards system methods
+  async getUserRewards(userId: number): Promise<UserRewards | undefined> {
+    const [rewards] = await db
+      .select()
+      .from(userRewards)
+      .where(eq(userRewards.userId, userId));
+    return rewards || undefined;
+  }
+
+  async createUserRewards(rewards: InsertUserRewards): Promise<UserRewards> {
+    const [newRewards] = await db
+      .insert(userRewards)
+      .values(rewards)
+      .returning();
+    return newRewards;
+  }
+
+  async updateUserRewards(userId: number, rewards: Partial<InsertUserRewards>): Promise<UserRewards | undefined> {
+    const [updatedRewards] = await db
+      .update(userRewards)
+      .set(rewards)
+      .where(eq(userRewards.userId, userId))
+      .returning();
+    return updatedRewards || undefined;
+  }
+
+  async addRewardTransaction(transaction: InsertRewardTransaction): Promise<RewardTransaction> {
+    const [newTransaction] = await db
+      .insert(rewardTransactions)
+      .values(transaction)
+      .returning();
+    
+    // Update user rewards
+    const currentRewards = await this.getUserRewards(transaction.userId);
+    
+    if (currentRewards) {
+      const newTotal = currentRewards.totalPoints + transaction.points;
+      const newAvailable = transaction.type === 'earned' 
+        ? currentRewards.availablePoints + transaction.points
+        : currentRewards.availablePoints - Math.abs(transaction.points);
+      const newUsed = transaction.type === 'used' 
+        ? currentRewards.usedPoints + Math.abs(transaction.points)
+        : currentRewards.usedPoints;
+
+      await this.updateUserRewards(transaction.userId, {
+        totalPoints: newTotal,
+        availablePoints: Math.max(0, newAvailable),
+        usedPoints: newUsed,
+      });
+    } else {
+      // Create new rewards record
+      await this.createUserRewards({
+        userId: transaction.userId,
+        totalPoints: transaction.points,
+        availablePoints: transaction.type === 'earned' ? transaction.points : 0,
+        usedPoints: transaction.type === 'used' ? Math.abs(transaction.points) : 0,
+        referralCount: 0,
+        successfulReferrals: 0,
+      });
+    }
+
+    return newTransaction;
+  }
+
+  async getUserRewardTransactions(userId: number): Promise<RewardTransaction[]> {
+    return await db
+      .select()
+      .from(rewardTransactions)
+      .where(eq(rewardTransactions.userId, userId))
+      .orderBy(desc(rewardTransactions.createdAt));
+  }
+
+  async processReferralReward(referralId: number): Promise<void> {
+    const [referral] = await db
+      .select()
+      .from(referrals)
+      .where(eq(referrals.id, referralId));
+
+    if (!referral || referral.rewardStatus !== 'pending') {
+      return;
+    }
+
+    // Award points to referrer
+    await this.addRewardTransaction({
+      userId: referral.referrerId,
+      type: 'earned',
+      points: referral.rewardPoints,
+      source: 'referral',
+      sourceId: referralId,
+      description: 'Recompensa por convidar um amigo',
+    });
+
+    // Update referral status
+    await this.updateReferral(referralId, {
+      status: 'completed',
+      rewardStatus: 'awarded',
+      completedAt: new Date(),
+    });
+
+    // Update referrer's referral count
+    const rewards = await this.getUserRewards(referral.referrerId);
+    if (rewards) {
+      await this.updateUserRewards(referral.referrerId, {
+        referralCount: rewards.referralCount + 1,
+        successfulReferrals: rewards.successfulReferrals + 1,
+      });
+    }
+  }
+
+  // User activity tracking methods
+  async trackUserActivity(activity: InsertUserActivity): Promise<UserActivity> {
+    const [newActivity] = await db
+      .insert(userActivity)
+      .values(activity)
+      .returning();
+    return newActivity;
+  }
+
+  async getUserActivity(userId: number, type?: string): Promise<UserActivity[]> {
+    const conditions = [eq(userActivity.userId, userId)];
+    
+    if (type) {
+      conditions.push(eq(userActivity.activityType, type));
+    }
+
+    return await db
+      .select()
+      .from(userActivity)
+      .where(and(...conditions))
+      .orderBy(desc(userActivity.createdAt))
+      .limit(100);
+  }
+
+  async getPersonalizedSuggestions(userId: number): Promise<VehicleWithOwner[]> {
+    // Get user's search and browsing history
+    const userActivities = await this.getUserActivity(userId);
+    
+    // Analyze user preferences from activity
+    const categoryPreferences: Record<string, number> = {};
+    const locationPreferences: Record<string, number> = {};
+    const priceRanges: number[] = [];
+    const viewedVehicleIds: number[] = [];
+
+    userActivities.forEach(activity => {
+      if (activity.filters) {
+        const filters = activity.filters as any;
+        
+        // Track category preferences
+        if (filters.category) {
+          categoryPreferences[filters.category] = (categoryPreferences[filters.category] || 0) + 1;
+        }
+        
+        // Track location preferences
+        if (filters.location) {
+          locationPreferences[filters.location] = (locationPreferences[filters.location] || 0) + 1;
+        }
+        
+        // Track price preferences
+        if (filters.priceMax) {
+          priceRanges.push(filters.priceMax);
+        }
+      }
+      
+      // Track viewed vehicles
+      if (activity.vehicleId && activity.activityType === 'vehicle_view') {
+        viewedVehicleIds.push(activity.vehicleId);
+      }
+    });
+
+    // Build suggestion query based on preferences
+    const mostPreferredCategory = Object.keys(categoryPreferences).sort((a, b) => 
+      categoryPreferences[b] - categoryPreferences[a]
+    )[0];
+    
+    const mostPreferredLocation = Object.keys(locationPreferences).sort((a, b) => 
+      locationPreferences[b] - locationPreferences[a]
+    )[0];
+
+    const avgPrice = priceRanges.length > 0 ? 
+      priceRanges.reduce((sum, price) => sum + price, 0) / priceRanges.length : 
+      null;
+
+    // Build query conditions
+    const conditions = [eq(vehicles.isAvailable, true)];
+    
+    if (viewedVehicleIds.length > 0) {
+      conditions.push(sql`${vehicles.id} NOT IN (${viewedVehicleIds.join(',')})`);
+    }
+    
+    if (mostPreferredCategory) {
+      conditions.push(eq(vehicles.category, mostPreferredCategory));
+    }
+    
+    if (mostPreferredLocation) {
+      conditions.push(ilike(vehicles.location, `%${mostPreferredLocation}%`));
+    }
+    
+    if (avgPrice) {
+      conditions.push(sql`${vehicles.pricePerDay} <= ${avgPrice * 1.2}`); // 20% above average preference
+    }
+
+    const results = await db
+      .select()
+      .from(vehicles)
+      .leftJoin(users, eq(vehicles.ownerId, users.id))
+      .where(and(...conditions))
+      .orderBy(desc(vehicles.rating), desc(vehicles.createdAt))
+      .limit(10);
+
+    return results.map(result => ({
+      ...result.vehicles,
+      owner: result.users!,
+    })) as VehicleWithOwner[];
+  }
+
+  // Contract methods for user
+  async getContractsByUser(userId: number): Promise<ContractWithDetails[]> {
+    const results = await db
+      .select()
+      .from(contracts)
+      .leftJoin(bookings, eq(contracts.bookingId, bookings.id))
+      .leftJoin(vehicles, eq(bookings.vehicleId, vehicles.id))
+      .leftJoin(users, eq(vehicles.ownerId, users.id))
+      .where(or(
+        eq(bookings.renterId, userId),
+        eq(bookings.ownerId, userId)
+      ))
+      .orderBy(desc(contracts.createdAt));
+
+    return results.map(result => {
+      const ownerUser = result.users!;
+      
+      return {
+        ...result.contracts,
+        booking: {
+          ...result.bookings!,
+          vehicle: result.vehicles!,
+          renter: ownerUser, // This will be replaced with actual renter data
+          owner: ownerUser,
+        },
+      } as ContractWithDetails;
+    });
   }
 
   async updateWaitingQueueStatus(id: number, data: Partial<InsertWaitingQueue>): Promise<WaitingQueue | undefined> {

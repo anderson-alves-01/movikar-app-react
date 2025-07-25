@@ -1112,6 +1112,214 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(200).json({ message: "Webhook received" });
   });
 
+  // User Contracts - get all contracts for current user
+  app.get("/api/user/contracts", authenticateToken, async (req, res) => {
+    try {
+      const contracts = await storage.getContractsByUser(req.user!.id);
+      res.json(contracts);
+    } catch (error) {
+      console.error("Error fetching user contracts:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Referral system routes
+  app.get("/api/referrals/my-code", authenticateToken, async (req, res) => {
+    try {
+      // Check if user already has an active referral code
+      const existingReferrals = await storage.getUserReferrals(req.user!.id);
+      const activeReferral = existingReferrals.find(r => r.status === 'active');
+      
+      if (activeReferral) {
+        return res.json({ referralCode: activeReferral.referralCode });
+      }
+      
+      // Generate new referral code
+      const referralCode = storage.generateReferralCode();
+      
+      // Create referral record (without referred user yet)
+      const referral = await storage.createReferral({
+        referrerId: req.user!.id,
+        referredId: 0, // Will be updated when someone uses the code
+        referralCode,
+        status: 'active',
+        rewardPoints: 100,
+        rewardStatus: 'pending',
+      });
+      
+      res.json({ referralCode: referral.referralCode });
+    } catch (error) {
+      console.error("Error generating referral code:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  app.post("/api/referrals/use-code", authenticateToken, async (req, res) => {
+    try {
+      const { referralCode } = req.body;
+      
+      if (!referralCode) {
+        return res.status(400).json({ message: "Código de convite obrigatório" });
+      }
+      
+      // Find referral by code
+      const referral = await storage.getReferralByCode(referralCode);
+      
+      if (!referral) {
+        return res.status(404).json({ message: "Código de convite inválido" });
+      }
+      
+      if (referral.referrerId === req.user!.id) {
+        return res.status(400).json({ message: "Você não pode usar seu próprio código de convite" });
+      }
+      
+      if (referral.status === 'completed') {
+        return res.status(400).json({ message: "Este código de convite já foi utilizado" });
+      }
+      
+      // Update referral with referred user
+      await storage.updateReferral(referral.id, {
+        referredId: req.user!.id,
+        status: 'pending_completion',
+      });
+      
+      // Award initial points to both users
+      await storage.addRewardTransaction({
+        userId: req.user!.id,
+        type: 'earned',
+        points: 50, // Welcome bonus for new user
+        source: 'referral_welcome',
+        sourceId: referral.id,
+        description: 'Bônus de boas-vindas por aceitar convite',
+      });
+      
+      // Process referral reward for referrer
+      await storage.processReferralReward(referral.id);
+      
+      res.json({ message: "Código de convite aplicado com sucesso! Vocês ganharam pontos." });
+    } catch (error) {
+      console.error("Error using referral code:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  app.get("/api/referrals/my-referrals", authenticateToken, async (req, res) => {
+    try {
+      const referrals = await storage.getUserReferrals(req.user!.id);
+      res.json(referrals);
+    } catch (error) {
+      console.error("Error fetching referrals:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Rewards system routes
+  app.get("/api/rewards/balance", authenticateToken, async (req, res) => {
+    try {
+      let rewards = await storage.getUserRewards(req.user!.id);
+      
+      if (!rewards) {
+        // Create initial rewards record
+        rewards = await storage.createUserRewards({
+          userId: req.user!.id,
+          totalPoints: 0,
+          availablePoints: 0,
+          usedPoints: 0,
+          referralCount: 0,
+          successfulReferrals: 0,
+        });
+      }
+      
+      res.json(rewards);
+    } catch (error) {
+      console.error("Error fetching rewards:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  app.get("/api/rewards/transactions", authenticateToken, async (req, res) => {
+    try {
+      const transactions = await storage.getUserRewardTransactions(req.user!.id);
+      res.json(transactions);
+    } catch (error) {
+      console.error("Error fetching reward transactions:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  app.post("/api/rewards/use-points", authenticateToken, async (req, res) => {
+    try {
+      const { points, bookingId, description } = req.body;
+      
+      if (!points || points <= 0) {
+        return res.status(400).json({ message: "Quantidade de pontos inválida" });
+      }
+      
+      const userRewards = await storage.getUserRewards(req.user!.id);
+      
+      if (!userRewards || userRewards.availablePoints < points) {
+        return res.status(400).json({ message: "Pontos insuficientes" });
+      }
+      
+      // Calculate discount (1 point = R$ 0.01)
+      const discountAmount = points * 0.01;
+      
+      const transaction = await storage.addRewardTransaction({
+        userId: req.user!.id,
+        type: 'used',
+        points: -points,
+        source: 'discount',
+        sourceId: bookingId || null,
+        description: description || `Desconto aplicado (${points} pontos)`,
+        bookingId: bookingId || null,
+        discountAmount: discountAmount.toString(),
+      });
+      
+      res.json({ 
+        message: "Pontos utilizados com sucesso!",
+        discountAmount,
+        transaction 
+      });
+    } catch (error) {
+      console.error("Error using points:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // User activity tracking routes
+  app.post("/api/activity/track", authenticateToken, async (req, res) => {
+    try {
+      const { activityType, searchQuery, vehicleId, filters, sessionId } = req.body;
+      
+      const activity = await storage.trackUserActivity({
+        userId: req.user!.id,
+        activityType,
+        searchQuery: searchQuery || null,
+        vehicleId: vehicleId || null,
+        filters: filters || null,
+        sessionId: sessionId || null,
+        ipAddress: req.ip || null,
+        userAgent: req.get('User-Agent') || null,
+      });
+      
+      res.json(activity);
+    } catch (error) {
+      console.error("Error tracking activity:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Personalized suggestions route
+  app.get("/api/suggestions/personalized", authenticateToken, async (req, res) => {
+    try {
+      const suggestions = await storage.getPersonalizedSuggestions(req.user!.id);
+      res.json(suggestions);
+    } catch (error) {
+      console.error("Error fetching personalized suggestions:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

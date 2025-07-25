@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Search, Menu, User, MessageCircle, Car, LogOut, Shield, Bell } from "lucide-react";
+import { Search, Menu, User, MessageCircle, Car, LogOut, Shield, Bell, Gift, Sparkles } from "lucide-react";
 import { useAuthStore } from "@/lib/auth";
 // import AddVehicleModal from "./add-vehicle-modal";
 
@@ -166,6 +166,18 @@ export default function Header() {
                         <Link href="/messages" className="cursor-pointer">
                           <MessageCircle className="h-4 w-4 mr-2" />
                           Mensagens
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/rewards" className="cursor-pointer">
+                          <Gift className="h-4 w-4 mr-2" />
+                          Recompensas
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/suggestions" className="cursor-pointer">
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Sugestões
                         </Link>
                       </DropdownMenuItem>
                       {user.role === 'admin' && (

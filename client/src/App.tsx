@@ -16,6 +16,9 @@ import AdminBookings from "@/pages/admin-bookings";
 import Reservations from "@/pages/reservations";
 import Vehicles from "@/pages/vehicles";
 import Messages from "@/pages/messages";
+import Contracts from "@/pages/contracts";
+import Rewards from "@/pages/rewards";
+import Suggestions from "@/pages/suggestions";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -33,6 +36,9 @@ function Router() {
       <Route path="/reservations" component={Reservations} />
       <Route path="/vehicles" component={Vehicles} />
       <Route path="/messages" component={Messages} />
+      <Route path="/contracts" component={Contracts} />
+      <Route path="/rewards" component={Rewards} />
+      <Route path="/suggestions" component={Suggestions} />
       <Route component={NotFound} />
     </Switch>
   );
