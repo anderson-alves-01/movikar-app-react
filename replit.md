@@ -53,11 +53,21 @@ Preferred communication style: Simple, everyday language.
 ✓ Veículo 8 (Toyota Corolla) totalmente liberado para aluguel
 ✓ URL de checkout agora carrega corretamente para todos os veículos
 
-### July 25, 2025 - Base de Dados Limpa para Testes
+### July 25, 2025 - Base de Dados Preparada para Testes
 ✓ Removidos todos os dados de teste do banco de dados
 ✓ Mantido apenas o usuário admin@carshare.com (ID: 4)
-✓ Limpas todas as tabelas: veículos, reservas, contratos, mensagens, avaliações, documentos
-✓ Sistema pronto para novos testes do fluxo completo
+✓ Adicionados 10 veículos de teste para o usuário admin:
+  - Toyota Corolla 2022 (Sedan) - R$80/dia
+  - Honda Civic 2023 (Sedan) - R$95/dia
+  - Volkswagen Golf 2021 (Hatchback) - R$75/dia
+  - Chevrolet Onix 2023 (Hatchback) - R$65/dia
+  - Ford EcoSport 2022 (SUV) - R$90/dia
+  - Nissan Kicks 2023 (SUV) - R$85/dia
+  - Hyundai HB20 2022 (Hatchback) - R$60/dia
+  - Renault Sandero 2021 (Hatchback) - R$58/dia
+  - Fiat Argo 2023 (Hatchback) - R$68/dia
+  - Jeep Compass 2022 (SUV) - R$120/dia
+✓ Sistema pronto para testes completos do fluxo de aluguel
 ✓ Problema DocuSign URLs corrigido - agora usa domínio correto do Replit
 
 ### July 25, 2025 - Sistema de Assinatura Digital DocuSign IMPLEMENTADO
