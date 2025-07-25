@@ -12,8 +12,25 @@ import fs from "fs";
 import { db, pool } from "./db";
 import { sql } from "drizzle-orm";
 import Stripe from "stripe";
+import multer from "multer";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+
+// Configure multer for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept images and PDFs
+    if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Apenas imagens e PDFs são aceitos'));
+    }
+  },
+});
 
 // Initialize Stripe
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -366,14 +383,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/user/documents/upload", authenticateToken, async (req, res) => {
+  app.post("/api/user/documents/upload", authenticateToken, upload.single('document'), async (req, res) => {
     try {
       const userId = req.user!.id;
       
       console.log("Upload request received for user:", userId);
       console.log("Request body:", req.body);
+      console.log("File:", req.file);
       
       const { documentType, documentNumber } = req.body;
+      
+      if (!documentType) {
+        return res.status(400).json({ message: "Tipo de documento é obrigatório" });
+      }
+      
+      if (!req.file) {
+        return res.status(400).json({ message: "Arquivo é obrigatório" });
+      }
       
       // Simular upload de arquivo - em produção seria integrado com serviço de storage
       const mockDocumentUrl = `https://storage.example.com/documents/${userId}/${documentType}/${Date.now()}.pdf`;
