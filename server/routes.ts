@@ -1965,7 +1965,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/contracts/sign-govbr/:bookingId", authenticateToken, async (req, res) => {
     try {
       const { bookingId } = req.params;
-      const userId = req.user?.id; // Corrigido: usar id ao invés de userId
+      const userId = req.user?.id || req.user?.userId; // Suporte para ambos os formatos
 
       const booking = await storage.getBookingWithDetails(parseInt(bookingId));
       if (!booking) {
