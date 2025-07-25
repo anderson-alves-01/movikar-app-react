@@ -72,7 +72,7 @@ export const vehicles = pgTable("vehicles", {
   description: text("description"),
   features: jsonb("features").$type<string[]>().default([]),
   images: jsonb("images").$type<string[]>().default([]),
-  available: boolean("available").default(true),
+  isAvailable: boolean("is_available").default(true),
   transmission: varchar("transmission", { length: 20 }).default("manual"),
   fuelType: varchar("fuel_type", { length: 20 }).default("gasoline"),
   seats: integer("seats").default(5),
