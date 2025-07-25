@@ -10,6 +10,17 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### July 25, 2025 - Automatic Contract Creation System
+✓ Implemented automatic contract creation when bookings are approved
+✓ Created comprehensive contract storage methods in database layer
+✓ Added default contract template with Portuguese content and styling
+✓ Integrated PDF generation service using Puppeteer for contract previews
+✓ Enhanced booking approval flow with contract creation notifications
+✓ Added proper error handling for contract generation failures
+✓ Implemented contract number generation using secure random IDs
+✓ Created template system with HTML-based contract layouts
+✓ Added contract data normalization and validation
+
 ### July 25, 2025 - Deployment Health Check Fixes
 ✓ Added dedicated health check endpoint at `/health` responding with 200 status
 ✓ Enhanced root endpoint `/` to provide quick health check responses in production
