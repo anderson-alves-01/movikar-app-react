@@ -269,10 +269,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Create payment intent
+      // Create payment intent with PIX support
       const paymentIntent = await stripe.paymentIntents.create({
         amount: Math.round(parseFloat(totalPrice) * 100), // Convert to cents
         currency: 'brl',
+        payment_method_types: ['card', 'pix'], // Support both card and PIX
         metadata: {
           vehicleId: vehicleId.toString(),
           userId: req.user!.id.toString(),
