@@ -64,10 +64,19 @@ export default function DocumentVerification() {
         formData.append('documentNumber', documentNumber);
       }
 
-      return await apiRequest('/api/user/documents/upload', {
+      const response = await fetch('/api/user/documents/upload', {
         method: 'POST',
         body: formData,
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return response.json();
     },
     onSuccess: (_, variables) => {
       toast({
@@ -78,7 +87,8 @@ export default function DocumentVerification() {
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       setUploadingFiles(prev => ({ ...prev, [variables.documentType]: false }));
     },
-    onError: (error, variables) => {
+    onError: (error: any, variables) => {
+      console.error("Upload error:", error);
       toast({
         title: "Erro no upload",
         description: `Falha ao enviar documento ${variables.documentType.toUpperCase()}. Tente novamente.`,

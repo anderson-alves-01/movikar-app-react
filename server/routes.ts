@@ -212,11 +212,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         vehicleId: parseInt(vehicleId),
         renterId: parseInt(userId),
         ownerId: vehicle.ownerId,
-        startDate: new Date(startDate),
-        endDate: new Date(endDate),
-        totalPrice: totalPrice,
-        servicefee: serviceFee,
-        insuranceFee: insuranceFee,
+        startDate: startDate,
+        endDate: endDate,
+        totalCost: totalPrice,
         status: "approved" as const,
         paymentStatus: "paid" as const,
         paymentIntentId,
@@ -230,7 +228,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           bookingId: booking.id,
           status: 'pending_signature',
           createdBy: parseInt(userId),
-          templateId: 1,
+          templateId: "1",
         });
       } catch (contractError) {
         console.error("Contract creation failed:", contractError);
@@ -773,11 +771,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         vehicleId: req.body.vehicleId,
         renterId: req.user!.id,
         ownerId: vehicle.ownerId,
-        startDate,
-        endDate,
-        totalPrice: totalPrice.toFixed(2), // Convert to string
-        servicefee: serviceFee,
-        insuranceFee: insuranceFee,
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0],
+        totalCost: totalPrice.toFixed(2), // Convert to string
         status: req.body.status || "pending",
         paymentStatus: req.body.paymentStatus || "pending",
         notes: req.body.notes || null,
@@ -788,8 +784,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check vehicle availability
       const isAvailable = await storage.checkVehicleAvailability(
         bookingData.vehicleId,
-        bookingData.startDate.toISOString().split('T')[0],
-        bookingData.endDate.toISOString().split('T')[0]
+        bookingData.startDate,
+        bookingData.endDate
       );
 
       if (!isAvailable) {
