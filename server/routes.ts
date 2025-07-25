@@ -1942,14 +1942,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/contracts/preview/:bookingId", authenticateToken, async (req, res) => {
     try {
       const { bookingId } = req.params;
-      const userId = req.user?.userId;
+      const userId = req.user?.id; // Corrigido: usar id ao invés de userId
 
       const booking = await storage.getBookingWithDetails(parseInt(bookingId));
       if (!booking) {
         return res.status(404).json({ message: "Reserva não encontrada" });
       }
 
-      // Check if user owns this booking
+      // Check if user owns this booking (both renter and owner can see preview)
       if (booking.renterId !== userId && booking.ownerId !== userId) {
         return res.status(403).json({ message: "Acesso negado" });
       }
@@ -1965,14 +1965,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/contracts/sign-govbr/:bookingId", authenticateToken, async (req, res) => {
     try {
       const { bookingId } = req.params;
-      const userId = req.user?.userId;
+      const userId = req.user?.id; // Corrigido: usar id ao invés de userId
 
       const booking = await storage.getBookingWithDetails(parseInt(bookingId));
       if (!booking) {
         return res.status(404).json({ message: "Reserva não encontrada" });
       }
 
-      // Check if user owns this booking
+      // Check if user is the renter (only renter signs)
       if (booking.renterId !== userId) {
         return res.status(403).json({ message: "Apenas o locatário pode assinar o contrato" });
       }
