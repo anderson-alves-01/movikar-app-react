@@ -237,6 +237,27 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount || 0) > 0;
   }
 
+  async hasActiveBookings(vehicleId: number): Promise<boolean> {
+    const [result] = await db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(bookings)
+      .where(
+        and(
+          eq(bookings.vehicleId, vehicleId),
+          sql`${bookings.status} IN ('pending', 'approved', 'active')`
+        )
+      );
+    return (result?.count || 0) > 0;
+  }
+
+  async hasAnyBookings(vehicleId: number): Promise<boolean> {
+    const [result] = await db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(bookings)
+      .where(eq(bookings.vehicleId, vehicleId));
+    return (result?.count || 0) > 0;
+  }
+
   // Bookings
   async getBooking(id: number): Promise<BookingWithDetails | undefined> {
     const [result] = await db

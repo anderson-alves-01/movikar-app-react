@@ -244,6 +244,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
+      // Check if vehicle has any bookings (due to foreign key constraint)
+      const hasBookings = await storage.hasAnyBookings(vehicleId);
+      if (hasBookings) {
+        return res.status(400).json({ 
+          message: "Cannot delete vehicle with existing booking history. Vehicle deletion is only allowed for vehicles that have never been booked." 
+        });
+      }
+
       const deleted = await storage.deleteVehicle(vehicleId);
       if (!deleted) {
         return res.status(404).json({ message: "Vehicle not found" });
@@ -251,6 +259,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.status(204).send();
     } catch (error) {
+      console.error("Delete vehicle error:", error);
       res.status(500).json({ message: "Failed to delete vehicle" });
     }
   });
