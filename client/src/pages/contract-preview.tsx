@@ -11,27 +11,46 @@ import { Separator } from '@/components/ui/separator';
 import { FileText, CheckCircle, Clock, ExternalLink, Download } from 'lucide-react';
 
 export default function ContractPreview() {
-  const [, params] = useRoute('/contract-preview/:bookingId');
+  const [, contractParams] = useRoute('/contracts/:id');
+  const [, bookingParams] = useRoute('/contract-preview/:bookingId');
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const bookingId = params?.bookingId;
+  
+  // Support both /contracts/:id and /contract-preview/:bookingId routes
+  const contractId = contractParams?.id;
+  const bookingId = bookingParams?.bookingId;
 
-  // Fetch booking details with contract
-  const { data: booking, isLoading } = useQuery({
+  // Fetch contract details directly if contractId is provided
+  const { data: contract, isLoading: isLoadingContract } = useQuery({
+    queryKey: ['/api/contracts', contractId],
+    enabled: !!contractId,
+  });
+
+  // Fetch booking details with contract (when using bookingId)
+  const { data: booking, isLoading: isLoadingBooking } = useQuery({
     queryKey: ['/api/bookings', bookingId],
     enabled: !!bookingId,
   });
 
-  // Fetch contract preview
+  // Fetch contract preview (when using bookingId)
   const { data: contractPreview, isLoading: isLoadingPreview } = useQuery({
     queryKey: ['/api/contracts/preview', bookingId],
     enabled: !!bookingId,
   });
 
+  // Determine which data to use
+  const isLoading = isLoadingContract || isLoadingBooking || isLoadingPreview;
+  const contractData = contract || contractPreview;
+  const bookingData = booking || contract?.booking;
+
   // Sign contract with DocuSign
   const signContractMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('POST', `/api/contracts/sign-docusign/${bookingId}`);
+      const idToUse = bookingId || (contract?.bookingId);
+      if (!idToUse) {
+        throw new Error('ID da reserva não encontrado');
+      }
+      const response = await apiRequest('POST', `/api/contracts/sign-docusign/${idToUse}`);
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message);
@@ -63,7 +82,7 @@ export default function ContractPreview() {
     },
   });
 
-  if (isLoading || isLoadingPreview) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
@@ -79,7 +98,7 @@ export default function ContractPreview() {
     );
   }
 
-  if (!booking) {
+  if (!bookingData && !contractData) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
@@ -118,23 +137,23 @@ export default function ContractPreview() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-gray-500">Veículo</label>
-                  <p className="font-semibold">{booking.vehicle?.brand} {booking.vehicle?.model}</p>
+                  <p className="font-semibold">{bookingData?.vehicle?.brand} {bookingData?.vehicle?.model}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Status</label>
                   <div>
-                    <Badge variant={booking.status === 'approved' ? 'default' : 'secondary'}>
-                      {booking.status === 'approved' ? 'Aprovado' : booking.status}
+                    <Badge variant={bookingData?.status === 'approved' ? 'default' : 'secondary'}>
+                      {bookingData?.status === 'approved' ? 'Aprovado' : bookingData?.status}
                     </Badge>
                   </div>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Período</label>
-                  <p>{new Date(booking.startDate).toLocaleDateString('pt-BR')} - {new Date(booking.endDate).toLocaleDateString('pt-BR')}</p>
+                  <p>{new Date(bookingData?.startDate).toLocaleDateString('pt-BR')} - {new Date(bookingData?.endDate).toLocaleDateString('pt-BR')}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Valor Total</label>
-                  <p className="font-semibold text-green-600">R$ {booking.totalPrice}</p>
+                  <p className="font-semibold text-green-600">R$ {bookingData?.totalPrice}</p>
                 </div>
               </div>
             </CardContent>
@@ -152,30 +171,30 @@ export default function ContractPreview() {
                   <div className="text-center mb-6">
                     <h2 className="text-xl font-bold">CONTRATO DE LOCAÇÃO DE VEÍCULO</h2>
                     <p className="text-sm text-gray-600 mt-2">
-                      Número: CNT-{booking.id}-{Date.now().toString().slice(-6)}
+                      Número: CNT-{bookingData?.id || contractData?.id}-{Date.now().toString().slice(-6)}
                     </p>
                   </div>
 
                   <div className="space-y-4 text-sm">
                     <div>
                       <h3 className="font-semibold mb-2">1. PARTES CONTRATANTES</h3>
-                      <p><strong>LOCADOR:</strong> {booking.vehicle?.owner?.name || 'Proprietário do Veículo'}</p>
-                      <p><strong>LOCATÁRIO:</strong> {booking.renter?.name || 'Locatário'}</p>
+                      <p><strong>LOCADOR:</strong> {bookingData?.vehicle?.owner?.name || 'Proprietário do Veículo'}</p>
+                      <p><strong>LOCATÁRIO:</strong> {bookingData?.renter?.name || 'Locatário'}</p>
                     </div>
 
                     <div>
                       <h3 className="font-semibold mb-2">2. OBJETO DO CONTRATO</h3>
                       <p>O LOCADOR concede ao LOCATÁRIO, em caráter temporário e oneroso, o uso do veículo:</p>
-                      <p><strong>Marca/Modelo:</strong> {booking.vehicle?.brand} {booking.vehicle?.model} {booking.vehicle?.year}</p>
-                      <p><strong>Placa:</strong> {booking.vehicle?.licensePlate || 'A definir'}</p>
+                      <p><strong>Marca/Modelo:</strong> {bookingData?.vehicle?.brand} {bookingData?.vehicle?.model} {bookingData?.vehicle?.year}</p>
+                      <p><strong>Placa:</strong> {bookingData?.vehicle?.licensePlate || 'A definir'}</p>
                     </div>
 
                     <div>
                       <h3 className="font-semibold mb-2">3. PERÍODO E VALORES</h3>
-                      <p><strong>Período:</strong> {new Date(booking.startDate).toLocaleDateString('pt-BR')} às {new Date(booking.endDate).toLocaleDateString('pt-BR')}</p>
-                      <p><strong>Valor da Locação:</strong> R$ {booking.totalPrice}</p>
-                      <p><strong>Taxa de Serviço:</strong> R$ {booking.serviceFee}</p>
-                      <p><strong>Seguro:</strong> R$ {booking.insuranceFee}</p>
+                      <p><strong>Período:</strong> {new Date(bookingData?.startDate).toLocaleDateString('pt-BR')} às {new Date(bookingData?.endDate).toLocaleDateString('pt-BR')}</p>
+                      <p><strong>Valor da Locação:</strong> R$ {bookingData?.totalPrice}</p>
+                      <p><strong>Taxa de Serviço:</strong> R$ {bookingData?.serviceFee || '0,00'}</p>
+                      <p><strong>Seguro:</strong> R$ {bookingData?.insuranceFee || '0,00'}</p>
                     </div>
 
                     <div>

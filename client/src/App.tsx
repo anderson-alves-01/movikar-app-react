@@ -46,6 +46,7 @@ function Router() {
       <Route path="/vehicles" component={Vehicles} />
       <Route path="/messages" component={Messages} />
       <Route path="/contracts" component={Contracts} />
+      <Route path="/contracts/:id" component={ContractPreview} />
       <Route path="/rewards" component={Rewards} />
       <Route path="/suggestions" component={Suggestions} />
       <Route path="/document-verification" component={DocumentVerification} />
