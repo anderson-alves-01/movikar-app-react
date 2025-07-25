@@ -82,7 +82,6 @@ export const vehicles = pgTable("vehicles", {
   seats: integer("seats").default(5),
   rating: decimal("rating", { precision: 3, scale: 2 }).default('0'),
   totalBookings: integer("total_bookings").default(0),
-  licensePlate: varchar("license_plate", { length: 10 }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
