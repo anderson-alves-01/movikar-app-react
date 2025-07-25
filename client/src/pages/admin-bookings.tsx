@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Calendar, Search, Filter, Edit, Trash2, Eye } from "lucide-react";
@@ -43,22 +44,33 @@ interface Booking {
 export default function AdminBookingsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState('');
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { token } = useAuthStore();
 
-  // Get all bookings
-  const { data: bookings = [], isLoading } = useQuery({
-    queryKey: ['/api/admin/bookings'],
+  // Get all bookings with pagination
+  const { data: bookingsData, isLoading } = useQuery({
+    queryKey: ['/api/admin/bookings', currentPage, pageSize, searchTerm, statusFilter, paymentStatusFilter],
     queryFn: async () => {
       if (!token) {
         throw new Error('No authentication token');
       }
       
-      const response = await fetch('/api/admin/bookings', {
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: pageSize.toString(),
+        search: searchTerm,
+        status: statusFilter,
+        paymentStatus: paymentStatusFilter,
+      });
+      
+      const response = await fetch(`/api/admin/bookings?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -76,6 +88,10 @@ export default function AdminBookingsPage() {
     },
     enabled: !!token, // Only run query if token exists
   });
+
+  const bookings = bookingsData?.bookings || [];
+  const totalPages = bookingsData?.totalPages || 0;
+  const total = bookingsData?.total || 0;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -156,7 +172,9 @@ export default function AdminBookingsPage() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/bookings'] });
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/admin/bookings', currentPage, pageSize, searchTerm, statusFilter, paymentStatusFilter] 
+      });
       toast({ title: "Status da reserva atualizado com sucesso!" });
       setIsEditDialogOpen(false);
       setSelectedBooking(null);
@@ -185,7 +203,9 @@ export default function AdminBookingsPage() {
       return response.ok;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/bookings'] });
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/admin/bookings', currentPage, pageSize, searchTerm, statusFilter, paymentStatusFilter] 
+      });
       toast({ title: "Reserva excluída com sucesso!" });
     },
     onError: () => {

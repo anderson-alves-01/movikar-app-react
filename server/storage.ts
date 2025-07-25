@@ -9,7 +9,7 @@ import {
   type WaitingQueue, type InsertWaitingQueue
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gte, lte, desc, asc, or, like, ilike, sql, lt } from "drizzle-orm";
+import { eq, and, gte, lte, desc, asc, or, like, ilike, sql, lt, ne, inArray } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -75,8 +75,8 @@ export interface IStorage {
   getContractTemplate(id: string): Promise<ContractTemplate | undefined>;
 
   // Admin methods
-  getAllUsers(): Promise<User[]>;
-  getAllBookings(): Promise<BookingWithDetails[]>;
+  getAllUsers(page?: number, limit?: number, search?: string, role?: string, verified?: string): Promise<{ users: User[], total: number, totalPages: number, currentPage: number }>;
+  getAllBookings(page?: number, limit?: number, search?: string, status?: string, paymentStatus?: string): Promise<{ bookings: BookingWithDetails[], total: number, totalPages: number, currentPage: number }>;
   getContracts(filters: any): Promise<ContractWithDetails[]>;
   getVehicleBrands(): Promise<VehicleBrand[]>;
   createVehicleBrand(brand: InsertVehicleBrand): Promise<VehicleBrand>;
@@ -979,9 +979,55 @@ export class DatabaseStorage implements IStorage {
     return result || undefined;
   }
 
-  // Admin methods
-  async getAllUsers(): Promise<User[]> {
-    return await db.select().from(users).orderBy(desc(users.createdAt));
+  // Admin methods with pagination
+  async getAllUsers(page: number = 1, limit: number = 10, search: string = '', role: string = '', verified: string = ''): Promise<{ users: User[], total: number, totalPages: number, currentPage: number }> {
+    const offset = (page - 1) * limit;
+    
+    let query = db.select().from(users);
+    let countQuery = db.select({ count: sql<number>`count(*)` }).from(users);
+    
+    // Apply filters
+    const conditions = [];
+    
+    if (search) {
+      const searchCondition = or(
+        ilike(users.name, `%${search}%`),
+        ilike(users.email, `%${search}%`),
+        ilike(users.phone, `%${search}%`)
+      );
+      conditions.push(searchCondition);
+    }
+    
+    if (role) {
+      conditions.push(eq(users.role, role));
+    }
+    
+    if (verified === 'true') {
+      conditions.push(eq(users.isVerified, true));
+    } else if (verified === 'false') {
+      conditions.push(eq(users.isVerified, false));
+    }
+    
+    if (conditions.length > 0) {
+      const whereCondition = and(...conditions);
+      query = query.where(whereCondition);
+      countQuery = countQuery.where(whereCondition);
+    }
+    
+    const [usersResult, countResult] = await Promise.all([
+      query.orderBy(desc(users.createdAt)).limit(limit).offset(offset),
+      countQuery
+    ]);
+    
+    const total = countResult[0]?.count || 0;
+    const totalPages = Math.ceil(total / limit);
+    
+    return {
+      users: usersResult,
+      total,
+      totalPages,
+      currentPage: page
+    };
   }
 
 
@@ -1018,21 +1064,71 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount || 0) > 0;
   }
 
-  async getAllBookings(): Promise<BookingWithDetails[]> {
-    const results = await db
+  async getAllBookings(page: number = 1, limit: number = 10, search: string = '', status: string = '', paymentStatus: string = ''): Promise<{ bookings: BookingWithDetails[], total: number, totalPages: number, currentPage: number }> {
+    const offset = (page - 1) * limit;
+    
+    let query = db
       .select()
       .from(bookings)
       .leftJoin(vehicles, eq(bookings.vehicleId, vehicles.id))
-      .leftJoin(users, eq(vehicles.ownerId, users.id))
-      .orderBy(desc(bookings.createdAt));
-
-    return results.map(result => ({
+      .leftJoin(users, eq(vehicles.ownerId, users.id));
+      
+    let countQuery = db.select({ count: sql<number>`count(*)` }).from(bookings);
+    
+    // Apply filters
+    const conditions = [];
+    
+    if (search) {
+      const searchCondition = or(
+        ilike(vehicles.brand, `%${search}%`),
+        ilike(vehicles.model, `%${search}%`),
+        ilike(users.name, `%${search}%`),
+        ilike(users.email, `%${search}%`)
+      );
+      conditions.push(searchCondition);
+      
+      // Add join to count query for search
+      countQuery = countQuery
+        .leftJoin(vehicles, eq(bookings.vehicleId, vehicles.id))
+        .leftJoin(users, eq(vehicles.ownerId, users.id));
+    }
+    
+    if (status) {
+      conditions.push(eq(bookings.status, status));
+    }
+    
+    if (paymentStatus) {
+      conditions.push(eq(bookings.paymentStatus, paymentStatus));
+    }
+    
+    if (conditions.length > 0) {
+      const whereCondition = and(...conditions);
+      query = query.where(whereCondition);
+      countQuery = countQuery.where(whereCondition);
+    }
+    
+    const [results, countResult] = await Promise.all([
+      query.orderBy(desc(bookings.createdAt)).limit(limit).offset(offset),
+      countQuery
+    ]);
+    
+    const bookingsWithDetails = results.map(result => ({
       ...result.bookings,
       vehicle: result.vehicles ? {
         ...result.vehicles,
         owner: result.users!
       } : undefined
     })) as BookingWithDetails[];
+    
+    const total = countResult[0]?.count || 0;
+    const totalPages = Math.ceil(total / limit);
+    
+    return {
+      bookings: bookingsWithDetails,
+      total,
+      totalPages,
+      currentPage: page
+    };
   }
 
   async getBookingById(id: number): Promise<BookingWithDetails | undefined> {

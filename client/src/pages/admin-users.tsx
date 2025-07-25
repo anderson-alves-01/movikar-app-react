@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -38,6 +39,8 @@ export default function AdminUsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [newUserData, setNewUserData] = useState({
     name: '',
     email: '',
@@ -53,15 +56,23 @@ export default function AdminUsersPage() {
   const queryClient = useQueryClient();
   const { token } = useAuthStore();
 
-  // Get all users
-  const { data: users = [], isLoading } = useQuery({
-    queryKey: ['/api/admin/users'],
+  // Get all users with pagination
+  const { data: usersData, isLoading } = useQuery({
+    queryKey: ['/api/admin/users', currentPage, pageSize, searchTerm, roleFilter, verificationFilter],
     queryFn: async () => {
       if (!token) {
         throw new Error('No authentication token');
       }
       
-      const response = await fetch('/api/admin/users', {
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: pageSize.toString(),
+        search: searchTerm,
+        role: roleFilter,
+        verified: verificationFilter,
+      });
+      
+      const response = await fetch(`/api/admin/users?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -79,6 +90,10 @@ export default function AdminUsersPage() {
     },
     enabled: !!token, // Only run query if token exists
   });
+
+  const users = usersData?.users || [];
+  const totalPages = usersData?.totalPages || 0;
+  const total = usersData?.total || 0;
 
   const getUserTypeText = (user: User) => {
     const types = [];
@@ -105,33 +120,8 @@ export default function AdminUsersPage() {
     }
   };
 
-  const filteredUsers = (Array.isArray(users) ? users : []).filter((user: User) => {
-    // Search filter
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      const matchesSearch = 
-        user.name?.toLowerCase().includes(searchLower) ||
-        user.email?.toLowerCase().includes(searchLower) ||
-        user.phone?.toLowerCase().includes(searchLower);
-      
-      if (!matchesSearch) return false;
-    }
-
-    // Role filter
-    if (roleFilter && roleFilter !== 'all') {
-      if (roleFilter === 'owner' && !user.isOwner) return false;
-      if (roleFilter === 'renter' && !user.isRenter) return false;
-      if (roleFilter === 'admin' && user.role !== 'admin') return false;
-    }
-
-    // Verification filter
-    if (verificationFilter && verificationFilter !== 'all') {
-      if (verificationFilter === 'verified' && !user.isVerified) return false;
-      if (verificationFilter === 'unverified' && user.isVerified) return false;
-    }
-
-    return true;
-  });
+  // Filtering is now handled on the backend, no need for frontend filtering
+  const filteredUsers = users;
 
   // Update user mutation
   const updateUserMutation = useMutation({
@@ -153,7 +143,9 @@ export default function AdminUsersPage() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/admin/users', currentPage, pageSize, searchTerm, roleFilter, verificationFilter] 
+      });
       toast({ title: "Usuário atualizado com sucesso!" });
       setIsEditDialogOpen(false);
       setSelectedUser(null);
@@ -182,7 +174,9 @@ export default function AdminUsersPage() {
       return response.ok;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/admin/users', currentPage, pageSize, searchTerm, roleFilter, verificationFilter] 
+      });
       toast({ title: "Usuário excluído com sucesso!" });
     },
     onError: () => {
@@ -210,7 +204,9 @@ export default function AdminUsersPage() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/admin/users', currentPage, pageSize, searchTerm, roleFilter, verificationFilter] 
+      });
       toast({ title: "Usuário criado com sucesso!" });
       setIsCreateDialogOpen(false);
       setNewUserData({
@@ -275,7 +271,7 @@ export default function AdminUsersPage() {
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-gray-400" />
             <span className="text-sm text-gray-600">
-              Total: {filteredUsers.length} usuários
+              Total: {total} usuários
             </span>
           </div>
           <Button onClick={() => setIsCreateDialogOpen(true)}>
@@ -301,34 +297,42 @@ export default function AdminUsersPage() {
                   <Input
                     placeholder="Buscar por nome, email..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setCurrentPage(1); // Reset to first page when searching
+                    }}
                     className="pl-10"
                   />
                 </div>
               </div>
 
               {/* Role Filter */}
-              <Select value={roleFilter} onValueChange={setRoleFilter}>
+              <Select value={roleFilter} onValueChange={(value) => {
+                setRoleFilter(value);
+                setCurrentPage(1); // Reset to first page when filtering  
+              }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Filtrar por tipo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos os tipos</SelectItem>
-                  <SelectItem value="owner">Proprietários</SelectItem>
-                  <SelectItem value="renter">Locatários</SelectItem>
+                  <SelectItem value="">Todos os tipos</SelectItem>
                   <SelectItem value="admin">Administradores</SelectItem>
+                  <SelectItem value="user">Usuários</SelectItem>
                 </SelectContent>
               </Select>
 
               {/* Verification Filter */}
-              <Select value={verificationFilter} onValueChange={setVerificationFilter}>
+              <Select value={verificationFilter} onValueChange={(value) => {
+                setVerificationFilter(value);
+                setCurrentPage(1); // Reset to first page when filtering
+              }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Filtrar por verificação" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="verified">Verificados</SelectItem>
-                  <SelectItem value="unverified">Não Verificados</SelectItem>
+                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="true">Verificados</SelectItem>
+                  <SelectItem value="false">Não Verificados</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -339,6 +343,7 @@ export default function AdminUsersPage() {
                   setSearchTerm('');
                   setRoleFilter('');
                   setVerificationFilter('');
+                  setCurrentPage(1); // Reset to first page when clearing filters
                 }}
               >
                 Limpar Filtros
@@ -455,6 +460,73 @@ export default function AdminUsersPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">
+                Mostrando {((currentPage - 1) * pageSize) + 1} - {Math.min(currentPage * pageSize, total)} de {total} usuários
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Select value={pageSize.toString()} onValueChange={(value) => {
+                setPageSize(parseInt(value));
+                setCurrentPage(1); // Reset to first page when changing page size
+              }}>
+                <SelectTrigger className="w-20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="25">25</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                </SelectContent>
+              </Select>
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (currentPage > 1) setCurrentPage(currentPage - 1);
+                      }}
+                      className={currentPage <= 1 ? 'pointer-events-none opacity-50' : ''}
+                    />
+                  </PaginationItem>
+                  
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setCurrentPage(page);
+                        }}
+                        isActive={currentPage === page}
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+                      }}
+                      className={currentPage >= totalPages ? 'pointer-events-none opacity-50' : ''}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          </div>
+        )}
 
         {/* Edit User Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

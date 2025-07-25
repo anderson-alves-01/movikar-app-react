@@ -788,8 +788,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin Users CRUD
   app.get("/api/admin/users", authenticateToken, requireAdmin, async (req, res) => {
     try {
-      const users = await storage.getAllUsers();
-      res.json(users);
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const search = req.query.search as string || '';
+      const role = req.query.role as string || '';
+      const verified = req.query.verified as string || '';
+      
+      const result = await storage.getAllUsers(page, limit, search, role, verified);
+      res.json(result);
     } catch (error) {
       console.error("Admin users error:", error);
       res.status(500).json({ message: "Failed to fetch users" });
@@ -857,8 +863,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin Bookings CRUD
   app.get("/api/admin/bookings", authenticateToken, requireAdmin, async (req, res) => {
     try {
-      const bookings = await storage.getAllBookings();
-      res.json(bookings);
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const search = req.query.search as string || '';
+      const status = req.query.status as string || '';
+      const paymentStatus = req.query.paymentStatus as string || '';
+      
+      const result = await storage.getAllBookings(page, limit, search, status, paymentStatus);
+      res.json(result);
     } catch (error) {
       console.error("Admin bookings error:", error);
       res.status(500).json({ message: "Failed to fetch bookings" });
