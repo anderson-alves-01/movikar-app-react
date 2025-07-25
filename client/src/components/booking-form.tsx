@@ -171,6 +171,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
                 <Input 
                   type="datetime-local" 
                   required
+                  className="h-12 text-sm"
                   value={bookingData.startDate}
                   onChange={(e) => setBookingData(prev => ({ ...prev, startDate: e.target.value }))}
                 />
@@ -180,6 +181,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
                 <Input 
                   type="datetime-local" 
                   required
+                  className="h-12 text-sm"
                   value={bookingData.endDate}
                   onChange={(e) => setBookingData(prev => ({ ...prev, endDate: e.target.value }))}
                 />
