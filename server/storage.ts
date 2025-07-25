@@ -47,6 +47,7 @@ export interface IStorage {
   getBooking(id: number): Promise<BookingWithDetails | undefined>;
   getBookingsByUser(userId: number, type: 'renter' | 'owner'): Promise<BookingWithDetails[]>;
   getBookingsByVehicle(vehicleId: number): Promise<Booking[]>;
+  getBookingByPaymentIntent(paymentIntentId: string): Promise<Booking | undefined>;
   createBooking(booking: InsertBooking): Promise<Booking>;
   updateBooking(id: number, booking: Partial<InsertBooking>): Promise<Booking | undefined>;
   checkVehicleAvailability(vehicleId: number, startDate: Date, endDate: Date): Promise<boolean>;
@@ -388,6 +389,14 @@ export class DatabaseStorage implements IStorage {
       .from(bookings)
       .where(eq(bookings.vehicleId, vehicleId))
       .orderBy(desc(bookings.createdAt));
+  }
+
+  async getBookingByPaymentIntent(paymentIntentId: string): Promise<Booking | undefined> {
+    const [booking] = await db
+      .select()
+      .from(bookings)
+      .where(eq(bookings.paymentIntentId, paymentIntentId));
+    return booking || undefined;
   }
 
   async createBooking(insertBooking: InsertBooking): Promise<Booking> {

@@ -11,8 +11,15 @@ import path from "path";
 import fs from "fs";
 import { db, pool } from "./db";
 import { sql } from "drizzle-orm";
+import Stripe from "stripe";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+
+// Initialize Stripe
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+}
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Extend Express Request type to include user
 declare global {
@@ -57,6 +64,188 @@ const requireAdmin = async (req: Request, res: Response, next: NextFunction) => 
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Payment routes for Stripe integration
+  app.post("/api/create-payment-intent", authenticateToken, async (req, res) => {
+    try {
+      const { vehicleId, startDate, endDate, totalPrice } = req.body;
+      
+      // Validate user verification status
+      const user = await storage.getUser(req.user!.id);
+      if (!user || user.verificationStatus !== 'verified') {
+        return res.status(403).json({ 
+          message: "Usuário não verificado. Complete a verificação de documentos antes de alugar um veículo." 
+        });
+      }
+
+      // Get vehicle details
+      const vehicle = await storage.getVehicle(vehicleId);
+      if (!vehicle) {
+        return res.status(404).json({ message: "Veículo não encontrado" });
+      }
+
+      // Check availability
+      const isAvailable = await storage.checkVehicleAvailability(vehicleId, startDate, endDate);
+      if (!isAvailable) {
+        return res.status(400).json({ 
+          message: "Veículo não disponível para as datas selecionadas" 
+        });
+      }
+
+      // Create payment intent
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(parseFloat(totalPrice) * 100), // Convert to cents
+        currency: 'brl',
+        metadata: {
+          vehicleId: vehicleId.toString(),
+          userId: req.user!.id.toString(),
+          startDate,
+          endDate,
+        },
+      });
+
+      res.json({ 
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id 
+      });
+    } catch (error) {
+      console.error("Create payment intent error:", error);
+      res.status(500).json({ message: "Falha ao criar intent de pagamento" });
+    }
+  });
+
+  app.post("/api/confirm-rental", authenticateToken, async (req, res) => {
+    try {
+      const { paymentIntentId, vehicleId, startDate, endDate, totalPrice } = req.body;
+      
+      // Verify payment intent
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      
+      if (paymentIntent.status !== 'succeeded') {
+        return res.status(400).json({ message: "Pagamento não confirmado" });
+      }
+
+      // Create booking after successful payment
+      const vehicle = await storage.getVehicle(vehicleId);
+      if (!vehicle) {
+        return res.status(404).json({ message: "Veículo não encontrado" });
+      }
+
+      const serviceFee = (parseFloat(totalPrice) * 0.1).toFixed(2);
+      const insuranceFee = (parseFloat(totalPrice) * 0.05).toFixed(2);
+
+      const bookingData = {
+        vehicleId,
+        renterId: req.user!.id,
+        ownerId: vehicle.ownerId,
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+        totalPrice: totalPrice,
+        servicefee: serviceFee,
+        insuranceFee: insuranceFee,
+        status: "approved" as const,
+        paymentStatus: "paid" as const,
+        paymentIntentId,
+      };
+
+      const booking = await storage.createBooking(bookingData);
+      
+      // Create contract automatically
+      try {
+        await storage.createContract({
+          bookingId: booking.id,
+          status: 'pending_signature',
+          createdBy: req.user!.id,
+          templateId: 1,
+        });
+      } catch (contractError) {
+        console.error("Contract creation failed:", contractError);
+      }
+
+      res.json({ 
+        booking,
+        message: "Aluguel confirmado com sucesso! Contrato criado automaticamente." 
+      });
+    } catch (error) {
+      console.error("Confirm rental error:", error);
+      res.status(500).json({ message: "Falha ao confirmar aluguel" });
+    }
+  });
+
+  app.get("/api/payment-success/:paymentIntentId", async (req, res) => {
+    try {
+      const paymentIntentId = req.params.paymentIntentId;
+      
+      // Verify payment intent
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      
+      if (paymentIntent.status !== 'succeeded') {
+        return res.status(400).json({ message: "Pagamento não confirmado" });
+      }
+
+      // Get metadata from payment intent
+      const { vehicleId, userId, startDate, endDate } = paymentIntent.metadata;
+      
+      if (!vehicleId || !userId || !startDate || !endDate) {
+        return res.status(400).json({ message: "Dados de pagamento incompletos" });
+      }
+
+      // Check if booking already exists for this payment
+      const existingBooking = await storage.getBookingByPaymentIntent(paymentIntentId);
+      if (existingBooking) {
+        return res.json({ 
+          message: "Aluguel já confirmado",
+          booking: existingBooking 
+        });
+      }
+
+      // Create booking after successful payment
+      const vehicle = await storage.getVehicle(parseInt(vehicleId));
+      if (!vehicle) {
+        return res.status(404).json({ message: "Veículo não encontrado" });
+      }
+
+      const totalPrice = (paymentIntent.amount / 100).toFixed(2); // Convert from cents
+      const serviceFee = (parseFloat(totalPrice) * 0.1).toFixed(2);
+      const insuranceFee = (parseFloat(totalPrice) * 0.05).toFixed(2);
+
+      const bookingData = {
+        vehicleId: parseInt(vehicleId),
+        renterId: parseInt(userId),
+        ownerId: vehicle.ownerId,
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+        totalPrice: totalPrice,
+        servicefee: serviceFee,
+        insuranceFee: insuranceFee,
+        status: "approved" as const,
+        paymentStatus: "paid" as const,
+        paymentIntentId,
+      };
+
+      const booking = await storage.createBooking(bookingData);
+      
+      // Create contract automatically
+      try {
+        await storage.createContract({
+          bookingId: booking.id,
+          status: 'pending_signature',
+          createdBy: parseInt(userId),
+          templateId: 1,
+        });
+      } catch (contractError) {
+        console.error("Contract creation failed:", contractError);
+      }
+
+      res.json({ 
+        booking,
+        message: "Aluguel confirmado com sucesso! Contrato criado automaticamente." 
+      });
+    } catch (error) {
+      console.error("Payment success error:", error);
+      res.status(500).json({ message: "Falha ao confirmar aluguel" });
+    }
+  });
+
   // Authentication routes
   app.post("/api/auth/register", async (req, res) => {
     try {
@@ -599,8 +788,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check vehicle availability
       const isAvailable = await storage.checkVehicleAvailability(
         bookingData.vehicleId,
-        bookingData.startDate,
-        bookingData.endDate
+        bookingData.startDate.toISOString().split('T')[0],
+        bookingData.endDate.toISOString().split('T')[0]
       );
 
       if (!isAvailable) {
@@ -1512,7 +1701,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const userRewards = await storage.getUserRewards(req.user!.id);
       
-      if (!userRewards || userRewards.availablePoints < points) {
+      if (!userRewards || (userRewards.availablePoints || 0) < points) {
         return res.status(400).json({ message: "Pontos insuficientes" });
       }
       

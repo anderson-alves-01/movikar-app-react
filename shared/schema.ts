@@ -92,6 +92,7 @@ export const bookings = pgTable("bookings", {
   totalCost: decimal("total_cost", { precision: 8, scale: 2 }).notNull(),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
   paymentStatus: varchar("payment_status", { length: 20 }).default("pending"),
+  paymentIntentId: varchar("payment_intent_id", { length: 255 }),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -268,6 +269,7 @@ export const contractAuditLog = pgTable("contract_audit_log", {
 export const vehicleBrands = pgTable("vehicle_brands", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 50 }).notNull(),
+  logoUrl: text("logo_url"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => {
@@ -528,7 +530,7 @@ export const insertVehicleSchema = createInsertSchema(vehicles).omit({
   pricePerDay: z.union([z.string(), z.number()]).transform(val => String(val)),
   pricePerWeek: z.union([z.string(), z.number()]).optional().transform(val => val ? String(val) : undefined),
   pricePerMonth: z.union([z.string(), z.number()]).optional().transform(val => val ? String(val) : undefined),
-}).refine(vehicleBrandModelValidation, {
+}).refine((data) => vehicleBrandModelValidation({ brand: data.brand, model: data.model }), {
   message: "Modelo inválido para a marca selecionada",
   path: ["model"]
 });
@@ -602,6 +604,8 @@ export const insertWaitingQueueSchema = createInsertSchema(waitingQueue).omit({
   id: true,
   createdAt: true,
 });
+
+
 
 // Types
 export type User = typeof users.$inferSelect;

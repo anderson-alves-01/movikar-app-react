@@ -21,6 +21,8 @@ import Rewards from "@/pages/rewards";
 import Suggestions from "@/pages/suggestions";
 import DocumentVerification from "@/pages/document-verification";
 import PerformanceDashboard from "@/pages/performance-dashboard";
+import Checkout from "@/pages/checkout";
+import PaymentSuccess from "@/pages/payment-success";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -43,6 +45,8 @@ function Router() {
       <Route path="/suggestions" component={Suggestions} />
       <Route path="/document-verification" component={DocumentVerification} />
       <Route path="/performance" component={PerformanceDashboard} />
+      <Route path="/checkout/:vehicleId" component={Checkout} />
+      <Route path="/payment-success" component={PaymentSuccess} />
       <Route component={NotFound} />
     </Switch>
   );

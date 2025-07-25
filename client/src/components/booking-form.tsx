@@ -20,6 +20,7 @@ interface BookingFormProps {
     year: number;
     pricePerDay: string;
     rating: string;
+    images?: string[];
     owner: {
       id: number;
       name: string;
@@ -111,15 +112,27 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
 
     const pricing = calculatePricing();
     
-    bookingMutation.mutate({
+    // Prepare checkout data
+    const checkoutData = {
       vehicleId: vehicle.id,
-      ownerId: vehicle.owner.id,
-      startDate: new Date(bookingData.startDate),
-      endDate: new Date(bookingData.endDate),
-      totalPrice: pricing.total,
-      servicefee: pricing.serviceFee,
-      insuranceFee: pricing.insuranceFee,
-    });
+      startDate: bookingData.startDate,
+      endDate: bookingData.endDate,
+      totalPrice: pricing.total.toFixed(2),
+      serviceFee: pricing.serviceFee.toFixed(2),
+      insuranceFee: pricing.insuranceFee.toFixed(2),
+      vehicle: {
+        id: vehicle.id,
+        brand: vehicle.brand,
+        model: vehicle.model,
+        year: vehicle.year,
+        pricePerDay: vehicle.pricePerDay,
+        images: vehicle.images || []
+      }
+    };
+
+    // Redirect to checkout with data
+    const encodedData = encodeURIComponent(JSON.stringify(checkoutData));
+    window.location.href = `/checkout/${vehicle.id}?data=${encodedData}`;
   };
 
   const pricing = calculatePricing();
@@ -202,21 +215,14 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
             <Button 
               type="submit" 
               className="w-full bg-primary text-white font-semibold hover:bg-red-600 transition-colors"
-              disabled={bookingMutation.isPending || !user}
+              disabled={!user || !bookingData.startDate || !bookingData.endDate}
             >
-              {bookingMutation.isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Processando...
-                </>
-              ) : (
-                'Solicitar Reserva'
-              )}
+              Alugar Agora
             </Button>
             
             <p className="text-xs text-gray-500 text-center">
               {user 
-                ? "Você não será cobrado ainda. A reserva precisa ser aprovada pelo proprietário."
+                ? "Você será redirecionado para finalizar o pagamento de forma segura."
                 : "Você precisa estar logado para fazer uma reserva."
               }
             </p>
