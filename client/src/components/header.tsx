@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Search, Menu, User, MessageCircle, Car, LogOut, Shield, Bell, Gift, Sparkles } from "lucide-react";
+import { Search, Menu, User, MessageCircle, Car, LogOut, Shield, Bell, Gift, Sparkles, BarChart3 } from "lucide-react";
 import { useAuthStore } from "@/lib/auth";
 // import AddVehicleModal from "./add-vehicle-modal";
 
@@ -184,6 +184,12 @@ export default function Header() {
                         <Link href="/document-verification" className="cursor-pointer">
                           <Shield className="h-4 w-4 mr-2" />
                           Verificação
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/performance" className="cursor-pointer">
+                          <BarChart3 className="h-4 w-4 mr-2" />
+                          Performance
                         </Link>
                       </DropdownMenuItem>
                       {user.role === 'admin' && (

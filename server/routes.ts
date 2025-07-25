@@ -235,6 +235,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Performance Dashboard Routes
+  app.get("/api/dashboard/metrics", authenticateToken, async (req, res) => {
+    try {
+      const timeRange = req.query.range || '30d';
+      
+      // Calcular métricas baseadas no banco de dados
+      const usersResult = await pool.query('SELECT COUNT(*) as total FROM users');
+      const vehiclesResult = await pool.query('SELECT COUNT(*) as total FROM vehicles WHERE is_available = true');
+      const bookingsResult = await pool.query('SELECT COUNT(*) as total FROM bookings');
+      const revenueResult = await pool.query('SELECT COALESCE(SUM(total_cost::numeric), 0) as total FROM bookings WHERE status = \'completed\'');
+      const ratingResult = await pool.query('SELECT COALESCE(AVG(rating::numeric), 0) as avg FROM reviews');
+      const completedResult = await pool.query('SELECT COUNT(*) as total FROM bookings WHERE status = \'completed\'');
+      const pendingResult = await pool.query('SELECT COUNT(*) as total FROM bookings WHERE status = \'pending\'');
+      const verifiedResult = await pool.query('SELECT COUNT(*) as total FROM users WHERE verification_status = \'verified\'');
+      
+      // Métricas de crescimento (simuladas)
+      const metrics = {
+        totalUsers: parseInt(usersResult.rows[0].total),
+        totalVehicles: parseInt(vehiclesResult.rows[0].total),
+        totalBookings: parseInt(bookingsResult.rows[0].total),
+        totalRevenue: parseFloat(revenueResult.rows[0].total),
+        averageRating: parseFloat(ratingResult.rows[0].avg),
+        completedBookings: parseInt(completedResult.rows[0].total),
+        pendingBookings: parseInt(pendingResult.rows[0].total),
+        verifiedUsers: parseInt(verifiedResult.rows[0].total),
+        activeListings: parseInt(vehiclesResult.rows[0].total),
+        monthlyGrowth: 15.5,
+        userGrowth: 23.2,
+        revenueGrowth: 18.7
+      };
+      
+      res.json(metrics);
+    } catch (error) {
+      console.error("Dashboard metrics error:", error);
+      res.status(500).json({ message: "Falha ao buscar métricas" });
+    }
+  });
+
+  app.get("/api/dashboard/charts", authenticateToken, async (req, res) => {
+    try {
+      // Dados simulados para os gráficos - em produção viria do banco
+      const chartData = {
+        monthly: [
+          { name: 'Jan', revenue: 45000, bookings: 120, users: 450 },
+          { name: 'Fev', revenue: 52000, bookings: 135, users: 520 },
+          { name: 'Mar', revenue: 48000, bookings: 128, users: 580 },
+          { name: 'Abr', revenue: 61000, bookings: 152, users: 640 },
+          { name: 'Mai', revenue: 55000, bookings: 145, users: 720 },
+          { name: 'Jun', revenue: 67000, bookings: 168, users: 780 },
+        ],
+        bookingStatus: [
+          { name: 'Concluídas', value: 168 },
+          { name: 'Ativas', value: 45 },
+          { name: 'Pendentes', value: 23 },
+          { name: 'Canceladas', value: 12 },
+        ],
+        vehicleCategories: [
+          { name: 'Econômico', value: 45 },
+          { name: 'Intermediário', value: 38 },
+          { name: 'SUV', value: 28 },
+          { name: 'Luxo', value: 15 },
+          { name: 'Esportivo', value: 8 },
+        ],
+        userActivity: [
+          { name: 'Ativos', value: 234 },
+          { name: 'Inativos', value: 89 },
+          { name: 'Novos', value: 67 },
+        ]
+      };
+      
+      res.json(chartData);
+    } catch (error) {
+      console.error("Dashboard charts error:", error);
+      res.status(500).json({ message: "Falha ao buscar dados dos gráficos" });
+    }
+  });
+
+  app.get("/api/dashboard/goals", authenticateToken, async (req, res) => {
+    try {
+      // Dados de metas - em produção viria de configuração ou banco
+      const goals = {
+        monthlyRevenue: { current: 67000, target: 80000 },
+        newUsers: { current: 156, target: 200 },
+        bookingRate: { current: 78, target: 85 },
+        satisfaction: { current: 4.3, target: 4.5 }
+      };
+      
+      res.json(goals);
+    } catch (error) {
+      console.error("Dashboard goals error:", error);
+      res.status(500).json({ message: "Falha ao buscar metas" });
+    }
+  });
+
   // Vehicle routes - simplified version
   app.get("/api/vehicles", async (req, res) => {
     try {
