@@ -59,7 +59,9 @@ async function createDocuSignEnvelope(params: {
   
   // In development mode, return a mock DocuSign URL
   if (process.env.NODE_ENV === 'development') {
-    return `${process.env.BASE_URL || 'http://localhost:5000'}/simulate-docusign-signature?` +
+    // Extract base URL from return URL to use same domain
+    const baseUrl = returnUrl.split('/contract-signature-callback')[0];
+    return `${baseUrl}/simulate-docusign-signature?` +
       `envelopeId=${envelopeId}&` +
       `returnUrl=${encodeURIComponent(returnUrl)}&` +
       `signerEmail=${encodeURIComponent(signerEmail)}&` +
