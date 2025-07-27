@@ -214,6 +214,15 @@ Preferred communication style: Simple, everyday language.
 ✓ CACHE STRATEGY: Service worker agora só faz cache de recursos GET
 ✓ SISTEMA DE EDIÇÃO: Totalmente funcional em todo frontend
 
+### Janeiro 27, 2025 - Correção Schema Admin Settings - Configurações do Sistema ✅
+✓ PROBLEMA IDENTIFICADO: Colunas serviceFeePercentage e insuranceFeePercentage eram INTEGER
+✓ CORREÇÃO APLICADA: Alteradas para DECIMAL(5,2) para aceitar valores como 12.75
+✓ SQL DIRETO: ALTER TABLE admin_settings para converter tipos de coluna
+✓ TESTE CONFIRMADO: Configurações salvam valores decimais corretamente
+✓ INTERFACE FUNCIONAL: Painel administrativo salva configurações no PostgreSQL
+✓ VALIDAÇÃO: Taxa de serviço 12.75% e seguro 8.25% salvos com sucesso
+✓ RESULTADO: Sistema de configurações administrativas totalmente operacional
+
 ### Janeiro 27, 2025 - Sistema de Feature Toggle PIX no Painel Admin Implementado ✅
 ✓ Campo PIX adicionado ao perfil do usuário para recebimento de valores
 ✓ Implementado fluxo automático de repasse após pagamento Stripe bem-sucedido

@@ -646,8 +646,8 @@ export type User = typeof users.$inferSelect;
 // Admin Settings table
 export const adminSettings = pgTable("admin_settings", {
   id: serial("id").primaryKey(),
-  serviceFeePercentage: integer("service_fee_percentage").default(10).notNull(),
-  insuranceFeePercentage: integer("insurance_fee_percentage").default(15).notNull(),
+  serviceFeePercentage: decimal("service_fee_percentage", { precision: 5, scale: 2 }).default("10.00").notNull(),
+  insuranceFeePercentage: decimal("insurance_fee_percentage", { precision: 5, scale: 2 }).default("15.00").notNull(),
   minimumBookingDays: integer("minimum_booking_days").default(1).notNull(),
   maximumBookingDays: integer("maximum_booking_days").default(30).notNull(),
   cancellationPolicyDays: integer("cancellation_policy_days").default(2).notNull(),
