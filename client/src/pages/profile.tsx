@@ -51,33 +51,18 @@ export default function Profile() {
   // Fetch user bookings as renter
   const { data: renterBookings, isLoading: renterBookingsLoading } = useQuery({
     queryKey: ['/api/bookings', { type: 'renter' }],
-    queryFn: async () => {
-      const response = await fetch('/api/bookings?type=renter');
-      if (!response.ok) throw new Error('Failed to fetch renter bookings');
-      return response.json();
-    },
     enabled: !!user,
   });
 
   // Fetch user bookings as owner
   const { data: ownerBookings, isLoading: ownerBookingsLoading } = useQuery({
     queryKey: ['/api/bookings', { type: 'owner' }],
-    queryFn: async () => {
-      const response = await fetch('/api/bookings?type=owner');
-      if (!response.ok) throw new Error('Failed to fetch owner bookings');
-      return response.json();
-    },
     enabled: !!user,
   });
 
   // Fetch user vehicles
   const { data: userVehicles, isLoading: vehiclesLoading } = useQuery({
     queryKey: ['/api/users', user?.id, 'vehicles'],
-    queryFn: async () => {
-      const response = await fetch(`/api/users/${user?.id}/vehicles`);
-      if (!response.ok) throw new Error('Failed to fetch vehicles');
-      return response.json();
-    },
     enabled: !!user,
   });
 
@@ -132,14 +117,14 @@ export default function Profile() {
       name: user?.name || '',
       phone: user?.phone || '',
       location: user?.location || '',
-      pixKey: user?.pix || '', // Usar pix do backend, não pixKey
+      pixKey: (user as any)?.pix || '', // Usar pix do backend, não pixKey
     });
     setIsEditing(true);
   };
 
   const handleSaveProfile = () => {
     // Converter pixKey para pix antes de enviar para API
-    const dataToSend = {
+    const dataToSend: any = {
       ...editData,
       pix: editData.pixKey, // Mapear pixKey para pix
     };
@@ -315,10 +300,10 @@ export default function Profile() {
                           <span>{user.location}</span>
                         </div>
                       )}
-                      {user.pix && (
+                      {(user as any).pix && (
                         <div className="flex items-center">
-                          <DollarSign className="h-4 w-4 mr-2" />
-                          <span>PIX: {user.pix}</span>
+                          <User className="h-4 w-4 mr-2" />
+                          <span>PIX: {(user as any).pix}</span>
                         </div>
                       )}
                     </div>
@@ -328,7 +313,7 @@ export default function Profile() {
               
               <div className="text-right">
                 <div className="text-2xl font-bold text-success">
-                  {formatCurrency(user.totalEarnings)}
+                  {formatCurrency(parseFloat(user.totalEarnings))}
                 </div>
                 <div className="text-sm text-gray-600">Total ganho</div>
               </div>
@@ -356,7 +341,7 @@ export default function Profile() {
                     <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
                     <p className="text-gray-600">Carregando reservas...</p>
                   </div>
-                ) : renterBookings && renterBookings.length > 0 ? (
+                ) : renterBookings && Array.isArray(renterBookings) && renterBookings.length > 0 ? (
                   <div className="space-y-4">
                     {renterBookings.map((booking: any) => (
                       <Card key={booking.id} className="border border-gray-200">
@@ -453,7 +438,7 @@ export default function Profile() {
                     <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
                     <p className="text-gray-600">Carregando reservas...</p>
                   </div>
-                ) : ownerBookings && ownerBookings.length > 0 ? (
+                ) : ownerBookings && Array.isArray(ownerBookings) && ownerBookings.length > 0 ? (
                   <div className="space-y-4">
                     {ownerBookings.map((booking: any) => (
                       <Card key={booking.id} className="border border-gray-200">
@@ -550,7 +535,7 @@ export default function Profile() {
                     <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
                     <p className="text-gray-600">Carregando veículos...</p>
                   </div>
-                ) : userVehicles && userVehicles.length > 0 ? (
+                ) : userVehicles && Array.isArray(userVehicles) && userVehicles.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {userVehicles.map((vehicle: any) => (
                       <Card key={vehicle.id} className="border border-gray-200">
