@@ -12,6 +12,7 @@ import { formatCurrency } from "@/lib/currency";
 import Header from "@/components/header";
 import AddVehicleModal from "@/components/add-vehicle-modal";
 import VehicleAvailabilityManager from "@/components/vehicle-availability-manager";
+import { TableSkeleton, Loading } from "@/components/ui/loading";
 
 import type { Vehicle } from "@/types";
 
@@ -110,8 +111,28 @@ export default function Vehicles() {
           </div>
 
         {isLoading ? (
-          <div className="text-center py-12">
-            <div className="text-lg text-gray-600">Carregando veículos...</div>
+          <div className="py-12">
+            <Loading 
+              variant="car" 
+              size="lg" 
+              text="Carregando seus veículos..." 
+              className="mb-8"
+            />
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="bg-white rounded-lg shadow-md overflow-hidden animate-pulse">
+                  <div className="h-48 bg-gray-200" />
+                  <div className="p-4 space-y-3">
+                    <div className="h-5 bg-gray-200 rounded w-3/4" />
+                    <div className="h-4 bg-gray-200 rounded w-1/2" />
+                    <div className="flex justify-between items-center">
+                      <div className="h-6 bg-gray-200 rounded w-20" />
+                      <div className="h-8 bg-gray-200 rounded w-24" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : vehicles?.length ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

@@ -31,6 +31,7 @@ import PaymentSuccess from "@/pages/payment-success";
 import ContractPreview from "@/pages/contract-preview";
 import ContractSignedSuccess from "@/pages/contract-signed-success";
 import ContractSignatureError from "@/pages/contract-signature-error";
+import LoadingDemo from "@/pages/loading-demo";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt, IOSInstallPrompt } from "@/components/InstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
@@ -66,6 +67,7 @@ function Router() {
       <Route path="/contract-signed-success" component={ContractSignedSuccess} />
       <Route path="/contract-signature-error" component={ContractSignatureError} />
       <Route path="/contract-signature-callback" component={ContractSignedSuccess} />
+      <Route path="/loading-demo" component={LoadingDemo} />
       <Route component={NotFound} />
     </Switch>
   );
