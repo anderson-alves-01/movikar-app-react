@@ -48,7 +48,7 @@ export default function VehicleAvailabilityManager({ vehicleId }: VehicleAvailab
 
   const createMutation = useMutation({
     mutationFn: (data: typeof newAvailability) =>
-      apiRequest(`/api/vehicles/${vehicleId}/availability`, "POST", data),
+      apiRequest("POST", `/api/vehicles/${vehicleId}/availability`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ 
         queryKey: ["/api/vehicles", vehicleId, "availability"] 
@@ -76,7 +76,7 @@ export default function VehicleAvailabilityManager({ vehicleId }: VehicleAvailab
 
   const deleteMutation = useMutation({
     mutationFn: (availabilityId: number) =>
-      apiRequest(`/api/vehicles/${vehicleId}/availability/${availabilityId}`, "DELETE"),
+      apiRequest("DELETE", `/api/vehicles/${vehicleId}/availability/${availabilityId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ 
         queryKey: ["/api/vehicles", vehicleId, "availability"] 

@@ -12,7 +12,7 @@ export default function VehicleReleaseManager() {
   const [lastResult, setLastResult] = useState<any>(null);
 
   const releaseExpiredMutation = useMutation({
-    mutationFn: () => apiRequest("/api/vehicles/release-expired", "POST"),
+    mutationFn: () => apiRequest("POST", "/api/vehicles/release-expired"),
     onSuccess: (data) => {
       setLastResult(data);
       toast({

@@ -39,7 +39,7 @@ export default function WaitingQueueButton({
 
   const joinQueueMutation = useMutation({
     mutationFn: (data: { desiredStartDate: string; desiredEndDate: string }) =>
-      apiRequest(`/api/vehicles/${vehicleId}/waiting-queue`, "POST", data),
+      apiRequest("POST", `/api/vehicles/${vehicleId}/waiting-queue`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ 
         queryKey: ["/api/users", user?.id, "waiting-queue"] 
