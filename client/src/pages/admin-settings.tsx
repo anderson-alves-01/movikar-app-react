@@ -66,29 +66,44 @@ export default function AdminSettingsPage() {
   // Update settings when data is loaded
   React.useEffect(() => {
     if (currentSettings && typeof currentSettings === 'object') {
+      console.log('🔄 Atualizando interface com dados do banco:', currentSettings);
       setSettings({
-        ...settings,
-        ...currentSettings
+        serviceFeePercentage: currentSettings.serviceFeePercentage || 10,
+        insuranceFeePercentage: currentSettings.insuranceFeePercentage || 15,
+        minimumBookingDays: currentSettings.minimumBookingDays || 1,
+        maximumBookingDays: currentSettings.maximumBookingDays || 30,
+        cancellationPolicyDays: currentSettings.cancellationPolicyDays || 2,
+        currency: currentSettings.currency || "BRL",
+        supportEmail: currentSettings.supportEmail || "suporte@carshare.com",
+        supportPhone: currentSettings.supportPhone || "(11) 9999-9999",
+        enablePixPayment: currentSettings.enablePixPayment || false,
+        enablePixTransfer: currentSettings.enablePixTransfer || true,
+        pixTransferDescription: currentSettings.pixTransferDescription || "Repasse CarShare",
       });
     }
   }, [currentSettings]);
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (newSettings: AdminSettings) => {
+      console.log('💾 Enviando configurações para salvar:', newSettings);
       return await apiRequest('PUT', '/api/admin/settings', newSettings);
     },
-    onSuccess: () => {
+    onSuccess: (updatedData) => {
+      console.log('✅ Configurações salvas com sucesso:', updatedData);
+      // Force refetch to ensure UI shows latest data
       queryClient.invalidateQueries({ queryKey: ['/api/admin/settings'] });
+      queryClient.refetchQueries({ queryKey: ['/api/admin/settings'] });
       toast({
         title: "Configurações Atualizadas",
-        description: "As configurações do sistema foram salvas com sucesso.",
+        description: "As configurações do sistema foram salvas com sucesso no banco de dados.",
       });
       setIsEditing(false);
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('❌ Erro ao salvar configurações:', error);
       toast({
         title: "Erro",
-        description: "Falha ao salvar as configurações.",
+        description: "Falha ao salvar as configurações no banco de dados.",
         variant: "destructive",
       });
     },
