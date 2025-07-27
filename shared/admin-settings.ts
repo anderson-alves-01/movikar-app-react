@@ -10,6 +10,10 @@ export const adminSettingsSchema = z.object({
   currency: z.string().default("BRL"),
   supportEmail: z.string().email().default("suporte@carshare.com"),
   supportPhone: z.string().default("(11) 9999-9999"),
+  // PIX Payment Settings
+  enablePixPayment: z.boolean().default(false),
+  enablePixTransfer: z.boolean().default(true),
+  pixTransferDescription: z.string().default("Repasse CarShare"),
 });
 
 export type AdminSettings = z.infer<typeof adminSettingsSchema>;
@@ -24,6 +28,9 @@ export const defaultAdminSettings: AdminSettings = {
   currency: "BRL",
   supportEmail: "suporte@carshare.com",
   supportPhone: "(11) 9999-9999",
+  enablePixPayment: false,
+  enablePixTransfer: true,
+  pixTransferDescription: "Repasse CarShare",
 };
 
 // Validation functions

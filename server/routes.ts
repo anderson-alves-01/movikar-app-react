@@ -270,11 +270,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Get feature flags to determine payment methods
-      const featureFlags = getFeatureFlags();
+      // Get admin settings and feature flags to determine payment methods
+      const adminSettings = {
+        serviceFeePercentage: 10,
+        insuranceFeePercentage: 15,
+        minimumBookingDays: 1,
+        maximumBookingDays: 30,
+        cancellationPolicyDays: 2,
+        currency: "BRL",
+        supportEmail: "suporte@carshare.com",
+        supportPhone: "(11) 9999-9999",
+        enablePixPayment: false, // Default to false, controlled by admin panel
+        enablePixTransfer: true,
+        pixTransferDescription: "Repasse CarShare",
+      };
+      
+      const featureFlags = getFeatureFlags(adminSettings);
       const paymentMethodTypes = ['card'];
       
-      // Add PIX only if enabled (production environment)
+      // Add PIX only if enabled by admin and environment allows
       if (featureFlags.pixPaymentEnabled) {
         paymentMethodTypes.push('pix');
       }
@@ -2586,6 +2600,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         currency: "BRL",
         supportEmail: "suporte@carshare.com",
         supportPhone: "(11) 9999-9999",
+        enablePixPayment: false,
+        enablePixTransfer: true,
+        pixTransferDescription: "Repasse CarShare",
       };
       res.json(defaultSettings);
     } catch (error) {
@@ -2880,12 +2897,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Feature flags endpoint
-  app.get("/api/feature-flags", (req, res) => {
-    const featureFlags = getFeatureFlags();
-    // Only return client-safe flags
-    res.json({
-      pixPaymentEnabled: featureFlags.pixPaymentEnabled
-    });
+  app.get("/api/feature-flags", async (req, res) => {
+    try {
+      // Get admin settings for feature flags
+      const adminSettings = {
+        serviceFeePercentage: 10,
+        insuranceFeePercentage: 15,
+        minimumBookingDays: 1,
+        maximumBookingDays: 30,
+        cancellationPolicyDays: 2,
+        currency: "BRL",
+        supportEmail: "suporte@carshare.com",
+        supportPhone: "(11) 9999-9999",
+        enablePixPayment: false, // Default to false, can be changed in admin panel
+        enablePixTransfer: true,
+        pixTransferDescription: "Repasse CarShare",
+      };
+      
+      const featureFlags = getFeatureFlags(adminSettings);
+      
+      // Only return client-safe flags
+      res.json({
+        pixPaymentEnabled: featureFlags.pixPaymentEnabled
+      });
+    } catch (error) {
+      console.error("Error fetching feature flags:", error);
+      res.status(500).json({ message: "Erro ao buscar configurações de funcionalidades" });
+    }
   });
 
   app.post("/api/process-payment-transfer", authenticateToken, async (req, res) => {

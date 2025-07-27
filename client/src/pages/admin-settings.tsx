@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Settings, DollarSign, Shield, Clock, Mail, Phone, Save, AlertCircle } from "lucide-react";
+import { Settings, DollarSign, Shield, Clock, Mail, Phone, Save, AlertCircle, Smartphone, CreditCard } from "lucide-react";
 import Header from "@/components/header";
 import { useAuthStore } from "@/lib/auth";
 import { Link } from "wouter";
@@ -28,6 +29,9 @@ export default function AdminSettingsPage() {
     currency: "BRL",
     supportEmail: "suporte@carshare.com",
     supportPhone: "(11) 9999-9999",
+    enablePixPayment: false,
+    enablePixTransfer: true,
+    pixTransferDescription: "Repasse CarShare",
   });
 
   // Verificar se é admin
@@ -56,13 +60,18 @@ export default function AdminSettingsPage() {
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/admin/settings');
       return response;
-    },
-    onSuccess: (data) => {
-      if (data) {
-        setSettings(data);
-      }
     }
   });
+
+  // Update settings when data is loaded
+  React.useEffect(() => {
+    if (currentSettings && typeof currentSettings === 'object') {
+      setSettings({
+        ...settings,
+        ...currentSettings
+      });
+    }
+  }, [currentSettings]);
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (newSettings: AdminSettings) => {
@@ -108,7 +117,7 @@ export default function AdminSettingsPage() {
     updateSettingsMutation.mutate(settings);
   };
 
-  const handleInputChange = (field: keyof AdminSettings, value: string | number) => {
+  const handleInputChange = (field: keyof AdminSettings, value: string | number | boolean) => {
     setSettings(prev => ({
       ...prev,
       [field]: value
@@ -176,7 +185,7 @@ export default function AdminSettingsPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             
             {/* Taxas e Fees */}
             <Card>
@@ -319,6 +328,91 @@ export default function AdminSettingsPage() {
                     disabled={!isEditing}
                     className="mt-1"
                   />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Configurações de Pagamento PIX */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Smartphone className="h-5 w-5 text-green-600" />
+                  Sistema de Pagamento PIX
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label htmlFor="enablePixPayment" className="text-sm font-medium">
+                      Aceitar PIX como Pagamento
+                    </Label>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Permite que locatários paguem via PIX (requer configuração Stripe PIX)
+                    </p>
+                  </div>
+                  <Switch
+                    id="enablePixPayment"
+                    checked={settings.enablePixPayment}
+                    onCheckedChange={(checked) => handleInputChange('enablePixPayment', checked)}
+                    disabled={!isEditing}
+                  />
+                </div>
+
+                <Separator />
+
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label htmlFor="enablePixTransfer" className="text-sm font-medium">
+                      Repasses PIX Automáticos
+                    </Label>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Ativa repasses automáticos via PIX para proprietários
+                    </p>
+                  </div>
+                  <Switch
+                    id="enablePixTransfer"
+                    checked={settings.enablePixTransfer}
+                    onCheckedChange={(checked) => handleInputChange('enablePixTransfer', checked)}
+                    disabled={!isEditing}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="pixTransferDescription">Descrição do PIX</Label>
+                  <Input
+                    id="pixTransferDescription"
+                    value={settings.pixTransferDescription}
+                    onChange={(e) => handleInputChange('pixTransferDescription', e.target.value)}
+                    disabled={!isEditing}
+                    className="mt-1"
+                    placeholder="Ex: Repasse CarShare"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Texto que aparece na transferência PIX para os proprietários
+                  </p>
+                </div>
+
+                {/* PIX Status Cards */}
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center gap-2 mb-1">
+                      <CreditCard className="h-4 w-4 text-green-600" />
+                      <span className="text-sm font-medium text-green-800">Pagamentos</span>
+                    </div>
+                    <p className="text-xs text-green-600">
+                      {settings.enablePixPayment ? 'PIX Ativo' : 'Apenas Cartão'}
+                    </p>
+                  </div>
+                  
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Smartphone className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm font-medium text-blue-800">Repasses</span>
+                    </div>
+                    <p className="text-xs text-blue-600">
+                      {settings.enablePixTransfer ? 'Automático' : 'Manual'}
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
