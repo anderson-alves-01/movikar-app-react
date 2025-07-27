@@ -654,6 +654,9 @@ export const adminSettings = pgTable("admin_settings", {
   currency: varchar("currency").default("BRL").notNull(),
   supportEmail: varchar("support_email").default("suporte@carshare.com").notNull(),
   supportPhone: varchar("support_phone").default("(11) 9999-9999").notNull(),
+  enablePixPayment: boolean("enable_pix_payment").default(false).notNull(),
+  enablePixTransfer: boolean("enable_pix_transfer").default(true).notNull(),
+  pixTransferDescription: varchar("pix_transfer_description").default("Repasse CarShare").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

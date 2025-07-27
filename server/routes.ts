@@ -286,8 +286,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Use current admin settings for feature flags
-      const featureFlags = getFeatureFlags(currentAdminSettings);
+      // Get admin settings from database for feature flags
+      const dbSettings = await storage.getAdminSettings();
+      const adminSettings = dbSettings ? {
+        ...dbSettings,
+        serviceFeePercentage: parseFloat(dbSettings.serviceFeePercentage || "10"),
+        insuranceFeePercentage: parseFloat(dbSettings.insuranceFeePercentage || "15"),
+      } : currentAdminSettings;
+      
+      const featureFlags = getFeatureFlags(adminSettings);
       const paymentMethodTypes = ['card'];
       
       // Add PIX only if enabled by admin and environment allows
@@ -2592,8 +2599,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin Settings API routes
   app.get("/api/admin/settings", authenticateToken, requireAdmin, async (req, res) => {
     try {
-      console.log("📋 Returning admin settings:", currentAdminSettings);
-      res.json(currentAdminSettings);
+      console.log("📋 Fetching admin settings from database...");
+      const dbSettings = await storage.getAdminSettings();
+      
+      if (dbSettings) {
+        // Convert string numbers to actual numbers for the response
+        const settings = {
+          ...dbSettings,
+          serviceFeePercentage: parseFloat(dbSettings.serviceFeePercentage || "10"),
+          insuranceFeePercentage: parseFloat(dbSettings.insuranceFeePercentage || "15"),
+        };
+        console.log("📋 Found settings in database:", settings);
+        res.json(settings);
+      } else {
+        console.log("📋 No settings found, returning defaults");
+        res.json(currentAdminSettings);
+      }
     } catch (error) {
       console.error("Error fetching admin settings:", error);
       res.status(500).json({ message: "Erro ao buscar configurações" });
@@ -2603,7 +2624,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/admin/settings", authenticateToken, requireAdmin, async (req, res) => {
     try {
       const settings = req.body;
-      console.log("💾 Updating admin settings:", settings);
+      console.log("💾 Updating admin settings in database:", settings);
       
       // Validate settings
       if (settings.serviceFeePercentage < 0 || settings.serviceFeePercentage > 50) {
@@ -2614,11 +2635,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Taxa de seguro deve estar entre 0% e 30%' });
       }
 
-      // Update in-memory settings
-      currentAdminSettings = { ...currentAdminSettings, ...settings };
-      console.log("✅ Settings updated:", currentAdminSettings);
+      // Convert numbers to strings for database storage
+      const dbSettings = {
+        ...settings,
+        serviceFeePercentage: settings.serviceFeePercentage?.toString() || "10",
+        insuranceFeePercentage: settings.insuranceFeePercentage?.toString() || "15",
+      };
+
+      // Save to database
+      const updatedSettings = await storage.updateAdminSettings(dbSettings);
       
-      res.json(currentAdminSettings);
+      // Convert back to numbers for response
+      const responseSettings = {
+        ...updatedSettings,
+        serviceFeePercentage: parseFloat(updatedSettings.serviceFeePercentage || "10"),
+        insuranceFeePercentage: parseFloat(updatedSettings.insuranceFeePercentage || "15"),
+      };
+      
+      console.log("✅ Settings saved to database:", responseSettings);
+      res.json(responseSettings);
     } catch (error) {
       console.error("Error updating admin settings:", error);
       res.status(500).json({ message: "Erro ao atualizar configurações" });
@@ -2892,10 +2927,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Feature flags endpoint
   app.get("/api/feature-flags", async (req, res) => {
     try {
-      const featureFlags = getFeatureFlags(currentAdminSettings);
+      // Get settings from database
+      const dbSettings = await storage.getAdminSettings();
+      const adminSettings = dbSettings ? {
+        ...dbSettings,
+        serviceFeePercentage: parseFloat(dbSettings.serviceFeePercentage || "10"),
+        insuranceFeePercentage: parseFloat(dbSettings.insuranceFeePercentage || "15"),
+      } : currentAdminSettings;
+
+      const featureFlags = getFeatureFlags(adminSettings);
       console.log("🎛️ Feature flags requested:", { 
         pixPaymentEnabled: featureFlags.pixPaymentEnabled,
-        adminPixEnabled: currentAdminSettings.enablePixPayment 
+        adminPixEnabled: adminSettings.enablePixPayment 
       });
       
       // Only return client-safe flags
