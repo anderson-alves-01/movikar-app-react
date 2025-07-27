@@ -144,6 +144,18 @@ Preferred communication style: Simple, everyday language.
   - Jeep Compass 2022 (SUV) - R$120/dia
 ✓ Sistema pronto para testes completos do fluxo de aluguel
 
+### Janeiro 27, 2025 - Modificações Solicitadas Implementadas
+✓ Removidos links "Verificar Documentos" e "Aprovar Veículos" do menu principal
+✓ Links administrativos mantidos apenas no painel admin para organização
+✓ Criado sistema parametrizável de taxas de serviço e seguro no admin
+✓ Definido componente loading padrão como "car pulse" com animação de carro
+✓ Desenvolvida página completa de configurações administrativas
+✓ Sistema permite configurar percentuais de taxa de serviço (0-50%)
+✓ Sistema permite configurar percentuais de seguro (0-30%)
+✓ Adicionadas validações e simulação de cálculo em tempo real
+✓ Interface administrativa com preview de valores aplicados
+✓ Componente Loading agora usa variante "car" como padrão no sistema
+
 ### Janeiro 27, 2025 - Sistema de Loading Personalizado Implementado
 ✓ Criado componente Loading com 5 variantes: default, car, pulse, dots, spinner
 ✓ Desenvolvidos skeletons especializados: VehicleCard, Table, Dashboard

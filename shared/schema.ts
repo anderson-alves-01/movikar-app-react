@@ -640,6 +640,24 @@ export const insertWaitingQueueSchema = createInsertSchema(waitingQueue).omit({
 
 // Types
 export type User = typeof users.$inferSelect;
+
+// Admin Settings table
+export const adminSettings = pgTable("admin_settings", {
+  id: serial("id").primaryKey(),
+  serviceFeePercentage: text("service_fee_percentage").default("10").notNull(),
+  insuranceFeePercentage: text("insurance_fee_percentage").default("15").notNull(),
+  minimumBookingDays: integer("minimum_booking_days").default(1).notNull(),
+  maximumBookingDays: integer("maximum_booking_days").default(30).notNull(),
+  cancellationPolicyDays: integer("cancellation_policy_days").default(2).notNull(),
+  currency: varchar("currency").default("BRL").notNull(),
+  supportEmail: varchar("support_email").default("suporte@carshare.com").notNull(),
+  supportPhone: varchar("support_phone").default("(11) 9999-9999").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type AdminSettings = typeof adminSettings.$inferSelect;
+export type InsertAdminSettings = typeof adminSettings.$inferInsert;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UserDocument = typeof userDocuments.$inferSelect;
 export type InsertUserDocument = z.infer<typeof insertUserDocumentSchema>;

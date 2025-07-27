@@ -1,5 +1,5 @@
 import { 
-  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity,
+  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity, adminSettings,
   type User, type InsertUser, type Vehicle, type InsertVehicle, 
   type Booking, type InsertBooking, type Review, type InsertReview,
   type Message, type InsertMessage, type VehicleWithOwner, type BookingWithDetails,
@@ -8,7 +8,7 @@ import {
   type VehicleBrand, type InsertVehicleBrand, type VehicleAvailability, type InsertVehicleAvailability,
   type WaitingQueue, type InsertWaitingQueue, type Referral, type InsertReferral,
   type UserRewards, type InsertUserRewards, type RewardTransaction, type InsertRewardTransaction,
-  type UserActivity, type InsertUserActivity
+  type UserActivity, type InsertUserActivity, type AdminSettings, type InsertAdminSettings
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, and, gte, lte, desc, asc, or, like, ilike, sql, lt, ne, inArray, not } from "drizzle-orm";
@@ -153,6 +153,10 @@ export interface IStorage {
   getVehiclesForApproval(): Promise<Vehicle[]>;
   approveVehicle(vehicleId: number, adminId: number, reason?: string): Promise<Vehicle | undefined>;
   rejectVehicle(vehicleId: number, adminId: number, reason: string): Promise<Vehicle | undefined>;
+
+  // Admin Settings
+  getAdminSettings(): Promise<AdminSettings | null>;
+  updateAdminSettings(settings: Partial<InsertAdminSettings>): Promise<AdminSettings>;
 }
 
 export class DatabaseStorage implements IStorage {

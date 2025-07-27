@@ -97,11 +97,12 @@ export default function AdminDashboard() {
     },
     {
       title: "Configurações",
-      description: "Configurações gerais do sistema",
+      description: "Taxas de serviço, seguro e políticas do sistema",
       icon: Settings,
       href: "/admin/settings",
       color: "bg-gray-500",
-      stats: "Sistema"
+      stats: "Taxas e políticas",
+      priority: false
     }
   ];
 

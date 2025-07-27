@@ -2563,6 +2563,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin Settings API routes
+  app.get("/api/admin/settings", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      // Return default settings for now
+      const defaultSettings = {
+        serviceFeePercentage: 10,
+        insuranceFeePercentage: 15,
+        minimumBookingDays: 1,
+        maximumBookingDays: 30,
+        cancellationPolicyDays: 2,
+        currency: "BRL",
+        supportEmail: "suporte@carshare.com",
+        supportPhone: "(11) 9999-9999",
+      };
+      res.json(defaultSettings);
+    } catch (error) {
+      console.error("Error fetching admin settings:", error);
+      res.status(500).json({ message: "Erro ao buscar configurações" });
+    }
+  });
+
+  app.put("/api/admin/settings", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const settings = req.body;
+      
+      // Validate settings
+      if (settings.serviceFeePercentage < 0 || settings.serviceFeePercentage > 50) {
+        return res.status(400).json({ message: 'Taxa de serviço deve estar entre 0% e 50%' });
+      }
+      
+      if (settings.insuranceFeePercentage < 0 || settings.insuranceFeePercentage > 30) {
+        return res.status(400).json({ message: 'Taxa de seguro deve estar entre 0% e 30%' });
+      }
+
+      // For now, just return the updated settings (would be saved to DB in production)
+      res.json(settings);
+    } catch (error) {
+      console.error("Error updating admin settings:", error);
+      res.status(500).json({ message: "Erro ao atualizar configurações" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

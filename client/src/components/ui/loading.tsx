@@ -12,7 +12,7 @@ interface LoadingProps {
 
 export function Loading({ 
   size = "md", 
-  variant = "default", 
+  variant = "car", 
   className,
   text,
   fullScreen = false
@@ -100,9 +100,17 @@ export function Loading({
   );
 }
 
-// Specialized loading components
+// Specialized loading components - changed to car pulse as default
 export function CarLoading({ className, text = "Carregando veículos..." }: { className?: string; text?: string }) {
-  return <Loading variant="car" size="lg" text={text} className={className} />;
+  return (
+    <div className={cn("flex flex-col items-center justify-center gap-3", className)}>
+      <div className="relative">
+        <Car className="w-12 h-12 text-secondary animate-bounce" />
+        <div className="absolute inset-0 w-12 h-12 bg-secondary/20 rounded-full animate-pulse" />
+      </div>
+      {text && <p className="text-lg text-gray-600 font-medium animate-pulse">{text}</p>}
+    </div>
+  );
 }
 
 export function PageLoading({ text = "Carregando..." }: { text?: string }) {
