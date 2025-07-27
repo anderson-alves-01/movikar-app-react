@@ -1,4 +1,5 @@
 export interface AdminSettings {
+  id?: number;
   serviceFeePercentage: number;
   insuranceFeePercentage: number;
   minimumBookingDays: number;
@@ -10,4 +11,6 @@ export interface AdminSettings {
   enablePixPayment: boolean;
   enablePixTransfer: boolean;
   pixTransferDescription: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }

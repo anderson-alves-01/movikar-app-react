@@ -646,17 +646,17 @@ export type User = typeof users.$inferSelect;
 // Admin Settings table
 export const adminSettings = pgTable("admin_settings", {
   id: serial("id").primaryKey(),
-  serviceFeePercentage: text("service_fee_percentage").default("10").notNull(),
-  insuranceFeePercentage: text("insurance_fee_percentage").default("15").notNull(),
+  serviceFeePercentage: integer("service_fee_percentage").default(10).notNull(),
+  insuranceFeePercentage: integer("insurance_fee_percentage").default(15).notNull(),
   minimumBookingDays: integer("minimum_booking_days").default(1).notNull(),
   maximumBookingDays: integer("maximum_booking_days").default(30).notNull(),
   cancellationPolicyDays: integer("cancellation_policy_days").default(2).notNull(),
-  currency: varchar("currency").default("BRL").notNull(),
-  supportEmail: varchar("support_email").default("suporte@carshare.com").notNull(),
-  supportPhone: varchar("support_phone").default("(11) 9999-9999").notNull(),
+  currency: varchar("currency", { length: 10 }).default("BRL").notNull(),
+  supportEmail: varchar("support_email", { length: 255 }).default("suporte@carshare.com").notNull(),
+  supportPhone: varchar("support_phone", { length: 50 }).default("(11) 9999-9999").notNull(),
   enablePixPayment: boolean("enable_pix_payment").default(false).notNull(),
   enablePixTransfer: boolean("enable_pix_transfer").default(true).notNull(),
-  pixTransferDescription: varchar("pix_transfer_description").default("Repasse CarShare").notNull(),
+  pixTransferDescription: varchar("pix_transfer_description", { length: 255 }).default("Repasse CarShare").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
