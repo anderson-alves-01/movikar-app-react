@@ -533,6 +533,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(userWithoutPassword);
   });
 
+  // Profile endpoints
+  app.get("/api/profile", authenticateToken, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.user!.id);
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      res.status(500).json({ message: "Erro ao buscar perfil" });
+    }
+  });
+
+  app.put("/api/profile", authenticateToken, async (req, res) => {
+    try {
+      const { name, phone, email, pix, pixKey } = req.body;
+      
+      const updateData: any = {};
+      if (name !== undefined) updateData.name = name;
+      if (phone !== undefined) updateData.phone = phone;
+      if (email !== undefined) updateData.email = email;
+      if (pix !== undefined) updateData.pix = pix;
+      if (pixKey !== undefined) updateData.pix = pixKey; // Support both field names
+      
+      const updatedUser = await storage.updateUser(req.user!.id, updateData);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+      
+      const { password: _, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      res.status(500).json({ message: "Erro ao atualizar perfil" });
+    }
+  });
+
   // User routes
   app.get("/api/users/:id", async (req, res) => {
     try {

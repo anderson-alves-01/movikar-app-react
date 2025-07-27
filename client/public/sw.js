@@ -39,9 +39,10 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', (event) => {
-  // Only cache GET requests from http/https schemes
+  // Skip caching for non-GET requests, non-HTTP schemes, and API endpoints
   if (event.request.method !== 'GET' || 
-      !event.request.url.startsWith('http')) {
+      !event.request.url.startsWith('http') ||
+      event.request.url.includes('/api/')) {
     event.respondWith(fetch(event.request));
     return;
   }
