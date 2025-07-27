@@ -31,6 +31,7 @@ import { sql, eq, lte, gte, desc, ilike } from "drizzle-orm";
 import Stripe from "stripe";
 import multer from "multer";
 import docusign from 'docusign-esign';
+import { getFeatureFlags } from "@shared/feature-flags";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
@@ -269,11 +270,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Create payment intent for card payments
+      // Get feature flags to determine payment methods
+      const featureFlags = getFeatureFlags();
+      const paymentMethodTypes = ['card'];
+      
+      // Add PIX only if enabled (production environment)
+      if (featureFlags.pixPaymentEnabled) {
+        paymentMethodTypes.push('pix');
+      }
+
+      // Create payment intent with appropriate payment methods
       const paymentIntent = await stripe.paymentIntents.create({
         amount: Math.round(parseFloat(totalPrice) * 100), // Convert to cents
         currency: 'brl',
-        payment_method_types: ['card'], // Card payments only for test mode
+        payment_method_types: paymentMethodTypes,
         metadata: {
           vehicleId: vehicleId.toString(),
           userId: req.user!.id.toString(),
@@ -2869,7 +2879,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Process payment and create transfer (called after Stripe payment success)
+  // Feature flags endpoint
+  app.get("/api/feature-flags", (req, res) => {
+    const featureFlags = getFeatureFlags();
+    // Only return client-safe flags
+    res.json({
+      pixPaymentEnabled: featureFlags.pixPaymentEnabled
+    });
+  });
+
   app.post("/api/process-payment-transfer", authenticateToken, async (req, res) => {
     try {
       const { bookingId, paymentIntentId } = req.body;

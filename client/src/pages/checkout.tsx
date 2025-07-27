@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft, Shield, Calendar, Car, DollarSign, QrCode } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
+import { getClientFeatureFlags } from "@shared/feature-flags";
 
 // Make sure to call `loadStripe` outside of a component's render to avoid
 // recreating the `Stripe` object on every render.
@@ -44,7 +45,8 @@ const CheckoutForm = ({ checkoutData }: { checkoutData: CheckoutData }) => {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('card');
+  const featureFlags = getClientFeatureFlags();
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'pix'>('card');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,18 +157,32 @@ const CheckoutForm = ({ checkoutData }: { checkoutData: CheckoutData }) => {
               </CardContent>
             </Card>
 
-            {/* Removed PIX option temporarily - card only for test mode */}
+            {/* Payment Method Selection - PIX available only in production */}
+            {featureFlags.pixPaymentEnabled && (
+              <PaymentMethodSelector 
+                selectedMethod={paymentMethod}
+                onMethodChange={(method: string) => setPaymentMethod(method as 'card' | 'pix')}
+              />
+            )}
 
             {/* Payment Form */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <Shield className="h-5 w-5 mr-2" />
-                  Informações de Pagamento
+                  {paymentMethod === 'pix' ? <QrCode className="h-5 w-5 mr-2" /> : <Shield className="h-5 w-5 mr-2" />}
+                  {paymentMethod === 'pix' ? 'Pagamento PIX' : 'Informações de Pagamento'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
+                  {paymentMethod === 'pix' && featureFlags.pixPaymentEnabled && (
+                    <div className="text-center p-4 bg-green-50 border border-green-200 rounded-lg mb-4">
+                      <QrCode className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                      <p className="text-sm text-green-700">
+                        Após clicar em "Finalizar Pagamento", você receberá um QR Code PIX para completar o pagamento.
+                      </p>
+                    </div>
+                  )}
                   <PaymentElement />
                   
                   <Button 
@@ -181,8 +197,8 @@ const CheckoutForm = ({ checkoutData }: { checkoutData: CheckoutData }) => {
                       </>
                     ) : (
                       <>
-                        <DollarSign className="h-4 w-4 mr-2" />
-                        Confirmar Pagamento - {formatCurrency(parseFloat(checkoutData.totalPrice))}
+                        {paymentMethod === 'pix' ? <QrCode className="h-4 w-4 mr-2" /> : <DollarSign className="h-4 w-4 mr-2" />}
+                        {paymentMethod === 'pix' ? 'Gerar PIX' : 'Confirmar Pagamento'} - {formatCurrency(parseFloat(checkoutData.totalPrice))}
                       </>
                     )}
                   </Button>
@@ -225,7 +241,7 @@ const CheckoutForm = ({ checkoutData }: { checkoutData: CheckoutData }) => {
                     <Shield className="h-5 w-5 text-blue-600 mt-0.5 mr-2" />
                     <div className="text-sm text-blue-800">
                       <strong>Pagamento 100% seguro</strong>
-                      <p className="mt-1">Seus dados estão protegidos com criptografia SSL e processamento seguro via Stripe.</p>
+                      <p className="mt-1">Seus dados estão protegidos com criptografia SSL e processamento seguro via Stripe. {featureFlags.pixPaymentEnabled ? 'PIX e cartão aceitos.' : 'Pagamento com cartão.'}</p>
                     </div>
                   </div>
                 </div>
