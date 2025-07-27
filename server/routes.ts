@@ -2764,6 +2764,158 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Payment Transfer Routes - Sistema de repasses
+  app.get("/api/payment-transfers", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const { period, status } = req.query;
+
+      // Sample transfers data (using the new payout structure)
+      const sampleTransfers = [
+        {
+          id: 1,
+          bookingId: 123,
+          ownerId: userId,
+          renterId: 456,
+          totalBookingAmount: "250.00",
+          serviceFee: "25.00",
+          insuranceFee: "12.50",
+          couponDiscount: "0.00",
+          netAmount: "212.50",
+          ownerPix: "user@email.com",
+          status: "completed",
+          method: "pix",
+          payoutDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          reference: "PIX-2024-001",
+          transferStatus: "completed", // For compatibility with frontend
+          transferDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          transferReference: "PIX-2024-001",
+          createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+          updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        },
+        {
+          id: 2,
+          bookingId: 124,
+          ownerId: userId,
+          renterId: 789,
+          totalBookingAmount: "180.00",
+          serviceFee: "18.00",
+          insuranceFee: "9.00",
+          couponDiscount: "0.00",
+          netAmount: "153.00",
+          ownerPix: "user@email.com",
+          status: "pending",
+          method: "pix",
+          payoutDate: null,
+          reference: null,
+          transferStatus: "pending", // For compatibility with frontend
+          transferDate: null,
+          transferReference: null,
+          createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+          updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+        }
+      ];
+
+      // Filter by status if provided
+      let filteredTransfers = sampleTransfers;
+      if (status && status !== 'all') {
+        filteredTransfers = sampleTransfers.filter(t => t.status === status);
+      }
+
+      res.json(filteredTransfers);
+    } catch (error) {
+      console.error("Error fetching payment transfers:", error);
+      res.status(500).json({ message: "Erro ao buscar repasses" });
+    }
+  });
+
+  app.get("/api/earnings-summary", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+
+      // Sample earnings summary (would be calculated from database in production)
+      const summary = {
+        totalReceived: 2125.50,
+        pendingAmount: 153.00,
+        thisMonthEarnings: 425.30,
+        totalTransfers: 15,
+      };
+
+      res.json(summary);
+    } catch (error) {
+      console.error("Error fetching earnings summary:", error);
+      res.status(500).json({ message: "Erro ao buscar resumo de ganhos" });
+    }
+  });
+
+  // Process payment and create transfer (called after Stripe payment success)
+  app.post("/api/process-payment-transfer", authenticateToken, async (req, res) => {
+    try {
+      const { bookingId, paymentIntentId } = req.body;
+
+      if (!bookingId || !paymentIntentId) {
+        return res.status(400).json({ message: "BookingId e PaymentIntentId são obrigatórios" });
+      }
+
+      // Sample booking data for now (in production would fetch from database)
+      const sampleBooking = {
+        id: bookingId,
+        totalPrice: "250.00",
+        ownerId: 123,
+        renterId: req.user!.id
+      };
+
+      // Sample owner data (in production would fetch from database)
+      const sampleOwner = {
+        id: 123,
+        pix: "owner@email.com" // Using the new field name
+      };
+
+      if (!sampleOwner.pix) {
+        return res.status(400).json({ message: "Proprietário não possui chave PIX cadastrada" });
+      }
+
+      // Sample admin settings (in production would fetch from database)
+      const serviceFeePercent = 10;
+      const insuranceFeePercent = 5;
+      
+      const totalPrice = parseFloat(sampleBooking.totalPrice);
+      const serviceFee = Math.round((totalPrice * serviceFeePercent) / 100 * 100) / 100;
+      const insuranceFee = Math.round((totalPrice * insuranceFeePercent) / 100 * 100) / 100;
+      const netAmount = Math.round((totalPrice - serviceFee - insuranceFee) * 100) / 100;
+
+      // Create payment transfer record (sample implementation)
+      const transfer = {
+        id: Date.now(),
+        bookingId: sampleBooking.id,
+        ownerId: sampleBooking.ownerId,
+        renterId: sampleBooking.renterId,
+        totalBookingAmount: totalPrice.toString(),
+        serviceFee: serviceFee.toString(),
+        insuranceFee: insuranceFee.toString(),
+        couponDiscount: '0',
+        netAmount: netAmount.toString(),
+        ownerPix: sampleOwner.pix,
+        status: 'pending',
+        method: 'pix',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      // In production, this would trigger actual PIX transfer
+      console.log("Transfer created:", transfer);
+
+      res.json({
+        success: true,
+        transfer,
+        message: "Repasse processado com sucesso. O proprietário receberá o valor em até 2 dias úteis."
+      });
+    } catch (error) {
+      console.error("Error processing payment transfer:", error);
+      res.status(500).json({ message: "Erro ao processar repasse" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

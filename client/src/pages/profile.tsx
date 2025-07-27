@@ -39,6 +39,7 @@ export default function Profile() {
     name: '',
     phone: '',
     location: '',
+    pixKey: '',
   });
   const [contractManagerOpen, setContractManagerOpen] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
@@ -131,6 +132,7 @@ export default function Profile() {
       name: user?.name || '',
       phone: user?.phone || '',
       location: user?.location || '',
+      pixKey: user?.pixKey || '',
     });
     setIsEditing(true);
   };
@@ -234,6 +236,18 @@ export default function Profile() {
                           onChange={(e) => setEditData(prev => ({ ...prev, location: e.target.value }))}
                         />
                       </div>
+                      <div className="md:col-span-2">
+                        <Label htmlFor="pixKey">Chave PIX</Label>
+                        <Input
+                          id="pixKey"
+                          value={editData.pixKey}
+                          onChange={(e) => setEditData(prev => ({ ...prev, pixKey: e.target.value }))}
+                          placeholder="CPF, e-mail, telefone ou chave aleatória"
+                        />
+                        <p className="text-xs text-gray-600 mt-1">
+                          Configure sua chave PIX para receber repasses das locações
+                        </p>
+                      </div>
                     </div>
                     <div className="flex space-x-2">
                       <Button 
@@ -293,6 +307,12 @@ export default function Profile() {
                         <div className="flex items-center">
                           <MapPin className="h-4 w-4 mr-2" />
                           <span>{user.location}</span>
+                        </div>
+                      )}
+                      {user.pix && (
+                        <div className="flex items-center">
+                          <DollarSign className="h-4 w-4 mr-2" />
+                          <span>PIX: {user.pix}</span>
                         </div>
                       )}
                     </div>

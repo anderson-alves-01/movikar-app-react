@@ -16,6 +16,7 @@ import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { vehicleModelValidation, vehicleBrandValidation, vehicleBrandModelValidation } from "./vehicle-validation";
+import { sql } from "drizzle-orm";
 
 // Users table
 export const users = pgTable("users", {
@@ -39,6 +40,7 @@ export const users = pgTable("users", {
   verifiedAt: timestamp("verified_at"),
   rejectionReason: text("rejection_reason"),
   canRentVehicles: boolean("can_rent_vehicles").default(false),
+  pix: varchar("pix", { length: 255 }), // Chave PIX para recebimento de valores
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -691,6 +693,31 @@ export type Coupon = typeof coupons.$inferSelect;
 export type InsertCoupon = typeof coupons.$inferInsert;
 export type CouponUsage = typeof couponUsage.$inferSelect;
 export type InsertCouponUsage = typeof couponUsage.$inferInsert;
+
+// Payment Transfers - Sistema de repasses para proprietários
+export const payouts = pgTable("payouts", {
+  id: serial("id").primaryKey(),
+  bookingId: integer("booking_id").references(() => bookings.id).notNull(),
+  ownerId: integer("owner_id").references(() => users.id).notNull(), // Proprietário do veículo
+  renterId: integer("renter_id").references(() => users.id).notNull(), // Locatário
+  totalBookingAmount: decimal("total_booking_amount", { precision: 10, scale: 2 }).notNull(), // Valor total da reserva
+  serviceFee: decimal("service_fee", { precision: 10, scale: 2 }).notNull(), // Taxa da plataforma
+  insuranceFee: decimal("insurance_fee", { precision: 10, scale: 2 }).notNull(), // Taxa de seguro
+  couponDiscount: decimal("coupon_discount", { precision: 10, scale: 2 }).default('0'), // Desconto aplicado
+  netAmount: decimal("net_amount", { precision: 10, scale: 2 }).notNull(), // Valor líquido para o proprietário
+  ownerPix: varchar("owner_pix", { length: 255 }).notNull(), // PIX do proprietário na época do pagamento
+  status: varchar("status", { length: 20 }).default("pending").notNull(), // pending, processing, completed, failed
+  method: varchar("method", { length: 20 }).default("pix").notNull(), // pix, bank_transfer
+  payoutDate: timestamp("payout_date"),
+  reference: varchar("reference", { length: 100 }), // ID da transferência bancária/PIX
+  failureReason: text("failure_reason"),
+  processedAt: timestamp("processed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type Payout = typeof payouts.$inferSelect;
+export type InsertPayout = typeof payouts.$inferInsert;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UserDocument = typeof userDocuments.$inferSelect;
 export type InsertUserDocument = z.infer<typeof insertUserDocumentSchema>;

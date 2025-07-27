@@ -34,6 +34,7 @@ import ContractSignatureError from "@/pages/contract-signature-error";
 import LoadingDemo from "@/pages/loading-demo";
 import AdminSettings from "@/pages/admin-settings";
 import AdminCouponsPage from "@/pages/admin-coupons";
+import EarningsPage from "@/pages/earnings";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt, IOSInstallPrompt } from "@/components/InstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
@@ -72,6 +73,7 @@ function Router() {
       <Route path="/loading-demo" component={LoadingDemo} />
       <Route path="/admin/settings" component={AdminSettings} />
       <Route path="/admin-coupons" component={AdminCouponsPage} />
+      <Route path="/earnings" component={EarningsPage} />
       <Route component={NotFound} />
     </Switch>
   );
