@@ -8,6 +8,7 @@ import { SearchFilters } from "@/types";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSearch } from "@/contexts/SearchContext";
+import { CarLoading, VehicleCardSkeleton } from "@/components/ui/loading";
 
 export default function Home() {
   const { filters, clearFilters } = useSearch();
@@ -94,9 +95,15 @@ export default function Home() {
 
           {/* Loading State */}
           {isLoading && (
-            <div className="flex justify-center items-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin" />
-              <span className="ml-2 text-gray-600">Carregando veículos...</span>
+            <div className="py-12">
+              <CarLoading text="Carregando veículos disponíveis..." />
+              
+              {/* Loading skeletons */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <VehicleCardSkeleton key={i} />
+                ))}
+              </div>
             </div>
           )}
 
