@@ -155,30 +155,18 @@ const CheckoutForm = ({ checkoutData }: { checkoutData: CheckoutData }) => {
               </CardContent>
             </Card>
 
-            {/* Payment Method Selection */}
-            <PaymentMethodSelector 
-              selectedMethod={paymentMethod}
-              onMethodChange={setPaymentMethod}
-            />
+            {/* Removed PIX option temporarily - card only for test mode */}
 
             {/* Payment Form */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  {paymentMethod === 'pix' ? <QrCode className="h-5 w-5 mr-2" /> : <Shield className="h-5 w-5 mr-2" />}
-                  {paymentMethod === 'pix' ? 'Pagamento PIX' : 'Informações de Pagamento'}
+                  <Shield className="h-5 w-5 mr-2" />
+                  Informações de Pagamento
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  {paymentMethod === 'pix' && (
-                    <div className="text-center p-4 bg-green-50 border border-green-200 rounded-lg mb-4">
-                      <QrCode className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                      <p className="text-sm text-green-700">
-                        Após clicar em "Finalizar Pagamento", você receberá um QR Code PIX para completar o pagamento.
-                      </p>
-                    </div>
-                  )}
                   <PaymentElement />
                   
                   <Button 
@@ -193,8 +181,8 @@ const CheckoutForm = ({ checkoutData }: { checkoutData: CheckoutData }) => {
                       </>
                     ) : (
                       <>
-                        {paymentMethod === 'pix' ? <QrCode className="h-4 w-4 mr-2" /> : <DollarSign className="h-4 w-4 mr-2" />}
-                        {paymentMethod === 'pix' ? 'Gerar PIX' : 'Confirmar Pagamento'} - {formatCurrency(parseFloat(checkoutData.totalPrice))}
+                        <DollarSign className="h-4 w-4 mr-2" />
+                        Confirmar Pagamento - {formatCurrency(parseFloat(checkoutData.totalPrice))}
                       </>
                     )}
                   </Button>
@@ -237,7 +225,7 @@ const CheckoutForm = ({ checkoutData }: { checkoutData: CheckoutData }) => {
                     <Shield className="h-5 w-5 text-blue-600 mt-0.5 mr-2" />
                     <div className="text-sm text-blue-800">
                       <strong>Pagamento 100% seguro</strong>
-                      <p className="mt-1">Seus dados estão protegidos com criptografia SSL e processamento seguro via Stripe. PIX e cartão aceitos.</p>
+                      <p className="mt-1">Seus dados estão protegidos com criptografia SSL e processamento seguro via Stripe.</p>
                     </div>
                   </div>
                 </div>

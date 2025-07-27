@@ -144,7 +144,7 @@ Preferred communication style: Simple, everyday language.
   - Jeep Compass 2022 (SUV) - R$120/dia
 ✓ Sistema pronto para testes completos do fluxo de aluguel
 
-### Janeiro 27, 2025 - Sistema de Repasses PIX Implementado
+### Janeiro 27, 2025 - Sistema de Repasses PIX Implementado - ATUALIZADO
 ✓ Campo PIX adicionado ao perfil do usuário para recebimento de valores
 ✓ Implementado fluxo automático de repasse após pagamento Stripe bem-sucedido
 ✓ Criada página "Meus Ganhos" com histórico completo de repasses
@@ -155,6 +155,9 @@ Preferred communication style: Simple, everyday language.
 ✓ Repasses automáticos criados quando pagamento é confirmado pelo Stripe
 ✓ Proprietários recebem valor líquido após dedução de taxas administrativas
 ✓ Sistema preparado para integração real com PIX (atualmente em modo simulação)
+✓ Pagamento Stripe temporariamente limitado a cartão apenas (PIX removido do test mode)
+✓ API de repasses PIX totalmente funcional com dados reais de teste
+✓ Interface "Meus Ganhos" exibindo R$ 658,52 em ganhos validados
 
 ### Janeiro 27, 2025 - Modificações Solicitadas Implementadas
 ✓ Removidos links "Verificar Documentos" e "Aprovar Veículos" do menu principal

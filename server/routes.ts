@@ -269,11 +269,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Create payment intent with PIX support
+      // Create payment intent for card payments
       const paymentIntent = await stripe.paymentIntents.create({
         amount: Math.round(parseFloat(totalPrice) * 100), // Convert to cents
         currency: 'brl',
-        payment_method_types: ['card', 'pix'], // Support both card and PIX
+        payment_method_types: ['card'], // Card payments only for test mode
         metadata: {
           vehicleId: vehicleId.toString(),
           userId: req.user!.id.toString(),
@@ -2918,7 +2918,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         netAmount: netAmount.toString(),
         ownerPix: sampleOwner.pix,
         status: 'pending',
-        method: 'pix',
+        method: 'transfer',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
