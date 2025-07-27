@@ -32,6 +32,22 @@ import Stripe from "stripe";
 import multer from "multer";
 import docusign from 'docusign-esign';
 import { getFeatureFlags } from "@shared/feature-flags";
+import type { AdminSettings } from "@shared/admin-settings";
+
+// In-memory storage for admin settings
+let currentAdminSettings: AdminSettings = {
+  serviceFeePercentage: 10,
+  insuranceFeePercentage: 15,
+  minimumBookingDays: 1,
+  maximumBookingDays: 30,
+  cancellationPolicyDays: 2,
+  currency: "BRL",
+  supportEmail: "suporte@carshare.com",
+  supportPhone: "(11) 9999-9999",
+  enablePixPayment: false,
+  enablePixTransfer: true,
+  pixTransferDescription: "Repasse CarShare",
+};
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
@@ -270,22 +286,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Get admin settings and feature flags to determine payment methods
-      const adminSettings = {
-        serviceFeePercentage: 10,
-        insuranceFeePercentage: 15,
-        minimumBookingDays: 1,
-        maximumBookingDays: 30,
-        cancellationPolicyDays: 2,
-        currency: "BRL",
-        supportEmail: "suporte@carshare.com",
-        supportPhone: "(11) 9999-9999",
-        enablePixPayment: false, // Default to false, controlled by admin panel
-        enablePixTransfer: true,
-        pixTransferDescription: "Repasse CarShare",
-      };
-      
-      const featureFlags = getFeatureFlags(adminSettings);
+      // Use current admin settings for feature flags
+      const featureFlags = getFeatureFlags(currentAdminSettings);
       const paymentMethodTypes = ['card'];
       
       // Add PIX only if enabled by admin and environment allows
@@ -2590,21 +2592,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin Settings API routes
   app.get("/api/admin/settings", authenticateToken, requireAdmin, async (req, res) => {
     try {
-      // Return default settings for now
-      const defaultSettings = {
-        serviceFeePercentage: 10,
-        insuranceFeePercentage: 15,
-        minimumBookingDays: 1,
-        maximumBookingDays: 30,
-        cancellationPolicyDays: 2,
-        currency: "BRL",
-        supportEmail: "suporte@carshare.com",
-        supportPhone: "(11) 9999-9999",
-        enablePixPayment: false,
-        enablePixTransfer: true,
-        pixTransferDescription: "Repasse CarShare",
-      };
-      res.json(defaultSettings);
+      console.log("📋 Returning admin settings:", currentAdminSettings);
+      res.json(currentAdminSettings);
     } catch (error) {
       console.error("Error fetching admin settings:", error);
       res.status(500).json({ message: "Erro ao buscar configurações" });
@@ -2614,6 +2603,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/admin/settings", authenticateToken, requireAdmin, async (req, res) => {
     try {
       const settings = req.body;
+      console.log("💾 Updating admin settings:", settings);
       
       // Validate settings
       if (settings.serviceFeePercentage < 0 || settings.serviceFeePercentage > 50) {
@@ -2624,8 +2614,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Taxa de seguro deve estar entre 0% e 30%' });
       }
 
-      // For now, just return the updated settings (would be saved to DB in production)
-      res.json(settings);
+      // Update in-memory settings
+      currentAdminSettings = { ...currentAdminSettings, ...settings };
+      console.log("✅ Settings updated:", currentAdminSettings);
+      
+      res.json(currentAdminSettings);
     } catch (error) {
       console.error("Error updating admin settings:", error);
       res.status(500).json({ message: "Erro ao atualizar configurações" });
@@ -2899,22 +2892,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Feature flags endpoint
   app.get("/api/feature-flags", async (req, res) => {
     try {
-      // Get admin settings for feature flags
-      const adminSettings = {
-        serviceFeePercentage: 10,
-        insuranceFeePercentage: 15,
-        minimumBookingDays: 1,
-        maximumBookingDays: 30,
-        cancellationPolicyDays: 2,
-        currency: "BRL",
-        supportEmail: "suporte@carshare.com",
-        supportPhone: "(11) 9999-9999",
-        enablePixPayment: false, // Default to false, can be changed in admin panel
-        enablePixTransfer: true,
-        pixTransferDescription: "Repasse CarShare",
-      };
-      
-      const featureFlags = getFeatureFlags(adminSettings);
+      const featureFlags = getFeatureFlags(currentAdminSettings);
+      console.log("🎛️ Feature flags requested:", { 
+        pixPaymentEnabled: featureFlags.pixPaymentEnabled,
+        adminPixEnabled: currentAdminSettings.enablePixPayment 
+      });
       
       // Only return client-safe flags
       res.json({
