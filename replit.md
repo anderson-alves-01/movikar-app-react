@@ -223,6 +223,15 @@ Preferred communication style: Simple, everyday language.
 ✓ VALIDAÇÃO: Taxa de serviço 12.75% e seguro 8.25% salvos com sucesso
 ✓ RESULTADO: Sistema de configurações administrativas totalmente operacional
 
+### Janeiro 27, 2025 - Correção Service Worker Chrome Extensions ✅
+✓ ERRO IDENTIFICADO: Service Worker tentava cachear chrome-extension:// URLs
+✓ CORREÇÃO APLICADA: Filtro para processar apenas requisições HTTP/HTTPS
+✓ COMPATIBILIDADE: Sistema funciona com extensões do navegador
+✓ CACHE INTELIGENTE: Apenas recursos web válidos são cacheados
+✓ TESTE VALIDADO: Erro "Request scheme chrome-extension is unsupported" eliminado
+✓ PWA OTIMIZADO: Performance melhorada para Progressive Web App
+✓ RESULTADO: Service Worker totalmente compatível com todos ambientes
+
 ### Janeiro 27, 2025 - Sistema de Feature Toggle PIX no Painel Admin Implementado ✅
 ✓ Campo PIX adicionado ao perfil do usuário para recebimento de valores
 ✓ Implementado fluxo automático de repasse após pagamento Stripe bem-sucedido

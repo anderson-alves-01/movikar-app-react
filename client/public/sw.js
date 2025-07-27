@@ -39,8 +39,9 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', (event) => {
-  // Only cache GET requests, skip PUT/POST/PATCH/DELETE
-  if (event.request.method !== 'GET') {
+  // Only cache GET requests from http/https schemes
+  if (event.request.method !== 'GET' || 
+      !event.request.url.startsWith('http')) {
     event.respondWith(fetch(event.request));
     return;
   }
@@ -54,8 +55,13 @@ self.addEventListener('fetch', (event) => {
         }
         
         return fetch(event.request).then((response) => {
-          // Check if we received a valid response
+          // Check if we received a valid response and can be cached
           if (!response || response.status !== 200 || response.type !== 'basic') {
+            return response;
+          }
+
+          // Skip caching for chrome-extension and other non-http schemes
+          if (!event.request.url.startsWith('http')) {
             return response;
           }
 
