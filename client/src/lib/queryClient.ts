@@ -12,17 +12,18 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  // Get token from localStorage
-  const token = localStorage.getItem('auth-storage');
+  // Get token from localStorage with better error handling
   let authToken = null;
   
-  if (token) {
-    try {
+  try {
+    const token = localStorage.getItem('auth-storage');
+    if (token) {
       const authData = JSON.parse(token);
-      authToken = authData.state?.token;
-    } catch (error) {
-      console.error('Error parsing auth token:', error);
+      // Try multiple possible token locations
+      authToken = authData.state?.token || authData.token || authData.state?.user?.token;
     }
+  } catch (error) {
+    console.error('Error parsing auth token:', error);
   }
 
   const headers: Record<string, string> = {};
@@ -33,6 +34,8 @@ export async function apiRequest(
   
   if (authToken) {
     headers["Authorization"] = `Bearer ${authToken}`;
+  } else {
+    console.warn('No auth token found for API request to:', url);
   }
 
   const res = await fetch(url, {
@@ -52,17 +55,18 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    // Get token from localStorage
-    const token = localStorage.getItem('auth-storage');
+    // Get token from localStorage with better error handling
     let authToken = null;
     
-    if (token) {
-      try {
+    try {
+      const token = localStorage.getItem('auth-storage');
+      if (token) {
         const authData = JSON.parse(token);
-        authToken = authData.state?.token;
-      } catch (error) {
-        console.error('Error parsing auth token:', error);
+        // Try multiple possible token locations
+        authToken = authData.state?.token || authData.token || authData.state?.user?.token;
       }
+    } catch (error) {
+      console.error('Error parsing auth token:', error);
     }
 
     const headers: Record<string, string> = {};
