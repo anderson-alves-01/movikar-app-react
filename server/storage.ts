@@ -1877,6 +1877,52 @@ export class DatabaseStorage implements IStorage {
       .where(eq(contracts.bookingId, bookingId))
       .orderBy(desc(contracts.createdAt));
   }
+  // Admin Settings
+  async getAdminSettings(): Promise<AdminSettings | null> {
+    try {
+      const [result] = await db.select().from(adminSettings).limit(1);
+      return result || null;
+    } catch (error) {
+      console.error("Error fetching admin settings:", error);
+      return null;
+    }
+  }
+
+  async updateAdminSettings(settings: Partial<InsertAdminSettings>): Promise<AdminSettings> {
+    try {
+      // Get existing settings first
+      const existingSettings = await this.getAdminSettings();
+      
+      // Clean the settings data - remove id, timestamps, and convert dates
+      const cleanSettings = { ...settings };
+      delete cleanSettings.id;
+      delete cleanSettings.createdAt;
+      delete cleanSettings.updatedAt;
+      
+      if (existingSettings) {
+        // Update existing record
+        const [updated] = await db
+          .update(adminSettings)
+          .set({
+            ...cleanSettings,
+            updatedAt: new Date(),
+          })
+          .where(eq(adminSettings.id, existingSettings.id))
+          .returning();
+        return updated;
+      } else {
+        // Create new record
+        const [created] = await db
+          .insert(adminSettings)
+          .values(cleanSettings)
+          .returning();
+        return created;
+      }
+    } catch (error) {
+      console.error("Error updating admin settings:", error);
+      throw new Error("Failed to update admin settings");
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
