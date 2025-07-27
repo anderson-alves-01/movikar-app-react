@@ -528,6 +528,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ user: userWithoutPassword });
   });
 
+  app.get("/api/auth/user", authenticateToken, async (req, res) => {
+    const { password: _, ...userWithoutPassword } = req.user!;
+    res.json(userWithoutPassword);
+  });
+
   // User routes
   app.get("/api/users/:id", async (req, res) => {
     try {
