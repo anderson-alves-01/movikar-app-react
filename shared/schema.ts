@@ -658,6 +658,39 @@ export const adminSettings = pgTable("admin_settings", {
 
 export type AdminSettings = typeof adminSettings.$inferSelect;
 export type InsertAdminSettings = typeof adminSettings.$inferInsert;
+
+// Coupon Schema
+export const coupons = pgTable("coupons", {
+  id: serial("id").primaryKey(),
+  code: varchar("code", { length: 50 }).unique().notNull(),
+  description: text("description").notNull(),
+  discountType: varchar("discount_type", { length: 20 }).notNull(), // 'percentage' or 'fixed'
+  discountValue: integer("discount_value").notNull(), // percentage (1-100) or fixed amount in cents
+  minOrderValue: integer("min_order_value").default(0), // minimum order value in cents
+  maxUses: integer("max_uses").default(1), // maximum number of uses
+  usedCount: integer("used_count").default(0), // current usage count
+  isActive: boolean("is_active").default(true),
+  validFrom: timestamp("valid_from").defaultNow(),
+  validUntil: timestamp("valid_until").notNull(),
+  createdBy: integer("created_by").notNull(), // admin user id
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Coupon Usage Tracking
+export const couponUsage = pgTable("coupon_usage", {
+  id: serial("id").primaryKey(),
+  couponId: integer("coupon_id").references(() => coupons.id).notNull(),
+  userId: integer("user_id").notNull(),
+  bookingId: integer("booking_id"), // optional, for tracking which booking used the coupon
+  discountAmount: integer("discount_amount").notNull(), // actual discount applied in cents
+  usedAt: timestamp("used_at").defaultNow(),
+});
+
+export type Coupon = typeof coupons.$inferSelect;
+export type InsertCoupon = typeof coupons.$inferInsert;
+export type CouponUsage = typeof couponUsage.$inferSelect;
+export type InsertCouponUsage = typeof couponUsage.$inferInsert;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UserDocument = typeof userDocuments.$inferSelect;
 export type InsertUserDocument = z.infer<typeof insertUserDocumentSchema>;

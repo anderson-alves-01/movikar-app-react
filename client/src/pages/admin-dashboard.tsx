@@ -12,7 +12,8 @@ import {
   BarChart3,
   Shield,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  Ticket
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -102,6 +103,15 @@ export default function AdminDashboard() {
       href: "/admin/settings",
       color: "bg-gray-500",
       stats: "Taxas e políticas",
+      priority: false
+    },
+    {
+      title: "Cupons de Desconto",
+      description: "Criar e gerenciar cupons promocionais para a plataforma",
+      icon: Ticket,
+      href: "/admin-coupons",
+      color: "bg-orange-500",
+      stats: "Cupons ativos",
       priority: false
     }
   ];

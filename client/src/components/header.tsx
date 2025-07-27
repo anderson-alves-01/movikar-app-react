@@ -239,13 +239,6 @@ export default function Header() {
                               Painel Admin
                             </Link>
                           </DropdownMenuItem>
-
-                          <DropdownMenuItem asChild>
-                            <Link href="/performance" className="cursor-pointer">
-                              <BarChart3 className="h-4 w-4 mr-2" />
-                              Performance
-                            </Link>
-                          </DropdownMenuItem>
                         </>
                       )}
                       <DropdownMenuSeparator />

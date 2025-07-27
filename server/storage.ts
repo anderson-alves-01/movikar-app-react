@@ -1,5 +1,5 @@
 import { 
-  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity, adminSettings,
+  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity, adminSettings, coupons, couponUsage,
   type User, type InsertUser, type Vehicle, type InsertVehicle, 
   type Booking, type InsertBooking, type Review, type InsertReview,
   type Message, type InsertMessage, type VehicleWithOwner, type BookingWithDetails,
@@ -8,7 +8,8 @@ import {
   type VehicleBrand, type InsertVehicleBrand, type VehicleAvailability, type InsertVehicleAvailability,
   type WaitingQueue, type InsertWaitingQueue, type Referral, type InsertReferral,
   type UserRewards, type InsertUserRewards, type RewardTransaction, type InsertRewardTransaction,
-  type UserActivity, type InsertUserActivity, type AdminSettings, type InsertAdminSettings
+  type UserActivity, type InsertUserActivity, type AdminSettings, type InsertAdminSettings,
+  type Coupon, type InsertCoupon, type CouponUsage, type InsertCouponUsage
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, and, gte, lte, desc, asc, or, like, ilike, sql, lt, ne, inArray, not } from "drizzle-orm";
@@ -157,6 +158,15 @@ export interface IStorage {
   // Admin Settings
   getAdminSettings(): Promise<AdminSettings | null>;
   updateAdminSettings(settings: Partial<InsertAdminSettings>): Promise<AdminSettings>;
+
+  // Coupon management
+  getAllCoupons(): Promise<Coupon[]>;
+  getCouponByCode(code: string): Promise<Coupon | undefined>;
+  createCoupon(coupon: InsertCoupon): Promise<Coupon>;
+  updateCoupon(id: number, coupon: Partial<InsertCoupon>): Promise<Coupon | undefined>;
+  deleteCoupon(id: number): Promise<boolean>;
+  useCoupon(couponId: number, userId: number, bookingId?: number): Promise<{ coupon: Coupon; discountAmount: number }>;
+  validateCoupon(code: string, orderValue: number): Promise<{ isValid: boolean; coupon?: Coupon; discountAmount?: number; error?: string }>;
 }
 
 export class DatabaseStorage implements IStorage {

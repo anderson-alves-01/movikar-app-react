@@ -2605,6 +2605,165 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Coupon Management API routes
+  app.get("/api/admin/coupons", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      // Return sample coupons for now (would be from database in production)
+      const sampleCoupons = [
+        {
+          id: 1,
+          code: "DESCONTO10",
+          description: "10% de desconto em qualquer reserva",
+          discountType: "percentage",
+          discountValue: 10,
+          minOrderValue: 5000, // R$ 50.00
+          maxUses: 100,
+          usedCount: 15,
+          isActive: true,
+          validFrom: new Date(),
+          validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          createdBy: req.user!.id,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: 2,
+          code: "WELCOME20",
+          description: "R$ 20 de desconto para novos usuários",
+          discountType: "fixed",
+          discountValue: 2000, // R$ 20.00 in cents
+          minOrderValue: 10000, // R$ 100.00
+          maxUses: 50,
+          usedCount: 8,
+          isActive: true,
+          validFrom: new Date(),
+          validUntil: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
+          createdBy: req.user!.id,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }
+      ];
+      res.json(sampleCoupons);
+    } catch (error) {
+      console.error("Error fetching coupons:", error);
+      res.status(500).json({ message: "Erro ao buscar cupons" });
+    }
+  });
+
+  app.post("/api/admin/coupons", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const couponData = {
+        ...req.body,
+        id: Date.now(), // Temporary ID generation
+        usedCount: 0,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      res.status(201).json(couponData);
+    } catch (error) {
+      console.error("Error creating coupon:", error);
+      res.status(500).json({ message: "Erro ao criar cupom" });
+    }
+  });
+
+  app.put("/api/admin/coupons/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const couponId = parseInt(req.params.id);
+      const updatedCoupon = {
+        ...req.body,
+        id: couponId,
+        updatedAt: new Date(),
+      };
+      res.json(updatedCoupon);
+    } catch (error) {
+      console.error("Error updating coupon:", error);
+      res.status(500).json({ message: "Erro ao atualizar cupom" });
+    }
+  });
+
+  app.delete("/api/admin/coupons/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const couponId = parseInt(req.params.id);
+      // In production, this would delete from database
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting coupon:", error);
+      res.status(500).json({ message: "Erro ao excluir cupom" });
+    }
+  });
+
+  // Coupon validation endpoint for checkout
+  app.post("/api/validate-coupon", authenticateToken, async (req, res) => {
+    try {
+      const { code, orderValue } = req.body;
+      
+      if (!code || !orderValue) {
+        return res.status(400).json({ message: "Código do cupom e valor do pedido são obrigatórios" });
+      }
+
+      // Sample validation logic (would use database in production)
+      const sampleCoupons = [
+        {
+          id: 1,
+          code: "DESCONTO10",
+          discountType: "percentage",
+          discountValue: 10,
+          minOrderValue: 5000,
+          maxUses: 100,
+          usedCount: 15,
+          isActive: true,
+          validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        }
+      ];
+
+      const coupon = sampleCoupons.find(c => c.code === code.toUpperCase());
+      
+      if (!coupon) {
+        return res.status(404).json({ message: "Cupom não encontrado" });
+      }
+
+      if (!coupon.isActive) {
+        return res.status(400).json({ message: "Cupom inativo" });
+      }
+
+      if (new Date() > coupon.validUntil) {
+        return res.status(400).json({ message: "Cupom expirado" });
+      }
+
+      if (coupon.usedCount >= coupon.maxUses) {
+        return res.status(400).json({ message: "Cupom esgotado" });
+      }
+
+      if (orderValue < coupon.minOrderValue) {
+        const minValue = (coupon.minOrderValue / 100).toFixed(2);
+        return res.status(400).json({ message: `Valor mínimo do pedido: R$ ${minValue}` });
+      }
+
+      // Calculate discount
+      let discountAmount = 0;
+      if (coupon.discountType === "percentage") {
+        discountAmount = Math.round((orderValue * coupon.discountValue) / 100);
+      } else {
+        discountAmount = coupon.discountValue;
+      }
+
+      discountAmount = Math.min(discountAmount, orderValue);
+      const finalAmount = orderValue - discountAmount;
+
+      res.json({
+        isValid: true,
+        coupon,
+        discountAmount,
+        finalAmount,
+        message: "Cupom válido aplicado com sucesso!"
+      });
+    } catch (error) {
+      console.error("Error validating coupon:", error);
+      res.status(500).json({ message: "Erro ao validar cupom" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
