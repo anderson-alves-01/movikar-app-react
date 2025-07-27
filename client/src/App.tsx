@@ -32,6 +32,8 @@ import ContractPreview from "@/pages/contract-preview";
 import ContractSignedSuccess from "@/pages/contract-signed-success";
 import ContractSignatureError from "@/pages/contract-signature-error";
 import NotFound from "@/pages/not-found";
+import { InstallPrompt, IOSInstallPrompt } from "@/components/InstallPrompt";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 
 function Router() {
   return (
@@ -77,6 +79,11 @@ function App() {
           <Toaster />
           <Router />
           <VehicleComparison />
+          
+          {/* PWA Components */}
+          <InstallPrompt />
+          <IOSInstallPrompt />
+          <OfflineIndicator />
         </TooltipProvider>
       </SearchProvider>
     </QueryClientProvider>

@@ -89,3 +89,28 @@
     background-color: hsl(var(--error));
   }
 }
+
+/* PWA Styles */
+@media all and (display-mode: standalone) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Touch-friendly buttons */
+.btn-touch {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
+  
+  button, .btn, [role="button"] {
+    min-height: 44px;
+  }
+}
