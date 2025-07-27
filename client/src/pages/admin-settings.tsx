@@ -59,7 +59,7 @@ export default function AdminSettingsPage() {
     queryKey: ['/api/admin/settings'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/admin/settings');
-      return response;
+      return response as AdminSettings;
     }
   });
 
