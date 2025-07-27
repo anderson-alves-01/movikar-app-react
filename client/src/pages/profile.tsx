@@ -50,19 +50,19 @@ export default function Profile() {
 
   // Fetch user bookings as renter
   const { data: renterBookings, isLoading: renterBookingsLoading } = useQuery({
-    queryKey: ['/api/bookings', { type: 'renter' }],
+    queryKey: ['/api/bookings?type=renter'],
     enabled: !!user,
   });
 
   // Fetch user bookings as owner
   const { data: ownerBookings, isLoading: ownerBookingsLoading } = useQuery({
-    queryKey: ['/api/bookings', { type: 'owner' }],
+    queryKey: ['/api/bookings?type=owner'],
     enabled: !!user,
   });
 
   // Fetch user vehicles
   const { data: userVehicles, isLoading: vehiclesLoading } = useQuery({
-    queryKey: ['/api/users', user?.id, 'vehicles'],
+    queryKey: [`/api/users/${user?.id}/vehicles`],
     enabled: !!user,
   });
 
@@ -117,7 +117,7 @@ export default function Profile() {
       name: user?.name || '',
       phone: user?.phone || '',
       location: user?.location || '',
-      pixKey: (user as any)?.pix || '', // Usar pix do backend, não pixKey
+      pixKey: user?.pix || '', // Usar pix do backend, não pixKey
     });
     setIsEditing(true);
   };
@@ -300,10 +300,10 @@ export default function Profile() {
                           <span>{user.location}</span>
                         </div>
                       )}
-                      {(user as any).pix && (
+                      {user.pix && (
                         <div className="flex items-center">
                           <User className="h-4 w-4 mr-2" />
-                          <span>PIX: {(user as any).pix}</span>
+                          <span>PIX: {user.pix}</span>
                         </div>
                       )}
                     </div>

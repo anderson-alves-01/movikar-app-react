@@ -31,6 +31,7 @@ export interface AuthUser {
   totalEarnings: string;
   location?: string;
   role?: 'admin' | 'user';
+  pix?: string;
 }
 
 export interface AuthState {
