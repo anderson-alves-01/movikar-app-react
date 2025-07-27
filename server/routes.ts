@@ -2770,59 +2770,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user!.id;
       const { period, status } = req.query;
 
-      // Sample transfers data (using the new payout structure)
-      const sampleTransfers = [
-        {
-          id: 1,
-          bookingId: 123,
-          ownerId: userId,
-          renterId: 456,
-          totalBookingAmount: "250.00",
-          serviceFee: "25.00",
-          insuranceFee: "12.50",
-          couponDiscount: "0.00",
-          netAmount: "212.50",
-          ownerPix: "user@email.com",
-          status: "completed",
-          method: "pix",
-          payoutDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          reference: "PIX-2024-001",
-          transferStatus: "completed", // For compatibility with frontend
-          transferDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          transferReference: "PIX-2024-001",
-          createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: 2,
-          bookingId: 124,
-          ownerId: userId,
-          renterId: 789,
-          totalBookingAmount: "180.00",
-          serviceFee: "18.00",
-          insuranceFee: "9.00",
-          couponDiscount: "0.00",
-          netAmount: "153.00",
-          ownerPix: "user@email.com",
-          status: "pending",
-          method: "pix",
-          payoutDate: null,
-          reference: null,
-          transferStatus: "pending", // For compatibility with frontend
-          transferDate: null,
-          transferReference: null,
-          createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-          updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-        }
-      ];
+      // Get real payout data from database
+      let query = `
+        SELECT 
+          p.*,
+          p.status as transferStatus,
+          p.payout_date as transferDate,
+          p.reference as transferReference
+        FROM payouts p 
+        WHERE p.owner_id = $1
+      `;
+      const params = [userId];
 
-      // Filter by status if provided
-      let filteredTransfers = sampleTransfers;
       if (status && status !== 'all') {
-        filteredTransfers = sampleTransfers.filter(t => t.status === status);
+        query += ` AND p.status = $${params.length + 1}`;
+        params.push(status);
       }
 
-      res.json(filteredTransfers);
+      if (period && period !== 'all') {
+        const now = new Date();
+        let startDate;
+        
+        switch (period) {
+          case '7d':
+            startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            break;
+          case '30d':
+            startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            break;
+          case '90d':
+            startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+            break;
+          default:
+            startDate = new Date(0);
+        }
+        
+        query += ` AND p.created_at >= $${params.length + 1}`;
+        params.push(startDate.toISOString());
+      }
+
+      query += ` ORDER BY p.created_at DESC`;
+
+      const result = await pool.query(query, params);
+
+      const transfers = result.rows.map((row: any) => ({
+        ...row,
+        ownerPix: row.owner_pix,
+        totalBookingAmount: row.total_booking_amount,
+        serviceFee: row.service_fee,
+        insuranceFee: row.insurance_fee,
+        couponDiscount: row.coupon_discount || '0.00',
+        netAmount: row.net_amount,
+        payoutDate: row.payout_date,
+        bookingId: row.booking_id,
+        ownerId: row.owner_id,
+        renterId: row.renter_id,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+      }));
+
+      res.json(transfers);
     } catch (error) {
       console.error("Error fetching payment transfers:", error);
       res.status(500).json({ message: "Erro ao buscar repasses" });
@@ -2833,12 +2840,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user!.id;
 
-      // Sample earnings summary (would be calculated from database in production)
+      // Get real earnings summary from database
+      const summaryQuery = `
+        SELECT 
+          SUM(CASE WHEN status = 'completed' THEN CAST(net_amount AS DECIMAL(10,2)) ELSE 0 END) as total_received,
+          SUM(CASE WHEN status = 'pending' THEN CAST(net_amount AS DECIMAL(10,2)) ELSE 0 END) as pending_amount,
+          SUM(CASE WHEN status = 'completed' AND created_at >= date_trunc('month', CURRENT_DATE) 
+               THEN CAST(net_amount AS DECIMAL(10,2)) ELSE 0 END) as this_month_earnings,
+          COUNT(*) as total_transfers
+        FROM payouts 
+        WHERE owner_id = $1
+      `;
+
+      const result = await pool.query(summaryQuery, [userId]);
+
+      const row = result.rows[0];
       const summary = {
-        totalReceived: 2125.50,
-        pendingAmount: 153.00,
-        thisMonthEarnings: 425.30,
-        totalTransfers: 15,
+        totalReceived: parseFloat(row.total_received || '0'),
+        pendingAmount: parseFloat(row.pending_amount || '0'),
+        thisMonthEarnings: parseFloat(row.this_month_earnings || '0'),
+        totalTransfers: parseInt(row.total_transfers || '0'),
       };
 
       res.json(summary);
