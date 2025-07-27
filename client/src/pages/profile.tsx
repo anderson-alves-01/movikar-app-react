@@ -132,13 +132,19 @@ export default function Profile() {
       name: user?.name || '',
       phone: user?.phone || '',
       location: user?.location || '',
-      pixKey: user?.pixKey || '',
+      pixKey: user?.pix || '', // Usar pix do backend, não pixKey
     });
     setIsEditing(true);
   };
 
   const handleSaveProfile = () => {
-    updateUserMutation.mutate(editData);
+    // Converter pixKey para pix antes de enviar para API
+    const dataToSend = {
+      ...editData,
+      pix: editData.pixKey, // Mapear pixKey para pix
+    };
+    delete dataToSend.pixKey; // Remover pixKey
+    updateUserMutation.mutate(dataToSend);
   };
 
   const handleBookingAction = (bookingId: number, status: string) => {

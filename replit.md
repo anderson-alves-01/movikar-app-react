@@ -160,6 +160,16 @@ Preferred communication style: Simple, everyday language.
 ✓ BANCO ATUALIZADO: Schema corrigido com tipos INTEGER para percentuais
 ✓ API VALIDADA: Endpoints GET/PUT funcionando com dados reais do PostgreSQL
 
+### Janeiro 27, 2025 - Campo PIX do Usuário Validado e Funcionando ✅
+✓ Campo PIX verificado e funcionando corretamente na tabela users
+✓ Interface de perfil permite edição da chave PIX do usuário
+✓ API aceita tanto campo "pix" quanto "pixKey" para compatibilidade
+✓ Dados persistem corretamente no PostgreSQL entre sessões
+✓ Frontend corrigido para usar campo "pix" do backend adequadamente
+✓ Campo disponível em /profile na seção "Editar Perfil"
+✓ Placeholder e descrição explicam uso para recebimento de pagamentos
+✓ Validação completa confirmou funcionamento 100% operacional
+
 ### Janeiro 27, 2025 - Sistema de Feature Toggle PIX no Painel Admin Implementado ✅
 ✓ Campo PIX adicionado ao perfil do usuário para recebimento de valores
 ✓ Implementado fluxo automático de repasse após pagamento Stripe bem-sucedido
