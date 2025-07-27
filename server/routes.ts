@@ -68,10 +68,11 @@ const upload = multer({
 });
 
 // Initialize Stripe
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+if (!stripeSecretKey) {
+  console.warn('Warning: STRIPE_SECRET_KEY not found. Stripe functionality will be disabled.');
 }
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = stripeSecretKey ? new Stripe(stripeSecretKey) : null;
 
 // DocuSign configuration
 const DOCUSIGN_INTEGRATION_KEY = process.env.DOCUSIGN_INTEGRATION_KEY || 'mock-integration-key';
@@ -303,6 +304,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Create payment intent with appropriate payment methods
+      if (!stripe) {
+        return res.status(500).json({ message: "Stripe não configurado" });
+      }
       const paymentIntent = await stripe.paymentIntents.create({
         amount: Math.round(parseFloat(totalPrice) * 100), // Convert to cents
         currency: 'brl',
@@ -365,9 +369,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         await storage.createContract({
           bookingId: booking.id,
+          contractNumber: `CONTRACT-${Date.now()}-${booking.id}`,
           status: 'pending_signature',
           createdBy: req.user!.id,
-          templateId: 1,
+          templateId: "1",
+          contractData: {
+            vehicle: booking,
+            renter: { id: booking.renterId },
+            owner: { id: booking.ownerId }, 
+            booking: booking,
+            terms: {
+              requiresGovBRSignature: true,
+              createdAt: new Date().toISOString()
+            }
+          }
         });
       } catch (contractError) {
         console.error("Contract creation failed:", contractError);
@@ -386,6 +401,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/payment-success/:paymentIntentId", async (req, res) => {
     try {
       const paymentIntentId = req.params.paymentIntentId;
+      
+      if (!stripe) {
+        return res.status(500).json({ message: "Stripe não configurado" });
+      }
       
       // Verify payment intent
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
@@ -861,7 +880,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Total revenue from completed bookings
         db.select({ 
-          total: sql<number>`COALESCE(SUM(${bookings.totalCost}), 0)` 
+          total: sql<number>`COALESCE(SUM(${bookings.totalPrice}), 0)` 
         }).from(bookings).where(eq(bookings.status, 'completed')),
         
         // Average rating
@@ -2024,7 +2043,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Process refund if payment was made
       let refundId = null;
-      if (booking.paymentIntentId && booking.paymentStatus === 'paid') {
+      if (booking.paymentIntentId && booking.paymentStatus === 'paid' && stripe) {
         try {
           const refund = await stripe.refunds.create({
             payment_intent: booking.paymentIntentId,
@@ -2037,11 +2056,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
           refundId = refund.id;
           console.log(`Refund created: ${refundId} for payment intent: ${booking.paymentIntentId}`);
-        } catch (stripeError) {
+        } catch (stripeError: unknown) {
           console.error('Stripe refund error:', stripeError);
+          const errorMessage = stripeError instanceof Error ? stripeError.message : 'Unknown error';
           return res.status(400).json({ 
             message: "Erro ao processar estorno no Stripe",
-            details: stripeError.message 
+            details: errorMessage 
           });
         }
       }
@@ -2074,9 +2094,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error("Contract cancellation error:", error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       res.status(500).json({ 
         message: "Erro interno ao cancelar contrato",
-        details: error.message 
+        details: errorMessage 
       });
     }
   });
@@ -2323,7 +2344,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/contracts/sign-docusign/:bookingId", authenticateToken, async (req, res) => {
     try {
       const { bookingId } = req.params;
-      const userId = req.user?.id || req.user?.userId; // Suporte para ambos os formatos
+      const userId = (req.user as any)?.id;
 
       const booking = await storage.getBookingWithDetails(parseInt(bookingId));
       if (!booking) {
@@ -2883,7 +2904,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (status && status !== 'all') {
         query += ` AND p.status = $${params.length + 1}`;
-        params.push(status);
+        params.push(status as string);
       }
 
       if (period && period !== 'all') {
@@ -2905,7 +2926,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         query += ` AND p.created_at >= $${params.length + 1}`;
-        params.push(startDate.toISOString());
+        params.push(startDate.toISOString() as any);
       }
 
       query += ` ORDER BY p.created_at DESC`;
