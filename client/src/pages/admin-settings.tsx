@@ -15,7 +15,7 @@ import { useAuthStore } from "@/lib/auth";
 import { Link } from "wouter";
 import type { AdminSettings } from "@shared/admin-settings";
 
-export default function AdminSettingsPage() {
+function AdminSettingsPage() {
   const { user } = useAuthStore();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -59,7 +59,7 @@ export default function AdminSettingsPage() {
     queryKey: ['/api/admin/settings'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/admin/settings');
-      return response as AdminSettings;
+      return response as unknown as AdminSettings;
     }
   });
 
@@ -473,3 +473,5 @@ export default function AdminSettingsPage() {
     </div>
   );
 }
+
+export default AdminSettingsPage;
