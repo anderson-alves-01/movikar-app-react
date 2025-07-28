@@ -128,21 +128,23 @@ Preferred communication style: Simple, everyday language.
 ✓ Sistema de cadastro mais flexível e amigável ao usuário
 ✓ Marcas carregadas dinamicamente do banco de dados
 
-### July 25, 2025 - Base de Dados Preparada para Testes
-✓ Removidos todos os dados de teste do banco de dados
-✓ Mantido apenas o usuário admin@carshare.com (ID: 4)
-✓ Adicionados 10 veículos de teste para o usuário admin:
-  - Toyota Corolla 2022 (Sedan) - R$80/dia
-  - Honda Civic 2023 (Sedan) - R$95/dia
-  - Volkswagen Golf 2021 (Hatchback) - R$75/dia
-  - Chevrolet Onix 2023 (Hatchback) - R$65/dia
-  - Ford EcoSport 2022 (SUV) - R$90/dia
-  - Nissan Kicks 2023 (SUV) - R$85/dia
-  - Hyundai HB20 2022 (Hatchback) - R$60/dia
-  - Renault Sandero 2021 (Hatchback) - R$58/dia
-  - Fiat Argo 2023 (Hatchback) - R$68/dia
-  - Jeep Compass 2022 (SUV) - R$120/dia
-✓ Sistema pronto para testes completos do fluxo de aluguel
+### January 28, 2025 - Base de Dados Atualizada com Carros Populares
+✓ Removidos carros premium (BMW, Mercedes, Audi, Porsche, Tesla, etc.)
+✓ Adicionados 10 veículos populares brasileiros para o usuário admin:
+  - Fiat Uno 2019 (Hatchback) - R$45/dia
+  - Volkswagen Gol 2020 (Hatchback) - R$50/dia
+  - Ford Ka 2018 (Hatchback) - R$42/dia
+  - Chevrolet Prisma 2019 (Sedan) - R$55/dia
+  - Renault Logan 2020 (Sedan) - R$48/dia
+  - Ford Focus 2019 (Hatchback) - R$65/dia
+  - Hyundai HB20 2021 (Hatchback) - R$58/dia
+  - Fiat Argo 2020 (Hatchback) - R$52/dia
+  - Chevrolet Onix 2021 (Hatchback) - R$60/dia
+  - Nissan March 2019 (Hatchback) - R$46/dia
+✓ Preços acessíveis: R$42 a R$65 por dia
+✓ Carros com fotos reais diferentes do Unsplash
+✓ Localizações espalhadas pelo Rio de Janeiro
+✓ Sistema pronto para testes com veículos populares
 
 ### Janeiro 27, 2025 - Problemas de Autenticação e Campo PIX Resolvidos Definitivamente ✅
 ✓ Problemas de autenticação no frontend totalmente corrigidos
