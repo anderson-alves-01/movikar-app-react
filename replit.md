@@ -128,23 +128,28 @@ Preferred communication style: Simple, everyday language.
 ✓ Sistema de cadastro mais flexível e amigável ao usuário
 ✓ Marcas carregadas dinamicamente do banco de dados
 
-### January 28, 2025 - Base de Dados Atualizada com Carros Populares
-✓ Removidos carros premium (BMW, Mercedes, Audi, Porsche, Tesla, etc.)
-✓ Adicionados 10 veículos populares brasileiros para o usuário admin:
-  - Fiat Uno 2019 (Hatchback) - R$45/dia
-  - Volkswagen Gol 2020 (Hatchback) - R$50/dia
-  - Ford Ka 2018 (Hatchback) - R$42/dia
-  - Chevrolet Prisma 2019 (Sedan) - R$55/dia
-  - Renault Logan 2020 (Sedan) - R$48/dia
-  - Ford Focus 2019 (Hatchback) - R$65/dia
-  - Hyundai HB20 2021 (Hatchback) - R$58/dia
-  - Fiat Argo 2020 (Hatchback) - R$52/dia
-  - Chevrolet Onix 2021 (Hatchback) - R$60/dia
-  - Nissan March 2019 (Hatchback) - R$46/dia
-✓ Preços acessíveis: R$42 a R$65 por dia
-✓ Carros com fotos reais diferentes do Unsplash
-✓ Localizações espalhadas pelo Rio de Janeiro
-✓ Sistema pronto para testes com veículos populares
+### January 28, 2025 - Base de Dados Completa com 31 Veículos
+✓ Criada base de dados diversificada com 3 categorias de preços:
+
+**Carros Populares (10 veículos) - R$42 a R$65/dia:**
+  - Fiat Uno 2019, Volkswagen Gol 2020, Ford Ka 2018
+  - Chevrolet Prisma/Onix, Renault Logan, Ford Focus
+  - Hyundai HB20 2021, Fiat Argo 2020, Nissan March 2019
+
+**Carros de Médio Porte (10 veículos) - R$72 a R$120/dia:**
+  - Honda Civic 2021, Toyota Corolla Cross 2022, VW Jetta 2020
+  - Nissan Sentra 2021, Jeep Compass 2022, Peugeot 208 2021
+  - Honda HR-V 2021, VW T-Cross 2022, Chevrolet Tracker 2022, Hyundai Creta 2022
+
+**Carros Premium (10 veículos) - R$265 a R$520/dia:**
+  - BMW X3 2024, Mercedes-Benz C200 2023, Audi Q5 2023
+  - Porsche Macan 2024, Tesla Model Y 2024, Land Rover Evoque 2023
+  - Volvo XC60 2023, Lexus NX 2023, Jaguar F-Pace 2023, Maserati Levante 2024
+
+✓ Total: 31 veículos com fotos únicas do Unsplash
+✓ Localizações distribuídas pelo Rio de Janeiro
+✓ Recursos e tecnologias específicas para cada categoria
+✓ Sistema pronto para atender diferentes perfis de clientes
 
 ### Janeiro 27, 2025 - Problemas de Autenticação e Campo PIX Resolvidos Definitivamente ✅
 ✓ Problemas de autenticação no frontend totalmente corrigidos
