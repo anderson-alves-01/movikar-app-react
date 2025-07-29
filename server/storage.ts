@@ -1,5 +1,5 @@
 import { 
-  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity, adminSettings,
+  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity, adminSettings, savedVehicles,
   type User, type InsertUser, type Vehicle, type InsertVehicle, 
   type Booking, type InsertBooking, type Review, type InsertReview,
   type Message, type InsertMessage, type VehicleWithOwner, type BookingWithDetails,
@@ -8,7 +8,8 @@ import {
   type VehicleBrand, type InsertVehicleBrand, type VehicleAvailability, type InsertVehicleAvailability,
   type WaitingQueue, type InsertWaitingQueue, type Referral, type InsertReferral,
   type UserRewards, type InsertUserRewards, type RewardTransaction, type InsertRewardTransaction,
-  type UserActivity, type InsertUserActivity, type AdminSettings, type InsertAdminSettings
+  type UserActivity, type InsertUserActivity, type AdminSettings, type InsertAdminSettings,
+  type SavedVehicle, type InsertSavedVehicle, type UpdateSavedVehicle
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, and, gte, lte, desc, asc, or, like, ilike, sql, lt, ne, inArray, not } from "drizzle-orm";
@@ -166,6 +167,15 @@ export interface IStorage {
   deleteCoupon(id: number): Promise<boolean>;
   useCoupon(couponId: number, userId: number, bookingId?: number): Promise<{ coupon: Coupon; discountAmount: number }>;
   validateCoupon(code: string, orderValue: number): Promise<{ isValid: boolean; coupon?: Coupon; discountAmount?: number; error?: string }>;
+
+  // Save for Later methods
+  getSavedVehicles(userId: number, category?: string): Promise<(SavedVehicle & { vehicle: Vehicle })[]>;
+  getSavedVehicle(userId: number, vehicleId: number): Promise<SavedVehicle | undefined>;
+  saveVehicle(data: InsertSavedVehicle): Promise<SavedVehicle>;
+  updateSavedVehicle(id: number, data: UpdateSavedVehicle): Promise<SavedVehicle | undefined>;
+  removeSavedVehicle(userId: number, vehicleId: number): Promise<boolean>;
+  getSavedVehicleCategories(userId: number): Promise<string[]>;
+  isVehicleSaved(userId: number, vehicleId: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1921,6 +1931,77 @@ export class DatabaseStorage implements IStorage {
       console.error("Error updating admin settings:", error);
       throw new Error("Failed to update admin settings");
     }
+  }
+
+  // Save for Later methods
+  async getSavedVehicles(userId: number, category?: string): Promise<(SavedVehicle & { vehicle: Vehicle })[]> {
+    let query = db
+      .select()
+      .from(savedVehicles)
+      .leftJoin(vehicles, eq(savedVehicles.vehicleId, vehicles.id))
+      .where(eq(savedVehicles.userId, userId));
+
+    if (category && category !== 'all') {
+      query = query.where(eq(savedVehicles.category, category));
+    }
+
+    const results = await query.orderBy(desc(savedVehicles.createdAt));
+
+    return results.map(result => ({
+      ...result.saved_vehicles,
+      vehicle: result.vehicles!
+    })) as (SavedVehicle & { vehicle: Vehicle })[];
+  }
+
+  async getSavedVehicle(userId: number, vehicleId: number): Promise<SavedVehicle | undefined> {
+    const [savedVehicle] = await db
+      .select()
+      .from(savedVehicles)
+      .where(and(eq(savedVehicles.userId, userId), eq(savedVehicles.vehicleId, vehicleId)));
+    return savedVehicle || undefined;
+  }
+
+  async saveVehicle(data: InsertSavedVehicle): Promise<SavedVehicle> {
+    const [savedVehicle] = await db
+      .insert(savedVehicles)
+      .values(data)
+      .returning();
+    return savedVehicle;
+  }
+
+  async updateSavedVehicle(id: number, data: UpdateSavedVehicle): Promise<SavedVehicle | undefined> {
+    const [savedVehicle] = await db
+      .update(savedVehicles)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(savedVehicles.id, id))
+      .returning();
+    return savedVehicle || undefined;
+  }
+
+  async removeSavedVehicle(userId: number, vehicleId: number): Promise<boolean> {
+    const result = await db
+      .delete(savedVehicles)
+      .where(and(eq(savedVehicles.userId, userId), eq(savedVehicles.vehicleId, vehicleId)));
+    return (result.rowCount || 0) > 0;
+  }
+
+  async getSavedVehicleCategories(userId: number): Promise<string[]> {
+    const results = await db
+      .select({ category: savedVehicles.category })
+      .from(savedVehicles)
+      .where(eq(savedVehicles.userId, userId))
+      .groupBy(savedVehicles.category);
+
+    return results.map(r => r.category).filter(Boolean);
+  }
+
+  async isVehicleSaved(userId: number, vehicleId: number): Promise<boolean> {
+    const [result] = await db
+      .select({ id: savedVehicles.id })
+      .from(savedVehicles)
+      .where(and(eq(savedVehicles.userId, userId), eq(savedVehicles.vehicleId, vehicleId)))
+      .limit(1);
+    return !!result;
   }
 }
 

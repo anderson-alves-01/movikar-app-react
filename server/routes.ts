@@ -1424,6 +1424,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Saved Vehicles routes (Save for Later feature)
+  app.get("/api/saved-vehicles", authenticateToken, async (req, res) => {
+    try {
+      const category = req.query.category as string;
+      const savedVehicles = await storage.getSavedVehicles(req.user!.id, category);
+      res.json(savedVehicles);
+    } catch (error) {
+      console.error("Get saved vehicles error:", error);
+      res.status(500).json({ message: "Falha ao buscar veículos salvos" });
+    }
+  });
+
+  app.get("/api/saved-vehicles/categories", authenticateToken, async (req, res) => {
+    try {
+      const categories = await storage.getSavedVehicleCategories(req.user!.id);
+      res.json(categories);
+    } catch (error) {
+      console.error("Get saved vehicle categories error:", error);
+      res.status(500).json({ message: "Falha ao buscar categorias de veículos salvos" });
+    }
+  });
+
+  app.get("/api/saved-vehicles/check/:vehicleId", authenticateToken, async (req, res) => {
+    try {
+      const vehicleId = parseInt(req.params.vehicleId);
+      const isSaved = await storage.isVehicleSaved(req.user!.id, vehicleId);
+      res.json({ isSaved });
+    } catch (error) {
+      console.error("Check saved vehicle error:", error);
+      res.status(500).json({ message: "Falha ao verificar veículo salvo" });
+    }
+  });
+
+  app.post("/api/saved-vehicles", authenticateToken, async (req, res) => {
+    try {
+      const { vehicleId, category, notes } = req.body;
+      
+      // Check if vehicle exists
+      const vehicle = await storage.getVehicle(vehicleId);
+      if (!vehicle) {
+        return res.status(404).json({ message: "Veículo não encontrado" });
+      }
+
+      // Check if already saved
+      const existing = await storage.getSavedVehicle(req.user!.id, vehicleId);
+      if (existing) {
+        return res.status(400).json({ message: "Veículo já está salvo" });
+      }
+
+      const saveData = {
+        userId: req.user!.id,
+        vehicleId,
+        category: category || "Geral",
+        notes: notes || null
+      };
+
+      const savedVehicle = await storage.saveVehicle(saveData);
+      res.status(201).json(savedVehicle);
+    } catch (error) {
+      console.error("Save vehicle error:", error);
+      res.status(400).json({ message: "Falha ao salvar veículo" });
+    }
+  });
+
+  app.put("/api/saved-vehicles/:vehicleId", authenticateToken, async (req, res) => {
+    try {
+      const vehicleId = parseInt(req.params.vehicleId);
+      const { category, notes } = req.body;
+
+      const savedVehicle = await storage.getSavedVehicle(req.user!.id, vehicleId);
+      if (!savedVehicle) {
+        return res.status(404).json({ message: "Veículo salvo não encontrado" });
+      }
+
+      const updateData = {
+        category: category || savedVehicle.category,
+        notes: notes !== undefined ? notes : savedVehicle.notes
+      };
+
+      const updated = await storage.updateSavedVehicle(savedVehicle.id, updateData);
+      res.json(updated);
+    } catch (error) {
+      console.error("Update saved vehicle error:", error);
+      res.status(400).json({ message: "Falha ao atualizar veículo salvo" });
+    }
+  });
+
+  app.delete("/api/saved-vehicles/:vehicleId", authenticateToken, async (req, res) => {
+    try {
+      const vehicleId = parseInt(req.params.vehicleId);
+      const deleted = await storage.removeSavedVehicle(req.user!.id, vehicleId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Veículo salvo não encontrado" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Remove saved vehicle error:", error);
+      res.status(500).json({ message: "Falha ao remover veículo salvo" });
+    }
+  });
+
   // Vehicle Availability Routes
   app.get("/api/vehicles/:vehicleId/availability", async (req, res) => {
     try {

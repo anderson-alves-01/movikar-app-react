@@ -2,9 +2,12 @@ import { Link, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, MapPin, Heart, Plus, Check } from "lucide-react";
+import { Star, MapPin, Heart, Plus, Check, Bookmark, BookmarkCheck } from "lucide-react";
 import { useState } from "react";
 import { useComparisonStore } from "@/lib/comparison";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import type { Vehicle } from "@/types";
 
 interface VehicleCardProps {
@@ -15,6 +18,83 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [, navigate] = useLocation();
   const { addVehicle, removeVehicle, isVehicleInComparison, vehicles } = useComparisonStore();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  // Check if vehicle is saved
+  const { data: savedStatus } = useQuery({
+    queryKey: ["/api/saved-vehicles/check", vehicle.id],
+    enabled: !!localStorage.getItem('token'),
+  });
+
+  const isSaved = savedStatus?.isSaved || false;
+
+  // Save vehicle mutation
+  const saveVehicleMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest('POST', '/api/saved-vehicles', {
+        vehicleId: vehicle.id,
+        category: 'Geral'
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/saved-vehicles/check", vehicle.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/saved-vehicles"] });
+      toast({
+        title: "Veículo salvo",
+        description: "Veículo adicionado aos seus salvos",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao salvar",
+        description: error.message || "Não foi possível salvar o veículo",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Remove saved vehicle mutation
+  const removeSavedVehicleMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest('DELETE', `/api/saved-vehicles/${vehicle.id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/saved-vehicles/check", vehicle.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/saved-vehicles"] });
+      toast({
+        title: "Veículo removido",
+        description: "Veículo removido dos seus salvos",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao remover",
+        description: error.message || "Não foi possível remover o veículo",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSaveToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!localStorage.getItem('token')) {
+      toast({
+        title: "Login necessário",
+        description: "Você precisa estar logado para salvar veículos",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isSaved) {
+      removeSavedVehicleMutation.mutate();
+    } else {
+      saveVehicleMutation.mutate();
+    }
+  };
 
   const formatPrice = (price: string) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -67,6 +147,20 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
           {getStatusBadge()}
         </div>
         <div className="absolute top-3 right-3 flex gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-8 h-8 bg-white bg-opacity-80 rounded-full flex items-center justify-center hover:bg-opacity-100 transition-all p-0 z-10 pointer-events-auto"
+            onClick={handleSaveToggle}
+            disabled={saveVehicleMutation.isPending || removeSavedVehicleMutation.isPending}
+            title={isSaved ? "Remover dos salvos" : "Salvar para depois"}
+          >
+            {isSaved ? (
+              <BookmarkCheck className="w-4 h-4 text-blue-600 fill-blue-600" />
+            ) : (
+              <Bookmark className="w-4 h-4 text-gray-600" />
+            )}
+          </Button>
           <Button
             variant="ghost"
             size="sm"

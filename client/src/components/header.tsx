@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Search, Menu, User, MessageCircle, Car, LogOut, Shield, Bell, Gift, Sparkles, BarChart3, RotateCcw, DollarSign } from "lucide-react";
+import { Search, Menu, User, MessageCircle, Car, LogOut, Shield, Bell, Gift, Sparkles, BarChart3, RotateCcw, DollarSign, BookmarkCheck } from "lucide-react";
 import { useAuthStore } from "@/lib/auth";
 import { useSearch } from "@/contexts/SearchContext";
 import { buildSearchParams } from "@/lib/searchUtils";
@@ -222,6 +222,12 @@ export default function Header() {
                         <Link href="/suggestions" className="cursor-pointer">
                           <Sparkles className="h-4 w-4 mr-2" />
                           Sugestões
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/saved-vehicles" className="cursor-pointer">
+                          <BookmarkCheck className="h-4 w-4 mr-2" />
+                          Veículos Salvos
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>

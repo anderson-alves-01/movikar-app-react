@@ -36,6 +36,7 @@ import AdminSettings from "@/pages/admin-settings";
 import AdminCouponsPage from "@/pages/admin-coupons";
 import EarningsPage from "@/pages/earnings";
 import DebugPix from "@/pages/debug-pix";
+import SavedVehicles from "@/pages/saved-vehicles";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt, IOSInstallPrompt } from "@/components/InstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
@@ -63,6 +64,7 @@ function Router() {
       <Route path="/contracts/:id" component={ContractPreview} />
       <Route path="/rewards" component={Rewards} />
       <Route path="/suggestions" component={Suggestions} />
+      <Route path="/saved-vehicles" component={SavedVehicles} />
       <Route path="/document-verification" component={DocumentVerification} />
       <Route path="/performance" component={PerformanceDashboard} />
       <Route path="/checkout/:vehicleId" component={Checkout} />

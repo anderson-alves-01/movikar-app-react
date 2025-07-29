@@ -253,6 +253,24 @@ export const userRewards = pgTable("user_rewards", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Save for later (bookmarks) system
+export const savedVehicles = pgTable("saved_vehicles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  vehicleId: integer("vehicle_id").references(() => vehicles.id).notNull(),
+  notes: text("notes"), // Optional notes from user
+  category: varchar("category", { length: 50 }).default("default"), // user-defined categories
+  priority: varchar("priority", { length: 20 }).default("medium"), // low, medium, high
+  reminderDate: timestamp("reminder_date"), // Optional reminder date
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  unique("unique_user_vehicle").on(table.userId, table.vehicleId),
+  index("idx_saved_vehicles_user").on(table.userId),
+  index("idx_saved_vehicles_category").on(table.category),
+]);
+
 // Reward transactions
 export const rewardTransactions = pgTable("reward_transactions", {
   id: serial("id").primaryKey(),
@@ -337,6 +355,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   rewardTransactions: many(rewardTransactions),
   activities: many(userActivity),
   documents: many(userDocuments),
+  savedVehicles: many(savedVehicles),
 }));
 
 export const userDocumentsRelations = relations(userDocuments, ({ one }) => ({
@@ -357,6 +376,7 @@ export const vehiclesRelations = relations(vehicles, ({ one, many }) => ({
   }),
   bookings: many(bookings),
   reviews: many(reviews),
+  savedByUsers: many(savedVehicles),
 }));
 
 export const bookingsRelations = relations(bookings, ({ one, many }) => ({
@@ -522,6 +542,17 @@ export const waitingQueueRelations = relations(waitingQueue, ({ one }) => ({
   }),
 }));
 
+export const savedVehiclesRelations = relations(savedVehicles, ({ one }) => ({
+  user: one(users, {
+    fields: [savedVehicles.userId],
+    references: [users.id],
+  }),
+  vehicle: one(vehicles, {
+    fields: [savedVehicles.vehicleId],
+    references: [vehicles.id],
+  }),
+}));
+
 // Zod schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -638,10 +669,24 @@ export const insertWaitingQueueSchema = createInsertSchema(waitingQueue).omit({
   createdAt: true,
 });
 
+export const insertSavedVehicleSchema = createInsertSchema(savedVehicles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
 
+export const updateSavedVehicleSchema = createInsertSchema(savedVehicles).omit({
+  id: true,
+  userId: true,
+  vehicleId: true,
+  createdAt: true,
+}).partial();
 
 // Types
 export type User = typeof users.$inferSelect;
+export type InsertSavedVehicle = z.infer<typeof insertSavedVehicleSchema>;
+export type UpdateSavedVehicle = z.infer<typeof updateSavedVehicleSchema>;
+export type SavedVehicle = typeof savedVehicles.$inferSelect;
 
 // Admin Settings table
 export const adminSettings = pgTable("admin_settings", {
