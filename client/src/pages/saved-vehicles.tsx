@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { BookmarkCheck, Search, Filter, Car, Clock, Heart, Plus } from "lucide-react";
 import VehicleCard from "@/components/vehicle-card";
 import { Loading } from "@/components/ui/loading";
+import Header from "@/components/header";
 
 // Helper function to get token from localStorage
 const getToken = () => {
@@ -32,6 +33,14 @@ export default function SavedVehicles() {
     queryKey: ["/api/saved-vehicles", selectedCategory],
     enabled: !!getToken(),
     retry: false,
+  });
+  
+  console.log('🔍 [SavedVehicles] Query data:', {
+    savedVehicles,
+    isLoading: vehiclesLoading,
+    error: vehiclesError,
+    selectedCategory,
+    hasToken: !!getToken()
   });
 
   // Fetch saved vehicle categories
@@ -62,60 +71,68 @@ export default function SavedVehicles() {
   
   if (!token) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Card className="text-center py-12">
-            <CardContent>
-              <div className="flex flex-col items-center">
-                <BookmarkCheck className="w-16 h-16 text-gray-300 mb-4" />
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                  Login necessário
-                </h3>
-                <p className="text-gray-500 mb-6 max-w-md">
-                  Você precisa estar logado para ver seus veículos salvos.
-                </p>
-                <Button 
-                  onClick={() => window.location.href = '/auth'}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  Fazer Login
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+      <>
+        <Header />
+        <div className="min-h-screen bg-gray-50 py-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <Card className="text-center py-12">
+              <CardContent>
+                <div className="flex flex-col items-center">
+                  <BookmarkCheck className="w-16 h-16 text-gray-300 mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                    Login necessário
+                  </h3>
+                  <p className="text-gray-500 mb-6 max-w-md">
+                    Você precisa estar logado para ver seus veículos salvos.
+                  </p>
+                  <Button 
+                    onClick={() => window.location.href = '/auth'}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    Fazer Login
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <Loading variant="car" size="lg" />
-            <p className="mt-4 text-gray-600">Carregando veículos salvos...</p>
+      <>
+        <Header />
+        <div className="min-h-screen bg-gray-50 py-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <Loading variant="car" size="lg" />
+              <p className="mt-4 text-gray-600">Carregando veículos salvos...</p>
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center mb-4">
-            <BookmarkCheck className="w-8 h-8 text-blue-600 mr-3" />
-            <h1 className="text-3xl font-bold text-gray-900">Veículos Salvos</h1>
+    <>
+      <Header />
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center mb-4">
+              <BookmarkCheck className="w-8 h-8 text-blue-600 mr-3" />
+              <h1 className="text-3xl font-bold text-gray-900">Veículos Salvos</h1>
+            </div>
+            <p className="text-gray-600">
+              Gerencie seus veículos favoritos e encontre rapidamente opções que chamaram sua atenção.
+            </p>
           </div>
-          <p className="text-gray-600">
-            Gerencie seus veículos favoritos e encontre rapidamente opções que chamaram sua atenção.
-          </p>
-        </div>
 
-        {filteredVehicles.length === 0 && !savedVehicles ? (
+        {(!savedVehicles || savedVehicles.length === 0) ? (
           <Card className="text-center py-12">
             <CardContent>
               <div className="flex flex-col items-center">
@@ -248,7 +265,8 @@ export default function SavedVehicles() {
             )}
           </>
         )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
