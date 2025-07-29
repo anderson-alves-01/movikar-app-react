@@ -71,17 +71,14 @@ export default function AdminCouponsPage() {
 
   const { data: couponsData, isLoading, error } = useQuery({
     queryKey: ['/api/admin/coupons'],
-    queryFn: async () => {
-      console.log("🎫 Fetching coupons with user:", user?.email, "role:", user?.role);
-      const response = await apiRequest('GET', '/api/admin/coupons');
-      console.log("🎫 Coupons response:", response);
-      return response;
-    },
     retry: false,
     enabled: !!user && user.role === 'admin', // Only run query if user is admin
   });
 
   const coupons = Array.isArray(couponsData) ? couponsData : [];
+  
+  console.log("🎫 Final coupons array:", coupons);
+  console.log("🎫 Coupons length:", coupons.length);
 
   const createCouponMutation = useMutation({
     mutationFn: async (couponData: InsertCoupon) => {
