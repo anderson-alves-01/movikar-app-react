@@ -2831,42 +2831,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Coupon Management API routes
   app.get("/api/admin/coupons", authenticateToken, requireAdmin, async (req, res) => {
     try {
-      // Return sample coupons for now (would be from database in production)
-      const sampleCoupons = [
-        {
-          id: 1,
-          code: "DESCONTO10",
-          description: "10% de desconto em qualquer reserva",
-          discountType: "percentage",
-          discountValue: 10,
-          minOrderValue: 5000, // R$ 50.00
-          maxUses: 100,
-          usedCount: 15,
-          isActive: true,
-          validFrom: new Date(),
-          validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-          createdBy: req.user!.id,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: 2,
-          code: "WELCOME20",
-          description: "R$ 20 de desconto para novos usuários",
-          discountType: "fixed",
-          discountValue: 2000, // R$ 20.00 in cents
-          minOrderValue: 10000, // R$ 100.00
-          maxUses: 50,
-          usedCount: 8,
-          isActive: true,
-          validFrom: new Date(),
-          validUntil: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
-          createdBy: req.user!.id,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        }
-      ];
-      res.json(sampleCoupons);
+      console.log("🎫 Admin coupons request from user:", req.user?.email, "role:", req.user?.role);
+      
+      // Get coupons from database
+      const coupons = await storage.getAllCoupons();
+      console.log("🎫 Found coupons:", coupons.length);
+      
+      res.json(coupons);
     } catch (error) {
       console.error("Error fetching coupons:", error);
       res.status(500).json({ message: "Erro ao buscar cupons" });
@@ -2877,13 +2848,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const couponData = {
         ...req.body,
-        id: Date.now(), // Temporary ID generation
+        createdBy: req.user!.id,
         usedCount: 0,
         isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
-      res.status(201).json(couponData);
+      
+      const coupon = await storage.createCoupon(couponData);
+      res.status(201).json(coupon);
     } catch (error) {
       console.error("Error creating coupon:", error);
       res.status(500).json({ message: "Erro ao criar cupom" });
@@ -2893,11 +2864,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/admin/coupons/:id", authenticateToken, requireAdmin, async (req, res) => {
     try {
       const couponId = parseInt(req.params.id);
-      const updatedCoupon = {
-        ...req.body,
-        id: couponId,
-        updatedAt: new Date(),
-      };
+      const updatedCoupon = await storage.updateCoupon(couponId, req.body);
+      
+      if (!updatedCoupon) {
+        return res.status(404).json({ message: "Cupom não encontrado" });
+      }
+      
       res.json(updatedCoupon);
     } catch (error) {
       console.error("Error updating coupon:", error);
@@ -2908,7 +2880,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/admin/coupons/:id", authenticateToken, requireAdmin, async (req, res) => {
     try {
       const couponId = parseInt(req.params.id);
-      // In production, this would delete from database
+      const deleted = await storage.deleteCoupon(couponId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Cupom não encontrado" });
+      }
+      
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting coupon:", error);

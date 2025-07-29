@@ -1,5 +1,5 @@
 import { 
-  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity, adminSettings, savedVehicles,
+  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity, adminSettings, savedVehicles, coupons,
   type User, type InsertUser, type Vehicle, type InsertVehicle, 
   type Booking, type InsertBooking, type Review, type InsertReview,
   type Message, type InsertMessage, type VehicleWithOwner, type BookingWithDetails,
@@ -9,7 +9,8 @@ import {
   type WaitingQueue, type InsertWaitingQueue, type Referral, type InsertReferral,
   type UserRewards, type InsertUserRewards, type RewardTransaction, type InsertRewardTransaction,
   type UserActivity, type InsertUserActivity, type AdminSettings, type InsertAdminSettings,
-  type SavedVehicle, type InsertSavedVehicle, type UpdateSavedVehicle
+  type SavedVehicle, type InsertSavedVehicle, type UpdateSavedVehicle,
+  type Coupon, type InsertCoupon
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, and, gte, lte, desc, asc, or, like, ilike, sql, lt, ne, inArray, not } from "drizzle-orm";
@@ -176,6 +177,14 @@ export interface IStorage {
   removeSavedVehicle(userId: number, vehicleId: number): Promise<boolean>;
   getSavedVehicleCategories(userId: number): Promise<string[]>;
   isVehicleSaved(userId: number, vehicleId: number): Promise<boolean>;
+
+  // Coupon methods
+  getAllCoupons(): Promise<Coupon[]>;
+  getCoupon(id: number): Promise<Coupon | undefined>;
+  getCouponByCode(code: string): Promise<Coupon | undefined>;
+  createCoupon(data: InsertCoupon): Promise<Coupon>;
+  updateCoupon(id: number, data: Partial<InsertCoupon>): Promise<Coupon | undefined>;
+  deleteCoupon(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2002,6 +2011,118 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(savedVehicles.userId, userId), eq(savedVehicles.vehicleId, vehicleId)))
       .limit(1);
     return !!result;
+  }
+
+  // Coupon Management Methods
+  async getAllCoupons(): Promise<Coupon[]> {
+    try {
+      const results = await db.select().from(coupons).orderBy(desc(coupons.createdAt));
+      return results;
+    } catch (error) {
+      console.error("Error fetching coupons:", error);
+      return [];
+    }
+  }
+
+  async getCoupon(id: number): Promise<Coupon | undefined> {
+    try {
+      const [coupon] = await db.select().from(coupons).where(eq(coupons.id, id));
+      return coupon;
+    } catch (error) {
+      console.error("Error fetching coupon:", error);
+      return undefined;
+    }
+  }
+
+  async getCouponByCode(code: string): Promise<Coupon | undefined> {
+    try {
+      const [coupon] = await db.select().from(coupons).where(eq(coupons.code, code.toUpperCase()));
+      return coupon;
+    } catch (error) {
+      console.error("Error fetching coupon by code:", error);
+      return undefined;
+    }
+  }
+
+  async createCoupon(data: InsertCoupon): Promise<Coupon> {
+    const [coupon] = await db.insert(coupons).values(data).returning();
+    return coupon;
+  }
+
+  async updateCoupon(id: number, data: Partial<InsertCoupon>): Promise<Coupon | undefined> {
+    const [coupon] = await db
+      .update(coupons)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(coupons.id, id))
+      .returning();
+    return coupon;
+  }
+
+  async deleteCoupon(id: number): Promise<boolean> {
+    const result = await db.delete(coupons).where(eq(coupons.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  async validateCoupon(code: string, orderValue: number): Promise<{ isValid: boolean; coupon?: Coupon; discountAmount?: number; error?: string }> {
+    try {
+      const coupon = await this.getCouponByCode(code);
+      
+      if (!coupon) {
+        return { isValid: false, error: "Cupom não encontrado" };
+      }
+
+      if (!coupon.isActive) {
+        return { isValid: false, error: "Cupom inativo" };
+      }
+
+      if (new Date() > coupon.validUntil) {
+        return { isValid: false, error: "Cupom expirado" };
+      }
+
+      if (coupon.usedCount >= coupon.maxUses) {
+        return { isValid: false, error: "Cupom esgotado" };
+      }
+
+      if (orderValue < (coupon.minOrderValue || 0)) {
+        const minValue = ((coupon.minOrderValue || 0) / 100).toFixed(2);
+        return { isValid: false, error: `Valor mínimo do pedido: R$ ${minValue}` };
+      }
+
+      // Calculate discount
+      let discountAmount = 0;
+      if (coupon.discountType === "percentage") {
+        discountAmount = Math.floor((orderValue * coupon.discountValue) / 100);
+      } else if (coupon.discountType === "fixed") {
+        discountAmount = Math.min(coupon.discountValue, orderValue);
+      }
+
+      return { 
+        isValid: true, 
+        coupon, 
+        discountAmount 
+      };
+    } catch (error) {
+      console.error("Error validating coupon:", error);
+      return { isValid: false, error: "Erro interno do servidor" };
+    }
+  }
+
+  async useCoupon(couponId: number, userId: number, bookingId?: number): Promise<{ coupon: Coupon; discountAmount: number }> {
+    const coupon = await this.getCoupon(couponId);
+    if (!coupon) {
+      throw new Error("Cupom não encontrado");
+    }
+
+    // Update usage count
+    await db
+      .update(coupons)
+      .set({ 
+        usedCount: coupon.usedCount + 1,
+        updatedAt: new Date()
+      })
+      .where(eq(coupons.id, couponId));
+
+    return { coupon, discountAmount: 0 }; // Discount amount would be calculated during validation
   }
 }
 
