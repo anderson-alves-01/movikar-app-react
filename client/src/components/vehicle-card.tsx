@@ -42,51 +42,60 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
     : "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=300";
 
   return (
-    <Card className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer">
-      <div className="relative">
-        <img 
-          src={mainImage}
-          alt={`${vehicle.brand} ${vehicle.model} ${vehicle.year}`}
-          className="w-full h-48 object-cover"
-        />
+    <Card className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300">
+      <Link href={`/vehicle/${vehicle.id}`}>
+        <div className="relative cursor-pointer group">
+          <img 
+            src={mainImage}
+            alt={`${vehicle.brand} ${vehicle.model} ${vehicle.year}`}
+            className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+          {/* Ver mais overlay on hover */}
+          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+            <div className="bg-white text-gray-800 px-4 py-2 rounded-lg font-medium opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+              Ver mais detalhes
+            </div>
+          </div>
         <div className="absolute top-3 left-3">
           {getStatusBadge()}
         </div>
-        <div className="absolute top-3 right-3 flex gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-8 h-8 bg-white bg-opacity-80 rounded-full flex items-center justify-center hover:bg-opacity-100 transition-all p-0"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (isVehicleInComparison(vehicle.id)) {
-                removeVehicle(vehicle.id);
-              } else if (vehicles.length < 3) {
-                addVehicle(vehicle);
-              }
-            }}
-            title={isVehicleInComparison(vehicle.id) ? "Remover da comparação" : "Adicionar à comparação"}
-          >
-            {isVehicleInComparison(vehicle.id) ? (
-              <Check className="w-4 h-4 text-blue-600" />
-            ) : (
-              <Plus className="w-4 h-4 text-gray-600" />
-            )}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-8 h-8 bg-white bg-opacity-80 rounded-full flex items-center justify-center hover:bg-opacity-100 transition-all p-0"
-            onClick={(e) => {
-              e.preventDefault();
-              setIsFavorite(!isFavorite);
-            }}
-          >
-            <Heart className={`h-4 w-4 ${isFavorite ? 'fill-primary text-primary' : 'text-gray-600'}`} />
-          </Button>
+          <div className="absolute top-3 right-3 flex gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-8 h-8 bg-white bg-opacity-80 rounded-full flex items-center justify-center hover:bg-opacity-100 transition-all p-0 z-10"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (isVehicleInComparison(vehicle.id)) {
+                  removeVehicle(vehicle.id);
+                } else if (vehicles.length < 3) {
+                  addVehicle(vehicle);
+                }
+              }}
+              title={isVehicleInComparison(vehicle.id) ? "Remover da comparação" : "Adicionar à comparação"}
+            >
+              {isVehicleInComparison(vehicle.id) ? (
+                <Check className="w-4 h-4 text-blue-600" />
+              ) : (
+                <Plus className="w-4 h-4 text-gray-600" />
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-8 h-8 bg-white bg-opacity-80 rounded-full flex items-center justify-center hover:bg-opacity-100 transition-all p-0 z-10"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsFavorite(!isFavorite);
+              }}
+            >
+              <Heart className={`h-4 w-4 ${isFavorite ? 'fill-primary text-primary' : 'text-gray-600'}`} />
+            </Button>
+          </div>
         </div>
-      </div>
+      </Link>
       
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-2">
