@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { apiRequest } from "@/lib/queryClient";
 import { Ticket, Plus, Edit, Trash2, Copy, Calendar, Users, DollarSign } from "lucide-react";
 import Header from "@/components/header";
@@ -19,6 +19,10 @@ import type { Coupon, InsertCoupon } from "@shared/coupon-schema";
 export default function AdminCouponsPage() {
   const { user } = useAuthStore();
   const { toast } = useToast();
+  
+  // Debug authentication state
+  console.log("Admin Coupons Page - User:", user);
+  console.log("Admin Coupons Page - Token:", localStorage.getItem('token'));
   const queryClient = useQueryClient();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
@@ -57,6 +61,7 @@ export default function AdminCouponsPage() {
       return response;
     },
     retry: false,
+    enabled: !!user && user.role === 'admin', // Only run query if user is admin
   });
 
   const coupons = Array.isArray(couponsData) ? couponsData : [];
@@ -208,6 +213,9 @@ export default function AdminCouponsPage() {
                     <DialogTitle>
                       {editingCoupon ? "Editar Cupom" : "Criar Novo Cupom"}
                     </DialogTitle>
+                    <DialogDescription>
+                      {editingCoupon ? "Modifique as informações do cupom de desconto" : "Preencha os dados para criar um novo cupom de desconto"}
+                    </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
                     <div>
@@ -334,14 +342,25 @@ export default function AdminCouponsPage() {
                 Erro ao carregar cupons
               </h3>
               <p className="text-gray-500 mb-4">
-                {error.message || "Verifique sua conexão e permissões"}
+                {error.message?.includes('401') || error.message?.includes('403') 
+                  ? "Você precisa estar logado como administrador para acessar esta página"
+                  : error.message || "Verifique sua conexão e permissões"}
               </p>
-              <Button 
-                onClick={() => queryClient.invalidateQueries({ queryKey: ['/api/admin/coupons'] })}
-                variant="outline"
-              >
-                Tentar novamente
-              </Button>
+              {error.message?.includes('401') || error.message?.includes('403') ? (
+                <Button 
+                  onClick={() => window.location.href = '/auth'}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  Fazer Login
+                </Button>
+              ) : (
+                <Button 
+                  onClick={() => queryClient.invalidateQueries({ queryKey: ['/api/admin/coupons'] })}
+                  variant="outline"
+                >
+                  Tentar novamente
+                </Button>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -387,7 +406,7 @@ export default function AdminCouponsPage() {
                         
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-gray-600">Usos:</span>
-                          <span>{coupon.usedCount}/{coupon.maxUses}</span>
+                          <span>{coupon.usedCount || 0}/{coupon.maxUses}</span>
                         </div>
                         
                         <div className="flex items-center justify-between text-sm">
@@ -395,10 +414,10 @@ export default function AdminCouponsPage() {
                           <span>{new Date(coupon.validUntil).toLocaleDateString()}</span>
                         </div>
                         
-                        {coupon.minOrderValue > 0 && (
+                        {(coupon.minOrderValue || 0) > 0 && (
                           <div className="flex items-center justify-between text-sm">
                             <span className="text-gray-600">Valor mín.:</span>
-                            <span>R$ {(coupon.minOrderValue / 100).toFixed(2)}</span>
+                            <span>R$ {((coupon.minOrderValue || 0) / 100).toFixed(2)}</span>
                           </div>
                         )}
                       </div>
@@ -414,8 +433,8 @@ export default function AdminCouponsPage() {
                               description: coupon.description,
                               discountType: coupon.discountType as "percentage" | "fixed",
                               discountValue: coupon.discountValue,
-                              minOrderValue: coupon.minOrderValue,
-                              maxUses: coupon.maxUses,
+                              minOrderValue: coupon.minOrderValue || 0,
+                              maxUses: coupon.maxUses || 1,
                               validUntil: new Date(coupon.validUntil),
                             });
                           }}
