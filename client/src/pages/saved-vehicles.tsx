@@ -53,15 +53,27 @@ export default function SavedVehicles() {
   const isLoading = vehiclesLoading || categoriesLoading;
 
   const filteredVehicles = Array.isArray(savedVehicles) ? savedVehicles.filter((saved: any) => {
-    const vehicle = saved?.vehicle;
-    if (!vehicle) return false;
+    // First filter by category
+    if (selectedCategory !== "all" && saved.category !== selectedCategory) {
+      return false;
+    }
+    
+    // Then filter by search query
+    if (searchQuery.trim() === "") {
+      return true;
+    }
+    
+    const vehicle = saved?.vehicle || saved; // Handle both formats
     const searchLower = searchQuery.toLowerCase();
     return (
-      vehicle.brand?.toLowerCase().includes(searchLower) ||
-      vehicle.model?.toLowerCase().includes(searchLower) ||
-      vehicle.location?.toLowerCase().includes(searchLower)
+      (vehicle.brand && vehicle.brand.toLowerCase().includes(searchLower)) ||
+      (vehicle.model && vehicle.model.toLowerCase().includes(searchLower)) ||
+      (vehicle.location && vehicle.location.toLowerCase().includes(searchLower))
     );
   }) : [];
+
+  console.log('🔍 [SavedVehicles] Filtered vehicles:', filteredVehicles);
+  console.log('🔍 [SavedVehicles] Raw savedVehicles:', savedVehicles);
 
   const allCategories = ["all", ...(Array.isArray(categories) ? categories : [])];
 
@@ -132,7 +144,7 @@ export default function SavedVehicles() {
             </p>
           </div>
 
-        {(!savedVehicles || savedVehicles.length === 0) ? (
+        {(!savedVehicles || (Array.isArray(savedVehicles) && savedVehicles.length === 0)) ? (
           <Card className="text-center py-12">
             <CardContent>
               <div className="flex flex-col items-center">
@@ -174,10 +186,10 @@ export default function SavedVehicles() {
                 <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
                   <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-6">
                     <TabsTrigger value="all" className="text-xs">
-                      Todos ({Array.isArray(savedVehicles) ? savedVehicles.length : 0})
+                      Todos ({(savedVehicles && Array.isArray(savedVehicles)) ? savedVehicles.length : 0})
                     </TabsTrigger>
                     {Array.isArray(categories) && categories.map((category: string) => {
-                      const count = Array.isArray(savedVehicles) ? savedVehicles.filter((s: any) => s.category === category).length : 0;
+                      const count = (savedVehicles && Array.isArray(savedVehicles)) ? savedVehicles.filter((s: any) => s.category === category).length : 0;
                       return (
                         <TabsTrigger key={category} value={category} className="text-xs">
                           {category} ({count})
@@ -197,7 +209,7 @@ export default function SavedVehicles() {
                     <BookmarkCheck className="w-8 h-8 text-blue-600" />
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-600">Total Salvos</p>
-                      <p className="text-2xl font-bold text-gray-900">{Array.isArray(savedVehicles) ? savedVehicles.length : 0}</p>
+                      <p className="text-2xl font-bold text-gray-900">{(savedVehicles && Array.isArray(savedVehicles)) ? savedVehicles.length : 0}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -243,24 +255,30 @@ export default function SavedVehicles() {
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredVehicles.map((saved: any) => (
-                  <div key={saved.id} className="relative">
-                    <VehicleCard vehicle={saved.vehicle} />
-                    {saved.category && saved.category !== "Geral" && (
-                      <Badge 
-                        variant="secondary" 
-                        className="absolute top-2 left-2 z-20 bg-white bg-opacity-90 text-xs"
-                      >
-                        {saved.category}
-                      </Badge>
-                    )}
-                    {saved.notes && (
-                      <div className="mt-2 p-2 bg-gray-100 rounded-md">
-                        <p className="text-xs text-gray-600">{saved.notes}</p>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                {filteredVehicles.map((saved: any) => {
+                  // Handle both formats: saved.vehicle or direct vehicle data
+                  const vehicleData = saved.vehicle || saved;
+                  console.log('🚗 [SavedVehicles] Rendering vehicle:', vehicleData);
+                  
+                  return (
+                    <div key={saved.id} className="relative">
+                      <VehicleCard vehicle={vehicleData} />
+                      {saved.category && saved.category !== "Geral" && (
+                        <Badge 
+                          variant="secondary" 
+                          className="absolute top-2 left-2 z-20 bg-white bg-opacity-90 text-xs"
+                        >
+                          {saved.category}
+                        </Badge>
+                      )}
+                      {saved.notes && (
+                        <div className="mt-2 p-2 bg-gray-100 rounded-md">
+                          <p className="text-xs text-gray-600">{saved.notes}</p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </>
