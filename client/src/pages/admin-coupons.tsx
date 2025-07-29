@@ -50,13 +50,16 @@ export default function AdminCouponsPage() {
     );
   }
 
-  const { data: coupons = [], isLoading } = useQuery({
+  const { data: couponsData, isLoading, error } = useQuery({
     queryKey: ['/api/admin/coupons'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/admin/coupons');
       return response;
-    }
+    },
+    retry: false,
   });
+
+  const coupons = Array.isArray(couponsData) ? couponsData : [];
 
   const createCouponMutation = useMutation({
     mutationFn: async (couponData: InsertCoupon) => {
@@ -324,9 +327,25 @@ export default function AdminCouponsPage() {
               <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
               <p className="text-gray-600">Carregando cupons...</p>
             </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <Ticket className="h-16 w-16 text-red-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                Erro ao carregar cupons
+              </h3>
+              <p className="text-gray-500 mb-4">
+                {error.message || "Verifique sua conexão e permissões"}
+              </p>
+              <Button 
+                onClick={() => queryClient.invalidateQueries({ queryKey: ['/api/admin/coupons'] })}
+                variant="outline"
+              >
+                Tentar novamente
+              </Button>
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {coupons.map((coupon: Coupon) => {
+              {Array.isArray(coupons) && coupons.map((coupon: Coupon) => {
                 const status = getCouponStatus(coupon);
                 return (
                   <Card key={coupon.id} className="hover:shadow-lg transition-shadow">
@@ -420,7 +439,7 @@ export default function AdminCouponsPage() {
                 );
               })}
 
-              {coupons.length === 0 && (
+              {Array.isArray(coupons) && coupons.length === 0 && (
                 <div className="col-span-full text-center py-12">
                   <Ticket className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Nenhum cupom criado</h3>
