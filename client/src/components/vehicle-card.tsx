@@ -21,10 +21,24 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // Get token helper function
+  const getToken = () => {
+    try {
+      const authStorage = localStorage.getItem('auth-storage');
+      if (authStorage) {
+        const authData = JSON.parse(authStorage);
+        return authData.state?.token || authData.token;
+      }
+    } catch (error) {
+      console.error('Error parsing auth token:', error);
+    }
+    return null;
+  };
+
   // Check if vehicle is saved
-  const { data: savedStatus, error: savedStatusError } = useQuery({
-    queryKey: ["/api/saved-vehicles/check", vehicle.id],
-    enabled: !!localStorage.getItem('token'),
+  const { data: savedStatus } = useQuery({
+    queryKey: ["/api/vehicles", vehicle.id, "is-saved"],
+    enabled: !!getToken(),
     retry: false,
   });
 
@@ -39,7 +53,7 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/saved-vehicles/check", vehicle.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vehicles", vehicle.id, "is-saved"] });
       queryClient.invalidateQueries({ queryKey: ["/api/saved-vehicles"] });
       toast({
         title: "Veículo salvo",
@@ -61,7 +75,7 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
       return await apiRequest('DELETE', `/api/saved-vehicles/${vehicle.id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/saved-vehicles/check", vehicle.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vehicles", vehicle.id, "is-saved"] });
       queryClient.invalidateQueries({ queryKey: ["/api/saved-vehicles"] });
       toast({
         title: "Veículo removido",
