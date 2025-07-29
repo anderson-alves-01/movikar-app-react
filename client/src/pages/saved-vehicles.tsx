@@ -30,9 +30,34 @@ export default function SavedVehicles() {
 
   // Fetch saved vehicles
   const { data: savedVehicles, isLoading: vehiclesLoading, error: vehiclesError } = useQuery({
-    queryKey: ["/api/saved-vehicles", selectedCategory],
+    queryKey: ["/api/saved-vehicles"],
     enabled: !!getToken(),
     retry: false,
+    queryFn: async () => {
+      const token = getToken();
+      console.log('🔄 [SavedVehicles] Query function executing, token:', token ? 'present' : 'missing');
+      
+      if (!token) {
+        throw new Error('No authentication token available');
+      }
+      
+      const response = await fetch('/api/saved-vehicles', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('🚨 [SavedVehicles] API Error:', response.status, errorText);
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
+      }
+      
+      const data = await response.json();
+      console.log('✅ [SavedVehicles] API Success:', data);
+      return data;
+    },
   });
   
   console.log('🔍 [SavedVehicles] Query data:', {
@@ -40,14 +65,58 @@ export default function SavedVehicles() {
     isLoading: vehiclesLoading,
     error: vehiclesError,
     selectedCategory,
-    hasToken: !!getToken()
+    hasToken: !!getToken(),
+    tokenValue: getToken() ? 'Token presente' : 'Token ausente'
   });
+  
+  if (vehiclesError) {
+    console.error('🚨 [SavedVehicles] Query error:', vehiclesError);
+  }
+  
+  // Manual API test if data is undefined
+  if (!vehiclesLoading && !savedVehicles && !vehiclesError) {
+    console.log('🔧 [SavedVehicles] Data is undefined, testing API manually...');
+    const testAPI = async () => {
+      try {
+        const token = getToken();
+        if (token) {
+          const response = await fetch('/api/saved-vehicles', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await response.json();
+          console.log('🧪 [SavedVehicles] Manual API test result:', data);
+        }
+      } catch (error) {
+        console.error('🚨 [SavedVehicles] Manual API test error:', error);
+      }
+    };
+    testAPI();
+  }
 
-  // Fetch saved vehicle categories
+  // Fetch saved vehicle categories  
   const { data: categories, isLoading: categoriesLoading, error: categoriesError } = useQuery({
     queryKey: ["/api/saved-vehicles/categories"],
     enabled: !!getToken(),
     retry: false,
+    queryFn: async () => {
+      const token = getToken();
+      if (!token) {
+        throw new Error('No authentication token available');
+      }
+      
+      const response = await fetch('/api/saved-vehicles/categories', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+      }
+      
+      return response.json();
+    },
   });
 
   const isLoading = vehiclesLoading || categoriesLoading;
