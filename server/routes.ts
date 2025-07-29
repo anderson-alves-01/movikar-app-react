@@ -1463,10 +1463,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/saved-vehicles/check/:vehicleId", authenticateToken, async (req, res) => {
     try {
       const vehicleId = parseInt(req.params.vehicleId);
+      console.log(`🔍 [API] Checking if vehicle ${vehicleId} is saved for user ${req.user!.id}`);
       const isSaved = await storage.isVehicleSaved(req.user!.id, vehicleId);
+      console.log(`✅ [API] Vehicle ${vehicleId} saved status: ${isSaved}`);
       res.json({ isSaved });
     } catch (error) {
-      console.error("Check saved vehicle error:", error);
+      console.error("❌ [API] Check saved vehicle error:", error);
       res.status(500).json({ message: "Falha ao verificar veículo salvo" });
     }
   });
@@ -1474,16 +1476,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/saved-vehicles", authenticateToken, async (req, res) => {
     try {
       const { vehicleId, category, notes } = req.body;
+      console.log(`🚀 [API] Saving vehicle ${vehicleId} for user ${req.user!.id}`, { vehicleId, category, notes });
       
       // Check if vehicle exists
       const vehicle = await storage.getVehicle(vehicleId);
       if (!vehicle) {
+        console.log(`❌ [API] Vehicle ${vehicleId} not found`);
         return res.status(404).json({ message: "Veículo não encontrado" });
       }
 
       // Check if already saved
       const existing = await storage.getSavedVehicle(req.user!.id, vehicleId);
       if (existing) {
+        console.log(`⚠️ [API] Vehicle ${vehicleId} already saved for user ${req.user!.id}`);
         return res.status(400).json({ message: "Veículo já está salvo" });
       }
 
@@ -1495,9 +1500,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       const savedVehicle = await storage.saveVehicle(saveData);
+      console.log(`✅ [API] Vehicle ${vehicleId} saved successfully:`, savedVehicle);
       res.status(201).json(savedVehicle);
     } catch (error) {
-      console.error("Save vehicle error:", error);
+      console.error("❌ [API] Save vehicle error:", error);
       res.status(400).json({ message: "Falha ao salvar veículo" });
     }
   });
@@ -1528,15 +1534,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/saved-vehicles/:vehicleId", authenticateToken, async (req, res) => {
     try {
       const vehicleId = parseInt(req.params.vehicleId);
+      console.log(`🗑️ [API] Removing saved vehicle ${vehicleId} for user ${req.user!.id}`);
       const deleted = await storage.removeSavedVehicle(req.user!.id, vehicleId);
       
       if (!deleted) {
+        console.log(`❌ [API] Saved vehicle ${vehicleId} not found for user ${req.user!.id}`);
         return res.status(404).json({ message: "Veículo salvo não encontrado" });
       }
       
+      console.log(`✅ [API] Vehicle ${vehicleId} removed successfully`);
       res.status(204).send();
     } catch (error) {
-      console.error("Remove saved vehicle error:", error);
+      console.error("❌ [API] Remove saved vehicle error:", error);
       res.status(500).json({ message: "Falha ao remover veículo salvo" });
     }
   });

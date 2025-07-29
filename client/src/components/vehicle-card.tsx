@@ -25,21 +25,33 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
   const getToken = () => {
     try {
       const authStorage = localStorage.getItem('auth-storage');
+      console.log('🔍 [VehicleCard] Auth storage raw:', authStorage);
       if (authStorage) {
         const authData = JSON.parse(authStorage);
-        return authData.state?.token || authData.token;
+        console.log('🔍 [VehicleCard] Auth data parsed:', authData);
+        const token = authData.state?.token || authData.token;
+        console.log('🔍 [VehicleCard] Token extracted:', token ? 'Present' : 'Missing');
+        return token;
       }
     } catch (error) {
-      console.error('Error parsing auth token:', error);
+      console.error('❌ [VehicleCard] Error parsing auth token:', error);
     }
+    console.log('❌ [VehicleCard] No token found');
     return null;
   };
 
   // Check if vehicle is saved
-  const { data: savedStatus } = useQuery({
+  const { data: savedStatus, error: savedError, isLoading: savedLoading } = useQuery({
     queryKey: ["/api/saved-vehicles/check", vehicle.id],
     enabled: !!getToken(),
     retry: false,
+  });
+  
+  console.log(`🔍 [VehicleCard] Vehicle ${vehicle.id} saved status:`, {
+    data: savedStatus,
+    error: savedError,
+    loading: savedLoading,
+    hasToken: !!getToken()
   });
 
   const isSaved = savedStatus?.isSaved || false;
@@ -47,10 +59,13 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
   // Save vehicle mutation
   const saveVehicleMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest('POST', '/api/saved-vehicles', {
+      console.log(`🚀 [VehicleCard] Saving vehicle ${vehicle.id}...`);
+      const result = await apiRequest('POST', '/api/saved-vehicles', {
         vehicleId: vehicle.id,
         category: 'Geral'
       });
+      console.log('✅ [VehicleCard] Save result:', result);
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/saved-vehicles/check", vehicle.id] });
@@ -61,6 +76,7 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
       });
     },
     onError: (error: any) => {
+      console.error('❌ [VehicleCard] Save error:', error);
       toast({
         title: "Erro ao salvar",
         description: error.message || "Não foi possível salvar o veículo",
@@ -72,7 +88,10 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
   // Remove saved vehicle mutation
   const removeSavedVehicleMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest('DELETE', `/api/saved-vehicles/${vehicle.id}`);
+      console.log(`🗑️ [VehicleCard] Removing vehicle ${vehicle.id}...`);
+      const result = await apiRequest('DELETE', `/api/saved-vehicles/${vehicle.id}`);
+      console.log('✅ [VehicleCard] Remove result:', result);
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/saved-vehicles/check", vehicle.id] });
@@ -83,6 +102,7 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
       });
     },
     onError: (error: any) => {
+      console.error('❌ [VehicleCard] Remove error:', error);
       toast({
         title: "Erro ao remover",
         description: error.message || "Não foi possível remover o veículo",
@@ -95,7 +115,11 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
     e.preventDefault();
     e.stopPropagation();
     
-    if (!localStorage.getItem('token')) {
+    const token = getToken();
+    console.log(`🔖 [VehicleCard] Save toggle clicked for vehicle ${vehicle.id}, isSaved: ${isSaved}, hasToken: ${!!token}`);
+    
+    if (!token) {
+      console.log('❌ [VehicleCard] No token, redirecting to login');
       toast({
         title: "Login necessário",
         description: "Você precisa estar logado para salvar veículos",
@@ -105,8 +129,10 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
     }
 
     if (isSaved) {
+      console.log('🗑️ [VehicleCard] Removing from saved...');
       removeSavedVehicleMutation.mutate();
     } else {
+      console.log('💾 [VehicleCard] Adding to saved...');
       saveVehicleMutation.mutate();
     }
   };
