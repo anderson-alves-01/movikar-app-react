@@ -226,31 +226,45 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
+  console.log("🔑 Authentication attempt - Token:", token ? "Present" : "Missing");
+
   if (!token) {
+    console.log("❌ No token provided");
     return res.status(401).json({ message: 'Token de acesso obrigatório' });
   }
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: number };
+    console.log("🔓 Token decoded - User ID:", decoded.userId);
+    
     const user = await storage.getUser(decoded.userId);
     if (!user) {
+      console.log("❌ User not found for ID:", decoded.userId);
       return res.status(403).json({ message: 'Token inválido' });
     }
+    
+    console.log("✅ User authenticated:", user.email, "Role:", user.role);
     req.user = user;
     next();
   } catch (error) {
+    console.log("❌ Token verification failed:", error);
     return res.status(403).json({ message: 'Token inválido' });
   }
 };
 
 // Admin authentication middleware
 const requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
+  console.log("🔐 RequireAdmin middleware - User:", req.user?.email, "Role:", req.user?.role);
+  
   if (!req.user) {
+    console.log("❌ RequireAdmin - No user found");
     return res.status(401).json({ error: 'Usuário não autenticado' });
   }
   if (req.user.role !== 'admin') {
+    console.log("❌ RequireAdmin - User is not admin:", req.user.role);
     return res.status(403).json({ error: 'Acesso negado: privilégios de administrador necessários' });
   }
+  console.log("✅ RequireAdmin - Admin access granted");
   next();
 };
 

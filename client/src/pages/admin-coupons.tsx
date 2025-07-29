@@ -22,7 +22,22 @@ export default function AdminCouponsPage() {
   
   // Debug authentication state
   console.log("Admin Coupons Page - User:", user);
-  console.log("Admin Coupons Page - Token:", localStorage.getItem('token'));
+  console.log("Admin Coupons Page - Auth Storage:", localStorage.getItem('auth-storage'));
+  
+  const getAuthToken = () => {
+    try {
+      const authStorage = localStorage.getItem('auth-storage');
+      if (authStorage) {
+        const authData = JSON.parse(authStorage);
+        return authData.state?.token || authData.token;
+      }
+    } catch (error) {
+      console.error('Error parsing auth token:', error);
+    }
+    return null;
+  };
+  
+  console.log("Admin Coupons Page - Token:", getAuthToken());
   const queryClient = useQueryClient();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
@@ -57,7 +72,9 @@ export default function AdminCouponsPage() {
   const { data: couponsData, isLoading, error } = useQuery({
     queryKey: ['/api/admin/coupons'],
     queryFn: async () => {
+      console.log("🎫 Fetching coupons with user:", user?.email, "role:", user?.role);
       const response = await apiRequest('GET', '/api/admin/coupons');
+      console.log("🎫 Coupons response:", response);
       return response;
     },
     retry: false,
