@@ -9,6 +9,20 @@ import { BookmarkCheck, Search, Filter, Car, Clock, Heart, Plus } from "lucide-r
 import VehicleCard from "@/components/vehicle-card";
 import { Loading } from "@/components/ui/loading";
 
+// Helper function to get token from localStorage
+const getToken = () => {
+  try {
+    const authStorage = localStorage.getItem('auth-storage');
+    if (authStorage) {
+      const authData = JSON.parse(authStorage);
+      return authData.state?.token || authData.token;
+    }
+  } catch (error) {
+    console.error('Error parsing auth token:', error);
+  }
+  return null;
+};
+
 export default function SavedVehicles() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -16,14 +30,14 @@ export default function SavedVehicles() {
   // Fetch saved vehicles
   const { data: savedVehicles, isLoading: vehiclesLoading, error: vehiclesError } = useQuery({
     queryKey: ["/api/saved-vehicles", selectedCategory],
-    enabled: !!localStorage.getItem('token'),
+    enabled: !!getToken(),
     retry: false,
   });
 
   // Fetch saved vehicle categories
   const { data: categories, isLoading: categoriesLoading, error: categoriesError } = useQuery({
     queryKey: ["/api/saved-vehicles/categories"],
-    enabled: !!localStorage.getItem('token'),
+    enabled: !!getToken(),
     retry: false,
   });
 
@@ -43,7 +57,10 @@ export default function SavedVehicles() {
   const allCategories = ["all", ...(Array.isArray(categories) ? categories : [])];
 
   // Check if user is not authenticated
-  if (!localStorage.getItem('token')) {
+  const token = getToken();
+  console.log('Saved Vehicles - Token:', token);
+  
+  if (!token) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
