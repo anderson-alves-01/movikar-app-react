@@ -22,9 +22,10 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
   const { toast } = useToast();
 
   // Check if vehicle is saved
-  const { data: savedStatus } = useQuery({
+  const { data: savedStatus, error: savedStatusError } = useQuery({
     queryKey: ["/api/saved-vehicles/check", vehicle.id],
     enabled: !!localStorage.getItem('token'),
+    retry: false,
   });
 
   const isSaved = savedStatus?.isSaved || false;

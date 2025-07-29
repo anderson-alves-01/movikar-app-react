@@ -14,28 +14,62 @@ export default function SavedVehicles() {
   const [selectedCategory, setSelectedCategory] = useState("all");
 
   // Fetch saved vehicles
-  const { data: savedVehicles, isLoading: vehiclesLoading } = useQuery({
+  const { data: savedVehicles, isLoading: vehiclesLoading, error: vehiclesError } = useQuery({
     queryKey: ["/api/saved-vehicles", selectedCategory],
+    enabled: !!localStorage.getItem('token'),
+    retry: false,
   });
 
   // Fetch saved vehicle categories
-  const { data: categories, isLoading: categoriesLoading } = useQuery({
+  const { data: categories, isLoading: categoriesLoading, error: categoriesError } = useQuery({
     queryKey: ["/api/saved-vehicles/categories"],
+    enabled: !!localStorage.getItem('token'),
+    retry: false,
   });
 
   const isLoading = vehiclesLoading || categoriesLoading;
 
-  const filteredVehicles = (savedVehicles || []).filter((saved: any) => {
-    const vehicle = saved.vehicle;
+  const filteredVehicles = Array.isArray(savedVehicles) ? savedVehicles.filter((saved: any) => {
+    const vehicle = saved?.vehicle;
+    if (!vehicle) return false;
     const searchLower = searchQuery.toLowerCase();
     return (
-      vehicle.brand.toLowerCase().includes(searchLower) ||
-      vehicle.model.toLowerCase().includes(searchLower) ||
-      vehicle.location.toLowerCase().includes(searchLower)
+      vehicle.brand?.toLowerCase().includes(searchLower) ||
+      vehicle.model?.toLowerCase().includes(searchLower) ||
+      vehicle.location?.toLowerCase().includes(searchLower)
     );
-  });
+  }) : [];
 
-  const allCategories = ["all", ...(categories || [])];
+  const allCategories = ["all", ...(Array.isArray(categories) ? categories : [])];
+
+  // Check if user is not authenticated
+  if (!localStorage.getItem('token')) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Card className="text-center py-12">
+            <CardContent>
+              <div className="flex flex-col items-center">
+                <BookmarkCheck className="w-16 h-16 text-gray-300 mb-4" />
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                  Login necessário
+                </h3>
+                <p className="text-gray-500 mb-6 max-w-md">
+                  Você precisa estar logado para ver seus veículos salvos.
+                </p>
+                <Button 
+                  onClick={() => window.location.href = '/auth'}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  Fazer Login
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -64,7 +98,7 @@ export default function SavedVehicles() {
           </p>
         </div>
 
-        {(savedVehicles || []).length === 0 ? (
+        {filteredVehicles.length === 0 && !savedVehicles ? (
           <Card className="text-center py-12">
             <CardContent>
               <div className="flex flex-col items-center">
@@ -106,10 +140,10 @@ export default function SavedVehicles() {
                 <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
                   <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-6">
                     <TabsTrigger value="all" className="text-xs">
-                      Todos ({(savedVehicles || []).length})
+                      Todos ({Array.isArray(savedVehicles) ? savedVehicles.length : 0})
                     </TabsTrigger>
-                    {(categories || []).map((category: string) => {
-                      const count = (savedVehicles || []).filter((s: any) => s.category === category).length;
+                    {Array.isArray(categories) && categories.map((category: string) => {
+                      const count = Array.isArray(savedVehicles) ? savedVehicles.filter((s: any) => s.category === category).length : 0;
                       return (
                         <TabsTrigger key={category} value={category} className="text-xs">
                           {category} ({count})
@@ -129,7 +163,7 @@ export default function SavedVehicles() {
                     <BookmarkCheck className="w-8 h-8 text-blue-600" />
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-600">Total Salvos</p>
-                      <p className="text-2xl font-bold text-gray-900">{(savedVehicles || []).length}</p>
+                      <p className="text-2xl font-bold text-gray-900">{Array.isArray(savedVehicles) ? savedVehicles.length : 0}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -140,7 +174,7 @@ export default function SavedVehicles() {
                     <Filter className="w-8 h-8 text-green-600" />
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-600">Categorias</p>
-                      <p className="text-2xl font-bold text-gray-900">{(categories || []).length}</p>
+                      <p className="text-2xl font-bold text-gray-900">{Array.isArray(categories) ? categories.length : 0}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -152,7 +186,7 @@ export default function SavedVehicles() {
                       <div className="ml-4">
                         <p className="text-sm font-medium text-gray-600">Último salvo</p>
                         <p className="text-sm font-bold text-gray-900">
-                          {(savedVehicles || []).length > 0 ? "Hoje" : "Nenhum"}
+                          {Array.isArray(savedVehicles) && savedVehicles.length > 0 ? "Hoje" : "Nenhum"}
                         </p>
                       </div>
                     </div>
