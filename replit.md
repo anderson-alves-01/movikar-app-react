@@ -128,6 +128,14 @@ Preferred communication style: Simple, everyday language.
 ✓ Sistema de cadastro mais flexível e amigável ao usuário
 ✓ Marcas carregadas dinamicamente do banco de dados
 
+### January 29, 2025 - Correção de Erro de Busca de Veículos - RESOLVIDO ✅
+✓ Identificado problema: Função UNACCENT não disponível no PostgreSQL
+✓ Solução aplicada: Instalada extensão `unaccent` no banco de dados
+✓ Erro 500 eliminado: Buscas por localização funcionando normalmente
+✓ API testada: Endpoints /api/vehicles retornando status 200
+✓ Funcionalidade validada: Filtros de busca operacionais
+✓ Sistema de pesquisa totalmente funcional para todos os 31 veículos
+
 ### January 28, 2025 - Base de Dados Completa com 31 Veículos
 ✓ Criada base de dados diversificada com 3 categorias de preços:
 
