@@ -37,7 +37,7 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
 
   // Check if vehicle is saved
   const { data: savedStatus } = useQuery({
-    queryKey: ["/api/vehicles", vehicle.id, "is-saved"],
+    queryKey: ["/api/saved-vehicles/check", vehicle.id],
     enabled: !!getToken(),
     retry: false,
   });
@@ -53,7 +53,7 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/vehicles", vehicle.id, "is-saved"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/saved-vehicles/check", vehicle.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/saved-vehicles"] });
       toast({
         title: "Veículo salvo",
@@ -75,7 +75,7 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
       return await apiRequest('DELETE', `/api/saved-vehicles/${vehicle.id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/vehicles", vehicle.id, "is-saved"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/saved-vehicles/check", vehicle.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/saved-vehicles"] });
       toast({
         title: "Veículo removido",
