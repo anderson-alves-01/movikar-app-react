@@ -2045,14 +2045,31 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCoupon(data: InsertCoupon): Promise<Coupon> {
-    const [coupon] = await db.insert(coupons).values(data).returning();
+    // Convert date strings to Date objects for proper database insertion
+    const normalizedData = {
+      ...data,
+      validFrom: data.validFrom ? new Date(data.validFrom) : new Date(),
+      validUntil: new Date(data.validUntil),
+    };
+    
+    console.log("💾 Creating coupon with normalized data:", normalizedData);
+    
+    const [coupon] = await db.insert(coupons).values(normalizedData).returning();
     return coupon;
   }
 
   async updateCoupon(id: number, data: Partial<InsertCoupon>): Promise<Coupon | undefined> {
+    // Convert date strings to Date objects if they exist
+    const normalizedData = {
+      ...data,
+      ...(data.validFrom && { validFrom: new Date(data.validFrom) }),
+      ...(data.validUntil && { validUntil: new Date(data.validUntil) }),
+      updatedAt: new Date()
+    };
+    
     const [coupon] = await db
       .update(coupons)
-      .set({ ...data, updatedAt: new Date() })
+      .set(normalizedData)
       .where(eq(coupons.id, id))
       .returning();
     return coupon;

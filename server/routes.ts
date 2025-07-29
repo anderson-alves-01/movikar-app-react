@@ -2860,6 +2860,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/admin/coupons", authenticateToken, requireAdmin, async (req, res) => {
     try {
+      console.log("📝 Creating coupon with data:", req.body);
+      console.log("👤 Created by user:", req.user!.id);
+      
       const couponData = {
         ...req.body,
         createdBy: req.user!.id,
@@ -2867,11 +2870,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isActive: true,
       };
       
+      console.log("📝 Final coupon data:", couponData);
       const coupon = await storage.createCoupon(couponData);
+      console.log("✅ Coupon created successfully:", coupon);
+      
       res.status(201).json(coupon);
     } catch (error) {
-      console.error("Error creating coupon:", error);
-      res.status(500).json({ message: "Erro ao criar cupom" });
+      console.error("❌ Error creating coupon:", error);
+      res.status(500).json({ message: `Erro ao criar cupom: ${error.message}` });
     }
   });
 
