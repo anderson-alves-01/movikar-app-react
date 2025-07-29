@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ interface VehicleCardProps {
 
 export default function VehicleCard({ vehicle }: VehicleCardProps) {
   const [isFavorite, setIsFavorite] = useState(false);
+  const [, navigate] = useLocation();
   const { addVehicle, removeVehicle, isVehicleInComparison, vehicles } = useComparisonStore();
 
   const formatPrice = (price: string) => {
@@ -41,8 +42,11 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
     ? vehicle.images[0] 
     : "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=300";
 
-  const handleImageClick = () => {
-    window.location.href = `/vehicle/${vehicle.id}`;
+  const handleImageClick = (e: React.MouseEvent) => {
+    console.log('Image clicked, navigating to vehicle:', vehicle.id);
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/vehicle/${vehicle.id}`);
   };
 
   return (
