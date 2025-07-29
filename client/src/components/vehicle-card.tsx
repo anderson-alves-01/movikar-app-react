@@ -58,8 +58,8 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
           className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
         />
         {/* Ver mais overlay on hover */}
-        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center pointer-events-none">
-          <div className="bg-white text-gray-800 px-4 py-2 rounded-lg font-medium opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center pointer-events-none">
+          <div className="bg-white bg-opacity-90 backdrop-blur-sm text-gray-800 px-3 py-1.5 rounded-lg font-medium text-sm opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 shadow-lg">
             Ver mais detalhes
           </div>
         </div>
