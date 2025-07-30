@@ -7,19 +7,9 @@ import { sanitizeInput, createRateLimit } from "./middleware/validation";
 
 const app = express();
 
-// Security Headers
+// Security Headers - CSP disabled for development to allow Stripe.js
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:", "blob:"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      connectSrc: ["'self'", "https://api.stripe.com"],
-      frameSrc: ["'self'", "https://js.stripe.com"]
-    },
-  },
+  contentSecurityPolicy: false, // Disabled for Stripe.js compatibility
   hsts: {
     maxAge: 31536000,
     includeSubDomains: true,
