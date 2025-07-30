@@ -109,7 +109,7 @@ export default function AdminDashboard() {
       title: "Cupons de Desconto",
       description: "Criar e gerenciar cupons promocionais para a plataforma",
       icon: Ticket,
-      href: "/admin-coupons",
+      href: "/admin/coupons",
       color: "bg-orange-500",
       stats: "Cupons ativos",
       priority: false
@@ -139,10 +139,17 @@ export default function AdminDashboard() {
               <h1 className="text-3xl font-bold text-gray-900">Painel Administrativo</h1>
               <p className="text-gray-600 mt-2">Bem-vindo, {user.name}</p>
             </div>
-            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-              <Shield className="h-4 w-4 mr-1" />
-              Administrador
-            </Badge>
+            <div className="flex gap-2 items-center">
+              <Link href="/">
+                <Button variant="ghost" size="sm">
+                  🏠 Ir para o Site
+                </Button>
+              </Link>
+              <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                <Shield className="h-4 w-4 mr-1" />
+                Administrador
+              </Badge>
+            </div>
           </div>
         </div>
 

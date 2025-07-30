@@ -1156,14 +1156,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/vehicles", authenticateToken, validateVehicle, handleValidationErrors, async (req, res) => {
     try {
+      const userId = req.user!.id;
+      
+      // Check subscription limits FIRST
+      const limits = await storage.checkUserSubscriptionLimits(userId);
+      
+      if (!limits.canCreateVehicle) {
+        return res.status(403).json({ 
+          message: `Limite de veículos atingido. Você pode criar até ${limits.maxVehicles} veículos com seu plano atual. Considere fazer upgrade da sua assinatura.`,
+          currentVehicles: limits.currentVehicles,
+          maxVehicles: limits.maxVehicles
+        });
+      }
+      
       const vehicleData = insertVehicleSchema.parse({
         ...req.body,
-        ownerId: req.user!.id,
+        ownerId: userId,
         status: "pending", // New vehicles start as pending for approval
       });
 
       // Log para auditoria de dados válidos
-      console.log(`✅ Veículo validado: ${vehicleData.brand} ${vehicleData.model} (usuário: ${req.user!.id})`);
+      console.log(`✅ Veículo validado: ${vehicleData.brand} ${vehicleData.model} (usuário: ${userId})`);
 
       const vehicle = await storage.createVehicle(vehicleData);
       res.status(201).json(vehicle);

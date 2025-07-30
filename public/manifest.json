@@ -1,0 +1,12 @@
+{
+  "name": "CarShare - Aluguel de Carros",
+  "short_name": "CarShare",
+  "description": "Plataforma de aluguel de carros entre pessoas",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#2563eb",
+  "background_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "categories": ["business", "finance"],
+  "icons": []
+}

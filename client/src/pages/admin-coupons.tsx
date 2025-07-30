@@ -420,7 +420,7 @@ export default function AdminCouponsPage() {
                         
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-gray-600">Usos:</span>
-                          <span>{coupon.usedCount || 0}/{coupon.maxUses}</span>
+                          <span>{(coupon.usedCount ?? 0)}/{coupon.maxUses}</span>
                         </div>
                         
                         <div className="flex items-center justify-between text-sm">
