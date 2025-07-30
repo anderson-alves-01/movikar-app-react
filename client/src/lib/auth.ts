@@ -1,6 +1,51 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AuthState, AuthUser } from '@/types';
+import { queryClient } from './queryClient';
+
+// Verificar se o usuário está autenticado
+export async function checkAuth() {
+  try {
+    const response = await fetch('/api/auth/check', {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      console.log('Auth check failed:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+    console.log('Auth check success:', data.user?.email);
+    return data.user;
+  } catch (error) {
+    console.error('Auth check error:', error);
+    return null;
+  }
+}
+
+export async function login(email: string, password: string) {
+  console.log('Attempting login for:', email);
+
+  const response = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ email, password }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    console.error('Login failed:', error.message);
+    throw new Error(error.message || 'Login failed');
+  }
+
+  const data = await response.json();
+  console.log('Login successful for:', data.user?.email);
+  queryClient.invalidateQueries();
+  return data;
+}
 
 interface AuthStore extends AuthState {
   setAuth: (user: AuthUser, token: string) => void;
@@ -34,7 +79,7 @@ export const useAuthStore = create<AuthStore>()(
           const response = await fetch('/api/auth/user', {
             credentials: 'include'
           });
-          
+
           if (response.ok) {
             const userData = await response.json();
             console.log('🔄 Refreshed user data - PIX field:', userData.pix);
@@ -45,7 +90,7 @@ export const useAuthStore = create<AuthStore>()(
               method: 'POST',
               credentials: 'include',
             });
-            
+
             if (refreshResponse.ok) {
               const { user } = await refreshResponse.json();
               set({ user });
@@ -83,14 +128,14 @@ export const makeAuthenticatedRequest = async (url: string, options: RequestInit
       ...options.headers,
     },
   });
-  
+
   // Handle token refresh if needed
   if (response.status === 401) {
     const refreshResponse = await fetch('/api/auth/refresh', {
       method: 'POST',
       credentials: 'include',
     });
-    
+
     if (refreshResponse.ok) {
       // Retry original request
       return fetch(url, {
@@ -107,6 +152,6 @@ export const makeAuthenticatedRequest = async (url: string, options: RequestInit
       window.location.href = '/auth';
     }
   }
-  
+
   return response;
 };

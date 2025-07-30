@@ -37,12 +37,12 @@ export default function Auth() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Authentication failed');
       }
-      
+
       return response.json();
     },
     onSuccess: (data) => {
@@ -53,7 +53,7 @@ export default function Auth() {
           ? "Bem-vindo de volta!" 
           : "Sua conta foi criada com sucesso.",
       });
-      
+
       // Check if there's a return URL saved (from subscription page or other protected pages)
       const returnUrl = localStorage.getItem('returnUrl');
       if (returnUrl) {

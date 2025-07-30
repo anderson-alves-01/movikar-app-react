@@ -70,7 +70,7 @@ export default function SubscriptionPlans() {
     },
     onError: (error: Error) => {
       console.error("Subscription error:", error);
-      
+
       // Check if it's an authentication error
       if (error.message && error.message.includes('401')) {
         toast({
@@ -78,19 +78,19 @@ export default function SubscriptionPlans() {
           description: "Sua sessão expirou. Faça login novamente.",
           variant: "destructive",
         });
-        
+
         // Clear expired token and redirect to login
         localStorage.removeItem('auth-storage');
-        
+
         // Save current page as return URL for after login
         localStorage.setItem('returnUrl', '/subscription-plans');
-        
+
         setTimeout(() => {
           window.location.href = '/auth';
         }, 2000);
         return;
       }
-      
+
       toast({
         title: "Erro",
         description: error.message || "Erro ao criar assinatura",
@@ -110,7 +110,7 @@ export default function SubscriptionPlans() {
         description: "Você precisa estar logado para assinar um plano.",
         variant: "destructive",
       });
-      
+
       // Save current page as return URL for after login
       localStorage.setItem('returnUrl', '/subscription-plans');
       window.location.href = '/auth';
@@ -151,10 +151,10 @@ export default function SubscriptionPlans() {
   const calculatePrice = (basePlan: string, vehicleCount: number, isAnnual: boolean) => {
     const basePrice = basePlan === 'essencial' ? 29.90 : 59.90;
     const pricePerVehicle = basePlan === 'essencial' ? 5.99 : 9.99; // Per vehicle per month
-    
+
     const monthlyPrice = basePrice + (pricePerVehicle * Math.max(0, vehicleCount - 2)); // First 2 vehicles included in base price
     const annualPrice = monthlyPrice * 12 * 0.8; // 20% discount for annual
-    
+
     return isAnnual ? annualPrice : monthlyPrice;
   };
 
@@ -221,7 +221,7 @@ export default function SubscriptionPlans() {
       if (plan.name === 'essencial' || plan.name === 'plus') {
         const monthlyPrice = calculatePrice(plan.name, vehicleCount, false);
         const annualPrice = calculatePrice(plan.name, vehicleCount, true);
-        
+
         return {
           ...plan,
           monthlyPrice: monthlyPrice.toFixed(2),
@@ -269,23 +269,23 @@ export default function SubscriptionPlans() {
   const getDisplayPrice = (plan: SubscriptionPlan) => {
     const price = getPrice(plan);
     if (plan.name === 'free') return 'Gratuito';
-    
+
     if (isAnnual) {
       const monthlyEquivalent = price / 12;
       return `R$ ${monthlyEquivalent.toFixed(2)}/mês`;
     }
-    
+
     return `R$ ${price.toFixed(2)}/mês`;
   };
 
   const getSavings = (plan: SubscriptionPlan) => {
     if (plan.name === 'free') return null;
-    
+
     const monthlyPrice = parseFloat(plan.monthlyPrice);
     const annualPrice = parseFloat(plan.annualPrice);
     const annualMonthlyPrice = monthlyPrice * 12;
     const savings = annualMonthlyPrice - annualPrice;
-    
+
     return savings > 0 ? savings : 0;
   };
 
@@ -362,7 +362,7 @@ export default function SubscriptionPlans() {
             .map((plan) => {
               const isCurrentPlan = currentPlan === plan.name;
               const savings = getSavings(plan);
-              
+
               return (
                 <Card
                   key={plan.id}
