@@ -231,15 +231,13 @@ declare global {
 
 // Authentication middleware
 const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
-  // Try to get token from cookies first, then fallback to Authorization header
-  let token = req.cookies?.token;
-  
-  if (!token) {
-    const authHeader = req.headers['authorization'];
-    token = authHeader && authHeader.split(' ')[1];
-  }
+  // Use ONLY httpOnly cookies for authentication - no Authorization header fallback
+  const token = req.cookies?.token;
 
   if (!token) {
+    // Clear any stale cookies if no token
+    res.clearCookie('token');
+    res.clearCookie('refreshToken');
     return res.status(401).json({ message: 'Token de acesso obrigatório' });
   }
 
@@ -248,13 +246,67 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
     
     const user = await storage.getUser(decoded.userId);
     if (!user) {
+      res.clearCookie('token');
+      res.clearCookie('refreshToken');
       return res.status(403).json({ message: 'Token inválido' });
     }
     
     req.user = user;
     next();
   } catch (error) {
-    return res.status(403).json({ message: 'Token inválido' });
+    if (error instanceof jwt.TokenExpiredError) {
+      // Try to refresh token from refreshToken cookie
+      const refreshToken = req.cookies?.refreshToken;
+      
+      if (!refreshToken) {
+        res.clearCookie('token');
+        res.clearCookie('refreshToken');
+        return res.status(401).json({ message: "Token expirado e refresh token não encontrado" });
+      }
+
+      try {
+        const decoded = jwt.verify(refreshToken, JWT_SECRET + '_refresh') as { userId: number };
+        const user = await storage.getUser(decoded.userId);
+        
+        if (!user) {
+          res.clearCookie('token');
+          res.clearCookie('refreshToken');
+          return res.status(401).json({ message: "Usuário não encontrado" });
+        }
+
+        // Generate new tokens
+        const newToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
+        const newRefreshToken = jwt.sign({ userId: user.id }, JWT_SECRET + '_refresh', { expiresIn: '7d' });
+
+        // Set new cookies with consistent settings for development
+        res.cookie('token', newToken, {
+          httpOnly: true,
+          secure: false, // Development mode
+          sameSite: 'lax',
+          maxAge: 15 * 60 * 1000
+        });
+
+        res.cookie('refreshToken', newRefreshToken, {
+          httpOnly: true,
+          secure: false, // Development mode
+          sameSite: 'lax',
+          maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        req.user = user;
+        next();
+      } catch (refreshError) {
+        console.error('Refresh token error:', refreshError);
+        res.clearCookie('token');
+        res.clearCookie('refreshToken');
+        return res.status(401).json({ message: "Refresh token inválido" });
+      }
+    } else {
+      console.error('Token verification error:', error);
+      res.clearCookie('token');
+      res.clearCookie('refreshToken');
+      return res.status(403).json({ message: 'Token inválido' });
+    }
   }
 };
 

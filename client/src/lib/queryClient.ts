@@ -12,28 +12,11 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  // Get token from localStorage with better error handling
-  let authToken = null;
-  
-  try {
-    const token = localStorage.getItem('auth-storage');
-    if (token) {
-      const authData = JSON.parse(token);
-      // Try multiple possible token locations
-      authToken = authData.state?.token || authData.token || authData.state?.user?.token;
-    }
-  } catch (error) {
-    console.error('Error parsing auth token:', error);
-  }
-
+  // Use only httpOnly cookies for authentication - no Authorization header
   const headers: Record<string, string> = {};
   
   if (data) {
     headers["Content-Type"] = "application/json";
-  }
-  
-  if (authToken) {
-    headers["Authorization"] = `Bearer ${authToken}`;
   }
 
   // Ensure proper baseURL for relative paths
@@ -43,7 +26,7 @@ export async function apiRequest(
     method,
     headers,
     body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
+    credentials: "include", // Only rely on cookies
   });
 
   // Handle 401 errors with automatic retry after token refresh
@@ -98,25 +81,8 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    // Get token from localStorage with better error handling
-    let authToken = null;
-    
-    try {
-      const token = localStorage.getItem('auth-storage');
-      if (token) {
-        const authData = JSON.parse(token);
-        // Try multiple possible token locations
-        authToken = authData.state?.token || authData.token || authData.state?.user?.token;
-      }
-    } catch (error) {
-      console.error('Error parsing auth token:', error);
-    }
-
+    // Use only httpOnly cookies for authentication - no Authorization header
     const headers: Record<string, string> = {};
-    
-    if (authToken) {
-      headers["Authorization"] = `Bearer ${authToken}`;
-    }
 
     // Ensure proper baseURL for queries
     const queryUrl = queryKey.join("/") as string;
@@ -124,7 +90,7 @@ export const getQueryFn: <T>(options: {
     
     const res = await fetch(fullQueryUrl, {
       headers,
-      credentials: "include",
+      credentials: "include", // Only rely on cookies
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {

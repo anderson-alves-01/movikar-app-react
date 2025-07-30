@@ -51,7 +51,7 @@ export default function SubscriptionPlans() {
   // Processar assinatura pendente quando user fizer login
   const processPendingSubscription = () => {
     const pendingSubscription = localStorage.getItem('pendingSubscription');
-    if (pendingSubscription && isAuthenticated) {
+    if (pendingSubscription && isAuthenticated && !authLoading) {
       try {
         const { planName, vehicleCount: savedVehicleCount } = JSON.parse(pendingSubscription);
         localStorage.removeItem('pendingSubscription');
@@ -64,15 +64,17 @@ export default function SubscriptionPlans() {
           description: `Processando sua assinatura do plano ${planName}`,
         });
         
-        // Executar a assinatura automaticamente
+        // Executar a assinatura automaticamente após garantir que a autenticação está completa
         setTimeout(() => {
-          setSelectedPlan(planName);
-          createSubscriptionMutation.mutate({
-            planName,
-            paymentMethod: isAnnual ? 'annual' : 'monthly',
-            vehicleCount: savedVehicleCount,
-          });
-        }, 1000);
+          if (isAuthenticated && !authLoading) {
+            setSelectedPlan(planName);
+            createSubscriptionMutation.mutate({
+              planName,
+              paymentMethod: isAnnual ? 'annual' : 'monthly',
+              vehicleCount: savedVehicleCount,
+            });
+          }
+        }, 2000); // Aumentado para 2 segundos para garantir que o estado de auth estabilize
         
       } catch (error) {
         localStorage.removeItem('pendingSubscription');

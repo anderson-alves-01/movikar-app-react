@@ -27,19 +27,35 @@ export function useAuth() {
         if (response.ok) {
           const userData = await response.json();
           setAuth(userData, '');
-        } else {
-          // Não há sessão válida, limpar storage local se existir
-          if (user) {
+        } else if (response.status === 401) {
+          // Tentar refresh automático se token expirou
+          try {
+            const refreshResponse = await fetch('/api/auth/refresh', {
+              method: 'POST',
+              credentials: 'include',
+            });
+
+            if (refreshResponse.ok) {
+              const refreshData = await refreshResponse.json();
+              setAuth(refreshData.user, '');
+            } else {
+              // Não há sessão válida, limpar storage local
+              clearAuth();
+              localStorage.removeItem('auth-storage');
+            }
+          } catch (refreshError) {
             clearAuth();
             localStorage.removeItem('auth-storage');
           }
-        }
-      } catch (error) {
-        // Em caso de erro, limpar dados locais
-        if (user) {
+        } else {
+          // Outros erros, limpar storage local
           clearAuth();
           localStorage.removeItem('auth-storage');
         }
+      } catch (error) {
+        // Em caso de erro de rede, limpar dados locais
+        clearAuth();
+        localStorage.removeItem('auth-storage');
       } finally {
         setLoading(false);
         setInitializing(false);
