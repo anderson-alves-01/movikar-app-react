@@ -135,12 +135,16 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "returnNull" }), // Return null instead of throwing to prevent loops
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      refetchOnMount: false, // Disable automatic refetch on mount
+      refetchOnMount: true, // Enable refetch on mount for better UX
       refetchOnReconnect: false, // Disable refetch on reconnect
-      staleTime: Infinity, // Never consider data stale to prevent background refetching
+      staleTime: 1000 * 60 * 2, // 2 minutes stale time
       gcTime: 1000 * 60 * 5, // 5 minutes cache time
-      retry: false,
-      enabled: false, // Disable all queries by default
+      retry: (failureCount, error) => {
+        // Don't retry on 401 errors to prevent loops
+        if (error?.message?.includes('401')) return false;
+        return failureCount < 2;
+      },
+      enabled: true, // Enable queries by default for better UX
     },
     mutations: {
       retry: false,

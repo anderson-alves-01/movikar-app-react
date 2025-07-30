@@ -30,7 +30,7 @@ export default function ProtectedRoute({
   }, [isAuthenticated, isLoading, initializing, requireAuth, redirectTo, setLocation]);
 
   // Show loading while checking authentication
-  if (isLoading || initializing) {
+  if (initializing) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center">

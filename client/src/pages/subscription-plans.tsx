@@ -46,10 +46,10 @@ export default function SubscriptionPlans() {
   const queryClient = useQueryClient();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
 
-  // Fetch subscription plans - only when authenticated
+  // Fetch subscription plans - always enabled (public data)
   const { data: plans = [], isLoading: plansLoading } = useQuery<SubscriptionPlan[]>({
     queryKey: ["/api/subscription-plans"],
-    enabled: isAuthenticated, // Only fetch when user is authenticated
+    enabled: true, // Public data, always fetch
   });
 
   // Disable user subscription fetch to prevent auth loops

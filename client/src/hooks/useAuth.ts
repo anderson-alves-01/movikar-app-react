@@ -11,56 +11,40 @@ export function useAuth() {
   // Verificar autenticação no carregamento inicial
   useEffect(() => {
     const checkAuthStatus = async () => {
-      // Se já temos um usuário no storage, verifica se o token ainda é válido
-      if (user) {
-        try {
-          setLoading(true);
-          
-          // Verificar token com o backend
-          const response = await fetch('/api/auth/user', {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
+      try {
+        setLoading(true);
+        
+        // Sempre verificar se existe uma sessão válida no backend
+        const response = await fetch('/api/auth/user', {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
 
-          if (response.ok) {
-            const userData = await response.json();
-            setAuth(userData, ''); // Token é httpOnly cookie
-          } else if (response.status === 401) {
-            // Token inválido, limpar autenticação
+        if (response.ok) {
+          const userData = await response.json();
+          setAuth(userData, '');
+          console.log('✅ Auth restored from server session:', userData.email);
+        } else {
+          // Não há sessão válida, limpar storage local se existir
+          if (user) {
+            console.log('🧹 Clearing invalid local auth data');
             clearAuth();
             localStorage.removeItem('auth-storage');
           }
-        } catch (error) {
-          console.error('Auth check failed:', error);
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        // Em caso de erro, limpar dados locais
+        if (user) {
           clearAuth();
           localStorage.removeItem('auth-storage');
-        } finally {
-          setLoading(false);
-          setInitializing(false);
         }
-      } else {
-        // Não tem usuário no storage, verificar se existe cookie de sessão
-        try {
-          const response = await fetch('/api/auth/user', {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
-
-          if (response.ok) {
-            const userData = await response.json();
-            setAuth(userData, '');
-          }
-        } catch (error) {
-          // Não há sessão válida, continuar como não autenticado
-        } finally {
-          setInitializing(false);
-        }
+      } finally {
+        setLoading(false);
+        setInitializing(false);
       }
     };
 
