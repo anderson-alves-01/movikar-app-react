@@ -37,6 +37,9 @@ import AdminCouponsPage from "@/pages/admin-coupons";
 import EarningsPage from "@/pages/earnings";
 import DebugPix from "@/pages/debug-pix";
 import SavedVehicles from "@/pages/saved-vehicles";
+import SubscriptionPlans from "@/pages/subscription-plans";
+import SubscriptionCheckout from "@/pages/subscription-checkout";
+import SubscriptionSuccess from "@/pages/subscription-success";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt, IOSInstallPrompt } from "@/components/InstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
@@ -78,6 +81,9 @@ function Router() {
       <Route path="/admin-coupons" component={AdminCouponsPage} />
       <Route path="/earnings" component={EarningsPage} />
       <Route path="/debug-pix" component={DebugPix} />
+      <Route path="/subscription-plans" component={SubscriptionPlans} />
+      <Route path="/subscription-checkout" component={SubscriptionCheckout} />
+      <Route path="/subscription-success" component={SubscriptionSuccess} />
       <Route component={NotFound} />
     </Switch>
   );

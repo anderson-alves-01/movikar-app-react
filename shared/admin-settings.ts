@@ -11,6 +11,10 @@ export interface AdminSettings {
   enablePixPayment: boolean;
   enablePixTransfer: boolean;
   pixTransferDescription: string;
+  // Subscription plan pricing
+  essentialPlanPrice: number;
+  plusPlanPrice: number;
+  annualDiscountPercentage: number;
   createdAt?: Date;
   updatedAt?: Date;
 }

@@ -1,5 +1,5 @@
 import { 
-  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity, adminSettings, savedVehicles, coupons,
+  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity, adminSettings, savedVehicles, coupons, subscriptionPlans, userSubscriptions,
   type User, type InsertUser, type Vehicle, type InsertVehicle, 
   type Booking, type InsertBooking, type Review, type InsertReview,
   type Message, type InsertMessage, type VehicleWithOwner, type BookingWithDetails,
@@ -10,7 +10,8 @@ import {
   type UserRewards, type InsertUserRewards, type RewardTransaction, type InsertRewardTransaction,
   type UserActivity, type InsertUserActivity, type AdminSettings, type InsertAdminSettings,
   type SavedVehicle, type InsertSavedVehicle, type UpdateSavedVehicle,
-  type Coupon, type InsertCoupon
+  type Coupon, type InsertCoupon, type SubscriptionPlan, type InsertSubscriptionPlan,
+  type UserSubscription, type InsertUserSubscription
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, and, gte, lte, desc, asc, or, like, ilike, sql, lt, ne, inArray, not } from "drizzle-orm";
@@ -172,6 +173,24 @@ export interface IStorage {
   // Save for Later methods
   getSavedVehicles(userId: number, category?: string): Promise<(SavedVehicle & { vehicle: Vehicle })[]>;
   getSavedVehicle(userId: number, vehicleId: number): Promise<SavedVehicle | undefined>;
+
+  // Subscription Plans methods
+  getAllSubscriptionPlans(): Promise<SubscriptionPlan[]>;
+  getSubscriptionPlan(id: number): Promise<SubscriptionPlan | undefined>;
+  getSubscriptionPlanByName(name: string): Promise<SubscriptionPlan | undefined>;
+  createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan>;
+  updateSubscriptionPlan(id: number, plan: Partial<InsertSubscriptionPlan>): Promise<SubscriptionPlan | undefined>;
+  deleteSubscriptionPlan(id: number): Promise<boolean>;
+
+  // User Subscriptions methods
+  getUserSubscription(userId: number): Promise<UserSubscription | undefined>;
+  getUserSubscriptionWithPlan(userId: number): Promise<(UserSubscription & { plan: SubscriptionPlan }) | undefined>;
+  createUserSubscription(subscription: InsertUserSubscription): Promise<UserSubscription>;
+  updateUserSubscription(id: number, subscription: Partial<InsertUserSubscription>): Promise<UserSubscription | undefined>;
+  cancelUserSubscription(userId: number): Promise<UserSubscription | undefined>;
+  upgradeUserSubscription(userId: number, newPlanId: number): Promise<UserSubscription | undefined>;
+  checkUserSubscriptionLimits(userId: number): Promise<{ canCreateVehicle: boolean; currentVehicles: number; maxVehicles: number; highlightsAvailable: number }>;
+  useHighlight(userId: number, vehicleId: number, highlightType: string): Promise<boolean>;
   saveVehicle(data: InsertSavedVehicle): Promise<SavedVehicle>;
   updateSavedVehicle(id: number, data: UpdateSavedVehicle): Promise<SavedVehicle | undefined>;
   removeSavedVehicle(userId: number, vehicleId: number): Promise<boolean>;
@@ -2140,6 +2159,183 @@ export class DatabaseStorage implements IStorage {
       .where(eq(coupons.id, couponId));
 
     return { coupon, discountAmount: 0 }; // Discount amount would be calculated during validation
+  }
+
+  // Subscription Plans methods
+  async getAllSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+    return await db
+      .select()
+      .from(subscriptionPlans)
+      .where(eq(subscriptionPlans.isActive, true))
+      .orderBy(asc(subscriptionPlans.sortOrder));
+  }
+
+  async getSubscriptionPlan(id: number): Promise<SubscriptionPlan | undefined> {
+    const [plan] = await db
+      .select()
+      .from(subscriptionPlans)
+      .where(eq(subscriptionPlans.id, id));
+    return plan || undefined;
+  }
+
+  async getSubscriptionPlanByName(name: string): Promise<SubscriptionPlan | undefined> {
+    const [plan] = await db
+      .select()
+      .from(subscriptionPlans)
+      .where(eq(subscriptionPlans.name, name));
+    return plan || undefined;
+  }
+
+  async createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan> {
+    const [newPlan] = await db
+      .insert(subscriptionPlans)
+      .values(plan)
+      .returning();
+    return newPlan;
+  }
+
+  async updateSubscriptionPlan(id: number, plan: Partial<InsertSubscriptionPlan>): Promise<SubscriptionPlan | undefined> {
+    const [updatedPlan] = await db
+      .update(subscriptionPlans)
+      .set({ ...plan, updatedAt: new Date() })
+      .where(eq(subscriptionPlans.id, id))
+      .returning();
+    return updatedPlan || undefined;
+  }
+
+  async deleteSubscriptionPlan(id: number): Promise<boolean> {
+    const result = await db
+      .delete(subscriptionPlans)
+      .where(eq(subscriptionPlans.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  // User Subscriptions methods
+  async getUserSubscription(userId: number): Promise<UserSubscription | undefined> {
+    const [subscription] = await db
+      .select()
+      .from(userSubscriptions)
+      .where(eq(userSubscriptions.userId, userId));
+    return subscription || undefined;
+  }
+
+  async getUserSubscriptionWithPlan(userId: number): Promise<(UserSubscription & { plan: SubscriptionPlan }) | undefined> {
+    const result = await db
+      .select()
+      .from(userSubscriptions)
+      .leftJoin(subscriptionPlans, eq(userSubscriptions.planId, subscriptionPlans.id))
+      .where(eq(userSubscriptions.userId, userId));
+
+    if (result.length === 0 || !result[0].subscription_plans) {
+      return undefined;
+    }
+
+    return {
+      ...result[0].user_subscriptions,
+      plan: result[0].subscription_plans
+    } as UserSubscription & { plan: SubscriptionPlan };
+  }
+
+  async createUserSubscription(subscription: InsertUserSubscription): Promise<UserSubscription> {
+    const [newSubscription] = await db
+      .insert(userSubscriptions)
+      .values(subscription)
+      .returning();
+    return newSubscription;
+  }
+
+  async updateUserSubscription(id: number, subscription: Partial<InsertUserSubscription>): Promise<UserSubscription | undefined> {
+    const [updatedSubscription] = await db
+      .update(userSubscriptions)
+      .set({ ...subscription, updatedAt: new Date() })
+      .where(eq(userSubscriptions.id, id))
+      .returning();
+    return updatedSubscription || undefined;
+  }
+
+  async cancelUserSubscription(userId: number): Promise<UserSubscription | undefined> {
+    const [cancelledSubscription] = await db
+      .update(userSubscriptions)
+      .set({ 
+        status: 'cancelled',
+        cancelAtPeriodEnd: true,
+        cancelledAt: new Date(),
+        updatedAt: new Date() 
+      })
+      .where(eq(userSubscriptions.userId, userId))
+      .returning();
+    return cancelledSubscription || undefined;
+  }
+
+  async upgradeUserSubscription(userId: number, newPlanId: number): Promise<UserSubscription | undefined> {
+    const [upgradedSubscription] = await db
+      .update(userSubscriptions)
+      .set({ 
+        planId: newPlanId,
+        updatedAt: new Date() 
+      })
+      .where(eq(userSubscriptions.userId, userId))
+      .returning();
+    return upgradedSubscription || undefined;
+  }
+
+  async checkUserSubscriptionLimits(userId: number): Promise<{ canCreateVehicle: boolean; currentVehicles: number; maxVehicles: number; highlightsAvailable: number }> {
+    // Get user's current subscription
+    const user = await this.getUser(userId);
+    if (!user) {
+      return { canCreateVehicle: false, currentVehicles: 0, maxVehicles: 0, highlightsAvailable: 0 };
+    }
+
+    // Count current vehicles
+    const currentVehicles = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(vehicles)
+      .where(eq(vehicles.ownerId, userId));
+
+    const vehicleCount = currentVehicles[0]?.count || 0;
+    const maxVehicles = user.maxVehicleListings || 2;
+    const highlightsAvailable = user.highlightsAvailable || 0;
+
+    return {
+      canCreateVehicle: vehicleCount < maxVehicles,
+      currentVehicles: vehicleCount,
+      maxVehicles,
+      highlightsAvailable
+    };
+  }
+
+  async useHighlight(userId: number, vehicleId: number, highlightType: string): Promise<boolean> {
+    const user = await this.getUser(userId);
+    if (!user || (user.highlightsAvailable || 0) <= 0) {
+      return false;
+    }
+
+    // Update vehicle to be highlighted
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30); // 30 days highlight
+
+    await db
+      .update(vehicles)
+      .set({
+        isHighlighted: true,
+        highlightType,
+        highlightExpiresAt: expiresAt,
+        highlightUsageCount: sql`${vehicles.highlightUsageCount} + 1`,
+        updatedAt: new Date()
+      })
+      .where(eq(vehicles.id, vehicleId));
+
+    // Update user's available highlights
+    await db
+      .update(users)
+      .set({
+        highlightsUsed: sql`${users.highlightsUsed} + 1`,
+        highlightsAvailable: sql`${users.highlightsAvailable} - 1`,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+
+    return true;
   }
 }
 

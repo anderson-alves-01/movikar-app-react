@@ -41,6 +41,16 @@ export const users = pgTable("users", {
   rejectionReason: text("rejection_reason"),
   canRentVehicles: boolean("can_rent_vehicles").default(false),
   pix: varchar("pix", { length: 255 }), // Chave PIX para recebimento de valores
+  // Subscription fields
+  subscriptionPlan: varchar("subscription_plan", { length: 20 }).default("free").notNull(), // free, essencial, plus
+  subscriptionStatus: varchar("subscription_status", { length: 20 }).default("active").notNull(), // active, cancelled, expired
+  subscriptionStartDate: timestamp("subscription_start_date"),
+  subscriptionEndDate: timestamp("subscription_end_date"),
+  subscriptionStripeId: varchar("subscription_stripe_id", { length: 255 }),
+  subscriptionPaymentMethod: varchar("subscription_payment_method", { length: 20 }).default("monthly"), // monthly, annual
+  maxVehicleListings: integer("max_vehicle_listings").default(2).notNull(),
+  highlightsUsed: integer("highlights_used").default(0).notNull(),
+  highlightsAvailable: integer("highlights_available").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -91,6 +101,11 @@ export const vehicles = pgTable("vehicles", {
   statusReason: text("status_reason"), // Motivo da aprovação/rejeição
   reviewedBy: integer("reviewed_by").references(() => users.id), // Admin que fez a revisão
   reviewedAt: timestamp("reviewed_at"), // Data da revisão
+  // Subscription features
+  isHighlighted: boolean("is_highlighted").default(false).notNull(),
+  highlightType: varchar("highlight_type", { length: 20 }), // prata, diamante
+  highlightExpiresAt: timestamp("highlight_expires_at"),
+  highlightUsageCount: integer("highlight_usage_count").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -702,6 +717,10 @@ export const adminSettings = pgTable("admin_settings", {
   enablePixPayment: boolean("enable_pix_payment").default(false).notNull(),
   enablePixTransfer: boolean("enable_pix_transfer").default(true).notNull(),
   pixTransferDescription: varchar("pix_transfer_description", { length: 255 }).default("Repasse CarShare").notNull(),
+  // Subscription plan pricing
+  essentialPlanPrice: decimal("essential_plan_price", { precision: 8, scale: 2 }).default("29.90").notNull(),
+  plusPlanPrice: decimal("plus_plan_price", { precision: 8, scale: 2 }).default("59.90").notNull(),
+  annualDiscountPercentage: decimal("annual_discount_percentage", { precision: 5, scale: 2 }).default("20.00").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -766,6 +785,47 @@ export const payouts = pgTable("payouts", {
 
 export type Payout = typeof payouts.$inferSelect;
 export type InsertPayout = typeof payouts.$inferInsert;
+
+// Subscription Plans table
+export const subscriptionPlans = pgTable("subscription_plans", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 50 }).notNull(), // free, essencial, plus
+  displayName: varchar("display_name", { length: 100 }).notNull(),
+  description: text("description"),
+  monthlyPrice: decimal("monthly_price", { precision: 8, scale: 2 }).notNull(),
+  annualPrice: decimal("annual_price", { precision: 8, scale: 2 }).notNull(),
+  maxVehicleListings: integer("max_vehicle_listings").notNull(),
+  highlightType: varchar("highlight_type", { length: 20 }), // null, prata, diamante
+  highlightCount: integer("highlight_count").default(0).notNull(),
+  features: jsonb("features").$type<string[]>().default([]),
+  isActive: boolean("is_active").default(true).notNull(),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User Subscriptions table
+export const userSubscriptions = pgTable("user_subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  planId: integer("plan_id").references(() => subscriptionPlans.id).notNull(),
+  stripeSubscriptionId: varchar("stripe_subscription_id", { length: 255 }),
+  stripeCustomerId: varchar("stripe_customer_id", { length: 255 }),
+  status: varchar("status", { length: 20 }).default("active").notNull(), // active, cancelled, expired, past_due
+  paymentMethod: varchar("payment_method", { length: 20 }).default("monthly").notNull(), // monthly, annual
+  currentPeriodStart: timestamp("current_period_start").notNull(),
+  currentPeriodEnd: timestamp("current_period_end").notNull(),
+  cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false).notNull(),
+  cancelledAt: timestamp("cancelled_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
+export type InsertSubscriptionPlan = typeof subscriptionPlans.$inferInsert;
+export type UserSubscription = typeof userSubscriptions.$inferSelect;
+export type InsertUserSubscription = typeof userSubscriptions.$inferInsert;
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UserDocument = typeof userDocuments.$inferSelect;
 export type InsertUserDocument = z.infer<typeof insertUserDocumentSchema>;

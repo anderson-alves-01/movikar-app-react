@@ -15,9 +15,13 @@ import {
   vehicles,
   bookings,
   reviews,
+  subscriptionPlans,
+  userSubscriptions,
   type User, 
   type VehicleBrand, 
-  type UserDocument 
+  type UserDocument,
+  type SubscriptionPlan,
+  type UserSubscription
 } from "@shared/schema";
 import { ZodError } from "zod";
 // import { contractService } from "./services/contractService.js";
@@ -3192,6 +3196,308 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error processing payment transfer:", error);
       res.status(500).json({ message: "Erro ao processar repasse" });
+    }
+  });
+
+  // Subscription Plans Routes
+  app.get("/api/subscription-plans", async (req, res) => {
+    try {
+      const plans = await storage.getAllSubscriptionPlans();
+      res.json(plans);
+    } catch (error) {
+      console.error("Error fetching subscription plans:", error);
+      res.status(500).json({ message: "Erro ao buscar planos de assinatura" });
+    }
+  });
+
+  app.get("/api/subscription-plans/:id", async (req, res) => {
+    try {
+      const planId = parseInt(req.params.id);
+      const plan = await storage.getSubscriptionPlan(planId);
+      if (!plan) {
+        return res.status(404).json({ message: "Plano não encontrado" });
+      }
+      res.json(plan);
+    } catch (error) {
+      console.error("Error fetching subscription plan:", error);
+      res.status(500).json({ message: "Erro ao buscar plano de assinatura" });
+    }
+  });
+
+  // User Subscription Routes
+  app.get("/api/user/subscription", authenticateToken, async (req, res) => {
+    try {
+      const userId = (req as any).userId;
+      const subscription = await storage.getUserSubscriptionWithPlan(userId);
+      
+      if (!subscription) {
+        // Return free plan info from user
+        const user = await storage.getUser(userId);
+        if (!user) {
+          return res.status(404).json({ message: "Usuário não encontrado" });
+        }
+        
+        return res.json({
+          plan: {
+            name: user.subscriptionPlan || 'free',
+            displayName: 'Plano Gratuito',
+            maxVehicleListings: user.maxVehicleListings || 2,
+            highlightType: null,
+            highlightCount: 0
+          },
+          status: user.subscriptionStatus || 'active',
+          paymentMethod: user.subscriptionPaymentMethod || 'monthly'
+        });
+      }
+      
+      res.json(subscription);
+    } catch (error) {
+      console.error("Error fetching user subscription:", error);
+      res.status(500).json({ message: "Erro ao buscar assinatura do usuário" });
+    }
+  });
+
+  app.get("/api/user/subscription/limits", authenticateToken, async (req, res) => {
+    try {
+      const userId = (req as any).userId;
+      const limits = await storage.checkUserSubscriptionLimits(userId);
+      res.json(limits);
+    } catch (error) {
+      console.error("Error checking subscription limits:", error);
+      res.status(500).json({ message: "Erro ao verificar limites da assinatura" });
+    }
+  });
+
+  // Stripe Subscription Routes
+  app.post("/api/create-subscription", authenticateToken, async (req, res) => {
+    try {
+      if (!stripe) {
+        return res.status(500).json({ message: "Stripe não está configurado" });
+      }
+
+      const userId = (req as any).userId;
+      const { planName, paymentMethod = 'monthly' } = req.body;
+
+      // Get user and admin settings
+      const user = await storage.getUser(userId);
+      const adminSettings = await storage.getAdminSettings();
+      
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      // Determine price based on plan and payment method
+      let priceInCents: number;
+      if (planName === 'essencial') {
+        const monthlyPrice = adminSettings?.essentialPlanPrice ? parseFloat(adminSettings.essentialPlanPrice.toString()) : 29.90;
+        const annualDiscount = adminSettings?.annualDiscountPercentage ? parseFloat(adminSettings.annualDiscountPercentage.toString()) : 20;
+        priceInCents = paymentMethod === 'annual' 
+          ? Math.round((monthlyPrice * 12 * (1 - annualDiscount / 100)) * 100)
+          : Math.round(monthlyPrice * 100);
+      } else if (planName === 'plus') {
+        const monthlyPrice = adminSettings?.plusPlanPrice ? parseFloat(adminSettings.plusPlanPrice.toString()) : 59.90;
+        const annualDiscount = adminSettings?.annualDiscountPercentage ? parseFloat(adminSettings.annualDiscountPercentage.toString()) : 20;
+        priceInCents = paymentMethod === 'annual' 
+          ? Math.round((monthlyPrice * 12 * (1 - annualDiscount / 100)) * 100)
+          : Math.round(monthlyPrice * 100);
+      } else {
+        return res.status(400).json({ message: "Plano inválido" });
+      }
+
+      // Create or get Stripe customer
+      let customerId = user.stripeCustomerId;
+      if (!customerId) {
+        const customer = await stripe.customers.create({
+          email: user.email,
+          name: user.name,
+          metadata: {
+            userId: userId.toString()
+          }
+        });
+        customerId = customer.id;
+        await storage.updateUser(userId, { stripeCustomerId: customerId });
+      }
+
+      // Create payment intent for subscription
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: priceInCents,
+        currency: 'brl',
+        customer: customerId,
+        metadata: {
+          userId: userId.toString(),
+          planName,
+          paymentMethod,
+          type: 'subscription'
+        },
+        automatic_payment_methods: {
+          enabled: true,
+        },
+      });
+
+      res.json({
+        clientSecret: paymentIntent.client_secret,
+        amount: priceInCents,
+        planName,
+        paymentMethod
+      });
+
+    } catch (error) {
+      console.error("Error creating subscription:", error);
+      res.status(500).json({ message: "Erro ao criar assinatura" });
+    }
+  });
+
+  app.post("/api/subscription/confirm", authenticateToken, async (req, res) => {
+    try {
+      const userId = (req as any).userId;
+      const { paymentIntentId } = req.body;
+
+      if (!stripe) {
+        return res.status(500).json({ message: "Stripe não está configurado" });
+      }
+
+      // Retrieve payment intent
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      
+      if (paymentIntent.status !== 'succeeded') {
+        return res.status(400).json({ message: "Pagamento não foi confirmado" });
+      }
+
+      const planName = paymentIntent.metadata.planName;
+      const paymentMethod = paymentIntent.metadata.paymentMethod || 'monthly';
+
+      // Get or create subscription plan
+      let plan = await storage.getSubscriptionPlanByName(planName);
+      if (!plan) {
+        // Create default plans if they don't exist
+        const adminSettings = await storage.getAdminSettings();
+        const monthlyPrice = planName === 'essencial' 
+          ? (adminSettings?.essentialPlanPrice ? parseFloat(adminSettings.essentialPlanPrice.toString()) : 29.90)
+          : (adminSettings?.plusPlanPrice ? parseFloat(adminSettings.plusPlanPrice.toString()) : 59.90);
+        
+        const annualDiscount = adminSettings?.annualDiscountPercentage ? parseFloat(adminSettings.annualDiscountPercentage.toString()) : 20;
+        const annualPrice = monthlyPrice * 12 * (1 - annualDiscount / 100);
+
+        plan = await storage.createSubscriptionPlan({
+          name: planName,
+          displayName: planName === 'essencial' ? 'Plano Essencial' : 'Plano Plus',
+          description: planName === 'essencial' ? 'Anúncios ilimitados com destaque prata' : 'Anúncios ilimitados com destaque diamante',
+          monthlyPrice: monthlyPrice.toString(),
+          annualPrice: annualPrice.toString(),
+          maxVehicleListings: -1, // unlimited
+          highlightType: planName === 'essencial' ? 'prata' : 'diamante',
+          highlightCount: planName === 'essencial' ? 3 : 10,
+          features: planName === 'essencial' 
+            ? ['Anúncios ilimitados', 'Destaque prata (3x mais visualizações)', 'Suporte prioritário']
+            : ['Anúncios ilimitados', 'Destaque diamante (10x mais visualizações)', 'Suporte VIP', 'Analytics avançados'],
+          sortOrder: planName === 'essencial' ? 1 : 2
+        });
+      }
+
+      // Calculate subscription period
+      const startDate = new Date();
+      const endDate = new Date();
+      if (paymentMethod === 'annual') {
+        endDate.setFullYear(endDate.getFullYear() + 1);
+      } else {
+        endDate.setMonth(endDate.getMonth() + 1);
+      }
+
+      // Update user subscription info
+      await storage.updateUser(userId, {
+        subscriptionPlan: planName,
+        subscriptionStatus: 'active',
+        subscriptionStartDate: startDate,
+        subscriptionEndDate: endDate,
+        subscriptionPaymentMethod: paymentMethod,
+        maxVehicleListings: -1, // unlimited
+        highlightsAvailable: plan.highlightCount || 0
+      });
+
+      // Create user subscription record
+      await storage.createUserSubscription({
+        userId,
+        planId: plan.id,
+        status: 'active',
+        paymentMethod,
+        currentPeriodStart: startDate,
+        currentPeriodEnd: endDate,
+        cancelAtPeriodEnd: false
+      });
+
+      res.json({
+        message: "Assinatura ativada com sucesso",
+        plan: planName,
+        paymentMethod,
+        endDate
+      });
+
+    } catch (error) {
+      console.error("Error confirming subscription:", error);
+      res.status(500).json({ message: "Erro ao confirmar assinatura" });
+    }
+  });
+
+  app.post("/api/subscription/cancel", authenticateToken, async (req, res) => {
+    try {
+      const userId = (req as any).userId;
+      
+      // Cancel user subscription
+      const cancelledSubscription = await storage.cancelUserSubscription(userId);
+      
+      if (!cancelledSubscription) {
+        return res.status(404).json({ message: "Assinatura não encontrada" });
+      }
+
+      // Update user to free plan at the end of current period
+      // For now, downgrade immediately
+      await storage.updateUser(userId, {
+        subscriptionPlan: 'free',
+        subscriptionStatus: 'cancelled',
+        maxVehicleListings: 2,
+        highlightsAvailable: 0
+      });
+
+      res.json({
+        message: "Assinatura cancelada com sucesso",
+        endsAt: cancelledSubscription.currentPeriodEnd
+      });
+
+    } catch (error) {
+      console.error("Error cancelling subscription:", error);
+      res.status(500).json({ message: "Erro ao cancelar assinatura" });
+    }
+  });
+
+  // Vehicle Highlight Routes
+  app.post("/api/vehicles/:id/highlight", authenticateToken, async (req, res) => {
+    try {
+      const userId = (req as any).userId;
+      const vehicleId = parseInt(req.params.id);
+      const { highlightType = 'prata' } = req.body;
+
+      // Check if user owns the vehicle
+      const vehicle = await storage.getVehicle(vehicleId);
+      if (!vehicle || vehicle.ownerId !== userId) {
+        return res.status(403).json({ message: "Você não tem permissão para destacar este veículo" });
+      }
+
+      // Use highlight
+      const success = await storage.useHighlight(userId, vehicleId, highlightType);
+      
+      if (!success) {
+        return res.status(400).json({ message: "Você não possui destaques disponíveis" });
+      }
+
+      res.json({
+        message: "Veículo destacado com sucesso",
+        highlightType,
+        expiresIn: "30 dias"
+      });
+
+    } catch (error) {
+      console.error("Error highlighting vehicle:", error);
+      res.status(500).json({ message: "Erro ao destacar veículo" });
     }
   });
 
