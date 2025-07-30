@@ -36,7 +36,10 @@ export async function apiRequest(
     headers["Authorization"] = `Bearer ${authToken}`;
   }
 
-  const res = await fetch(url, {
+  // Ensure proper baseURL for relative paths
+  const fullUrl = url.startsWith('http') ? url : `/api${url.startsWith('/') ? url.slice(4) : url}`;
+  
+  const res = await fetch(fullUrl, {
     method,
     headers,
     body: data ? JSON.stringify(data) : undefined,
@@ -53,8 +56,9 @@ export async function apiRequest(
       });
 
       if (refreshResponse.ok) {
-        // Retry the original request
-        return fetch(url, {
+        // Retry the original request with exponential backoff
+        await new Promise(resolve => setTimeout(resolve, Math.min(1000 * Math.pow(2, 0), 5000)));
+        return fetch(fullUrl, {
           method,
           headers,
           body: data ? JSON.stringify(data) : undefined,
@@ -114,7 +118,11 @@ export const getQueryFn: <T>(options: {
       headers["Authorization"] = `Bearer ${authToken}`;
     }
 
-    const res = await fetch(queryKey.join("/") as string, {
+    // Ensure proper baseURL for queries
+    const queryUrl = queryKey.join("/") as string;
+    const fullQueryUrl = queryUrl.startsWith('http') ? queryUrl : queryUrl;
+    
+    const res = await fetch(fullQueryUrl, {
       headers,
       credentials: "include",
     });
@@ -125,7 +133,6 @@ export const getQueryFn: <T>(options: {
 
     await throwIfResNotOk(res);
     const data = await res.json();
-    console.log("📊 Query data parsed successfully:", data);
     return data;
   };
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/lib/auth';
+import { handleAuthError, getErrorMessage } from '@/lib/errorHandler';
 import type { AuthUser } from '@/types';
 
 // AuthUser interface is now imported from types
@@ -26,17 +27,14 @@ export function useAuth() {
         if (response.ok) {
           const userData = await response.json();
           setAuth(userData, '');
-          console.log('✅ Auth restored from server session:', userData.email);
         } else {
           // Não há sessão válida, limpar storage local se existir
           if (user) {
-            console.log('🧹 Clearing invalid local auth data');
             clearAuth();
             localStorage.removeItem('auth-storage');
           }
         }
       } catch (error) {
-        console.error('Auth check failed:', error);
         // Em caso de erro, limpar dados locais
         if (user) {
           clearAuth();
@@ -66,7 +64,7 @@ export function useAuth() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Login failed');
+        throw new Error(getErrorMessage(error.message || 'Falha no login'));
       }
 
       const data = await response.json();
@@ -85,7 +83,7 @@ export function useAuth() {
         credentials: 'include',
       });
     } catch (error) {
-      console.error('Logout request failed:', error);
+      // Logout sempre deve limpar dados locais mesmo se falhar
     } finally {
       clearAuth();
       localStorage.removeItem('auth-storage');

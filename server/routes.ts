@@ -1,5 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import rateLimit from "express-rate-limit";
 import { storage } from "./storage";
 import { 
   insertUserSchema, 
@@ -51,6 +52,9 @@ let currentAdminSettings: AdminSettings = {
   enablePixPayment: false,
   enablePixTransfer: true,
   pixTransferDescription: "Repasse CarShare",
+  essentialPlanPrice: 29.90,
+  plusPlanPrice: 59.90,
+  annualDiscountPercentage: 15,
 };
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
@@ -235,49 +239,61 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
     token = authHeader && authHeader.split(' ')[1];
   }
 
-  console.log("🔑 Authentication attempt - Token:", token ? "Present" : "Missing");
-
   if (!token) {
-    console.log("❌ No token provided");
     return res.status(401).json({ message: 'Token de acesso obrigatório' });
   }
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: number };
-    console.log("🔓 Token decoded - User ID:", decoded.userId);
     
     const user = await storage.getUser(decoded.userId);
     if (!user) {
-      console.log("❌ User not found for ID:", decoded.userId);
       return res.status(403).json({ message: 'Token inválido' });
     }
     
-    console.log("✅ User authenticated:", user.email, "Role:", user.role);
     req.user = user;
     next();
   } catch (error) {
-    console.log("❌ Token verification failed:", error);
     return res.status(403).json({ message: 'Token inválido' });
   }
 };
 
 // Admin authentication middleware
 const requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
-  console.log("🔐 RequireAdmin middleware - User:", req.user?.email, "Role:", req.user?.role);
-  
   if (!req.user) {
-    console.log("❌ RequireAdmin - No user found");
     return res.status(401).json({ error: 'Usuário não autenticado' });
   }
   if (req.user.role !== 'admin') {
-    console.log("❌ RequireAdmin - User is not admin:", req.user.role);
     return res.status(403).json({ error: 'Acesso negado: privilégios de administrador necessários' });
   }
-  console.log("✅ RequireAdmin - Admin access granted");
   next();
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Trust proxy for rate limiting to work correctly in Replit
+  app.set('trust proxy', 1);
+
+  // Rate limiting configuration
+  const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10, // Limit each IP to 10 requests per windowMs
+    message: { message: 'Muitas tentativas de login. Tente novamente em 15 minutos.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  const generalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 1000, // Limit each IP to 1000 requests per windowMs
+    message: { message: 'Muitas requisições. Tente novamente em alguns minutos.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  // Apply rate limiting
+  app.use('/api/auth', authLimiter);
+  app.use('/api', generalLimiter);
+
   // Payment routes for Stripe integration
   app.post("/api/create-payment-intent", authenticateToken, async (req, res) => {
     try {
