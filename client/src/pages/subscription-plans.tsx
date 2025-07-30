@@ -69,6 +69,24 @@ export default function SubscriptionPlans() {
       window.location.href = `/subscription-checkout?clientSecret=${data.clientSecret}&planName=${data.planName}&paymentMethod=${data.paymentMethod}`;
     },
     onError: (error: Error) => {
+      console.error("Subscription error:", error);
+      
+      // Check if it's an authentication error
+      if (error.message && error.message.includes('401')) {
+        toast({
+          title: "Sessão Expirada",
+          description: "Sua sessão expirou. Faça login novamente.",
+          variant: "destructive",
+        });
+        
+        // Clear expired token and redirect to login
+        localStorage.removeItem('auth-storage');
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+        return;
+      }
+      
       toast({
         title: "Erro",
         description: error.message || "Erro ao criar assinatura",
@@ -178,7 +196,28 @@ export default function SubscriptionPlans() {
     },
   ];
 
-  const displayPlans = plans.length > 0 ? plans : defaultPlans;
+  // Update plans with dynamic pricing based on vehicle count
+  const updatePlansWithDynamicPricing = (basePlans: SubscriptionPlan[]) => {
+    return basePlans.map(plan => {
+      if (plan.name === 'essencial' || plan.name === 'plus') {
+        const monthlyPrice = calculatePrice(plan.name, vehicleCount, false);
+        const annualPrice = calculatePrice(plan.name, vehicleCount, true);
+        
+        return {
+          ...plan,
+          monthlyPrice: monthlyPrice.toFixed(2),
+          annualPrice: annualPrice.toFixed(2),
+          maxVehicleListings: vehicleCount,
+          features: plan.features.map(feature => 
+            feature.includes('anúncios') ? `${vehicleCount} anúncios de veículos` : feature
+          )
+        };
+      }
+      return plan;
+    });
+  };
+
+  const displayPlans = updatePlansWithDynamicPricing(plans.length > 0 ? plans : defaultPlans);
   const currentPlan = userSubscription?.plan?.name || 'free';
 
   const getPlanIcon = (planName: string) => {
