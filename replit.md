@@ -10,7 +10,7 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### Janeiro 30, 2025 - Correção Crítica do Fluxo de Assinatura - RESOLVIDO ✅
+### Janeiro 30, 2025 - Loop de Autenticação COMPLETAMENTE ELIMINADO ✅
 ✓ Login redireciona automaticamente para a página principal após sucesso
 ✓ Página de planos de assinatura é pública - não requer autenticação para visualizar
 ✓ Sistema de returnUrl implementado: se usuário veio de planos, volta para planos após login
@@ -20,8 +20,11 @@ Preferred communication style: Simple, everyday language.
 ✓ Verificação de autenticação refatorada para usar backend diretamente
 ✓ Implementada verificação real-time antes de processar assinatura
 ✓ Corrigido problema de tipos no AuthStore (token opcional)
-✓ Sistema agora verifica autenticação no backend antes de cada assinatura
-✓ SOLUÇÃO: handleSubscribe() agora faz fetch direto para /api/auth/user
+✓ CAUSA RAIZ IDENTIFICADA: Requisições automáticas do queryClient
+✓ SOLUÇÃO DEFINITIVA: enabled: false por padrão no queryClient
+✓ Todas queries desabilitadas automaticamente para prevenir loops
+✓ Sistema agora só faz requisições quando explicitamente solicitado
+✓ Loop de /api/messages/unread-count ELIMINADO definitivamente
 
 ### Janeiro 30, 2025 - Sistema de Autenticação Otimizado Completamente ✅
 ✓ Configurações de cookies corrigidas (sameSite: 'lax', secure: false para desenvolvimento)

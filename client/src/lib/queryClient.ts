@@ -142,7 +142,7 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "returnNull" }), // Return null instead of throwing to prevent loops
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      refetchOnMount: true, // Enable refetch on mount for better UX
+      refetchOnMount: false, // Disable all automatic refetching to prevent auth loops
       refetchOnReconnect: false, // Disable refetch on reconnect
       staleTime: 1000 * 60 * 2, // 2 minutes stale time
       gcTime: 1000 * 60 * 5, // 5 minutes cache time
@@ -151,7 +151,7 @@ export const queryClient = new QueryClient({
         if (error?.message?.includes('401')) return false;
         return failureCount < 2;
       },
-      enabled: true, // Enable queries by default for better UX
+      enabled: false, // Disable all queries by default to prevent auth loops
     },
     mutations: {
       retry: false,
