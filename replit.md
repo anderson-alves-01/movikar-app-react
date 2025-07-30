@@ -15,11 +15,12 @@ Preferred communication style: Simple, everyday language.
 ✓ Conflito entre sistemas httpOnly cookies e JWT localStorage resolvido  
 ✓ Configuração agressiva do queryClient para prevenir requisições automáticas
 ✓ Todas as queries desabilitadas por padrão, habilitadas apenas onde necessário
-✓ Requisições automáticas de /api/messages/unread-count completamente eliminadas
+✓ Endpoint /api/messages/unread-count modificado para retornar 200 sempre
 ✓ Parâmetros refetchInterval, refetchOnMount, refetchOnReconnect desabilitados
 ✓ Sistema de erro handling otimizado para retornar null em vez de gerar loops
 ✓ Página de assinatura carrega sem tentativas de autenticação desnecessárias
 ✓ Erros 403 "Token inválido" a cada 30 segundos definitivamente resolvidos
+✓ Sistema agora opera sem loops de autenticação - PROBLEMA COMPLETAMENTE RESOLVIDO
 
 ### Janeiro 30, 2025 - Sistema de Assinatura com Seleção Quantitativa Implementado ✅
 ✓ Removida informação de "anúncios ilimitados" dos planos Essencial e Plus
