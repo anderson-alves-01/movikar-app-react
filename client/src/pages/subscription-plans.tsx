@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Crown, Star, Sparkles, Check, X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
@@ -39,6 +40,7 @@ interface UserSubscription {
 export default function SubscriptionPlans() {
   const [isAnnual, setIsAnnual] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [vehicleCount, setVehicleCount] = useState<number>(5); // Default 5 vehicles
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -54,10 +56,11 @@ export default function SubscriptionPlans() {
 
   // Create subscription mutation
   const createSubscriptionMutation = useMutation({
-    mutationFn: async ({ planName, paymentMethod }: { planName: string; paymentMethod: string }) => {
+    mutationFn: async ({ planName, paymentMethod, vehicleCount }: { planName: string; paymentMethod: string; vehicleCount: number }) => {
       const response = await apiRequest("POST", "/api/create-subscription", {
         planName,
         paymentMethod,
+        vehicleCount,
       });
       return response.json();
     },
@@ -81,6 +84,7 @@ export default function SubscriptionPlans() {
     createSubscriptionMutation.mutate({
       planName,
       paymentMethod: isAnnual ? 'annual' : 'monthly',
+      vehicleCount,
     });
   };
 
@@ -106,6 +110,17 @@ export default function SubscriptionPlans() {
     );
   }
 
+  // Calculate dynamic pricing based on vehicle count
+  const calculatePrice = (basePlan: string, vehicleCount: number, isAnnual: boolean) => {
+    const basePrice = basePlan === 'essencial' ? 29.90 : 59.90;
+    const pricePerVehicle = basePlan === 'essencial' ? 5.99 : 9.99; // Per vehicle per month
+    
+    const monthlyPrice = basePrice + (pricePerVehicle * Math.max(0, vehicleCount - 2)); // First 2 vehicles included in base price
+    const annualPrice = monthlyPrice * 12 * 0.8; // 20% discount for annual
+    
+    return isAnnual ? annualPrice : monthlyPrice;
+  };
+
   // Default plans if none exist in database
   const defaultPlans: SubscriptionPlan[] = [
     {
@@ -127,13 +142,13 @@ export default function SubscriptionPlans() {
       name: "essencial",
       displayName: "Plano Essencial",
       description: "Para proprietários ativos",
-      monthlyPrice: "29.90",
-      annualPrice: "287.04", // 20% discount
-      maxVehicleListings: -1,
+      monthlyPrice: calculatePrice('essencial', vehicleCount, false).toString(),
+      annualPrice: calculatePrice('essencial', vehicleCount, true).toString(),
+      maxVehicleListings: vehicleCount,
       highlightType: "prata",
       highlightCount: 3,
       features: [
-        "Anúncios ilimitados",
+        `${vehicleCount} anúncios de veículos`,
         "Destaque prata (3x mais visualizações)",
         "Suporte prioritário",
         "Estatísticas básicas",
@@ -146,13 +161,13 @@ export default function SubscriptionPlans() {
       name: "plus",
       displayName: "Plano Plus",
       description: "Para máxima visibilidade",
-      monthlyPrice: "59.90",
-      annualPrice: "574.08", // 20% discount
-      maxVehicleListings: -1,
+      monthlyPrice: calculatePrice('plus', vehicleCount, false).toString(),
+      annualPrice: calculatePrice('plus', vehicleCount, true).toString(),
+      maxVehicleListings: vehicleCount,
       highlightType: "diamante",
       highlightCount: 10,
       features: [
-        "Anúncios ilimitados",
+        `${vehicleCount} anúncios de veículos`,
         "Destaque diamante (10x mais visualizações)",
         "Suporte VIP 24/7",
         "Analytics avançados",
@@ -229,7 +244,7 @@ export default function SubscriptionPlans() {
           </p>
 
           {/* Annual/Monthly Toggle */}
-          <div className="flex items-center justify-center space-x-4 mb-8">
+          <div className="flex items-center justify-center space-x-4 mb-6">
             <Label htmlFor="annual-toggle" className="text-sm font-medium">
               Mensal
             </Label>
@@ -244,6 +259,29 @@ export default function SubscriptionPlans() {
                 Economize 20%
               </Badge>
             </Label>
+          </div>
+
+          {/* Vehicle Count Selector */}
+          <div className="flex items-center justify-center space-x-4 mb-8">
+            <Label htmlFor="vehicle-count" className="text-sm font-medium">
+              Quantidade de anúncios:
+            </Label>
+            <Select value={vehicleCount.toString()} onValueChange={(value) => setVehicleCount(parseInt(value))}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="3">3 anúncios</SelectItem>
+                <SelectItem value="5">5 anúncios</SelectItem>
+                <SelectItem value="10">10 anúncios</SelectItem>
+                <SelectItem value="15">15 anúncios</SelectItem>
+                <SelectItem value="20">20 anúncios</SelectItem>
+                <SelectItem value="30">30 anúncios</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="text-xs text-gray-500">
+              O preço é calculado conforme a quantidade
+            </div>
           </div>
         </div>
 
@@ -306,15 +344,9 @@ export default function SubscriptionPlans() {
                       ))}
                     </ul>
 
-                    {plan.maxVehicleListings !== -1 && (
-                      <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        Limite: {plan.maxVehicleListings} veículos
-                      </div>
-                    )}
-
-                    {plan.maxVehicleListings === -1 && (
-                      <div className="text-sm text-green-600 font-medium mb-4">
-                        Anúncios ilimitados
+                    {plan.name !== 'free' && (
+                      <div className="text-sm text-purple-600 font-medium mb-4">
+                        {vehicleCount} anúncios selecionados
                       </div>
                     )}
                   </CardContent>

@@ -3276,7 +3276,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const userId = (req as any).userId;
-      const { planName, paymentMethod = 'monthly' } = req.body;
+      const { planName, paymentMethod = 'monthly', vehicleCount = 5 } = req.body;
 
       // Get user and admin settings
       const user = await storage.getUser(userId);
@@ -3286,16 +3286,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Usuário não encontrado" });
       }
 
-      // Determine price based on plan and payment method
+      // Calculate price based on plan, payment method and vehicle count
       let priceInCents: number;
+      const calculatePriceWithVehicleCount = (basePlan: string, vehicleCount: number) => {
+        const basePrice = basePlan === 'essencial' ? 29.90 : 59.90;
+        const pricePerVehicle = basePlan === 'essencial' ? 5.99 : 9.99; // Per vehicle per month
+        
+        // First 2 vehicles included in base price, additional vehicles add to cost
+        const monthlyPrice = basePrice + (pricePerVehicle * Math.max(0, vehicleCount - 2));
+        return monthlyPrice;
+      };
+
       if (planName === 'essencial') {
-        const monthlyPrice = adminSettings?.essentialPlanPrice ? parseFloat(adminSettings.essentialPlanPrice.toString()) : 29.90;
+        const monthlyPrice = calculatePriceWithVehicleCount('essencial', vehicleCount);
         const annualDiscount = adminSettings?.annualDiscountPercentage ? parseFloat(adminSettings.annualDiscountPercentage.toString()) : 20;
         priceInCents = paymentMethod === 'annual' 
           ? Math.round((monthlyPrice * 12 * (1 - annualDiscount / 100)) * 100)
           : Math.round(monthlyPrice * 100);
       } else if (planName === 'plus') {
-        const monthlyPrice = adminSettings?.plusPlanPrice ? parseFloat(adminSettings.plusPlanPrice.toString()) : 59.90;
+        const monthlyPrice = calculatePriceWithVehicleCount('plus', vehicleCount);
         const annualDiscount = adminSettings?.annualDiscountPercentage ? parseFloat(adminSettings.annualDiscountPercentage.toString()) : 20;
         priceInCents = paymentMethod === 'annual' 
           ? Math.round((monthlyPrice * 12 * (1 - annualDiscount / 100)) * 100)
@@ -3327,6 +3336,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userId: userId.toString(),
           planName,
           paymentMethod,
+          vehicleCount: vehicleCount.toString(),
           type: 'subscription'
         },
         automatic_payment_methods: {
