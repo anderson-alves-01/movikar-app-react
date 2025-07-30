@@ -45,7 +45,7 @@ export default function SubscriptionPlans() {
   const queryClient = useQueryClient();
 
   // Fetch subscription plans
-  const { data: plans = [], isLoading: plansLoading } = useQuery({
+  const { data: plans = [], isLoading: plansLoading } = useQuery<SubscriptionPlan[]>({
     queryKey: ["/api/subscription-plans"],
   });
 
@@ -101,6 +101,21 @@ export default function SubscriptionPlans() {
 
   const handleSubscribe = (planName: string) => {
     if (createSubscriptionMutation.isPending) return;
+
+    // Check if user is authenticated first
+    const authStorage = localStorage.getItem('auth-storage');
+    if (!authStorage) {
+      toast({
+        title: "Login Necessário",
+        description: "Você precisa estar logado para assinar um plano.",
+        variant: "destructive",
+      });
+      
+      // Save current page as return URL for after login
+      localStorage.setItem('returnUrl', '/subscription-plans');
+      window.location.href = '/auth';
+      return;
+    }
 
     setSelectedPlan(planName);
     createSubscriptionMutation.mutate({
