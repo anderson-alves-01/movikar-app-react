@@ -3,7 +3,7 @@ import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { setupVite, serveStatic, log } from "./vite";
-import { sanitizeInput, createRateLimit } from "./middleware/validation";
+import { sanitizeInput } from "./middleware/validation";
 
 const app = express();
 
@@ -28,11 +28,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
-// Rate limiting for API routes
-app.use('/api/', createRateLimit(15 * 60 * 1000, 100, 'Muitas requisições. Tente novamente em 15 minutos.'));
-
-// Special rate limiting for auth routes
-app.use('/api/auth/', createRateLimit(15 * 60 * 1000, 10, 'Muitas tentativas de login. Tente novamente em 15 minutos.'));
+// Rate limiting will be handled in routes.ts to avoid duplication
 
 // Cookie parser
 app.use(cookieParser());
