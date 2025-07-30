@@ -1,0 +1,394 @@
+CAUSAS COMUNS DO PROBLEMA:
+
+Verificacao de autenticacao inconsistente
+Redirecionamento apos login incorreto
+Problemas com cookies/tokens
+Roteamento mal configurado
+Estado de autenticacao nao persistido
+SOLUCAO PASSO A PASSO:
+
+VERIFIQUE O MIDDLEWARE DE AUTENTICACAO (BACKEND):
+// server/middleware/authMiddleware.js
+const jwt = require('jsonwebtoken');
+const asyncHandler = require('express-async-handler');
+
+const protect = asyncHandler(async (req, res, next) => {
+let token;
+
+// Verificar token no cookie
+if (req.cookies && req.cookies.token) {
+token = req.cookies.token;
+}
+
+if (!token) {
+res.status(401);
+throw new Error('Not authorized, no token');
+}
+
+try {
+const decoded = jwt.verify(token, process.env.JWT_SECRET);
+req.user = await User.findById(decoded.id).select('-password');
+next();
+} catch (error) {
+res.status(401);
+throw new Error('Not authorized, token failed');
+}
+});
+
+module.exports = { protect };
+
+PROTEJA A ROTA DE SUBSCRIPTION PLANS:
+// server/routes/subscriptionRoutes.js
+const express = require('express');
+const router = express.Router();
+const { protect } = require('../middleware/authMiddleware');
+
+router.get('/', protect, getSubscriptionPlans); // Protegida
+router.post('/subscribe', protect, subscribeToPlan); // Protegida
+
+module.exports = router;
+
+CONFIGURE O AXIOS NO FRONTEND (REACT):
+// client/src/utils/api.js
+import axios from 'axios';
+
+const API = axios.create({
+baseURL: '/api',
+withCredentials: true, // Importante para enviar cookies
+});
+
+// Interceptor para tratar erros de autenticacao
+API.interceptors.response.use(
+(response) => response,
+(error) => {
+if (error.response?.status === 401) {
+// Redireciona para login se token expirou
+window.location.href = '/login';
+}
+return Promise.reject(error);
+}
+);
+
+export default API;
+
+COMPONENTE DE SUBSCRIPTION PLANS CORRIGIDO:
+// client/src/components/SubscriptionPlans.js
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import API from '../utils/api';
+
+const SubscriptionPlans = () => {
+const [plans, setPlans] = useState([]);
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState(null);
+const navigate = useNavigate();
+
+useEffect(() => {
+const fetchPlans = async () => {
+try {
+const response = await API.get('/subscriptions');
+setPlans(response.data);
+} catch (err) {
+if (err.response?.status === 401) {
+// Redireciona para login se nao autenticado
+navigate('/login', { state: { from: '/subscription-plans' } });
+} else {
+setError('Failed to load subscription plans');
+}
+} finally {
+setLoading(false);
+}
+};
+
+fetchPlans();
+}, [navigate]);
+
+const handleSubscribe = async (planId) => {
+try {
+await API.post('/subscriptions/subscribe', { planId });
+// Redireciona apos assinatura
+navigate('/dashboard');
+} catch (err) {
+setError('Failed to subscribe');
+}
+};
+
+if (loading) return
+Loading...;
+if (error) return
+{error};
+
+return (
+
+Choose Your Plan
+
+{plans.map(plan => (
+
+{plan.name}
+{plan.description}
+${plan.price}/month
+<button
+onClick={() => handleSubscribe(plan.id)}
+className="subscribe-btn"
+>
+Subscribe
+
+
+))}
+
+
+);
+};
+
+export default SubscriptionPlans;
+
+COMPONENTE DE LOGIN CORRIGIDO:
+// client/src/components/Login.js
+import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import API from '../utils/api';
+
+const Login = () => {
+const [email, setEmail] = useState('');
+const [password, setPassword] = useState('');
+const [error, setError] = useState(null);
+const navigate = useNavigate();
+const location = useLocation();
+
+// Pega a URL de redirecionamento se existir
+const from = location.state?.from?.pathname || '/';
+
+const handleSubmit = async (e) => {
+e.preventDefault();
+setError(null);
+
+try {
+const response = await API.post('/users/login', { email, password });
+
+// Redireciona para a pagina original ou dashboard
+navigate(from, { replace: true });
+} catch (err) {
+setError(err.response?.data?.message || 'Login failed');
+}
+};
+
+return (
+
+Login
+{error &&
+{error}}
+
+
+Email
+<input
+type="email"
+value={email}
+onChange={(e) => setEmail(e.target.value)}
+required
+/>
+
+
+Password
+<input
+type="password"
+value={password}
+onChange={(e) => setPassword(e.target.value)}
+required
+/>
+
+Login
+
+
+);
+};
+
+export default Login;
+
+CONFIGURE O ROTEAMENTO NO APP.JS:
+// client/src/App.js
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import Login from './components/Login';
+import SubscriptionPlans from './components/SubscriptionPlans';
+import Dashboard from './components/Dashboard';
+
+function App() {
+const { userInfo } = useSelector((state) => state.auth);
+
+return (
+
+
+<Route
+path="/login"
+element={!userInfo ? : }
+/>
+<Route
+path="/subscription-plans"
+element={
+
+
+
+}
+/>
+<Route
+path="/dashboard"
+element={
+
+
+
+}
+/>
+<Route path="/" element={} />
+
+
+);
+}
+
+// Componente de rota protegida
+const ProtectedRoute = ({ children }) => {
+const { userInfo } = useSelector((state) => state.auth);
+
+if (!userInfo) {
+return <Navigate to="/login" state={{ from: location }} replace />;
+}
+
+return children;
+};
+
+export default App;
+
+VERIFIQUE O REDUX STORE (SE ESTIVER USANDO):
+// client/src/store/authSlice.js
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import API from '../utils/api';
+
+export const login = createAsyncThunk(
+'auth/login',
+async ({ email, password }, { rejectWithValue }) => {
+try {
+const response = await API.post('/users/login', { email, password });
+// O token ja esta no cookie, nao precisa armazenar
+return response.data; // Apenas dados do usuario
+} catch (error) {
+return rejectWithValue(error.response?.data?.message);
+}
+}
+);
+
+const authSlice = createSlice({
+name: 'auth',
+initialState: {
+userInfo: null,
+loading: false,
+error: null,
+},
+reducers: {
+logout: (state) => {
+state.userInfo = null;
+},
+},
+extraReducers: (builder) => {
+builder
+.addCase(login.pending, (state) => {
+state.loading = true;
+state.error = null;
+})
+.addCase(login.fulfilled, (state, action) => {
+state.loading = false;
+state.userInfo = action.payload;
+})
+.addCase(login.rejected, (state, action) => {
+state.loading = false;
+state.error = action.payload;
+});
+},
+});
+
+export const { logout } = authSlice.actions;
+export default authSlice.reducer;
+
+ADICIONE VERIFICACAO DE AUTENTICACAO NO CARREGAMENTO:
+// client/src/App.js
+import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { checkAuth } from './store/authSlice';
+
+function App() {
+const dispatch = useDispatch();
+
+useEffect(() => {
+// Verifica autenticacao ao carregar o app
+dispatch(checkAuth());
+}, [dispatch]);
+
+// ... resto do codigo
+}
+
+// client/src/store/authSlice.js
+export const checkAuth = createAsyncThunk(
+'auth/checkAuth',
+async (_, { rejectWithValue }) => {
+try {
+const response = await API.get('/users/check-auth');
+return response.data;
+} catch (error) {
+return rejectWithValue(error.response?.data?.message);
+}
+}
+);
+
+SOLUCAO DE PROBLEMAS ESPECIFICOS:
+
+PROBLEMA: COOKIE NAO SENDO ENVIADO
+
+Verifique se o dominio do cookie esta correto:
+// Ao definir o cookie
+res.cookie('token', token, {
+httpOnly: true,
+secure: process.env.NODE_ENV !== 'development',
+sameSite: 'strict',
+domain: process.env.COOKIE_DOMAIN || 'localhost', // Configure conforme seu dominio
+maxAge: 15 * 60 * 1000
+});
+Verifique a configuracao do CORS:
+// server/app.js
+app.use(cors({
+origin: process.env.CLIENT_URL || 'http://localhost:3000',
+credentials: true,
+}));
+PROBLEMA: REDIRECIONAMENTO INFINITO
+
+Verifique se a rota de subscription-plans nao esta protegida duas vezes
+Verifique se nao ha conflito no roteamento
+Adicione logs para depurar:
+// No middleware de autenticacao
+console.log('Auth middleware - Token:', req.cookies?.token);
+console.log('Auth middleware - User:', req.user);
+PROBLEMA: ESTADO DE AUTENTICACAO NAO PERSISTIDO
+
+Verifique se o Redux store esta sendo persistido (se estiver usando Redux)
+Adicione verificacao de autenticacao no carregamento do app
+TESTE O FLUXO COMPLETO:
+
+Limpe os cookies do navegador
+Acesse diretamente /subscription-plans
+Deve redirecionar para /login
+Faca login
+Deve redirecionar para /subscription-plans
+Recarregue a pagina
+Deve continuar na pagina de planos sem redirecionar
+Clique em "Assinar"
+Deve processar a assinatura sem pedir login novamente
+CODIGO DE DEPURACAO:
+
+Adicione estes logs para identificar o problema:
+
+// No middleware de autenticacao
+console.log('Auth Check - Token exists:', !!req.cookies.token);
+console.log('Auth Check - User ID:', req.user?.id);
+
+// No componente SubscriptionPlans
+useEffect(() => {
+console.log('SubscriptionPlans - User from Redux:', userInfo);
+console.log('SubscriptionPlans - Current URL:', window.location.pathname);
+}, []);
