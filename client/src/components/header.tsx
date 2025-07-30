@@ -27,34 +27,8 @@ export default function Header() {
   const { user, token, clearAuth } = useAuthStore();
   const { updateFilter, clearFilters } = useSearch();
 
-  // Get unread message count
-  const { data: unreadCount = 0 } = useQuery({
-    queryKey: ['/api/messages/unread-count'],
-    queryFn: async () => {
-      if (!token) return 0;
-      
-      const response = await fetch('/api/messages/unread-count', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (!response.ok) {
-        // Se não autorizado, retorna 0 ao invés de error
-        if (response.status === 401 || response.status === 403) {
-          return 0;
-        }
-        throw new Error('Failed to fetch unread count');
-      }
-      
-      const data = await response.json();
-      return parseInt(data.count) || 0;
-    },
-    enabled: !!user && !!token,
-    refetchInterval: 30000, // Refetch every 30 seconds
-    retry: false, // Não tentar novamente em caso de erro de auth
-  });
+  // Disable unread message count to prevent auth loops
+  const unreadCount = 0;
 
   const handleLogout = () => {
     clearAuth();

@@ -49,10 +49,9 @@ export default function SubscriptionPlans() {
     queryKey: ["/api/subscription-plans"],
   });
 
-  // Fetch user's current subscription
-  const { data: userSubscription, isLoading: subscriptionLoading } = useQuery<UserSubscription>({
-    queryKey: ["/api/user/subscription"],
-  });
+  // Disable user subscription fetch to prevent auth loops
+  const userSubscription = null;
+  const subscriptionLoading = false;
 
   // Create subscription mutation
   const createSubscriptionMutation = useMutation({
@@ -237,7 +236,7 @@ export default function SubscriptionPlans() {
   };
 
   const displayPlans = updatePlansWithDynamicPricing(plans.length > 0 ? plans : defaultPlans);
-  const currentPlan = userSubscription?.plan?.name || 'free';
+  const currentPlan = 'free'; // Default to free to prevent auth issues
 
   const getPlanIcon = (planName: string) => {
     switch (planName) {
