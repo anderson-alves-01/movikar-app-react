@@ -81,6 +81,10 @@ export default function SubscriptionPlans() {
         
         // Clear expired token and redirect to login
         localStorage.removeItem('auth-storage');
+        
+        // Save current page as return URL for after login
+        localStorage.setItem('returnUrl', '/subscription-plans');
+        
         setTimeout(() => {
           window.location.href = '/auth';
         }, 2000);

@@ -53,7 +53,15 @@ export default function Auth() {
           ? "Bem-vindo de volta!" 
           : "Sua conta foi criada com sucesso.",
       });
-      setLocation('/');
+      
+      // Check if there's a return URL saved (from subscription page or other protected pages)
+      const returnUrl = localStorage.getItem('returnUrl');
+      if (returnUrl) {
+        localStorage.removeItem('returnUrl'); // Clean up
+        setLocation(returnUrl);
+      } else {
+        setLocation('/');
+      }
     },
     onError: (error: any) => {
       toast({
