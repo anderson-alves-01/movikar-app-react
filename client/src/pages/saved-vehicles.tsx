@@ -31,7 +31,7 @@ export default function SavedVehicles() {
   // Fetch saved vehicles
   const { data: savedVehicles, isLoading: vehiclesLoading, error: vehiclesError } = useQuery({
     queryKey: ["/api/saved-vehicles"],
-    enabled: !!getToken(),
+    enabled: false, // Disabled to prevent auth loops
     retry: false,
     queryFn: async () => {
       const token = getToken();
@@ -96,7 +96,7 @@ export default function SavedVehicles() {
   // Fetch saved vehicle categories  
   const { data: categories, isLoading: categoriesLoading, error: categoriesError } = useQuery({
     queryKey: ["/api/saved-vehicles/categories"],
-    enabled: !!getToken(),
+    enabled: false, // Disabled to prevent auth loops
     retry: false,
     queryFn: async () => {
       const token = getToken();

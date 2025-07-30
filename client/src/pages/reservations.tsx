@@ -67,17 +67,17 @@ export default function Reservations() {
 
   const { data: renterBookings, isLoading: loadingRenter } = useQuery<Booking[]>({
     queryKey: ["/api/bookings?type=renter"],
-    enabled: !!user,
+    enabled: false, // Disabled to prevent auth loops
   });
 
   const { data: ownerBookings, isLoading: loadingOwner } = useQuery<Booking[]>({
     queryKey: ["/api/bookings?type=owner"],
-    enabled: !!user,
+    enabled: false, // Disabled to prevent auth loops
   });
 
   const { data: waitingQueue, isLoading: loadingQueue } = useQuery<WaitingQueueEntry[]>({
     queryKey: ["/api/users/" + user?.id + "/waiting-queue"],
-    enabled: !!user,
+    enabled: false, // Disabled to prevent auth loops
   });
 
   const removeFromQueueMutation = useMutation({

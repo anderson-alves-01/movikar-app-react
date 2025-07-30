@@ -43,7 +43,7 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
   // Check if vehicle is saved
   const { data: savedStatus, error: savedError, isLoading: savedLoading } = useQuery({
     queryKey: ["/api/saved-vehicles/check", vehicle.id],
-    enabled: !!getToken(),
+    enabled: false, // Disabled to prevent auth loops
     retry: false,
   });
   

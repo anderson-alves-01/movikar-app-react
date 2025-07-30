@@ -41,7 +41,7 @@ export default function Contracts() {
   // Get user's contracts (as renter or owner)
   const { data: contracts, isLoading } = useQuery<ContractData[]>({
     queryKey: ["/api/contracts/user"],
-    enabled: !!user,
+    enabled: false, // Disabled to prevent auth loops
   });
 
   // Send contract for signature

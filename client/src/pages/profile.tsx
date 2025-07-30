@@ -64,19 +64,19 @@ export default function Profile() {
   // Fetch user bookings as renter
   const { data: renterBookings, isLoading: renterBookingsLoading } = useQuery({
     queryKey: ['/api/bookings?type=renter'],
-    enabled: !!user,
+    enabled: false, // Disabled to prevent auth loops
   });
 
   // Fetch user bookings as owner
   const { data: ownerBookings, isLoading: ownerBookingsLoading } = useQuery({
     queryKey: ['/api/bookings?type=owner'],
-    enabled: !!user,
+    enabled: false, // Disabled to prevent auth loops
   });
 
   // Fetch user vehicles
   const { data: userVehicles, isLoading: vehiclesLoading } = useQuery({
     queryKey: [`/api/users/${user?.id}/vehicles`],
-    enabled: !!user,
+    enabled: false, // Disabled to prevent auth loops
   });
 
   // Update user mutation
