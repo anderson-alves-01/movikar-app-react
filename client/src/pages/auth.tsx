@@ -35,6 +35,7 @@ export default function Auth() {
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Importante para cookies httpOnly
         body: JSON.stringify(data),
       });
 
@@ -46,7 +47,8 @@ export default function Auth() {
       return response.json();
     },
     onSuccess: (data) => {
-      setAuth(data.user, data.token);
+      // Para sistema httpOnly cookies, o token pode vir vazio
+      setAuth(data.user, data.token || '');
       toast({
         title: authMode === 'login' ? "Login realizado!" : "Conta criada!",
         description: authMode === 'login' 
