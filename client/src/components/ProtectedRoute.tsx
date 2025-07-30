@@ -19,12 +19,9 @@ export default function ProtectedRoute({
 
   useEffect(() => {
     if (!isLoading && !initializing && requireAuth && !isAuthenticated) {
-      // Save current URL for redirect after login
-      const currentPath = window.location.pathname + window.location.search;
-      if (currentPath !== '/auth' && currentPath !== '/') {
-        localStorage.setItem('returnUrl', currentPath);
-      }
-      
+      // REMOVIDO: Não salvar URL para redirecionamento
+      // REMOVIDO: Não redirecionar automaticamente
+      // Apenas mostrar componente de login quando necessário
       setLocation(redirectTo);
     }
   }, [isAuthenticated, isLoading, initializing, requireAuth, redirectTo, setLocation]);

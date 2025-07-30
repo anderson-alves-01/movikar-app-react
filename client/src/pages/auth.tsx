@@ -50,20 +50,16 @@ export default function Auth() {
       // Para sistema httpOnly cookies, o token pode vir vazio
       setAuth(data.user, data.token || '');
       toast({
-        title: authMode === 'login' ? "Login realizado!" : "Conta criada!",
+        title: authMode === 'login' ? "✅ Login realizado com sucesso!" : "✅ Conta criada!",
         description: authMode === 'login' 
-          ? "Bem-vindo de volta!" 
-          : "Sua conta foi criada com sucesso.",
+          ? "Bem-vindo de volta! Você pode agora navegar pelo site." 
+          : "Sua conta foi criada com sucesso. Você já está logado!",
       });
 
-      // Check if there's a return URL saved (from subscription page or other protected pages)
-      const returnUrl = localStorage.getItem('returnUrl');
-      if (returnUrl) {
-        localStorage.removeItem('returnUrl'); // Clean up
-        setLocation(returnUrl);
-      } else {
-        setLocation('/');
-      }
+      // REMOVIDO: Não fazer redirecionamentos automáticos
+      // Usuário fica na mesma página e pode navegar manualmente
+      // Limpar qualquer localStorage de redirect
+      localStorage.removeItem('returnUrl');
     },
     onError: (error: any) => {
       toast({
@@ -378,6 +374,18 @@ export default function Auth() {
                     </Button>
                   </>
                 )}
+              </div>
+
+              {/* Home Button */}
+              <div className="text-center pt-4 border-t">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setLocation('/')}
+                >
+                  🏠 Voltar ao Início
+                </Button>
               </div>
             </form>
           </CardContent>

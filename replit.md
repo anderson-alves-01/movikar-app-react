@@ -10,6 +10,16 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### Janeiro 30, 2025 - Redirecionamentos Pós-Login Removidos Completamente ✅
+✓ Removidos todos os redirecionamentos automáticos após login para resolver loop infinito
+✓ Usuários permanecem na tela de login após sucesso com mensagem de confirmação
+✓ Botão "Voltar ao Início" adicionado na tela de login para navegação manual
+✓ localStorage de returnUrl limpo para evitar redirecionamentos indesejados
+✓ Página de planos de assinatura acessível sem loops de autenticação
+✓ Sistema de toast melhorado com mensagens mais claras de sucesso
+✓ ProtectedRoute otimizado para não salvar URLs de retorno
+✓ Experiência de usuário melhorada: login funciona sem travamentos
+
 ### Janeiro 30, 2025 - Sistema de Autenticação Otimizado Completamente ✅
 ✓ Configurações de cookies corrigidas (sameSite: 'lax', secure: false para desenvolvimento)
 ✓ Rate limiting implementado com express-rate-limit (10 tentativas/15min para auth)
