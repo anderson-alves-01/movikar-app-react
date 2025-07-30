@@ -16,9 +16,10 @@ export const useAuthStore = create<AuthStore>()(
       user: null,
       token: null,
       isLoading: false,
-      setAuth: (user, token) => {
+      setAuth: (user, token = null) => {
         console.log('🔐 Setting auth - PIX field:', user.pix);
-        set({ user, token, isLoading: false });
+        // Token is now handled by httpOnly cookies, so we don't store it
+        set({ user, token: null, isLoading: false });
       },
       updateUser: (userData) => {
         const currentUser = get().user;
@@ -29,18 +30,28 @@ export const useAuthStore = create<AuthStore>()(
         }
       },
       refreshUser: async () => {
-        const token = get().token;
-        if (!token) return;
-
         try {
           const response = await fetch('/api/auth/user', {
-            headers: { 'Authorization': `Bearer ${token}` }
+            credentials: 'include'
           });
           
           if (response.ok) {
             const userData = await response.json();
             console.log('🔄 Refreshed user data - PIX field:', userData.pix);
             set({ user: userData });
+          } else if (response.status === 401) {
+            // Try to refresh token
+            const refreshResponse = await fetch('/api/auth/refresh', {
+              method: 'POST',
+              credentials: 'include',
+            });
+            
+            if (refreshResponse.ok) {
+              const { user } = await refreshResponse.json();
+              set({ user });
+            } else {
+              get().clearAuth();
+            }
           }
         } catch (error) {
           console.error('Failed to refresh user data:', error);
@@ -57,6 +68,45 @@ export const useAuthStore = create<AuthStore>()(
 );
 
 export const getAuthHeaders = () => {
-  const token = useAuthStore.getState().token;
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  // No longer need to send token in headers since we use httpOnly cookies
+  // But keep this for backward compatibility with any existing code
+  return {};
+};
+
+// Function to make authenticated requests
+export const makeAuthenticatedRequest = async (url: string, options: RequestInit = {}) => {
+  const response = await fetch(url, {
+    ...options,
+    credentials: 'include', // Include cookies
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+  
+  // Handle token refresh if needed
+  if (response.status === 401) {
+    const refreshResponse = await fetch('/api/auth/refresh', {
+      method: 'POST',
+      credentials: 'include',
+    });
+    
+    if (refreshResponse.ok) {
+      // Retry original request
+      return fetch(url, {
+        ...options,
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+      });
+    } else {
+      // Refresh failed, redirect to login
+      useAuthStore.getState().clearAuth();
+      window.location.href = '/auth';
+    }
+  }
+  
+  return response;
 };

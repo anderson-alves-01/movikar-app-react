@@ -1,10 +1,58 @@
 import express, { type Request, Response, NextFunction } from "express";
+import helmet from "helmet";
+import cors from "cors";
+import cookieParser from "cookie-parser";
 import { setupVite, serveStatic, log } from "./vite";
+import { sanitizeInput, createRateLimit } from "./middleware/validation";
 
 const app = express();
-// Increase payload limit for file uploads (50MB)
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: false, limit: '50mb' }));
+
+// Security Headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      connectSrc: ["'self'", "https://api.stripe.com"],
+      frameSrc: ["'self'", "https://js.stripe.com"]
+    },
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true,
+  },
+  crossOriginEmbedderPolicy: false
+}));
+
+// CORS Configuration
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://yourdomain.com'] // Update this in production
+    : ['http://localhost:5000', 'http://localhost:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+
+// Rate limiting for API routes
+app.use('/api/', createRateLimit(15 * 60 * 1000, 100, 'Muitas requisições. Tente novamente em 15 minutos.'));
+
+// Special rate limiting for auth routes
+app.use('/api/auth/', createRateLimit(15 * 60 * 1000, 10, 'Muitas tentativas de login. Tente novamente em 15 minutos.'));
+
+// Cookie parser
+app.use(cookieParser());
+
+// Input sanitization
+app.use(sanitizeInput);
+
+// Body parser with size limits
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
 app.use((req, res, next) => {
   const start = Date.now();

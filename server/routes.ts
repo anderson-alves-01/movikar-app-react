@@ -227,8 +227,13 @@ declare global {
 
 // Authentication middleware
 const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  // Try to get token from cookies first, then fallback to Authorization header
+  let token = req.cookies?.token;
+  
+  if (!token) {
+    const authHeader = req.headers['authorization'];
+    token = authHeader && authHeader.split(' ')[1];
+  }
 
   console.log("🔑 Authentication attempt - Token:", token ? "Present" : "Missing");
 
@@ -506,8 +511,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Import validation middleware
+  const { validateUser, validateVehicle, validateBooking, validateMessage, handleValidationErrors } = await import("./middleware/validation");
+
   // Authentication routes
-  app.post("/api/auth/register", async (req, res) => {
+  app.post("/api/auth/register", validateUser, handleValidationErrors, async (req, res) => {
     try {
       const userData = insertUserSchema.parse(req.body);
       
@@ -526,10 +534,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Generate token
-      const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '24h' });
+      const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
+      const refreshToken = jwt.sign({ userId: user.id }, JWT_SECRET + '_refresh', { expiresIn: '7d' });
+
+      // Set HttpOnly cookies
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 15 * 60 * 1000 // 15 minutes
+      });
+
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      });
 
       const { password: _, ...userWithoutPassword } = user;
-      res.status(201).json({ user: userWithoutPassword, token });
+      res.status(201).json({ user: userWithoutPassword });
     } catch (error) {
       console.error("Registration error:", error);
       res.status(400).json({ message: "Falha no cadastro. Verifique os dados informados" });
@@ -550,10 +574,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "E-mail ou senha incorretos" });
       }
 
-      const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '24h' });
+      const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
+      const refreshToken = jwt.sign({ userId: user.id }, JWT_SECRET + '_refresh', { expiresIn: '7d' });
+
+      // Set HttpOnly cookies
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 15 * 60 * 1000 // 15 minutes
+      });
+
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      });
       
       const { password: _, ...userWithoutPassword } = user;
-      res.json({ user: userWithoutPassword, token });
+      res.json({ user: userWithoutPassword });
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ message: "Falha no login. Tente novamente" });
@@ -568,6 +608,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/auth/user", authenticateToken, async (req, res) => {
     const { password: _, ...userWithoutPassword } = req.user!;
     res.json(userWithoutPassword);
+  });
+
+  app.post("/api/auth/logout", (req, res) => {
+    res.clearCookie('token');
+    res.clearCookie('refreshToken');
+    res.json({ message: 'Logout realizado com sucesso' });
+  });
+
+  app.post("/api/auth/refresh", async (req, res) => {
+    try {
+      const refreshToken = req.cookies?.refreshToken;
+      
+      if (!refreshToken) {
+        return res.status(401).json({ message: 'Refresh token não encontrado' });
+      }
+
+      const decoded = jwt.verify(refreshToken, JWT_SECRET + '_refresh') as { userId: number };
+      const user = await storage.getUser(decoded.userId);
+      
+      if (!user) {
+        return res.status(403).json({ message: 'Refresh token inválido' });
+      }
+      
+      const newToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
+      
+      res.cookie('token', newToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 15 * 60 * 1000
+      });
+      
+      const { password: _, ...userWithoutPassword } = user;
+      res.json({ user: userWithoutPassword });
+    } catch (error) {
+      res.status(403).json({ message: 'Refresh token inválido' });
+    }
   });
 
   // Profile endpoints
@@ -1061,7 +1138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/vehicles", authenticateToken, async (req, res) => {
+  app.post("/api/vehicles", authenticateToken, validateVehicle, handleValidationErrors, async (req, res) => {
     try {
       const vehicleData = insertVehicleSchema.parse({
         ...req.body,
@@ -1197,7 +1274,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/bookings", authenticateToken, async (req, res) => {
+  app.post("/api/bookings", authenticateToken, validateBooking, handleValidationErrors, async (req, res) => {
     try {
       // Get vehicle to find owner ID
       const vehicle = await storage.getVehicle(req.body.vehicleId);
@@ -1847,7 +1924,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/messages", authenticateToken, async (req, res) => {
+  app.post("/api/messages", authenticateToken, validateMessage, handleValidationErrors, async (req, res) => {
     try {
       const { content, receiverId, bookingId } = req.body;
       
