@@ -577,23 +577,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
       const refreshToken = jwt.sign({ userId: user.id }, JWT_SECRET + '_refresh', { expiresIn: '7d' });
 
-      // Set HttpOnly cookies
+      // Set HttpOnly cookies - mais permissivo para desenvolvimento
       res.cookie('token', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        secure: false, // Permite HTTPS e HTTP em desenvolvimento
+        sameSite: 'lax', // Menos restritivo para desenvolvimento
         maxAge: 15 * 60 * 1000 // 15 minutes
       });
 
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        secure: false, // Permite HTTPS e HTTP em desenvolvimento
+        sameSite: 'lax', // Menos restritivo para desenvolvimento
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
       
       const { password: _, ...userWithoutPassword } = user;
-      res.json({ user: userWithoutPassword });
+      res.json({ user: userWithoutPassword, token }); // Incluir token para compatibilidade
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ message: "Falha no login. Tente novamente" });
@@ -635,8 +635,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.cookie('token', newToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        secure: false, // Permite HTTPS e HTTP em desenvolvimento
+        sameSite: 'lax', // Menos restritivo para desenvolvimento
         maxAge: 15 * 60 * 1000
       });
       

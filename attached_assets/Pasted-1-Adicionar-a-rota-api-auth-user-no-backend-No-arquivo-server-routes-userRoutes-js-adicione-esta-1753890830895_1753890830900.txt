@@ -1,0 +1,190 @@
+1. Adicionar a rota /api/auth/user no backend
+No arquivo server/routes/userRoutes.js, adicione esta rota:
+
+router.get('/auth/user', protect, async (req, res) => {
+try {
+const user = await User.findById(req.user._id).select('-password');
+if (user) {
+res.json({
+_id: user._id,
+name: user.name,
+email: user.email,
+});
+} else {
+res.status(404);
+throw new Error('Usuário não encontrado');
+}
+} catch (error) {
+res.status(401);
+res.json({ message: 'Não autorizado' });
+}
+});
+
+2. Verificar o middleware de autenticação
+Em server/middleware/authMiddleware.js:
+
+const jwt = require('jsonwebtoken');
+const asyncHandler = require('express-async-handler');
+
+const protect = asyncHandler(async (req, res, next) => {
+let token;
+
+if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+token = req.headers.authorization.split(' ');
+}
+
+if (!token) {
+res.status(401);
+throw new Error('Não autorizado, token não encontrado');
+}
+
+try {
+const decoded = jwt.verify(token, process.env.JWT_SECRET);
+req.user = await User.findById(decoded.id).select('-password');
+next();
+} catch (error) {
+res.status(401);
+throw new Error('Não autorizado, token inválido');
+}
+});
+
+module.exports = { protect };
+
+3. Corrigir o problema do PIX no frontend
+No componente onde está o erro, remova ou comente a linha:
+console.log('🔐 Setting auth - PIX field: 11987654321');
+
+4. Atualizar o interceptor da API
+Em client/src/utils/api.js:
+
+import axios from 'axios';
+import store from '../store';
+import { logout } from '../store/authSlice';
+
+const API = axios.create({ baseURL: '/api' });
+
+API.interceptors.request.use((config) => {
+const userInfo = localStorage.getItem('userInfo');
+if (userInfo) {
+const parsedUserInfo = JSON.parse(userInfo);
+if (parsedUserInfo.token) {
+config.headers.Authorization = Bearer ${parsedUserInfo.token};
+}
+}
+return config;
+});
+
+API.interceptors.response.use(
+(response) => response,
+(error) => {
+if (error.response?.status === 401) {
+console.log('🧹 Clearing invalid local auth data');
+localStorage.removeItem('userInfo');
+store.dispatch(logout());
+window.location.href = '/login';
+}
+return Promise.reject(error);
+}
+);
+
+export default API;
+
+5. Verificar o componente VehicleCard
+No componente VehicleCard, verifique se há uma função como:
+
+const saveVehicleStatus = async () => {
+try {
+const response = await API.post('/vehicles/save-status', {
+vehicleId: id,
+status: newStatus
+});
+console.log('🔍 [VehicleCard] Vehicle', id, 'saved status:', response.data);
+} catch (error) {
+console.error('Failed to save vehicle status:', error);
+}
+};
+
+6. Adicionar a rota para salvar status do veículo
+Em server/routes/vehicleRoutes.js:
+
+const express = require('express');
+const router = express.Router();
+const { protect } = require('../middleware/authMiddleware');
+const Vehicle = require('../models/vehicleModel');
+
+router.post('/save-status', protect, async (req, res) => {
+try {
+const { vehicleId, status } = req.body;
+
+const vehicle = await Vehicle.findById(vehicleId);
+
+if (!vehicle) {
+return res.status(404).json({ message: 'Veículo não encontrado' });
+}
+
+vehicle.status = status;
+await vehicle.save();
+
+res.json({ message: 'Status atualizado com sucesso', vehicle });
+} catch (error) {
+console.error('Erro ao salvar status do veículo:', error);
+res.status(500).json({ message: 'Erro ao atualizar status' });
+}
+});
+
+module.exports = router;
+
+7. Verificar o modelo de veículo
+Em server/models/vehicleModel.js:
+
+const mongoose = require('mongoose');
+
+const vehicleSchema = new mongoose.Schema({
+make: {
+type: String,
+required: [true, 'Por favor, adicione a marca do veículo'],
+},
+model: {
+type: String,
+required: [true, 'Por favor, adicione o modelo do veículo'],
+},
+year: {
+type: Number,
+required: [true, 'Por favor, adicione o ano do veículo'],
+},
+pricePerDay: {
+type: Number,
+required: [true, 'Por favor, adicione o preço por dia'],
+},
+status: {
+type: String,
+enum: ['available', 'rented', 'maintenance'],
+default: 'available',
+},
+createdAt: {
+type: Date,
+default: Date.now,
+},
+});
+
+module.exports = mongoose.model('Vehicle', vehicleSchema);
+
+8. Verificar todas as rotas no backend
+Em server/app.js:
+
+app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/vehicles', require('./routes/vehicleRoutes'));
+app.use('/api/subscriptions', require('./routes/subscriptionRoutes'));
+
+9. Testar a solução
+Limpe o cache do navegador
+Faça login novamente
+Acesse a página de planos de assinatura
+Verifique se os erros no console desapareceram
+10. Verificar o console do navegador
+Depois de fazer login, verifique se os erros desapareceram. Se ainda houver erros, verifique:
+
+Se o token está sendo armazenado no localStorage
+Se o token está sendo enviado no cabeçalho Authorization
+Se as rotas no backend estão protegidas corretamente
+Essas alterações devem resolver os erros 401 e o problema de limpeza de dados de autenticação.
