@@ -325,13 +325,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Trust proxy for rate limiting to work correctly in Replit
   app.set('trust proxy', 1);
 
-  // Rate limiting configuration
+  // Rate limiting configuration - mais permissivo para desenvolvimento e testes
   const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // Limit each IP to 10 requests per windowMs
-    message: { message: 'Muitas tentativas de login. Tente novamente em 15 minutos.' },
+    windowMs: 5 * 60 * 1000, // 5 minutes (reduzido de 15)
+    max: 50, // Limit cada IP to 50 requests per windowMs (aumentado de 10)
+    message: { message: 'Muitas tentativas de login. Tente novamente em alguns minutos.' },
     standardHeaders: true,
     legacyHeaders: false,
+    skip: (req) => {
+      // Pular rate limiting para refresh e logout durante desenvolvimento
+      return process.env.NODE_ENV === 'development' && 
+             (req.path === '/api/auth/refresh' || req.path === '/api/auth/logout');
+    }
   });
 
   const generalLimiter = rateLimit({
@@ -605,18 +610,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
       const refreshToken = jwt.sign({ userId: user.id }, JWT_SECRET + '_refresh', { expiresIn: '7d' });
 
-      // Set HttpOnly cookies
+      // Set HttpOnly cookies - mesmas configurações do login
       res.cookie('token', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        secure: false, // Permite HTTPS e HTTP em desenvolvimento
+        sameSite: 'lax', // Menos restritivo para desenvolvimento
         maxAge: 15 * 60 * 1000 // 15 minutes
       });
 
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        secure: false, // Permite HTTPS e HTTP em desenvolvimento
+        sameSite: 'lax', // Menos restritivo para desenvolvimento
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
 
@@ -661,7 +666,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const { password: _, ...userWithoutPassword } = user;
-      res.json({ user: userWithoutPassword, token }); // Incluir token para compatibilidade
+      res.json({ user: userWithoutPassword }); // Não incluir token no response (apenas cookies)
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ message: "Falha no login. Tente novamente" });
@@ -679,8 +684,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/auth/logout", (req, res) => {
-    res.clearCookie('token');
-    res.clearCookie('refreshToken');
+    // Limpar cookies com configurações que garantem remoção completa
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      path: '/'
+    });
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      path: '/'
+    });
+    
+    // Definir cookies com valor vazio e expiração no passado como fallback
+    res.cookie('token', '', {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      expires: new Date(0)
+    });
+    res.cookie('refreshToken', '', {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      expires: new Date(0)
+    });
+    
     res.json({ message: 'Logout realizado com sucesso' });
   });
 
