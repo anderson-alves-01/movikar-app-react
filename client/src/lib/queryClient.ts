@@ -34,8 +34,6 @@ export async function apiRequest(
   
   if (authToken) {
     headers["Authorization"] = `Bearer ${authToken}`;
-  } else {
-    console.warn('No auth token found for API request to:', url);
   }
 
   const res = await fetch(url, {
@@ -44,6 +42,47 @@ export async function apiRequest(
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
+
+  // Handle 401 errors with automatic retry after token refresh
+  if (res.status === 401) {
+    try {
+      // Try to refresh the session
+      const refreshResponse = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (refreshResponse.ok) {
+        // Retry the original request
+        return fetch(url, {
+          method,
+          headers,
+          body: data ? JSON.stringify(data) : undefined,
+          credentials: "include",
+        });
+      } else {
+        // Refresh failed, redirect to login
+        localStorage.removeItem('auth-storage');
+        
+        // Only redirect if not already on auth page
+        if (!window.location.pathname.includes('/auth')) {
+          localStorage.setItem('returnUrl', window.location.pathname);
+          window.location.href = '/auth';
+        }
+        
+        throw new Error('401: Session expired');
+      }
+    } catch (refreshError) {
+      localStorage.removeItem('auth-storage');
+      
+      if (!window.location.pathname.includes('/auth')) {
+        localStorage.setItem('returnUrl', window.location.pathname);
+        window.location.href = '/auth';
+      }
+      
+      throw new Error('401: Session expired');
+    }
+  }
 
   await throwIfResNotOk(res);
   return res;

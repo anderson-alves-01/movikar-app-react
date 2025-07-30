@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -43,11 +44,12 @@ export default function SubscriptionPlans() {
   const [vehicleCount, setVehicleCount] = useState<number>(3); // Default 3 vehicles (minimum)
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
 
-  // Fetch subscription plans
+  // Fetch subscription plans - only when authenticated
   const { data: plans = [], isLoading: plansLoading } = useQuery<SubscriptionPlan[]>({
     queryKey: ["/api/subscription-plans"],
-    enabled: true, // Enable this specific query only
+    enabled: isAuthenticated, // Only fetch when user is authenticated
   });
 
   // Disable user subscription fetch to prevent auth loops
@@ -102,9 +104,8 @@ export default function SubscriptionPlans() {
   const handleSubscribe = (planName: string) => {
     if (createSubscriptionMutation.isPending) return;
 
-    // Check if user is authenticated first
-    const authStorage = localStorage.getItem('auth-storage');
-    if (!authStorage) {
+    // Check if user is authenticated using the new auth hook
+    if (!isAuthenticated) {
       toast({
         title: "Login Necessário",
         description: "Você precisa estar logado para assinar um plano.",
@@ -125,7 +126,7 @@ export default function SubscriptionPlans() {
     });
   };
 
-  if (plansLoading || subscriptionLoading) {
+  if (authLoading || plansLoading || subscriptionLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
         <div className="max-w-6xl mx-auto">

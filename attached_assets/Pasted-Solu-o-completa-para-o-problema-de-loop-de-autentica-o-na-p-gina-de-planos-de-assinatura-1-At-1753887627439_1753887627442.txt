@@ -1,0 +1,337 @@
+Solução completa para o problema de loop de autenticação na página de planos de assinatura:
+
+1. Atualizar authSlice.js (client/src/store/authSlice.js)
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
+
+const userInfoFromStorage = localStorage.getItem('userInfo')
+? JSON.parse(localStorage.getItem('userInfo'))
+: null;
+
+export const login = createAsyncThunk(
+'auth/login',
+async ({ email, password }, { rejectWithValue }) => {
+try {
+const { data } = await axios.post('/api/users/login', { email, password });
+localStorage.setItem('userInfo', JSON.stringify(data));
+return data;
+} catch (error) {
+return rejectWithValue(error.response?.data?.message || 'Login failed');
+}
+}
+);
+
+export const checkAuth = createAsyncThunk(
+'auth/checkAuth',
+async (_, { rejectWithValue }) => {
+try {
+const userInfo = localStorage.getItem('userInfo');
+if (!userInfo) {
+return rejectWithValue('No user info found');
+}
+
+const parsedUserInfo = JSON.parse(userInfo);
+const token = parsedUserInfo.token;
+
+// Verificar token com backend
+const response = await axios.get('/api/users/profile', {
+headers: {
+Authorization: `Bearer ${token}`,
+},
+});
+
+return response.data;
+} catch (error) {
+localStorage.removeItem('userInfo');
+return rejectWithValue(error.response?.data?.message || 'Session expired');
+}
+}
+);
+
+const authSlice = createSlice({
+name: 'auth',
+initialState: {
+userInfo: userInfoFromStorage,
+loading: userInfoFromStorage ? false : true,
+error: null,
+},
+reducers: {
+logout: (state) => {
+localStorage.removeItem('userInfo');
+state.userInfo = null;
+state.loading = false;
+},
+},
+extraReducers: (builder) => {
+builder
+.addCase(login.pending, (state) => {
+state.loading = true;
+state.error = null;
+})
+.addCase(login.fulfilled, (state, action) => {
+state.loading = false;
+state.userInfo = action.payload;
+})
+.addCase(login.rejected, (state, action) => {
+state.loading = false;
+state.error = action.payload;
+})
+.addCase(checkAuth.pending, (state) => {
+state.loading = true;
+})
+.addCase(checkAuth.fulfilled, (state, action) => {
+state.loading = false;
+state.userInfo = action.payload;
+})
+.addCase(checkAuth.rejected, (state) => {
+state.loading = false;
+state.userInfo = null;
+});
+},
+});
+
+export const { logout } = authSlice.actions;
+export default authSlice.reducer;
+
+2. Atualizar api.js (client/src/utils/api.js)
+import axios from 'axios';
+import store from '../store';
+
+const API = axios.create({ baseURL: '/api' });
+
+// Adicionar token a cada requisição
+API.interceptors.request.use((config) => {
+const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+if (userInfo && userInfo.token) {
+config.headers.Authorization = Bearer ${userInfo.token};
+}
+return config;
+});
+
+// Lidar com erros 401
+API.interceptors.response.use(
+(response) => response,
+(error) => {
+if (error.response?.status === 401) {
+store.dispatch(logout());
+window.location.href = '/login';
+}
+return Promise.reject(error);
+}
+);
+
+export default API;
+
+3. Atualizar App.js (client/src/App.js)
+import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { checkAuth } from './store/authSlice';
+import Login from './components/Login';
+import SubscriptionPlans from './components/SubscriptionPlans';
+import Dashboard from './components/Dashboard';
+
+function App() {
+const dispatch = useDispatch();
+const { userInfo, loading } = useSelector((state) => state.auth);
+
+useEffect(() => {
+dispatch(checkAuth());
+}, [dispatch]);
+
+if (loading) {
+return
+Loading...;
+}
+
+return (
+
+
+<Route
+path="/login"
+element={!userInfo ? : }
+/>
+<Route
+path="/subscription-plans"
+element={
+
+
+
+}
+/>
+<Route
+path="/dashboard"
+element={
+
+
+
+}
+/>
+<Route path="/" element={} />
+
+
+);
+}
+
+const ProtectedRoute = ({ children }) => {
+const { userInfo, loading } = useSelector((state) => state.auth);
+const location = useLocation();
+
+if (loading) {
+return
+Loading...;
+}
+
+if (!userInfo) {
+return <Navigate to="/login" state={{ from: location }} replace />;
+}
+
+return children;
+};
+
+export default App;
+
+4. Atualizar userRoutes.js (server/routes/userRoutes.js)
+router.get('/profile', protect, async (req, res) => {
+const user = await User.findById(req.user._id);
+if (user) {
+res.json({
+_id: user._id,
+name: user.name,
+email: user.email,
+});
+} else {
+res.status(404);
+throw new Error('User not found');
+}
+});
+
+5. Atualizar SubscriptionPlans.js (client/src/components/SubscriptionPlans.js)
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import API from '../utils/api';
+
+const SubscriptionPlans = () => {
+const [plans, setPlans] = useState([]);
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState(null);
+const navigate = useNavigate();
+const { userInfo } = useSelector((state) => state.auth);
+
+useEffect(() => {
+const fetchPlans = async () => {
+try {
+const response = await API.get('/subscriptions');
+setPlans(response.data);
+} catch (err) {
+setError('Failed to load subscription plans');
+} finally {
+setLoading(false);
+}
+};
+
+if (userInfo) {
+fetchPlans();
+} else {
+navigate('/login');
+}
+}, [navigate, userInfo]);
+
+const handleSubscribe = async (planId) => {
+try {
+await API.post('/subscriptions/subscribe', { planId });
+navigate('/dashboard');
+} catch (err) {
+setError('Failed to subscribe');
+}
+};
+
+if (loading) return
+Loading...;
+if (error) return
+{error};
+
+return (
+
+Choose Your Plan
+
+{plans.map(plan => (
+
+{plan.name}
+{plan.description}
+${plan.price}/month
+<button
+onClick={() => handleSubscribe(plan.id)}
+className="subscribe-btn"
+>
+Subscribe
+
+
+))}
+
+
+);
+};
+
+export default SubscriptionPlans;
+
+Explicação das Mudanças Principais
+Verificação de Token:
+Adicionada verificação real com backend no checkAuth
+Agora faz uma chamada real para /api/users/profile para validar o token
+Estado de Carregamento:
+Adicionado estado de carregamento durante verificação de autenticação
+Mostra spinner enquanto verifica autenticação
+Tratamento de Erros:
+Melhorado tratamento de erros no interceptor da API
+Faz logout automático em erros 401
+Limpa localStorage em falhas de autenticação
+Rotas Protegidas:
+Componente ProtectedRoute aprimorado para lidar com estado de carregamento
+Redireciona corretamente para login se não autenticado
+Otimização de Componentes:
+SubscriptionPlans agora verifica userInfo antes de fazer chamadas de API
+Evita chamadas desnecessárias quando não autenticado
+Testando a Solução
+Limpe cache e cookies do navegador
+Acesse https://car-share.replit.app/subscription-plans
+Deve redirecionar para página de login
+Faça login com credenciais válidas
+Deve redirecionar de volta para subscription-plans
+Recarregue a página - deve permanecer em subscription-plans sem redirecionar
+Clique no botão de assinar - deve funcionar sem pedir login novamente
+Recomendações Adicionais
+Adicionar Refresh Tokens:
+export const refreshToken = createAsyncThunk(
+'auth/refreshToken',
+async (_, { rejectWithValue }) => {
+try {
+const { data } = await axios.post('/api/users/refresh');
+localStorage.setItem('userInfo', JSON.stringify(data));
+return data;
+} catch (error) {
+return rejectWithValue('Session expired');
+}
+}
+);
+Verificar Expiração do Token:
+API.interceptors.response.use(
+(response) => response,
+async (error) => {
+const originalRequest = error.config;
+if (error.response?.status === 401 && !originalRequest._retry) {
+originalRequest._retry = true;
+try {
+await store.dispatch(refreshToken());
+return API(originalRequest);
+} catch (refreshError) {
+store.dispatch(logout());
+window.location.href = '/login';
+}
+}
+return Promise.reject(error);
+}
+);
+
+Esta solução deve corrigir o problema de loop de autenticação que você está enfrentando. A melhoria chave é que agora verificamos o token com o backend no carregamento do app em vez de apenas confiar no valor do localStorage.

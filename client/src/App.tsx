@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SearchProvider } from "@/contexts/SearchContext";
 import VehicleComparison from "@/components/vehicle-comparison";
+import AuthProvider from "@/components/AuthProvider";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Home from "@/pages/home";
 import Auth from "@/pages/auth";
 import Profile from "@/pages/profile";
@@ -82,9 +84,21 @@ function Router() {
       <Route path="/admin-coupons" component={AdminCouponsPage} />
       <Route path="/earnings" component={EarningsPage} />
       <Route path="/debug-pix" component={DebugPix} />
-      <Route path="/subscription-plans" component={SubscriptionPlans} />
-      <Route path="/subscription-checkout" component={SubscriptionCheckout} />
-      <Route path="/subscription-success" component={SubscriptionSuccess} />
+      <Route path="/subscription-plans">
+        <ProtectedRoute requireAuth={true}>
+          <SubscriptionPlans />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/subscription-checkout">
+        <ProtectedRoute requireAuth={true}>
+          <SubscriptionCheckout />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/subscription-success">
+        <ProtectedRoute requireAuth={true}>
+          <SubscriptionSuccess />
+        </ProtectedRoute>
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
@@ -93,18 +107,20 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <SearchProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-          <VehicleComparison />
-          
-          {/* PWA Components */}
-          <InstallPrompt />
-          <IOSInstallPrompt />
-          <OfflineIndicator />
-        </TooltipProvider>
-      </SearchProvider>
+      <AuthProvider>
+        <SearchProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+            <VehicleComparison />
+            
+            {/* PWA Components */}
+            <InstallPrompt />
+            <IOSInstallPrompt />
+            <OfflineIndicator />
+          </TooltipProvider>
+        </SearchProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
