@@ -135,50 +135,61 @@ export default function SubscriptionPlans() {
     },
   });
 
-  const handleSubscribe = (planName: string) => {
+  const handleSubscribe = async (planName: string) => {
     if (createSubscriptionMutation.isPending) return;
 
-    // Debug: verificar status de autenticação
-    console.log('🔍 Debug autenticação:', {
-      isAuthenticated,
-      authLoading,
-      user: !!user,
-      userEmail: user?.email
-    });
-
-    // Verificar se está autenticado usando o hook direto
-    const { user: currentUser } = useAuthStore();
-    
-    if (!currentUser || !isAuthenticated) {
-      console.log('❌ Usuário não autenticado, redirecionando para login');
-      
-      toast({
-        title: "Login Necessário",
-        description: "Você precisa estar logado para assinar um plano.",
-        variant: "destructive",
+    // Fazer uma verificação direta com o backend antes de prosseguir
+    try {
+      const response = await fetch('/api/auth/user', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
+        },
       });
 
-      // Salvar dados da assinatura e redirecionar para login
-      localStorage.setItem('returnUrl', '/subscription-plans');
-      localStorage.setItem('pendingSubscription', JSON.stringify({
+      if (!response.ok) {
+        console.log('❌ Backend auth check failed:', response.status);
+        
+        toast({
+          title: "Login Necessário",
+          description: "Você precisa estar logado para assinar um plano.",
+          variant: "destructive",
+        });
+
+        // Salvar dados da assinatura e redirecionar para login
+        localStorage.setItem('returnUrl', '/subscription-plans');
+        localStorage.setItem('pendingSubscription', JSON.stringify({
+          planName,
+          vehicleCount
+        }));
+        
+        setTimeout(() => {
+          window.location.href = '/auth';
+        }, 1500);
+        return;
+      }
+
+      const userData = await response.json();
+      console.log('✅ Backend confirmou autenticação:', userData.email);
+
+      setSelectedPlan(planName);
+      createSubscriptionMutation.mutate({
         planName,
-        vehicleCount
-      }));
+        paymentMethod: isAnnual ? 'annual' : 'monthly',
+        vehicleCount,
+      });
+
+    } catch (error) {
+      console.error('❌ Erro na verificação de auth:', error);
       
-      setTimeout(() => {
-        window.location.href = '/auth';
-      }, 1500);
-      return;
+      toast({
+        title: "Erro de Conexão",
+        description: "Erro ao verificar autenticação. Tente novamente.",
+        variant: "destructive",
+      });
     }
-
-    console.log('✅ Usuário autenticado, prosseguindo com assinatura:', currentUser.email);
-
-    setSelectedPlan(planName);
-    createSubscriptionMutation.mutate({
-      planName,
-      paymentMethod: isAnnual ? 'annual' : 'monthly',
-      vehicleCount,
-    });
   };
 
   if (authLoading || plansLoading || subscriptionLoading) {

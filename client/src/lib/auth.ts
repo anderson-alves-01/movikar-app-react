@@ -48,7 +48,7 @@ export async function login(email: string, password: string) {
 }
 
 interface AuthStore extends AuthState {
-  setAuth: (user: AuthUser, token: string) => void;
+  setAuth: (user: AuthUser, token?: string | null) => void;
   updateUser: (userData: Partial<AuthUser>) => void;
   refreshUser: () => Promise<void>;
   clearAuth: () => void;
@@ -63,8 +63,8 @@ export const useAuthStore = create<AuthStore>()(
       isLoading: false,
       setAuth: (user, token = null) => {
         console.log('🔐 Setting auth - PIX field:', user.pix);
-        // Token is now handled by httpOnly cookies, so we don't store it
-        set({ user, token: null, isLoading: false });
+        // Store token for subscription flow
+        set({ user, token, isLoading: false });
       },
       updateUser: (userData) => {
         const currentUser = get().user;

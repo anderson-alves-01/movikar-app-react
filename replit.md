@@ -10,15 +10,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### Janeiro 30, 2025 - Debug e Correção do Fluxo de Assinatura em Andamento
+### Janeiro 30, 2025 - Correção Crítica do Fluxo de Assinatura - RESOLVIDO ✅
 ✓ Login redireciona automaticamente para a página principal após sucesso
 ✓ Página de planos de assinatura é pública - não requer autenticação para visualizar
 ✓ Sistema de returnUrl implementado: se usuário veio de planos, volta para planos após login
-✓ Logs de debug adicionados para diagnosticar problema de autenticação
+✓ Erro React #321 (useSyncExternalStore) corrigido com ajustes no Zustand
 ✓ Correção de import no subscription-checkout (useHistory removido)
 ✓ Sistema de assinatura pendente implementado com localStorage
-→ Investigando problema: usuário autenticado ainda solicita login na assinatura
-→ Testando verificação dupla: useAuth() vs useAuthStore() para confirmar estado
+✓ Verificação de autenticação refatorada para usar backend diretamente
+✓ Implementada verificação real-time antes de processar assinatura
+✓ Corrigido problema de tipos no AuthStore (token opcional)
+✓ Sistema agora verifica autenticação no backend antes de cada assinatura
+✓ SOLUÇÃO: handleSubscribe() agora faz fetch direto para /api/auth/user
 
 ### Janeiro 30, 2025 - Sistema de Autenticação Otimizado Completamente ✅
 ✓ Configurações de cookies corrigidas (sameSite: 'lax', secure: false para desenvolvimento)
