@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Search, Menu, User, MessageCircle, Car, LogOut, Shield, Bell, Gift, Sparkles, BarChart3, RotateCcw, DollarSign, BookmarkCheck } from "lucide-react";
+import { Search, Menu, User, MessageCircle, Car, LogOut, Shield, Bell, Gift, Sparkles, BarChart3, RotateCcw, DollarSign, BookmarkCheck, Crown } from "lucide-react";
 import { useAuthStore } from "@/lib/auth";
 import { useSearch } from "@/contexts/SearchContext";
 import { buildSearchParams } from "@/lib/searchUtils";
@@ -143,6 +143,18 @@ export default function Header() {
 
               {user ? (
                 <>
+                  {/* Subscription Button */}
+                  <Link href="/subscription-plans">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="hidden sm:flex bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white border-0 shadow-md"
+                    >
+                      <Crown className="h-4 w-4 mr-2" />
+                      Upgrade
+                    </Button>
+                  </Link>
+
                   {/* Add Vehicle Button */}
                   <Link href="/vehicles">
                     <Button
@@ -228,6 +240,13 @@ export default function Header() {
                         <Link href="/saved-vehicles" className="cursor-pointer">
                           <BookmarkCheck className="h-4 w-4 mr-2" />
                           Veículos Salvos
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href="/subscription-plans" className="cursor-pointer">
+                          <Crown className="h-4 w-4 mr-2 text-purple-600" />
+                          <span className="text-purple-600 font-medium">Planos Premium</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>

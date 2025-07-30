@@ -5,8 +5,9 @@ import VehicleFilters from "@/components/vehicle-filters";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SearchFilters } from "@/types";
-import { Loader2 } from "lucide-react";
+import { Loader2, Crown, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 import { useSearch } from "@/contexts/SearchContext";
 import { CarLoading, VehicleCardSkeleton } from "@/components/ui/loading";
 
@@ -59,6 +60,39 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       <HeroSection onSearch={handleSearch} />
+      
+      {/* Subscription Banner */}
+      <section className="py-8 bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between">
+            <div className="text-center md:text-left mb-6 md:mb-0">
+              <div className="flex items-center justify-center md:justify-start mb-2">
+                <Crown className="h-6 w-6 text-yellow-300 mr-2" />
+                <h3 className="text-2xl font-bold text-white">Destaque seus anúncios</h3>
+                <Sparkles className="h-5 w-5 text-yellow-300 ml-2" />
+              </div>
+              <p className="text-purple-100 text-lg max-w-2xl">
+                Com os planos Premium, seus veículos aparecem no topo das pesquisas e recebem até 10x mais visualizações
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link href="/subscription-plans">
+                <Button 
+                  size="lg" 
+                  className="bg-white text-purple-700 hover:bg-gray-100 font-semibold px-8 py-3 shadow-lg"
+                >
+                  <Crown className="h-5 w-5 mr-2" />
+                  Ver Planos
+                </Button>
+              </Link>
+              <div className="text-center">
+                <div className="text-yellow-300 font-bold text-sm">A partir de</div>
+                <div className="text-white font-bold text-xl">R$ 29,90/mês</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
       
       {/* Vehicle Listings Section */}
       <section className="py-16 bg-gray-50">

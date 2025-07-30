@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Settings, DollarSign, Shield, Clock, Mail, Phone, Save, AlertCircle, Smartphone, CreditCard } from "lucide-react";
+import { Settings, DollarSign, Shield, Clock, Mail, Phone, Save, AlertCircle, Smartphone, CreditCard, Crown } from "lucide-react";
 import Header from "@/components/header";
 import { useAuthStore } from "@/lib/auth";
 import { Link } from "wouter";
@@ -32,6 +32,9 @@ function AdminSettingsPage() {
     enablePixPayment: false,
     enablePixTransfer: true,
     pixTransferDescription: "Repasse CarShare",
+    essentialPlanPrice: 29.90,
+    plusPlanPrice: 59.90,
+    annualDiscountPercentage: 20.00,
   });
 
   // Verificar se é admin
@@ -79,6 +82,9 @@ function AdminSettingsPage() {
         enablePixPayment: currentSettings.enablePixPayment || false,
         enablePixTransfer: currentSettings.enablePixTransfer || true,
         pixTransferDescription: currentSettings.pixTransferDescription || "Repasse CarShare",
+        essentialPlanPrice: currentSettings.essentialPlanPrice || 29.90,
+        plusPlanPrice: currentSettings.plusPlanPrice || 59.90,
+        annualDiscountPercentage: currentSettings.annualDiscountPercentage || 20.00,
       });
     }
   }, [currentSettings]);
@@ -343,6 +349,95 @@ function AdminSettingsPage() {
                     disabled={!isEditing}
                     className="mt-1"
                   />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Configurações de Planos de Assinatura */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Crown className="h-5 w-5 text-purple-600" />
+                  Planos de Assinatura
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="essentialPrice">Preço Plano Essencial (R$)</Label>
+                  <Input
+                    id="essentialPrice"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={settings.essentialPlanPrice}
+                    onChange={(e) => handleInputChange('essentialPlanPrice', parseFloat(e.target.value) || 0)}
+                    disabled={!isEditing}
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Preço mensal do plano Essencial (destaque prata)
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="plusPrice">Preço Plano Plus (R$)</Label>
+                  <Input
+                    id="plusPrice"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={settings.plusPlanPrice}
+                    onChange={(e) => handleInputChange('plusPlanPrice', parseFloat(e.target.value) || 0)}
+                    disabled={!isEditing}
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Preço mensal do plano Plus (destaque diamante)
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="annualDiscount">Desconto Anual (%)</Label>
+                  <Input
+                    id="annualDiscount"
+                    type="number"
+                    min="0"
+                    max="50"
+                    step="0.1"
+                    value={settings.annualDiscountPercentage}
+                    onChange={(e) => handleInputChange('annualDiscountPercentage', parseFloat(e.target.value) || 0)}
+                    disabled={!isEditing}
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Percentual de desconto para pagamento anual
+                  </p>
+                </div>
+
+                {/* Preview de preços anuais */}
+                <div className="bg-purple-50 p-4 rounded-lg mt-4">
+                  <h4 className="text-sm font-medium text-purple-800 mb-2">Preview de Preços Anuais:</h4>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span>Essencial mensal:</span>
+                      <span>R$ {settings.essentialPlanPrice.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Essencial anual:</span>
+                      <span>R$ {(settings.essentialPlanPrice * 12 * (1 - settings.annualDiscountPercentage / 100)).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Plus mensal:</span>
+                      <span>R$ {settings.plusPlanPrice.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Plus anual:</span>
+                      <span>R$ {(settings.plusPlanPrice * 12 * (1 - settings.annualDiscountPercentage / 100)).toFixed(2)}</span>
+                    </div>
+                    <div className="text-xs text-purple-600 mt-2">
+                      Economia anual: {settings.annualDiscountPercentage}% ({(settings.annualDiscountPercentage * 12 / 100).toFixed(1)} meses grátis)
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
