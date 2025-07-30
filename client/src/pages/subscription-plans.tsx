@@ -82,7 +82,7 @@ export default function SubscriptionPlans() {
         // Clear expired token and redirect to login
         localStorage.removeItem('auth-storage');
         setTimeout(() => {
-          window.location.href = '/login';
+          window.location.href = '/auth';
         }, 2000);
         return;
       }
