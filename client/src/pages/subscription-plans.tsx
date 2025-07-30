@@ -46,6 +46,45 @@ export default function SubscriptionPlans() {
   const queryClient = useQueryClient();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
 
+  // Processar assinatura pendente quando user fizer login
+  const processPendingSubscription = () => {
+    const pendingSubscription = localStorage.getItem('pendingSubscription');
+    if (pendingSubscription && isAuthenticated) {
+      try {
+        const { planName, vehicleCount: savedVehicleCount } = JSON.parse(pendingSubscription);
+        localStorage.removeItem('pendingSubscription');
+        
+        // Configurar os valores salvos
+        setVehicleCount(savedVehicleCount);
+        
+        toast({
+          title: "Continuando assinatura...",
+          description: `Processando sua assinatura do plano ${planName}`,
+        });
+        
+        // Executar a assinatura automaticamente
+        setTimeout(() => {
+          setSelectedPlan(planName);
+          createSubscriptionMutation.mutate({
+            planName,
+            paymentMethod: isAnnual ? 'annual' : 'monthly',
+            vehicleCount: savedVehicleCount,
+          });
+        }, 1000);
+        
+      } catch (error) {
+        localStorage.removeItem('pendingSubscription');
+      }
+    }
+  };
+
+  // Verificar se há uma assinatura pendente após login
+  useEffect(() => {
+    if (isAuthenticated && !authLoading) {
+      processPendingSubscription();
+    }
+  }, [isAuthenticated, authLoading]);
+
   // Fetch subscription plans - always enabled (public data)
   const { data: plans = [], isLoading: plansLoading } = useQuery<SubscriptionPlan[]>({
     queryKey: ["/api/subscription-plans"],
@@ -105,27 +144,20 @@ export default function SubscriptionPlans() {
         variant: "destructive",
       });
 
-      // Salvar URL de retorno e redirecionar para login
+      // Salvar dados da assinatura e redirecionar para login
       localStorage.setItem('returnUrl', '/subscription-plans');
+      localStorage.setItem('pendingSubscription', JSON.stringify({
+        planName,
+        vehicleCount
+      }));
+      
       setTimeout(() => {
         window.location.href = '/auth';
       }, 1500);
       return;
     }
 
-    // Check if user is authenticated using the new auth hook
-    if (!isAuthenticated) {
-      toast({
-        title: "Login Necessário",
-        description: "Você precisa estar logado para assinar um plano.",
-        variant: "destructive",
-      });
-
-      // Save current page as return URL for after login
-      localStorage.setItem('returnUrl', '/subscription-plans');
-      window.location.href = '/auth';
-      return;
-    }
+    // Usuário autenticado, prosseguir com a assinatura
 
     setSelectedPlan(planName);
     createSubscriptionMutation.mutate({
