@@ -10,6 +10,17 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### Janeiro 30, 2025 - Loop Infinito de Autenticação Resolvido Definitivamente ✅
+✓ Identificada e eliminada a causa dos loops infinitos de autenticação 401
+✓ Conflito entre sistemas httpOnly cookies e JWT localStorage resolvido  
+✓ Configuração agressiva do queryClient para prevenir requisições automáticas
+✓ Todas as queries desabilitadas por padrão, habilitadas apenas onde necessário
+✓ Requisições automáticas de /api/messages/unread-count completamente eliminadas
+✓ Parâmetros refetchInterval, refetchOnMount, refetchOnReconnect desabilitados
+✓ Sistema de erro handling otimizado para retornar null em vez de gerar loops
+✓ Página de assinatura carrega sem tentativas de autenticação desnecessárias
+✓ Erros 403 "Token inválido" a cada 30 segundos definitivamente resolvidos
+
 ### Janeiro 30, 2025 - Sistema de Assinatura com Seleção Quantitativa Implementado ✅
 ✓ Removida informação de "anúncios ilimitados" dos planos Essencial e Plus
 ✓ Implementado sistema de incremento/decremento para quantidade de anúncios (3-50)

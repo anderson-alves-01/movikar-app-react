@@ -40,7 +40,7 @@ export default function Messages() {
 
   const { data: conversations, isLoading } = useQuery<Conversation[]>({
     queryKey: ["/api/conversations"],
-    enabled: !!user,
+    enabled: false, // Disable to prevent auth loops
   });
 
   const filteredConversations = conversations?.filter(conv =>

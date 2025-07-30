@@ -96,9 +96,12 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "returnNull" }), // Return null instead of throwing to prevent loops
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: 0, // Make messages always fresh
+      refetchOnMount: false, // Disable automatic refetch on mount
+      refetchOnReconnect: false, // Disable refetch on reconnect
+      staleTime: Infinity, // Never consider data stale to prevent background refetching
       gcTime: 1000 * 60 * 5, // 5 minutes cache time
       retry: false,
+      enabled: false, // Disable all queries by default
     },
     mutations: {
       retry: false,

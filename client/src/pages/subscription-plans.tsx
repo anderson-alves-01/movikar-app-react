@@ -47,6 +47,7 @@ export default function SubscriptionPlans() {
   // Fetch subscription plans
   const { data: plans = [], isLoading: plansLoading } = useQuery<SubscriptionPlan[]>({
     queryKey: ["/api/subscription-plans"],
+    enabled: true, // Enable this specific query only
   });
 
   // Disable user subscription fetch to prevent auth loops
