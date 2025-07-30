@@ -3276,7 +3276,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const userId = (req as any).userId;
-      const { planName, paymentMethod = 'monthly', vehicleCount = 5 } = req.body;
+      const { planName, paymentMethod = 'monthly', vehicleCount = 3 } = req.body;
 
       // Get user and admin settings
       const user = await storage.getUser(userId);

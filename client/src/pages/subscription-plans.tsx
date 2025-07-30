@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Crown, Star, Sparkles, Check, X } from "lucide-react";
+import { Crown, Star, Sparkles, Check, X, Plus, Minus } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 interface SubscriptionPlan {
@@ -40,7 +40,7 @@ interface UserSubscription {
 export default function SubscriptionPlans() {
   const [isAnnual, setIsAnnual] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  const [vehicleCount, setVehicleCount] = useState<number>(5); // Default 5 vehicles
+  const [vehicleCount, setVehicleCount] = useState<number>(3); // Default 3 vehicles (minimum)
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -262,25 +262,37 @@ export default function SubscriptionPlans() {
           </div>
 
           {/* Vehicle Count Selector */}
-          <div className="flex items-center justify-center space-x-4 mb-8">
+          <div className="flex flex-col items-center justify-center space-y-3 mb-8">
             <Label htmlFor="vehicle-count" className="text-sm font-medium">
               Quantidade de anúncios:
             </Label>
-            <Select value={vehicleCount.toString()} onValueChange={(value) => setVehicleCount(parseInt(value))}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="3">3 anúncios</SelectItem>
-                <SelectItem value="5">5 anúncios</SelectItem>
-                <SelectItem value="10">10 anúncios</SelectItem>
-                <SelectItem value="15">15 anúncios</SelectItem>
-                <SelectItem value="20">20 anúncios</SelectItem>
-                <SelectItem value="30">30 anúncios</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="text-xs text-gray-500">
-              O preço é calculado conforme a quantidade
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setVehicleCount(Math.max(3, vehicleCount - 1))}
+                disabled={vehicleCount <= 3}
+                className="h-8 w-8 p-0"
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <div className="flex items-center justify-center min-w-[120px] px-4 py-2 border rounded-md bg-white dark:bg-gray-800">
+                <span className="text-lg font-semibold">{vehicleCount}</span>
+                <span className="text-sm text-gray-500 ml-1">anúncios</span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setVehicleCount(Math.min(50, vehicleCount + 1))}
+                disabled={vehicleCount >= 50}
+                className="h-8 w-8 p-0"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="text-xs text-gray-500 text-center">
+              O preço é calculado conforme a quantidade selecionada<br/>
+              Mínimo: 3 anúncios | Máximo: 50 anúncios
             </div>
           </div>
         </div>

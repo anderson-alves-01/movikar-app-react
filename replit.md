@@ -10,6 +10,17 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### Janeiro 30, 2025 - Sistema de Assinatura com Seleção Quantitativa Implementado ✅
+✓ Removida informação de "anúncios ilimitados" dos planos Essencial e Plus
+✓ Implementado sistema de incremento/decremento para quantidade de anúncios (3-50)
+✓ Botões + e - para ajustar quantidade um a um de forma intuitiva
+✓ Cálculo dinâmico de preço baseado na quantidade selecionada
+✓ Preço base: Essencial R$29,90 + R$5,99 por anúncio adicional | Plus R$59,90 + R$9,99 por anúncio adicional
+✓ Primeiros 2 anúncios inclusos no preço base, anúncios extras somam ao valor
+✓ Interface visual com contador centralizado e limites claramente definidos
+✓ Backend atualizado para processar vehicleCount no payment intent
+✓ Sistema totalmente funcional com cálculo automático em tempo real
+
 ### July 25, 2025 - Sistema de Aprovação de Veículos Implementado
 ✓ Implementado fluxo completo de aprovação de veículos com upload de CRLV
 ✓ Criado formulário de cadastro com upload obrigatório de documento CRLV
