@@ -3347,7 +3347,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: "Stripe não está configurado" });
       }
 
-      const userId = (req as any).userId;
+      const userId = req.user!.id;
       const { planName, paymentMethod = 'monthly', vehicleCount = 3 } = req.body;
 
       // Get user and admin settings

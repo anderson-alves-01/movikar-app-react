@@ -19,25 +19,9 @@
     },
     {
       "src": "/icons/icon-512x512.png",
-      "sizes": "512x512", 
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/screenshots/home-mobile.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Página inicial do CarShare"
-    },
-    {
-      "src": "/screenshots/vehicles-mobile.png",
-      "sizes": "390x844",
-      "type": "image/png", 
-      "form_factor": "narrow",
-      "label": "Lista de veículos disponíveis"
     }
   ]
 }

@@ -72,10 +72,10 @@ export default function SubscriptionPlans() {
       console.error("Subscription error:", error);
 
       // Check if it's an authentication error
-      if (error.message && error.message.includes('401')) {
+      if (error.message && (error.message.includes('401') || error.message.includes('404'))) {
         toast({
-          title: "Sessão Expirada",
-          description: "Sua sessão expirou. Faça login novamente.",
+          title: "Login Necessário",
+          description: "Você precisa estar logado para assinar um plano.",
           variant: "destructive",
         });
 
@@ -87,7 +87,7 @@ export default function SubscriptionPlans() {
 
         setTimeout(() => {
           window.location.href = '/auth';
-        }, 2000);
+        }, 1500);
         return;
       }
 
