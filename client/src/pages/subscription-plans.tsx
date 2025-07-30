@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { useAuthStore } from "@/lib/auth";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +45,8 @@ export default function SubscriptionPlans() {
   const [vehicleCount, setVehicleCount] = useState<number>(3); // Default 3 vehicles (minimum)
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
+  const { user: storeUser } = useAuthStore();
 
   // Processar assinatura pendente quando user fizer login
   const processPendingSubscription = () => {
@@ -136,8 +138,20 @@ export default function SubscriptionPlans() {
   const handleSubscribe = (planName: string) => {
     if (createSubscriptionMutation.isPending) return;
 
-    // Verificar se está autenticado antes de prosseguir
-    if (!isAuthenticated) {
+    // Debug: verificar status de autenticação
+    console.log('🔍 Debug autenticação:', {
+      isAuthenticated,
+      authLoading,
+      user: !!user,
+      userEmail: user?.email
+    });
+
+    // Verificar se está autenticado usando o hook direto
+    const { user: currentUser } = useAuthStore();
+    
+    if (!currentUser || !isAuthenticated) {
+      console.log('❌ Usuário não autenticado, redirecionando para login');
+      
       toast({
         title: "Login Necessário",
         description: "Você precisa estar logado para assinar um plano.",
@@ -157,7 +171,7 @@ export default function SubscriptionPlans() {
       return;
     }
 
-    // Usuário autenticado, prosseguir com a assinatura
+    console.log('✅ Usuário autenticado, prosseguindo com assinatura:', currentUser.email);
 
     setSelectedPlan(planName);
     createSubscriptionMutation.mutate({

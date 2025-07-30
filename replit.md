@@ -10,15 +10,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### Janeiro 30, 2025 - Sistema de Login e Acesso a Planos Otimizado ✅
-✓ Login agora redireciona automaticamente para a página principal após sucesso
+### Janeiro 30, 2025 - Debug e Correção do Fluxo de Assinatura em Andamento
+✓ Login redireciona automaticamente para a página principal após sucesso
 ✓ Página de planos de assinatura é pública - não requer autenticação para visualizar
 ✓ Sistema de returnUrl implementado: se usuário veio de planos, volta para planos após login
-✓ Botões de assinatura verificam autenticação e redirecionam para login se necessário
-✓ Toast com mensagem "Redirecionando para a página principal..." implementado
-✓ Delay de 1 segundo no redirecionamento para mostrar mensagem de sucesso
-✓ Botão "Voltar ao Início" mantido na tela de login para navegação alternativa
-✓ Fluxo completo: Planos (público) → Login (se necessário) → Volta para Planos → Checkout
+✓ Logs de debug adicionados para diagnosticar problema de autenticação
+✓ Correção de import no subscription-checkout (useHistory removido)
+✓ Sistema de assinatura pendente implementado com localStorage
+→ Investigando problema: usuário autenticado ainda solicita login na assinatura
+→ Testando verificação dupla: useAuth() vs useAuthStore() para confirmar estado
 
 ### Janeiro 30, 2025 - Sistema de Autenticação Otimizado Completamente ✅
 ✓ Configurações de cookies corrigidas (sameSite: 'lax', secure: false para desenvolvimento)
