@@ -83,13 +83,6 @@ export default function SubscriptionPlans() {
 
         // Clear expired token and redirect to login
         localStorage.removeItem('auth-storage');
-
-        // Save current page as return URL for after login
-        localStorage.setItem('returnUrl', '/subscription-plans');
-
-        setTimeout(() => {
-          window.location.href = '/auth';
-        }, 1500);
         return;
       }
 
@@ -103,6 +96,22 @@ export default function SubscriptionPlans() {
 
   const handleSubscribe = (planName: string) => {
     if (createSubscriptionMutation.isPending) return;
+
+    // Verificar se está autenticado antes de prosseguir
+    if (!isAuthenticated) {
+      toast({
+        title: "Login Necessário",
+        description: "Você precisa estar logado para assinar um plano.",
+        variant: "destructive",
+      });
+
+      // Salvar URL de retorno e redirecionar para login
+      localStorage.setItem('returnUrl', '/subscription-plans');
+      setTimeout(() => {
+        window.location.href = '/auth';
+      }, 1500);
+      return;
+    }
 
     // Check if user is authenticated using the new auth hook
     if (!isAuthenticated) {

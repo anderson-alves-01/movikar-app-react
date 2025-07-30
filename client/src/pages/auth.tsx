@@ -52,14 +52,21 @@ export default function Auth() {
       toast({
         title: authMode === 'login' ? "✅ Login realizado com sucesso!" : "✅ Conta criada!",
         description: authMode === 'login' 
-          ? "Bem-vindo de volta! Você pode agora navegar pelo site." 
-          : "Sua conta foi criada com sucesso. Você já está logado!",
+          ? "Redirecionando para a página principal..." 
+          : "Conta criada! Redirecionando para a página principal...",
       });
 
-      // REMOVIDO: Não fazer redirecionamentos automáticos
-      // Usuário fica na mesma página e pode navegar manualmente
-      // Limpar qualquer localStorage de redirect
-      localStorage.removeItem('returnUrl');
+      // Verificar se há URL de retorno salva (ex: página de planos)
+      const returnUrl = localStorage.getItem('returnUrl');
+      
+      setTimeout(() => {
+        if (returnUrl) {
+          localStorage.removeItem('returnUrl');
+          setLocation(returnUrl);
+        } else {
+          setLocation('/'); // Redirecionar para a tela principal
+        }
+      }, 1000); // Delay de 1s para mostrar a mensagem
     },
     onError: (error: any) => {
       toast({

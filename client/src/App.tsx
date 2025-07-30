@@ -86,11 +86,7 @@ function Router() {
       <Route path="/admin/coupons" component={AdminCouponsPage} />
       <Route path="/earnings" component={EarningsPage} />
       <Route path="/debug-pix" component={DebugPix} />
-      <Route path="/subscription-plans">
-        <ProtectedRoute requireAuth={true}>
-          <SubscriptionPlans />
-        </ProtectedRoute>
-      </Route>
+      <Route path="/subscription-plans" component={SubscriptionPlans} />
       <Route path="/subscription-checkout">
         <ProtectedRoute requireAuth={true}>
           <SubscriptionCheckout />

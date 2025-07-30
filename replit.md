@@ -10,15 +10,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### Janeiro 30, 2025 - Redirecionamentos Pós-Login Removidos Completamente ✅
-✓ Removidos todos os redirecionamentos automáticos após login para resolver loop infinito
-✓ Usuários permanecem na tela de login após sucesso com mensagem de confirmação
-✓ Botão "Voltar ao Início" adicionado na tela de login para navegação manual
-✓ localStorage de returnUrl limpo para evitar redirecionamentos indesejados
-✓ Página de planos de assinatura acessível sem loops de autenticação
-✓ Sistema de toast melhorado com mensagens mais claras de sucesso
-✓ ProtectedRoute otimizado para não salvar URLs de retorno
-✓ Experiência de usuário melhorada: login funciona sem travamentos
+### Janeiro 30, 2025 - Sistema de Login e Acesso a Planos Otimizado ✅
+✓ Login agora redireciona automaticamente para a página principal após sucesso
+✓ Página de planos de assinatura é pública - não requer autenticação para visualizar
+✓ Sistema de returnUrl implementado: se usuário veio de planos, volta para planos após login
+✓ Botões de assinatura verificam autenticação e redirecionam para login se necessário
+✓ Toast com mensagem "Redirecionando para a página principal..." implementado
+✓ Delay de 1 segundo no redirecionamento para mostrar mensagem de sucesso
+✓ Botão "Voltar ao Início" mantido na tela de login para navegação alternativa
+✓ Fluxo completo: Planos (público) → Login (se necessário) → Volta para Planos → Checkout
 
 ### Janeiro 30, 2025 - Sistema de Autenticação Otimizado Completamente ✅
 ✓ Configurações de cookies corrigidas (sameSite: 'lax', secure: false para desenvolvimento)
