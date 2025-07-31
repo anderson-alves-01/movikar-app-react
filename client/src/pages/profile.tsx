@@ -50,13 +50,11 @@ export default function Profile() {
 
   // Debug: Log user data para identificar problema
   console.log('🔍 Profile Debug - User data:', user);
-  console.log('🔍 Profile Debug - PIX field:', user?.pix);
   console.log('🔍 Profile Debug - User keys:', user ? Object.keys(user) : 'No user');
 
   // Force refresh user data on component mount
   useEffect(() => {
     if (user && !user.pix) {
-      console.log('🔄 PIX field missing, refreshing user data...');
       refreshUser();
     }
   }, [user, refreshUser]);

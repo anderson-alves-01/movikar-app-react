@@ -62,7 +62,6 @@ export const useAuthStore = create<AuthStore>()(
       token: null,
       isLoading: false,
       setAuth: (user, token = null) => {
-        console.log('🔐 Setting auth - PIX field:', user.pix);
         // Store token for subscription flow
         set({ user, token, isLoading: false });
       },
@@ -70,7 +69,6 @@ export const useAuthStore = create<AuthStore>()(
         const currentUser = get().user;
         if (currentUser) {
           const updatedUser = { ...currentUser, ...userData };
-          console.log('👤 Updating user - PIX field:', updatedUser.pix);
           set({ user: updatedUser });
         }
       },
@@ -82,7 +80,6 @@ export const useAuthStore = create<AuthStore>()(
 
           if (response.ok) {
             const userData = await response.json();
-            console.log('🔄 Refreshed user data - PIX field:', userData.pix);
             set({ user: userData });
           } else if (response.status === 401) {
             // Try to refresh token
