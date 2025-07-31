@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-
 import { useToast } from "@/hooks/use-toast";
 import { Crown, Star, Sparkles, Check, X, Plus, Minus } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
@@ -82,30 +81,30 @@ export default function SubscriptionPlans() {
     }
   };
 
-  // Verificar se há uma assinatura pendente após login
+  // Processar assinatura pendente após login
   useEffect(() => {
     if (isAuthenticated && !authLoading) {
       processPendingSubscription();
     }
   }, [isAuthenticated, authLoading]);
 
-  // Fetch subscription plans - always enabled (public data)
+  // Carregar planos de assinatura (endpoint público)
   const { data: plans = [], isLoading: plansLoading } = useQuery<SubscriptionPlan[]>({
     queryKey: ["/api/subscription-plans"],
-    enabled: true, // Public data, always fetch
+    enabled: true,
     queryFn: async () => {
       const response = await fetch('/api/subscription-plans', {
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' }
       });
       if (!response.ok) {
-        throw new Error(`Failed to fetch plans: ${response.status}`);
+        throw new Error(`Erro ao carregar planos: ${response.status}`);
       }
       return response.json();
     },
   });
 
-  // Disable user subscription fetch to prevent auth loops
+  // Não carregar dados de assinatura do usuário para evitar loops
   const userSubscription = null;
   const subscriptionLoading = false;
 
@@ -124,42 +123,44 @@ export default function SubscriptionPlans() {
       window.location.href = `/subscription-checkout?clientSecret=${data.clientSecret}&planName=${data.planName}&paymentMethod=${data.paymentMethod}`;
     },
     onError: (error: Error) => {
-      console.error("Subscription error:", error);
-
-      // Check if it's an authentication error
-      if (error.message && (error.message.includes('401') || error.message.includes('404'))) {
+      if (error.message?.includes('401')) {
         toast({
           title: "Login Necessário",
           description: "Você precisa estar logado para assinar um plano.",
           variant: "destructive",
         });
-
-        // Clear expired token and redirect to login
-        localStorage.removeItem('auth-storage');
-        return;
+        
+        // Salvar intenção de assinatura
+        localStorage.setItem('pendingSubscription', JSON.stringify({
+          planName: selectedPlan,
+          vehicleCount
+        }));
+        
+        setTimeout(() => {
+          window.location.href = '/auth';
+        }, 1500);
+      } else {
+        toast({
+          title: "Erro",
+          description: error.message || "Erro ao criar assinatura",
+          variant: "destructive",
+        });
       }
-
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao criar assinatura",
-        variant: "destructive",
-      });
     },
   });
 
-  const handleSubscribe = async (planName: string) => {
+  const handleSubscribe = (planName: string) => {
     if (createSubscriptionMutation.isPending) return;
 
-    // Verificar se está autenticado usando o hook useAuth
-    if (!isAuthenticated || authLoading) {
+    // Verificar se está autenticado
+    if (!isAuthenticated) {
       toast({
         title: "Login Necessário",
         description: "Você precisa estar logado para assinar um plano.",
         variant: "destructive",
       });
 
-      // Salvar dados da assinatura e redirecionar para login
-      localStorage.setItem('returnUrl', '/subscription-plans');
+      // Salvar intenção de assinatura
       localStorage.setItem('pendingSubscription', JSON.stringify({
         planName,
         vehicleCount
@@ -171,7 +172,7 @@ export default function SubscriptionPlans() {
       return;
     }
 
-    // Proceder com a assinatura
+    // Proceder com assinatura
     setSelectedPlan(planName);
     createSubscriptionMutation.mutate({
       planName,
