@@ -137,12 +137,10 @@ export default function SubscriptionPlans() {
         description: "Redirecionando para pagamento...",
       });
       
-      // Redirect to payment after a short delay
-      setTimeout(() => {
-        const checkoutUrl = `/subscription-checkout?clientSecret=${data.clientSecret}&planName=${data.planName}&paymentMethod=${data.paymentMethod}`;
-        console.log('🔗 Redirecting to:', checkoutUrl);
-        window.location.href = checkoutUrl;
-      }, 1000);
+      // Redirect to payment immediately - no delay needed
+      const checkoutUrl = `/subscription-checkout?clientSecret=${data.clientSecret}&planName=${data.planName}&paymentMethod=${data.paymentMethod}`;
+      console.log('🔗 Redirecting to:', checkoutUrl);
+      window.location.href = checkoutUrl;
     },
     onError: (error: Error) => {
       if (error.message?.includes('401')) {

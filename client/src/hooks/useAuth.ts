@@ -42,9 +42,35 @@ export function useAuth() {
         if (response.ok) {
           const userData = await response.json();
           console.log('✅ useAuth - User authenticated:', userData.email);
-          setAuth(userData, '');
+          setAuth(userData, token || '');
+        } else if (response.status === 401 && token) {
+          console.log('🔄 useAuth - Token expired, attempting refresh...');
+          // Try to refresh token
+          try {
+            const refreshResponse = await fetch('/api/auth/refresh', {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Authorization': `Bearer ${token}` },
+            });
+            
+            if (refreshResponse.ok) {
+              const refreshData = await refreshResponse.json();
+              console.log('✅ useAuth - Token refreshed successfully');
+              sessionStorage.setItem('auth_token', refreshData.token);
+              setAuth(refreshData.user, refreshData.token);
+            } else {
+              console.log('❌ useAuth - Token refresh failed, clearing auth');
+              sessionStorage.removeItem('auth_token');
+              clearAuth();
+            }
+          } catch (refreshError) {
+            console.log('❌ useAuth - Token refresh error:', refreshError);
+            sessionStorage.removeItem('auth_token');
+            clearAuth();
+          }
         } else {
           console.log('❌ useAuth - Not authenticated, clearing auth');
+          sessionStorage.removeItem('auth_token');
           clearAuth();
         }
       } catch (error) {

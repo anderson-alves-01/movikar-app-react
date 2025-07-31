@@ -43,9 +43,46 @@ export async function apiRequest(
 
   console.log(`📡 apiRequest - Response: ${res.status} ${res.statusText}`);
 
-  // Para erros 401, simplesmente falhar sem tentar refresh
+  // Para erros 401, tentar refresh token uma vez
   if (res.status === 401) {
-    console.log('❌ apiRequest - 401 Unauthorized');
+    console.log('❌ apiRequest - 401 Unauthorized, attempting token refresh...');
+    
+    try {
+      const refreshResponse = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (refreshResponse.ok) {
+        const refreshData = await refreshResponse.json();
+        console.log('✅ apiRequest - Token refreshed, retrying original request');
+        
+        // Update token in sessionStorage
+        if (refreshData.token) {
+          sessionStorage.setItem('auth_token', refreshData.token);
+          headers['Authorization'] = `Bearer ${refreshData.token}`;
+        }
+        
+        // Retry original request with new token
+        const retryRes = await fetch(fullUrl, {
+          method,
+          headers,
+          body: data ? JSON.stringify(data) : undefined,
+          credentials: "include",
+        });
+        
+        console.log(`📡 apiRequest - Retry response: ${retryRes.status} ${retryRes.statusText}`);
+        
+        if (retryRes.ok) {
+          return retryRes;
+        }
+      }
+    } catch (refreshError) {
+      console.log('❌ apiRequest - Token refresh failed:', refreshError);
+      sessionStorage.removeItem('auth_token');
+    }
+    
     throw new Error('401: Não autorizado');
   }
 

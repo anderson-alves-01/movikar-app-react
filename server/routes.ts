@@ -753,9 +753,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/auth/refresh", async (req, res) => {
     try {
-      const refreshToken = req.cookies?.refreshToken;
+      console.log('🔄 Refresh token attempt');
+      
+      // Try refresh token from cookies first, then from Authorization header
+      let refreshToken = req.cookies?.refreshToken;
+      
+      // Fallback: check Authorization header for refresh token
+      const authHeader = req.headers.authorization;
+      if (!refreshToken && authHeader && authHeader.startsWith('Bearer ')) {
+        refreshToken = authHeader.substring(7);
+        console.log('🔄 Using Authorization header as refresh token');
+      }
       
       if (!refreshToken) {
+        console.log('❌ No refresh token found');
         return res.status(401).json({ message: 'Refresh token não encontrado' });
       }
 
@@ -763,16 +774,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(decoded.userId);
       
       if (!user) {
+        console.log('❌ User not found for refresh token');
         return res.status(403).json({ message: 'Refresh token inválido' });
       }
       
       const newToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
       
+      console.log('✅ Token refreshed for user:', user.email);
+      
       res.cookie('token', newToken, {
         httpOnly: true,
         secure: false, // Permite HTTPS e HTTP em desenvolvimento
         sameSite: 'lax', // Menos restritivo para desenvolvimento
-        maxAge: 15 * 60 * 1000
+        maxAge: 15 * 60 * 1000 // 15 minutes
+      });
+      
+      const { password: _, ...userWithoutPassword } = user;
+      
+      res.json({
+        user: userWithoutPassword,
+        token: newToken
+      });
+    } catch (error) {
+      console.error('❌ Refresh token error:', error);
+      res.status(403).json({ message: 'Refresh token inválido' });
+    }
+  });
       });
       
       const { password: _, ...userWithoutPassword } = user;
