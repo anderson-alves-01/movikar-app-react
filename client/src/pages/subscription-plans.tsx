@@ -124,8 +124,25 @@ export default function SubscriptionPlans() {
     },
     onSuccess: (data) => {
       console.log('✅ Subscription creation successful:', data);
-      // Redirect to payment
-      window.location.href = `/subscription-checkout?clientSecret=${data.clientSecret}&planName=${data.planName}&paymentMethod=${data.paymentMethod}`;
+      console.log('📄 Data details:', {
+        clientSecret: !!data.clientSecret,
+        planName: data.planName,
+        paymentMethod: data.paymentMethod,
+        amount: data.amount
+      });
+      
+      // Show success message first
+      toast({
+        title: "Assinatura Criada!",
+        description: "Redirecionando para pagamento...",
+      });
+      
+      // Redirect to payment after a short delay
+      setTimeout(() => {
+        const checkoutUrl = `/subscription-checkout?clientSecret=${data.clientSecret}&planName=${data.planName}&paymentMethod=${data.paymentMethod}`;
+        console.log('🔗 Redirecting to:', checkoutUrl);
+        window.location.href = checkoutUrl;
+      }, 1000);
     },
     onError: (error: Error) => {
       if (error.message?.includes('401')) {
@@ -156,6 +173,7 @@ export default function SubscriptionPlans() {
 
   const handleSubscribe = (planName: string) => {
     console.log('🚀 handleSubscribe called:', { planName, isAuthenticated, authLoading, isPending: createSubscriptionMutation.isPending });
+    console.log('🔍 User data:', { user, storeUser });
     
     if (createSubscriptionMutation.isPending) return;
 

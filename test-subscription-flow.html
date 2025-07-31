@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste do Fluxo de Assinatura</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        button { padding: 10px 20px; margin: 10px 0; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Teste do Fluxo de Assinatura</h1>
+    
+    <button onclick="testLogin()">1. Fazer Login</button>
+    <button onclick="testSubscription()">2. Criar Assinatura</button>
+    <button onclick="testCompleteFlow()">3. Fluxo Completo</button>
+    <button onclick="clearLogs()">Limpar Logs</button>
+    
+    <div id="logs"></div>
+
+    <script>
+        let token = null;
+        
+        function addLog(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.innerHTML = `${new Date().toLocaleTimeString()}: ${message}`;
+            logs.appendChild(div);
+            console.log(message);
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+        
+        async function testLogin() {
+            try {
+                addLog('🔐 Fazendo login...');
+                
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: 'testuser@carshare.com',
+                        password: 'test123'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    token = data.token;
+                    addLog(`✅ Login successful: ${data.user.email}`, 'success');
+                    addLog(`🔑 Token: ${token ? 'Recebido' : 'Não recebido'}`, token ? 'success' : 'error');
+                } else {
+                    const error = await response.text();
+                    addLog(`❌ Login failed: ${response.status} - ${error}`, 'error');
+                }
+            } catch (error) {
+                addLog(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testSubscription() {
+            if (!token) {
+                addLog('❌ Token não encontrado. Faça login primeiro!', 'error');
+                return;
+            }
+            
+            try {
+                addLog('💳 Criando assinatura...');
+                
+                const response = await fetch('/api/create-subscription', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        planName: 'essencial',
+                        paymentMethod: 'monthly',
+                        vehicleCount: 5
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addLog(`✅ Subscription created successfully!`, 'success');
+                    addLog(`📄 ClientSecret: ${data.clientSecret ? 'Presente' : 'Ausente'}`, data.clientSecret ? 'success' : 'error');
+                    addLog(`📋 Plan: ${data.planName}`, 'success');
+                    addLog(`💰 Amount: R$ ${(data.amount / 100).toFixed(2)}`, 'success');
+                    
+                    // Simular redirecionamento
+                    const checkoutUrl = `/subscription-checkout?clientSecret=${data.clientSecret}&planName=${data.planName}&paymentMethod=${data.paymentMethod}`;
+                    addLog(`🔗 Checkout URL: ${checkoutUrl}`, 'success');
+                    addLog(`👆 O sistema redirecionaria para essa URL`, 'success');
+                    
+                } else {
+                    const error = await response.text();
+                    addLog(`❌ Subscription failed: ${response.status} - ${error}`, 'error');
+                }
+            } catch (error) {
+                addLog(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testCompleteFlow() {
+            clearLogs();
+            addLog('🚀 Iniciando fluxo completo...');
+            
+            await testLogin();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testSubscription();
+            
+            addLog('🎉 Fluxo completo testado!', 'success');
+        }
+    </script>
+</body>
+</html>
