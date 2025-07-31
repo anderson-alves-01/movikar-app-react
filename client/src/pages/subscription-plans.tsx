@@ -93,6 +93,16 @@ export default function SubscriptionPlans() {
   const { data: plans = [], isLoading: plansLoading } = useQuery<SubscriptionPlan[]>({
     queryKey: ["/api/subscription-plans"],
     enabled: true, // Public data, always fetch
+    queryFn: async () => {
+      const response = await fetch('/api/subscription-plans', {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch plans: ${response.status}`);
+      }
+      return response.json();
+    },
   });
 
   // Disable user subscription fetch to prevent auth loops
@@ -140,58 +150,34 @@ export default function SubscriptionPlans() {
   const handleSubscribe = async (planName: string) => {
     if (createSubscriptionMutation.isPending) return;
 
-    // Fazer uma verificação direta com o backend antes de prosseguir
-    try {
-      const response = await fetch('/api/auth/user', {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
-        },
-      });
-
-      if (!response.ok) {
-        console.log('❌ Backend auth check failed:', response.status);
-        
-        toast({
-          title: "Login Necessário",
-          description: "Você precisa estar logado para assinar um plano.",
-          variant: "destructive",
-        });
-
-        // Salvar dados da assinatura e redirecionar para login
-        localStorage.setItem('returnUrl', '/subscription-plans');
-        localStorage.setItem('pendingSubscription', JSON.stringify({
-          planName,
-          vehicleCount
-        }));
-        
-        setTimeout(() => {
-          window.location.href = '/auth';
-        }, 1500);
-        return;
-      }
-
-      const userData = await response.json();
-      console.log('✅ Backend confirmou autenticação:', userData.email);
-
-      setSelectedPlan(planName);
-      createSubscriptionMutation.mutate({
-        planName,
-        paymentMethod: isAnnual ? 'annual' : 'monthly',
-        vehicleCount,
-      });
-
-    } catch (error) {
-      console.error('❌ Erro na verificação de auth:', error);
-      
+    // Verificar se está autenticado usando o hook useAuth
+    if (!isAuthenticated || authLoading) {
       toast({
-        title: "Erro de Conexão",
-        description: "Erro ao verificar autenticação. Tente novamente.",
+        title: "Login Necessário",
+        description: "Você precisa estar logado para assinar um plano.",
         variant: "destructive",
       });
+
+      // Salvar dados da assinatura e redirecionar para login
+      localStorage.setItem('returnUrl', '/subscription-plans');
+      localStorage.setItem('pendingSubscription', JSON.stringify({
+        planName,
+        vehicleCount
+      }));
+      
+      setTimeout(() => {
+        window.location.href = '/auth';
+      }, 1500);
+      return;
     }
+
+    // Proceder com a assinatura
+    setSelectedPlan(planName);
+    createSubscriptionMutation.mutate({
+      planName,
+      paymentMethod: isAnnual ? 'annual' : 'monthly',
+      vehicleCount,
+    });
   };
 
   if (authLoading || plansLoading || subscriptionLoading) {

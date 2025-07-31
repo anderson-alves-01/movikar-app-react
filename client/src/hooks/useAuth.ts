@@ -39,21 +39,22 @@ export function useAuth() {
               const refreshData = await refreshResponse.json();
               setAuth(refreshData.user, '');
             } else {
-              // Não há sessão válida, limpar storage local
+              // Não há sessão válida, limpar storage local sem gerar erro
               clearAuth();
               localStorage.removeItem('auth-storage');
             }
           } catch (refreshError) {
+            // Falha silenciosa no refresh
             clearAuth();
             localStorage.removeItem('auth-storage');
           }
         } else {
-          // Outros erros, limpar storage local
+          // Outros erros, limpar storage local sem gerar erro
           clearAuth();
           localStorage.removeItem('auth-storage');
         }
       } catch (error) {
-        // Em caso de erro de rede, limpar dados locais
+        // Em caso de erro de rede, limpar dados locais sem gerar erro
         clearAuth();
         localStorage.removeItem('auth-storage');
       } finally {
