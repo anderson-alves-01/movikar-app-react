@@ -658,20 +658,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
       const refreshToken = jwt.sign({ userId: user.id }, JWT_SECRET + '_refresh', { expiresIn: '7d' });
 
-      // Set HttpOnly cookies - mais permissivo para desenvolvimento
+      console.log('🍪 Setting login cookies for user:', user.email);
+
+      // Set HttpOnly cookies with explicit path
       res.cookie('token', token, {
         httpOnly: true,
-        secure: false, // Permite HTTPS e HTTP em desenvolvimento
-        sameSite: 'lax', // Menos restritivo para desenvolvimento
+        secure: false,
+        sameSite: 'lax',
+        path: '/',
         maxAge: 15 * 60 * 1000 // 15 minutes
       });
 
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
-        secure: false, // Permite HTTPS e HTTP em desenvolvimento
-        sameSite: 'lax', // Menos restritivo para desenvolvimento
+        secure: false,
+        sameSite: 'lax',
+        path: '/',
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
+
+      console.log('🍪 Cookies set successfully');
       
       const { password: _, ...userWithoutPassword } = user;
       res.json({ user: userWithoutPassword }); // Não incluir token no response (apenas cookies)

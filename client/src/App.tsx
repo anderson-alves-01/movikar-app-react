@@ -44,6 +44,7 @@ import SubscriptionPlans from "@/pages/subscription-plans";
 import SubscriptionCheckout from "@/pages/subscription-checkout";
 import SubscriptionSuccess from "@/pages/subscription-success";
 import TestSubscription from "@/pages/test-subscription";
+import DebugAuth from "@/pages/debug-auth";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt, IOSInstallPrompt } from "@/components/InstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
@@ -99,6 +100,7 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/test-subscription" component={TestSubscription} />
+      <Route path="/debug-auth" component={DebugAuth} />
       <Route component={NotFound} />
     </Switch>
   );
