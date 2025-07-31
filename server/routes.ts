@@ -240,9 +240,10 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
   
   if (!token) {
     const authHeader = req.headers.authorization;
+    console.log('🔐 Auth middleware - Authorization header:', authHeader);
     if (authHeader && authHeader.startsWith('Bearer ')) {
       token = authHeader.substring(7);
-      console.log('🔐 Auth middleware - Using Authorization header fallback');
+      console.log('🔐 Auth middleware - Using Authorization header fallback, token:', token.substring(0, 20) + '...');
     }
   } else {
     console.log('🔐 Auth middleware - Using cookie token');

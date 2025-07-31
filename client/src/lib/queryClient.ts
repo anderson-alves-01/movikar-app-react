@@ -27,18 +27,26 @@ export async function apiRequest(
   const authStore = localStorage.getItem('auth-storage');
   let token = sessionStorage.getItem('auth_token');
   
+  console.log('🔑 apiRequest - Token sources:', {
+    sessionStorage: !!token,
+    authStore: !!authStore
+  });
+  
   if (!token && authStore) {
     try {
       const parsed = JSON.parse(authStore);
       token = parsed?.state?.token;
+      console.log('🔑 apiRequest - Token from auth store:', !!token);
     } catch (e) {
-      console.log('Failed to parse auth storage');
+      console.log('❌ Failed to parse auth storage', e);
     }
   }
   
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
-    console.log('📡 apiRequest - Using Authorization header');
+    console.log('📡 apiRequest - Using Authorization header with token:', token.substring(0, 20) + '...');
+  } else {
+    console.log('❌ apiRequest - No token found anywhere');
   }
 
   const fullUrl = url.startsWith('http') ? url : url;
@@ -112,18 +120,26 @@ export const getQueryFn: QueryFunction = async ({ queryKey }) => {
   const authStore = localStorage.getItem('auth-storage');
   let token = sessionStorage.getItem('auth_token');
   
+  console.log('🔑 getQueryFn - Token sources:', {
+    sessionStorage: !!token,
+    authStore: !!authStore
+  });
+  
   if (!token && authStore) {
     try {
       const parsed = JSON.parse(authStore);
       token = parsed?.state?.token;
+      console.log('🔑 getQueryFn - Token from auth store:', !!token);
     } catch (e) {
-      console.log('Failed to parse auth storage');
+      console.log('❌ Failed to parse auth storage', e);
     }
   }
   
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
-    console.log('📡 getQueryFn - Using Authorization header');
+    console.log('📡 getQueryFn - Using Authorization header with token:', token.substring(0, 20) + '...');
+  } else {
+    console.log('❌ getQueryFn - No token found anywhere');
   }
   
   const res = await fetch(queryUrl, {
