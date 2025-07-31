@@ -25,6 +25,8 @@ export async function apiRequest(
 
   const fullUrl = url.startsWith('http') ? url : url;
   
+  console.log(`📡 apiRequest - ${method} ${fullUrl}`, data ? 'with data' : 'no data');
+  
   const res = await fetch(fullUrl, {
     method,
     headers,
@@ -32,8 +34,11 @@ export async function apiRequest(
     credentials: "include",
   });
 
+  console.log(`📡 apiRequest - Response: ${res.status} ${res.statusText}`);
+
   // Para erros 401, simplesmente falhar sem tentar refresh
   if (res.status === 401) {
+    console.log('❌ apiRequest - 401 Unauthorized');
     throw new Error('401: Não autorizado');
   }
 

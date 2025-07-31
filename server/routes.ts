@@ -248,14 +248,17 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: number };
+    console.log('🔐 Auth middleware - Token decoded, userId:', decoded.userId);
     
     const user = await storage.getUser(decoded.userId);
     if (!user) {
+      console.log('❌ Auth middleware - User not found for ID:', decoded.userId);
       res.clearCookie('token');
       res.clearCookie('refreshToken');
       return res.status(403).json({ message: 'Token inválido' });
     }
     
+    console.log('✅ Auth middleware - User authenticated:', user.email);
     req.user = user;
     next();
   } catch (error) {

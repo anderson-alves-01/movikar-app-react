@@ -20,21 +20,25 @@ export function useAuth() {
       try {
         setLoading(true);
         
+        console.log('🔍 useAuth - Checking authentication...');
         const response = await fetch('/api/auth/user', {
           method: 'GET',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
         });
 
+        console.log('🔍 useAuth - Auth check response:', response.status);
+
         if (response.ok) {
           const userData = await response.json();
+          console.log('✅ useAuth - User authenticated:', userData.email);
           setAuth(userData, '');
         } else {
-          // Se não autenticado, simplesmente limpar
+          console.log('❌ useAuth - Not authenticated, clearing auth');
           clearAuth();
         }
       } catch (error) {
-        // Em caso de erro, limpar dados locais
+        console.log('❌ useAuth - Auth check error:', error);
         clearAuth();
       } finally {
         setLoading(false);
@@ -49,6 +53,7 @@ export function useAuth() {
     try {
       setLoading(true);
       
+      console.log('🔐 useAuth - Login attempt for:', email);
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -56,13 +61,21 @@ export function useAuth() {
         body: JSON.stringify({ email, password }),
       });
 
+      console.log('🔐 useAuth - Login response status:', response.status);
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Falha no login');
       }
 
       const data = await response.json();
+      console.log('✅ useAuth - Login successful for:', data.user.email);
       setAuth(data.user, '');
+      
+      // Force re-initialization to ensure auth state is fresh
+      setInitialized(false);
+      setLoading(false);
+      
       return data;
     } catch (error) {
       setLoading(false);
