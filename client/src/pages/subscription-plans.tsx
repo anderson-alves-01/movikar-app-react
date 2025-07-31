@@ -111,42 +111,64 @@ export default function SubscriptionPlans() {
   // Create subscription mutation
   const createSubscriptionMutation = useMutation({
     mutationFn: async ({ planName, paymentMethod, vehicleCount }: { planName: string; paymentMethod: string; vehicleCount: number }) => {
-      console.log('📡 Sending subscription request:', { planName, paymentMethod, vehicleCount });
-      const response = await apiRequest("POST", "/api/create-subscription", {
-        planName,
-        paymentMethod,
-        vehicleCount,
-      });
-      console.log('📡 Response status:', response.status);
-      const data = await response.json();
-      console.log('📡 Response data:', data);
-      return data;
+      console.log('📡 Sending subscription request:', { planName, paymentMethod, vehicleCount, isAuthenticated, user: !!user });
+      
+      try {
+        const response = await apiRequest("POST", "/api/create-subscription", {
+          planName,
+          paymentMethod,
+          vehicleCount,
+        });
+        console.log('📡 Response status:', response.status);
+        const data = await response.json();
+        console.log('📡 Response data:', data);
+        return data;
+      } catch (error) {
+        console.log('❌ Subscription creation failed:', error);
+        throw error;
+      }
     },
     onSuccess: (data) => {
       console.log('✅ Subscription creation successful:', data);
-      console.log('📄 Data details:', {
-        clientSecret: !!data.clientSecret,
-        planName: data.planName,
-        paymentMethod: data.paymentMethod,
-        amount: data.amount
-      });
       
-      // Show success message first
+      if (!data.clientSecret) {
+        toast({
+          title: "Erro",
+          description: "Resposta inválida do servidor",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Show success message
       toast({
         title: "Assinatura Criada!",
         description: "Redirecionando para pagamento...",
       });
       
-      // Redirect to payment immediately - no delay needed
-      const checkoutUrl = `/subscription-checkout?clientSecret=${data.clientSecret}&planName=${data.planName}&paymentMethod=${data.paymentMethod}`;
+      // Build checkout URL with all required parameters
+      const searchParams = new URLSearchParams({
+        clientSecret: data.clientSecret,
+        planName: data.planName,
+        paymentMethod: data.paymentMethod,
+        amount: data.amount.toString()
+      });
+      
+      const checkoutUrl = `/subscription-checkout?${searchParams.toString()}`;
       console.log('🔗 Redirecting to:', checkoutUrl);
-      window.location.href = checkoutUrl;
+      
+      // Use timeout to ensure toast is shown
+      setTimeout(() => {
+        window.location.href = checkoutUrl;
+      }, 500);
     },
     onError: (error: Error) => {
-      if (error.message?.includes('401')) {
+      console.log('❌ Subscription error:', error.message);
+      
+      if (error.message?.includes('401') || error.message?.includes('Não autorizado')) {
         toast({
-          title: "Login Necessário",
-          description: "Você precisa estar logado para assinar um plano.",
+          title: "Sessão Expirada",
+          description: "Faça login novamente para continuar.",
           variant: "destructive",
         });
         
@@ -156,13 +178,12 @@ export default function SubscriptionPlans() {
           vehicleCount
         }));
         
-        setTimeout(() => {
-          window.location.href = '/auth';
-        }, 1500);
+        // Redirect immediately to login
+        window.location.href = '/auth';
       } else {
         toast({
-          title: "Erro",
-          description: error.message || "Erro ao criar assinatura",
+          title: "Erro ao Criar Assinatura",
+          description: error.message || "Tente novamente em alguns instantes",
           variant: "destructive",
         });
       }
@@ -176,7 +197,7 @@ export default function SubscriptionPlans() {
     if (createSubscriptionMutation.isPending) return;
 
     // Verificar se está autenticado
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !user) {
       console.log('❌ User not authenticated, redirecting to login');
       toast({
         title: "Login Necessário",
@@ -190,9 +211,8 @@ export default function SubscriptionPlans() {
         vehicleCount
       }));
       
-      setTimeout(() => {
-        window.location.href = '/auth';
-      }, 1500);
+      // Redirecionar imediatamente para login
+      window.location.href = '/auth';
       return;
     }
 
