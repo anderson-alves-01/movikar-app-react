@@ -37,6 +37,16 @@ export default function DebugAuth() {
         const loginData = await loginResponse.json();
         addLog(`✅ Login SUCCESS: ${loginData.user.email}`);
         
+        // Check for token in response
+        if (loginData.token) {
+          addLog(`🔑 Token recebido no response: ${loginData.token.substring(0, 20)}...`);
+          // Store token for auth test
+          sessionStorage.setItem('auth_token', loginData.token);
+          addLog(`💾 Token armazenado no sessionStorage`);
+        } else {
+          addLog(`❌ Nenhum token no response!`);
+        }
+        
         // Log cookies and headers
         const cookieHeader = loginResponse.headers.get('set-cookie');
         const credentialsHeader = loginResponse.headers.get('access-control-allow-credentials');
@@ -60,10 +70,20 @@ export default function DebugAuth() {
         
         // 2. Verificar autenticação
         addLog('2️⃣ Verificando autenticação...');
+        
+        const authHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+        
+        // Use stored token if available
+        const storedToken = sessionStorage.getItem('auth_token');
+        if (storedToken) {
+          authHeaders['Authorization'] = `Bearer ${storedToken}`;
+          addLog(`🔑 Usando token armazenado para autenticação`);
+        }
+        
         const authResponse = await fetch('/api/auth/user', {
           method: 'GET',
           credentials: 'include',
-          headers: { 'Content-Type': 'application/json' }
+          headers: authHeaders
         });
 
         addLog(`Auth check response: ${authResponse.status} ${authResponse.statusText}`);
@@ -74,9 +94,19 @@ export default function DebugAuth() {
           
           // 3. Tentar criar assinatura
           addLog('3️⃣ Testando assinatura...');
+          
+          const subscriptionHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+          
+          // Use stored token for subscription too
+          const subscriptionToken = sessionStorage.getItem('auth_token');
+          if (subscriptionToken) {
+            subscriptionHeaders['Authorization'] = `Bearer ${subscriptionToken}`;
+            addLog(`🔑 Usando token para assinatura`);
+          }
+          
           const subscriptionResponse = await fetch('/api/create-subscription', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: subscriptionHeaders,
             credentials: 'include',
             body: JSON.stringify({
               planName: 'essencial',
