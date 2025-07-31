@@ -111,14 +111,19 @@ export default function SubscriptionPlans() {
   // Create subscription mutation
   const createSubscriptionMutation = useMutation({
     mutationFn: async ({ planName, paymentMethod, vehicleCount }: { planName: string; paymentMethod: string; vehicleCount: number }) => {
+      console.log('📡 Sending subscription request:', { planName, paymentMethod, vehicleCount });
       const response = await apiRequest("POST", "/api/create-subscription", {
         planName,
         paymentMethod,
         vehicleCount,
       });
-      return response.json();
+      console.log('📡 Response status:', response.status);
+      const data = await response.json();
+      console.log('📡 Response data:', data);
+      return data;
     },
     onSuccess: (data) => {
+      console.log('✅ Subscription creation successful:', data);
       // Redirect to payment
       window.location.href = `/subscription-checkout?clientSecret=${data.clientSecret}&planName=${data.planName}&paymentMethod=${data.paymentMethod}`;
     },
@@ -150,10 +155,13 @@ export default function SubscriptionPlans() {
   });
 
   const handleSubscribe = (planName: string) => {
+    console.log('🚀 handleSubscribe called:', { planName, isAuthenticated, authLoading, isPending: createSubscriptionMutation.isPending });
+    
     if (createSubscriptionMutation.isPending) return;
 
     // Verificar se está autenticado
     if (!isAuthenticated) {
+      console.log('❌ User not authenticated, redirecting to login');
       toast({
         title: "Login Necessário",
         description: "Você precisa estar logado para assinar um plano.",
@@ -173,6 +181,7 @@ export default function SubscriptionPlans() {
     }
 
     // Proceder com assinatura
+    console.log('✅ User authenticated, proceeding with subscription');
     setSelectedPlan(planName);
     createSubscriptionMutation.mutate({
       planName,
