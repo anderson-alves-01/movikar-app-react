@@ -23,11 +23,22 @@ export async function apiRequest(
     'Content-Type': 'application/json',
   };
 
-  // Add Authorization header as fallback if sessionStorage has token
-  const token = sessionStorage.getItem('auth_token');
+  // Add Authorization header from auth store or sessionStorage
+  const authStore = localStorage.getItem('auth-storage');
+  let token = sessionStorage.getItem('auth_token');
+  
+  if (!token && authStore) {
+    try {
+      const parsed = JSON.parse(authStore);
+      token = parsed?.state?.token;
+    } catch (e) {
+      console.log('Failed to parse auth storage');
+    }
+  }
+  
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
-    console.log('📡 apiRequest - Using Authorization header fallback');
+    console.log('📡 apiRequest - Using Authorization header');
   }
 
   const fullUrl = url.startsWith('http') ? url : url;
@@ -93,13 +104,36 @@ export async function apiRequest(
 export const getQueryFn: QueryFunction = async ({ queryKey }) => {
   const queryUrl = queryKey.join("/") as string;
   
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  // Add Authorization header from auth store or sessionStorage
+  const authStore = localStorage.getItem('auth-storage');
+  let token = sessionStorage.getItem('auth_token');
+  
+  if (!token && authStore) {
+    try {
+      const parsed = JSON.parse(authStore);
+      token = parsed?.state?.token;
+    } catch (e) {
+      console.log('Failed to parse auth storage');
+    }
+  }
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+    console.log('📡 getQueryFn - Using Authorization header');
+  }
+  
   const res = await fetch(queryUrl, {
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     credentials: "include",
   });
 
   // Para queries, retornar null em erro 401 para evitar loops
   if (res.status === 401) {
+    console.log('📡 getQueryFn - 401 Unauthorized, returning null');
     return null;
   }
 
