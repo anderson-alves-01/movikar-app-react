@@ -60,7 +60,7 @@ async function testSubscriptionFlow() {
 
   // 3. Tentar criar uma assinatura (simular endpoint que causava loops)
   console.log('\n3️⃣ Testando criação de assinatura...');
-  const subscriptionResponse = await fetch(`${baseUrl}/api/subscription/create`, {
+  const subscriptionResponse = await fetch(`${baseUrl}/api/create-subscription`, {
     method: 'POST',
     headers: { 
       'Content-Type': 'application/json',

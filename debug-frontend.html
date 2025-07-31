@@ -1,82 +1,288 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-    <title>Debug Frontend PIX Issue</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Fluxo de Assinatura CarShare</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .step {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .loading { background: #fff3cd; border-color: #ffeaa7; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 10px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
 </head>
 <body>
-    <h1>Debug Frontend PIX Issue</h1>
-    <div id="results"></div>
-    
+    <div class="container">
+        <h1>🧪 Debug: Fluxo de Assinatura CarShare</h1>
+        <p>Esta página testa o fluxo de assinatura diretamente no navegador para identificar problemas.</p>
+
+        <div id="step1" class="step">
+            <h3>1️⃣ Verificar conexão com servidor</h3>
+            <p>Status: <span id="server-status">Aguardando...</span></p>
+            <button onclick="testServerConnection()">Testar Conexão</button>
+        </div>
+
+        <div id="step2" class="step">
+            <h3>2️⃣ Carregar planos de assinatura</h3>
+            <p>Status: <span id="plans-status">Aguardando...</span></p>
+            <button onclick="loadPlans()">Carregar Planos</button>
+            <div id="plans-list"></div>
+        </div>
+
+        <div id="step3" class="step">
+            <h3>3️⃣ Fazer login</h3>
+            <p>Status: <span id="auth-status">Aguardando...</span></p>
+            <div>
+                <input type="email" id="email" placeholder="Email" value="teste@carshare.com">
+                <input type="password" id="password" placeholder="Senha" value="Teste123!">
+                <button onclick="doLogin()">Fazer Login</button>
+                <button onclick="createTestUser()">Criar Usuário de Teste</button>
+            </div>
+        </div>
+
+        <div id="step4" class="step">
+            <h3>4️⃣ Criar assinatura</h3>
+            <p>Status: <span id="subscription-status">Aguardando...</span></p>
+            <div>
+                <select id="planName">
+                    <option value="essencial">Essencial</option>
+                    <option value="plus">Plus</option>
+                </select>
+                <input type="number" id="vehicleCount" value="5" min="3" max="50">
+                <button onclick="createSubscription()">Criar Assinatura</button>
+            </div>
+        </div>
+
+        <div id="step5" class="step">
+            <h3>5️⃣ Log de requisições</h3>
+            <button onclick="clearLog()">Limpar Log</button>
+            <div id="request-log" class="log"></div>
+        </div>
+    </div>
+
     <script>
-        async function debugFrontend() {
-            const results = document.getElementById('results');
-            
-            try {
-                // 1. Login
-                results.innerHTML += '<h2>1. Testing Login</h2>';
-                const loginRes = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: 'admin@carshare.com',
-                        password: '123456'
-                    })
-                });
-                
-                const { token, user } = await loginRes.json();
-                results.innerHTML += `<p>✅ Login OK - PIX: ${user.pix || 'AUSENTE'}</p>`;
-                
-                // 2. Simular localStorage
-                const authData = {
-                    state: { user, token, isLoading: false }
-                };
-                localStorage.setItem('auth-storage', JSON.stringify(authData));
-                results.innerHTML += '<p>✅ LocalStorage set</p>';
-                
-                // 3. Testar recuperação
-                const stored = localStorage.getItem('auth-storage');
-                const parsed = JSON.parse(stored);
-                results.innerHTML += `<p>✅ Retrieved PIX: ${parsed.state.user.pix || 'AUSENTE'}</p>`;
-                
-                // 4. Testar endpoints
-                results.innerHTML += '<h2>2. Testing Endpoints</h2>';
-                
-                const authUserRes = await fetch('/api/auth/user', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                if (authUserRes.ok) {
-                    const authUser = await authUserRes.json();
-                    results.innerHTML += `<p>✅ /api/auth/user PIX: ${authUser.pix || 'AUSENTE'}</p>`;
-                    results.innerHTML += `<p>User fields: ${Object.keys(authUser).join(', ')}</p>`;
-                } else {
-                    results.innerHTML += `<p>❌ /api/auth/user failed: ${authUserRes.status}</p>`;
-                }
-                
-                // 5. Testar admin settings
-                const settingsRes = await fetch('/api/admin/settings', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                if (settingsRes.ok) {
-                    const settings = await settingsRes.json();
-                    results.innerHTML += `<p>✅ Admin settings OK - PIX enabled: ${settings.enablePixPayment}</p>`;
-                } else {
-                    results.innerHTML += `<p>❌ Admin settings failed: ${settingsRes.status}</p>`;
-                }
-                
-                results.innerHTML += '<h2>3. Conclusion</h2>';
-                results.innerHTML += '<p>✅ All backend systems working</p>';
-                results.innerHTML += '<p>✅ PIX field present everywhere</p>';
-                results.innerHTML += '<p>💡 Issue must be in React components</p>';
-                
-            } catch (error) {
-                results.innerHTML += `<p>❌ Error: ${error.message}</p>`;
+        let authToken = '';
+        let userCookies = '';
+
+        function log(message) {
+            const logDiv = document.getElementById('request-log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.textContent += `[${timestamp}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('request-log').textContent = '';
+        }
+
+        function setStatus(elementId, status, className = '') {
+            const element = document.getElementById(elementId);
+            element.textContent = status;
+            if (className) {
+                element.parentElement.parentElement.className = `step ${className}`;
             }
         }
-        
-        // Run test when page loads
-        debugFrontend();
+
+        async function apiCall(method, endpoint, data = null) {
+            const url = window.location.origin + endpoint;
+            const options = {
+                method,
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            };
+
+            if (data) {
+                options.body = JSON.stringify(data);
+            }
+
+            log(`${method} ${endpoint}`);
+            if (data) log(`Dados: ${JSON.stringify(data)}`);
+
+            try {
+                const response = await fetch(url, options);
+                const responseData = response.ok ? await response.json() : await response.text();
+                
+                log(`Resposta: ${response.status} ${response.statusText}`);
+                if (response.ok) {
+                    log(`Dados: ${JSON.stringify(responseData).slice(0, 200)}...`);
+                } else {
+                    log(`Erro: ${responseData}`);
+                }
+
+                return { ok: response.ok, status: response.status, data: responseData };
+            } catch (error) {
+                log(`Erro de rede: ${error.message}`);
+                return { ok: false, status: 0, data: error.message };
+            }
+        }
+
+        async function testServerConnection() {
+            setStatus('server-status', 'Testando...', 'loading');
+            
+            const result = await apiCall('GET', '/api/vehicles');
+            
+            if (result.ok) {
+                setStatus('server-status', '✅ Servidor funcionando', 'success');
+            } else {
+                setStatus('server-status', `❌ Erro: ${result.status}`, 'error');
+            }
+        }
+
+        async function loadPlans() {
+            setStatus('plans-status', 'Carregando...', 'loading');
+            
+            const result = await apiCall('GET', '/api/subscription-plans');
+            
+            if (result.ok) {
+                setStatus('plans-status', `✅ ${result.data.length} planos carregados`, 'success');
+                
+                const plansDiv = document.getElementById('plans-list');
+                plansDiv.innerHTML = '<h4>Planos disponíveis:</h4>';
+                result.data.forEach(plan => {
+                    plansDiv.innerHTML += `<p>• ${plan.displayName} - R$ ${plan.monthlyPrice}</p>`;
+                });
+            } else {
+                setStatus('plans-status', `❌ Erro: ${result.status}`, 'error');
+            }
+        }
+
+        async function createTestUser() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            setStatus('auth-status', 'Criando usuário...', 'loading');
+            
+            const userData = {
+                name: 'Usuário Debug',
+                email: email,
+                password: password,
+                phone: '11999888777'
+            };
+
+            const result = await apiCall('POST', '/api/auth/register', userData);
+            
+            if (result.ok) {
+                setStatus('auth-status', `✅ Usuário criado: ${result.data.user.name}`, 'success');
+                authToken = result.data.token || '';
+            } else {
+                setStatus('auth-status', `❌ Erro: ${result.status} - ${result.data}`, 'error');
+            }
+        }
+
+        async function doLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            setStatus('auth-status', 'Fazendo login...', 'loading');
+            
+            const loginData = { email, password };
+            const result = await apiCall('POST', '/api/auth/login', loginData);
+            
+            if (result.ok) {
+                setStatus('auth-status', `✅ Login: ${result.data.user.name}`, 'success');
+                authToken = result.data.token || '';
+                
+                // Verificar se está autenticado
+                setTimeout(async () => {
+                    const authCheck = await apiCall('GET', '/api/auth/user');
+                    if (authCheck.ok) {
+                        log(`✅ Autenticação confirmada: ${authCheck.data.name}`);
+                    } else {
+                        log(`❌ Problemas na autenticação: ${authCheck.status}`);
+                    }
+                }, 1000);
+            } else {
+                setStatus('auth-status', `❌ Erro: ${result.status} - ${result.data}`, 'error');
+            }
+        }
+
+        async function createSubscription() {
+            const planName = document.getElementById('planName').value;
+            const vehicleCount = parseInt(document.getElementById('vehicleCount').value);
+            
+            setStatus('subscription-status', 'Criando assinatura...', 'loading');
+            
+            // Primeiro verificar se está autenticado
+            const authCheck = await apiCall('GET', '/api/auth/user');
+            if (!authCheck.ok) {
+                setStatus('subscription-status', '❌ Não autenticado, faça login primeiro', 'error');
+                return;
+            }
+
+            const subscriptionData = {
+                planName,
+                paymentMethod: 'monthly',
+                vehicleCount
+            };
+
+            const result = await apiCall('POST', '/api/create-subscription', subscriptionData);
+            
+            if (result.ok) {
+                setStatus('subscription-status', '✅ Assinatura criada com sucesso!', 'success');
+                log(`✅ Client Secret: ${result.data.clientSecret ? 'Presente' : 'Ausente'}`);
+                log(`💰 Valor: R$ ${(result.data.amount / 100).toFixed(2)}`);
+                log(`📋 Plano: ${result.data.planName}`);
+                
+                // Simular redirecionamento para checkout
+                const checkoutUrl = `/subscription-checkout?clientSecret=${result.data.clientSecret}&planName=${result.data.planName}&paymentMethod=monthly`;
+                log(`🔗 URL de checkout: ${checkoutUrl}`);
+                
+            } else {
+                setStatus('subscription-status', `❌ Erro: ${result.status}`, 'error');
+                log(`❌ Detalhes: ${result.data}`);
+            }
+        }
+
+        // Executar testes iniciais
+        window.onload = function() {
+            log('🚀 Debug do fluxo de assinatura iniciado');
+            log('📍 URL atual: ' + window.location.href);
+            log('🍪 Cookies: ' + document.cookie || 'Nenhum');
+            
+            // Testar conexão automaticamente
+            testServerConnection();
+        };
     </script>
 </body>
 </html>
