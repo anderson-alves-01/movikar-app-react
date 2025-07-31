@@ -24,8 +24,22 @@ export function useAuth() {
         
         const headers: Record<string, string> = { 'Content-Type': 'application/json' };
         
-        // Add Authorization header if token exists in sessionStorage
-        const token = sessionStorage.getItem('auth_token');
+        // Add Authorization header from auth store or sessionStorage
+        let token = sessionStorage.getItem('auth_token');
+        
+        // Fallback: try to get token from Zustand auth store
+        if (!token) {
+          try {
+            const authStore = localStorage.getItem('auth-storage');
+            if (authStore) {
+              const parsed = JSON.parse(authStore);
+              token = parsed?.state?.token;
+            }
+          } catch (e) {
+            console.log('Failed to parse auth storage');
+          }
+        }
+        
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
           console.log('🔍 useAuth - Using stored token for auth check');
@@ -43,31 +57,6 @@ export function useAuth() {
           const userData = await response.json();
           console.log('✅ useAuth - User authenticated:', userData.email);
           setAuth(userData, token || '');
-        } else if (response.status === 401 && token) {
-          console.log('🔄 useAuth - Token expired, attempting refresh...');
-          // Try to refresh token
-          try {
-            const refreshResponse = await fetch('/api/auth/refresh', {
-              method: 'POST',
-              credentials: 'include',
-              headers: { 'Authorization': `Bearer ${token}` },
-            });
-            
-            if (refreshResponse.ok) {
-              const refreshData = await refreshResponse.json();
-              console.log('✅ useAuth - Token refreshed successfully');
-              sessionStorage.setItem('auth_token', refreshData.token);
-              setAuth(refreshData.user, refreshData.token);
-            } else {
-              console.log('❌ useAuth - Token refresh failed, clearing auth');
-              sessionStorage.removeItem('auth_token');
-              clearAuth();
-            }
-          } catch (refreshError) {
-            console.log('❌ useAuth - Token refresh error:', refreshError);
-            sessionStorage.removeItem('auth_token');
-            clearAuth();
-          }
         } else {
           console.log('❌ useAuth - Not authenticated, clearing auth');
           sessionStorage.removeItem('auth_token');
