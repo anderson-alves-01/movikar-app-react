@@ -23,32 +23,6 @@ export async function apiRequest(
     'Content-Type': 'application/json',
   };
 
-  // Add Authorization header from auth store or sessionStorage
-  const authStore = localStorage.getItem('auth-storage');
-  let token = sessionStorage.getItem('auth_token');
-  
-  console.log('🔑 apiRequest - Token sources:', {
-    sessionStorage: !!token,
-    authStore: !!authStore
-  });
-  
-  if (!token && authStore) {
-    try {
-      const parsed = JSON.parse(authStore);
-      token = parsed?.state?.token;
-      console.log('🔑 apiRequest - Token from auth store:', !!token);
-    } catch (e) {
-      console.log('❌ Failed to parse auth storage', e);
-    }
-  }
-  
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-    console.log('📡 apiRequest - Using Authorization header with token:', token.substring(0, 20) + '...');
-  } else {
-    console.log('❌ apiRequest - No token found anywhere');
-  }
-
   const fullUrl = url.startsWith('http') ? url : url;
   
   console.log(`📡 apiRequest - ${method} ${fullUrl}`, data ? 'with data' : 'no data');
@@ -57,51 +31,14 @@ export async function apiRequest(
     method,
     headers,
     body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
+    credentials: "include", // Use cookies for authentication
   });
 
   console.log(`📡 apiRequest - Response: ${res.status} ${res.statusText}`);
 
-  // Para erros 401, tentar refresh token uma vez
+  // Para erros 401, just throw error - don't try complex refresh logic
   if (res.status === 401) {
-    console.log('❌ apiRequest - 401 Unauthorized, attempting token refresh...');
-    
-    try {
-      const refreshResponse = await fetch('/api/auth/refresh', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
-      if (refreshResponse.ok) {
-        const refreshData = await refreshResponse.json();
-        console.log('✅ apiRequest - Token refreshed, retrying original request');
-        
-        // Update token in sessionStorage
-        if (refreshData.token) {
-          sessionStorage.setItem('auth_token', refreshData.token);
-          headers['Authorization'] = `Bearer ${refreshData.token}`;
-        }
-        
-        // Retry original request with new token
-        const retryRes = await fetch(fullUrl, {
-          method,
-          headers,
-          body: data ? JSON.stringify(data) : undefined,
-          credentials: "include",
-        });
-        
-        console.log(`📡 apiRequest - Retry response: ${retryRes.status} ${retryRes.statusText}`);
-        
-        if (retryRes.ok) {
-          return retryRes;
-        }
-      }
-    } catch (refreshError) {
-      console.log('❌ apiRequest - Token refresh failed:', refreshError);
-      sessionStorage.removeItem('auth_token');
-    }
-    
+    console.log('❌ apiRequest - 401 Unauthorized');
     throw new Error('401: Não autorizado');
   }
 
@@ -115,37 +52,15 @@ export const getQueryFn: QueryFunction = async ({ queryKey }) => {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
-
-  // Add Authorization header from auth store or sessionStorage
-  const authStore = localStorage.getItem('auth-storage');
-  let token = sessionStorage.getItem('auth_token');
   
-  console.log('🔑 getQueryFn - Token sources:', {
-    sessionStorage: !!token,
-    authStore: !!authStore
-  });
-  
-  if (!token && authStore) {
-    try {
-      const parsed = JSON.parse(authStore);
-      token = parsed?.state?.token;
-      console.log('🔑 getQueryFn - Token from auth store:', !!token);
-    } catch (e) {
-      console.log('❌ Failed to parse auth storage', e);
-    }
-  }
-  
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-    console.log('📡 getQueryFn - Using Authorization header with token:', token.substring(0, 20) + '...');
-  } else {
-    console.log('❌ getQueryFn - No token found anywhere');
-  }
+  console.log('📡 getQueryFn - Making request to:', queryUrl);
   
   const res = await fetch(queryUrl, {
     headers,
-    credentials: "include",
+    credentials: "include", // Use cookies for authentication
   });
+
+  console.log('📡 getQueryFn - Response status:', res.status);
 
   // Para queries, retornar null em erro 401 para evitar loops
   if (res.status === 401) {

@@ -22,41 +22,19 @@ export function useAuth() {
         
         console.log('🔍 useAuth - Checking authentication...');
         
-        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-        
-        // Add Authorization header from auth store or sessionStorage
-        let token = sessionStorage.getItem('auth_token');
-        
-        // Fallback: try to get token from Zustand auth store
-        if (!token) {
-          try {
-            const authStore = localStorage.getItem('auth-storage');
-            if (authStore) {
-              const parsed = JSON.parse(authStore);
-              token = parsed?.state?.token;
-            }
-          } catch (e) {
-            console.log('Failed to parse auth storage');
-          }
-        }
-        
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-          console.log('🔍 useAuth - Using stored token for auth check');
-        }
-        
+        // Try authentication with cookies first (most reliable)
         const response = await fetch('/api/auth/user', {
           method: 'GET',
           credentials: 'include',
-          headers,
+          headers: { 'Content-Type': 'application/json' },
         });
 
         console.log('🔍 useAuth - Auth check response:', response.status);
 
         if (response.ok) {
           const userData = await response.json();
-          console.log('✅ useAuth - User authenticated:', userData.email);
-          setAuth(userData, token || '');
+          console.log('✅ useAuth - User authenticated via cookies:', userData.email);
+          setAuth(userData, ''); // No token needed since using cookies
         } else {
           console.log('❌ useAuth - Not authenticated, clearing auth');
           sessionStorage.removeItem('auth_token');
@@ -133,6 +111,7 @@ export function useAuth() {
     user,
     isAuthenticated: !!user,
     isLoading: isLoading || !initialized,
+    initializing: !initialized,
     login,
     logout,
   };
