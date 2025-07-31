@@ -37,13 +37,23 @@ export default function DebugAuth() {
         const loginData = await loginResponse.json();
         addLog(`✅ Login SUCCESS: ${loginData.user.email}`);
         
-        // Log cookies
+        // Log cookies and headers
         const cookieHeader = loginResponse.headers.get('set-cookie');
+        const credentialsHeader = loginResponse.headers.get('access-control-allow-credentials');
+        
         if (cookieHeader) {
           addLog(`🍪 Cookies recebidos: ${cookieHeader}`);
         } else {
-          addLog('❌ Nenhum cookie recebido!');
+          addLog('❌ Nenhum cookie recebido no header!');
         }
+        
+        addLog(`🔐 Credentials header: ${credentialsHeader}`);
+        
+        // Check if browser can see cookies
+        setTimeout(() => {
+          const browserCookies = document.cookie;
+          addLog(`🍪 Browser cookies: ${browserCookies || 'Nenhum'}`);
+        }, 100);
         
         // Aguardar um pouco
         await new Promise(resolve => setTimeout(resolve, 500));

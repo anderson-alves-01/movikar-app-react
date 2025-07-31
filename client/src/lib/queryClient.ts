@@ -23,6 +23,13 @@ export async function apiRequest(
     'Content-Type': 'application/json',
   };
 
+  // Add Authorization header as fallback if sessionStorage has token
+  const token = sessionStorage.getItem('auth_token');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+    console.log('📡 apiRequest - Using Authorization header fallback');
+  }
+
   const fullUrl = url.startsWith('http') ? url : url;
   
   console.log(`📡 apiRequest - ${method} ${fullUrl}`, data ? 'with data' : 'no data');

@@ -231,15 +231,26 @@ declare global {
 
 // Authentication middleware
 const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
-  // Use ONLY httpOnly cookies for authentication - no Authorization header fallback
   console.log('🔐 Auth middleware - URL:', req.path);
   console.log('🔐 Auth middleware - All cookies:', req.cookies);
   
-  const token = req.cookies?.token;
+  // Try cookies first, then Authorization header as fallback
+  let token = req.cookies?.token;
+  
+  if (!token) {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+      console.log('🔐 Auth middleware - Using Authorization header fallback');
+    }
+  } else {
+    console.log('🔐 Auth middleware - Using cookie token');
+  }
+  
   console.log('🔐 Auth middleware - Token exists:', !!token);
 
   if (!token) {
-    console.log('❌ Auth middleware - No token found');
+    console.log('❌ Auth middleware - No token found in cookies or headers');
     // Clear any stale cookies if no token
     res.clearCookie('token');
     res.clearCookie('refreshToken');
@@ -330,8 +341,8 @@ const requireAdmin = async (req: Request, res: Response, next: NextFunction) => 
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Trust proxy for rate limiting to work correctly in Replit
-  app.set('trust proxy', 1);
+  // Trust proxy configuration for Replit environment
+  app.set('trust proxy', true);
 
   // Rate limiting configuration - mais permissivo para desenvolvimento e testes
   const authLimiter = rateLimit({
@@ -660,27 +671,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('🍪 Setting login cookies for user:', user.email);
 
-      // Set HttpOnly cookies with explicit path
-      res.cookie('token', token, {
+      // Set cookies with development-friendly configuration
+      const cookieOptions = {
         httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
+        secure: false, // Must be false for HTTP in development
+        sameSite: 'lax' as const,
         path: '/',
+        domain: undefined // Let browser determine domain
+      };
+
+      res.cookie('token', token, {
+        ...cookieOptions,
         maxAge: 15 * 60 * 1000 // 15 minutes
       });
 
       res.cookie('refreshToken', refreshToken, {
-        httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
-        path: '/',
+        ...cookieOptions,
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
 
-      console.log('🍪 Cookies set successfully');
+      // Additional headers to ensure cookie transmission
+      res.header('Access-Control-Allow-Credentials', 'true');
+      res.header('Access-Control-Expose-Headers', 'Set-Cookie');
+
+      console.log('🍪 Cookies set with options:', cookieOptions);
       
       const { password: _, ...userWithoutPassword } = user;
-      res.json({ user: userWithoutPassword }); // Não incluir token no response (apenas cookies)
+      
+      // TEMPORARY: Also return token in response for testing (remove in production)
+      res.json({ 
+        user: userWithoutPassword,
+        token: token // Remove this line in production
+      });
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ message: "Falha no login. Tente novamente" });

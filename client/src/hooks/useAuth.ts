@@ -70,7 +70,14 @@ export function useAuth() {
 
       const data = await response.json();
       console.log('✅ useAuth - Login successful for:', data.user.email);
-      setAuth(data.user, '');
+      
+      // Store token temporarily in sessionStorage as fallback
+      if (data.token) {
+        console.log('💾 Storing token in sessionStorage as fallback');
+        sessionStorage.setItem('auth_token', data.token);
+      }
+      
+      setAuth(data.user, data.token || '');
       
       // Force re-initialization to ensure auth state is fresh
       setInitialized(false);
