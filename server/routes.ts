@@ -232,9 +232,14 @@ declare global {
 // Authentication middleware
 const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
   // Use ONLY httpOnly cookies for authentication - no Authorization header fallback
+  console.log('🔐 Auth middleware - URL:', req.path);
+  console.log('🔐 Auth middleware - All cookies:', req.cookies);
+  
   const token = req.cookies?.token;
+  console.log('🔐 Auth middleware - Token exists:', !!token);
 
   if (!token) {
+    console.log('❌ Auth middleware - No token found');
     // Clear any stale cookies if no token
     res.clearCookie('token');
     res.clearCookie('refreshToken');

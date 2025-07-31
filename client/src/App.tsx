@@ -43,6 +43,7 @@ import SavedVehicles from "@/pages/saved-vehicles";
 import SubscriptionPlans from "@/pages/subscription-plans";
 import SubscriptionCheckout from "@/pages/subscription-checkout";
 import SubscriptionSuccess from "@/pages/subscription-success";
+import TestSubscription from "@/pages/test-subscription";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt, IOSInstallPrompt } from "@/components/InstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
@@ -97,6 +98,7 @@ function Router() {
           <SubscriptionSuccess />
         </ProtectedRoute>
       </Route>
+      <Route path="/test-subscription" component={TestSubscription} />
       <Route component={NotFound} />
     </Switch>
   );
