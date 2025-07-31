@@ -47,6 +47,7 @@ export const users = pgTable("users", {
   subscriptionStartDate: timestamp("subscription_start_date"),
   subscriptionEndDate: timestamp("subscription_end_date"),
   subscriptionStripeId: varchar("subscription_stripe_id", { length: 255 }),
+  stripeCustomerId: varchar("stripe_customer_id", { length: 255 }),
   subscriptionPaymentMethod: varchar("subscription_payment_method", { length: 20 }).default("monthly"), // monthly, annual
   maxVehicleListings: integer("max_vehicle_listings").default(2).notNull(),
   highlightsUsed: integer("highlights_used").default(0).notNull(),
@@ -160,13 +161,7 @@ export const contracts = pgTable("contracts", {
   contractNumber: varchar("contract_number", { length: 50 }).notNull().unique(),
   status: varchar("status", { length: 20 }).notNull().default("draft"),
   templateId: varchar("template_id", { length: 50 }),
-  contractData: jsonb("contract_data").$type<{
-    vehicle: any;
-    renter: any;
-    owner: any;
-    booking: any;
-    terms: any;
-  }>().notNull(),
+  contractData: jsonb("contract_data").$type<Record<string, any>>().notNull(),
   signaturePlatform: varchar("signature_platform", { length: 20 }).default("docusign"),
   externalDocumentId: varchar("external_document_id", { length: 100 }),
   renterSigned: boolean("renter_signed").default(false),

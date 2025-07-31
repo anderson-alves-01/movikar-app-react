@@ -35,6 +35,7 @@ import { db, pool } from "./db";
 import { sql, eq, lte, gte, desc, ilike } from "drizzle-orm";
 import Stripe from "stripe";
 import multer from "multer";
+// @ts-ignore
 import docusign from 'docusign-esign';
 import { getFeatureFlags } from "@shared/feature-flags";
 import type { AdminSettings } from "@shared/admin-settings";
@@ -449,6 +450,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { paymentIntentId, vehicleId, startDate, endDate, totalPrice } = req.body;
       
       // Verify payment intent
+      if (!stripe) {
+        return res.status(500).json({ message: "Stripe não configurado" });
+      }
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
       
       if (paymentIntent.status !== 'succeeded') {
@@ -486,18 +490,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
           bookingId: booking.id,
           contractNumber: `CONTRACT-${Date.now()}-${booking.id}`,
           status: 'pending_signature',
-          createdBy: req.user!.id,
           templateId: "1",
           contractData: {
-            vehicle: booking,
-            renter: { id: booking.renterId },
-            owner: { id: booking.ownerId }, 
-            booking: booking,
+            vehicle: {
+              id: vehicle.id,
+              brand: vehicle.brand,
+              model: vehicle.model,
+              year: vehicle.year,
+              color: vehicle.color
+            },
+            renter: { 
+              id: booking.renterId,
+              name: req.user!.name,
+              email: req.user!.email
+            },
+            owner: { 
+              id: booking.ownerId,
+              name: vehicle.ownerId
+            }, 
+            booking: {
+              id: booking.id,
+              startDate: booking.startDate,
+              endDate: booking.endDate,
+              totalPrice: booking.totalPrice
+            },
             terms: {
               requiresGovBRSignature: true,
               createdAt: new Date().toISOString()
             }
-          }
+          } as any
         });
       } catch (contractError) {
         console.error("Contract creation failed:", contractError);
@@ -574,8 +595,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const contract = await storage.createContract({
           bookingId: booking.id,
+          contractNumber: `CONTRACT-${Date.now()}-${booking.id}`,
           status: 'pending_signature',
-          createdBy: parseInt(userId),
           templateId: "1",
           contractData: {
             vehicle: { id: booking.vehicleId },
@@ -586,7 +607,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               requiresGovBRSignature: true,
               createdAt: new Date().toISOString()
             }
-          }
+          } as any
         });
         console.log(`Contract created for preview: ${contract.contractNumber}`);
       } catch (contractError) {
@@ -607,7 +628,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { validateUser, validateVehicle, validateBooking, validateMessage, handleValidationErrors } = await import("./middleware/validation");
 
   // Authentication routes
-  app.post("/api/auth/register", validateUser, handleValidationErrors, async (req, res) => {
+  app.post("/api/auth/register", validateUser, handleValidationErrors, async (req: Request, res: Response) => {
     try {
       const userData = insertUserSchema.parse(req.body);
       
@@ -797,14 +818,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error('❌ Refresh token error:', error);
-      res.status(403).json({ message: 'Refresh token inválido' });
-    }
-  });
-      });
-      
-      const { password: _, ...userWithoutPassword } = user;
-      res.json({ user: userWithoutPassword });
-    } catch (error) {
       res.status(403).json({ message: 'Refresh token inválido' });
     }
   });
@@ -1300,7 +1313,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/vehicles", authenticateToken, validateVehicle, handleValidationErrors, async (req, res) => {
+  app.post("/api/vehicles", authenticateToken, validateVehicle, handleValidationErrors, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
       
@@ -1449,7 +1462,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/bookings", authenticateToken, validateBooking, handleValidationErrors, async (req, res) => {
+  app.post("/api/bookings", authenticateToken, validateBooking, handleValidationErrors, async (req: Request, res: Response) => {
     try {
       // Get vehicle to find owner ID
       const vehicle = await storage.getVehicle(req.body.vehicleId);
@@ -2099,7 +2112,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/messages", authenticateToken, validateMessage, handleValidationErrors, async (req, res) => {
+  app.post("/api/messages", authenticateToken, validateMessage, handleValidationErrors, async (req: Request, res: Response) => {
     try {
       const { content, receiverId, bookingId } = req.body;
       
@@ -3137,7 +3150,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(coupon);
     } catch (error) {
       console.error("❌ Error creating coupon:", error);
-      res.status(500).json({ message: `Erro ao criar cupom: ${error.message}` });
+      res.status(500).json({ message: `Erro ao criar cupom: ${error instanceof Error ? error.message : 'Erro desconhecido'}` });
     }
   });
 
@@ -3260,7 +3273,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         FROM payouts p 
         WHERE p.owner_id = $1
       `;
-      const params = [userId];
+      const params: (string | number)[] = [userId];
 
       if (status && status !== 'all') {
         query += ` AND p.status = $${params.length + 1}`;
@@ -3474,7 +3487,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User Subscription Routes
   app.get("/api/user/subscription", authenticateToken, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = req.user!.id;
       const subscription = await storage.getUserSubscriptionWithPlan(userId);
       
       if (!subscription) {
@@ -3506,7 +3519,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/user/subscription/limits", authenticateToken, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = req.user!.id;
       const limits = await storage.checkUserSubscriptionLimits(userId);
       res.json(limits);
     } catch (error) {
