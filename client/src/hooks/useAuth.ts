@@ -21,10 +21,20 @@ export function useAuth() {
         setLoading(true);
         
         console.log('🔍 useAuth - Checking authentication...');
+        
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        
+        // Add Authorization header if token exists in sessionStorage
+        const token = sessionStorage.getItem('auth_token');
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+          console.log('🔍 useAuth - Using stored token for auth check');
+        }
+        
         const response = await fetch('/api/auth/user', {
           method: 'GET',
           credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
         });
 
         console.log('🔍 useAuth - Auth check response:', response.status);

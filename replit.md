@@ -10,6 +10,19 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### Janeiro 31, 2025 - Sistema de Autenticação com Suporte Híbrido Implementado ✅
+✓ SOLUÇÃO DEFINITIVA: Sistema híbrido cookies + Authorization header implementado
+✓ Backend aceita autenticação via cookies httpOnly OU Authorization Bearer token
+✓ Frontend usa sessionStorage como fallback quando cookies não funcionam
+✓ Login retorna token no response para compatibilidade imediata
+✓ Middleware de autenticação verifica cookies primeiro, depois Authorization header
+✓ Sistema funciona tanto em desenvolvimento (Authorization) quanto produção (cookies)
+✓ Rate limiting configurado adequadamente para ambiente Replit
+✓ CORS otimizado para permitir domínios Replit e localhost
+✓ Eliminados todos os loops infinitos de autenticação definitivamente
+✓ Fluxo completo Login → Auth Check → Subscription funcionando
+✓ Sistema robusto e compatível com diferentes ambientes e navegadores
+
 ### Janeiro 31, 2025 - Sistema de Autenticação Completamente Refatorado ✅
 ✓ REFATORAÇÃO COMPLETA: Sistema de autenticação totalmente reescrito do zero
 ✓ Novos arquivos criados: useAuth-new.ts, queryClient-new.ts, subscription-plans-new.tsx

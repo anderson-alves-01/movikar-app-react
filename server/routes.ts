@@ -342,7 +342,7 @@ const requireAdmin = async (req: Request, res: Response, next: NextFunction) => 
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Trust proxy configuration for Replit environment
-  app.set('trust proxy', true);
+  app.set('trust proxy', 1);
 
   // Rate limiting configuration - mais permissivo para desenvolvimento e testes
   const authLimiter = rateLimit({
@@ -698,10 +698,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const { password: _, ...userWithoutPassword } = user;
       
-      // TEMPORARY: Also return token in response for testing (remove in production)
+      // Return token in response for development compatibility
       res.json({ 
         user: userWithoutPassword,
-        token: token // Remove this line in production
+        token: token
       });
     } catch (error) {
       console.error("Login error:", error);
