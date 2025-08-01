@@ -99,10 +99,18 @@ export function useAuth() {
         method: 'POST',
         credentials: 'include',
       });
+      console.log('✅ useAuth - Logout successful');
     } catch (error) {
-      // Ignorar erros de logout
+      console.log('❌ useAuth - Logout error:', error);
     } finally {
+      // Clear all authentication and checkout related data
       clearAuth();
+      sessionStorage.removeItem('auth_token');
+      localStorage.removeItem('checkoutPlan');
+      localStorage.removeItem('pendingSubscription');
+      localStorage.removeItem('returnUrl');
+      
+      console.log('🧹 Cleared all session data on logout');
       window.location.href = '/';
     }
   };

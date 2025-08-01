@@ -56,17 +56,21 @@ export default function Auth() {
           : "Conta criada! Redirecionando para a página principal...",
       });
 
-      // Verificar se há URL de retorno salva (ex: página de planos)
+      // Check for pending subscription or return URL
+      const pendingSubscription = localStorage.getItem('pendingSubscription');
       const returnUrl = localStorage.getItem('returnUrl');
       
       setTimeout(() => {
-        if (returnUrl) {
+        if (pendingSubscription) {
+          console.log('📋 Found pending subscription, redirecting to plans');
+          setLocation('/subscription-plans?from=login');
+        } else if (returnUrl) {
           localStorage.removeItem('returnUrl');
           setLocation(returnUrl);
         } else {
-          setLocation('/'); // Redirecionar para a tela principal
+          setLocation('/'); // Redirect to main page
         }
-      }, 1000); // Delay de 1s para mostrar a mensagem
+      }, 1000);
     },
     onError: (error: any) => {
       toast({

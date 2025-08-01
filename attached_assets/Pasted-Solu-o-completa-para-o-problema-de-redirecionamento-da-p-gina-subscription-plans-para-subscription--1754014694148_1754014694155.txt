@@ -1,0 +1,326 @@
+Solução completa para o problema de redirecionamento da página subscription-plans para subscription-checkout:
+
+1. Verificar o Componente SubscriptionPlans (client/src/components/SubscriptionPlans.js)
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import API from '../utils/api';
+
+const SubscriptionPlans = () => {
+const [plans, setPlans] = useState([]);
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState(null);
+const navigate = useNavigate();
+const { userInfo } = useSelector((state) => state.auth);
+
+useEffect(() => {
+// Limpar qualquer estado de checkout anterior
+localStorage.removeItem('checkoutPlan');
+
+const fetchPlans = async () => {
+try {
+const response = await API.get('/subscriptions');
+setPlans(response.data);
+} catch (err) {
+setError('Failed to load subscription plans');
+} finally {
+setLoading(false);
+}
+};
+
+if (userInfo) {
+fetchPlans();
+} else {
+navigate('/login');
+}
+}, [navigate, userInfo]);
+
+const handleSubscribe = (planId) => {
+// Salvar plano selecionado apenas quando clicar
+localStorage.setItem('checkoutPlan', JSON.stringify({ planId }));
+navigate('/subscription-checkout');
+};
+
+if (loading) return
+Loading...;
+if (error) return
+{error};
+
+return (
+
+Choose Your Plan
+
+{plans.map(plan => (
+
+{plan.name}
+{plan.description}
+${plan.price}/month
+<button
+onClick={() => handleSubscribe(plan.id)}
+className="subscribe-btn"
+>
+Subscribe
+
+
+))}
+
+
+);
+};
+
+export default SubscriptionPlans;
+
+2. Verificar o Roteamento no App.js (client/src/App.js)
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import SubscriptionPlans from './components/SubscriptionPlans';
+import SubscriptionCheckout from './components/SubscriptionCheckout';
+import Login from './components/Login';
+
+function App() {
+const { userInfo } = useSelector((state) => state.auth);
+
+return (
+
+
+<Route
+path="/login"
+element={!userInfo ? : }
+/>
+<Route
+path="/subscription-plans"
+element={
+
+
+
+}
+/>
+<Route
+path="/subscription-checkout"
+element={
+
+
+
+}
+/>
+<Route path="/" element={} />
+
+
+);
+}
+
+const ProtectedRoute = ({ children }) => {
+const { userInfo, loading } = useSelector((state) => state.auth);
+const location = useLocation();
+
+if (loading) {
+return
+Loading...;
+}
+
+if (!userInfo) {
+return <Navigate to="/login" state={{ from: location }} replace />;
+}
+
+return children;
+};
+
+export default App;
+
+3. Verificar o Componente SubscriptionCheckout (client/src/components/SubscriptionCheckout.js)
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import API from '../utils/api';
+
+const SubscriptionCheckout = () => {
+const [loading, setLoading] = useState(false);
+const [error, setError] = useState(null);
+const [plan, setPlan] = useState(null);
+const navigate = useNavigate();
+const { userInfo } = useSelector((state) => state.auth);
+
+useEffect(() => {
+// Verificar se há um plano selecionado
+const checkoutData = localStorage.getItem('checkoutPlan');
+
+if (!checkoutData) {
+// Se não houver plano, redirecionar para a página de planos
+navigate('/subscription-plans');
+return;
+}
+
+const { planId } = JSON.parse(checkoutData);
+
+// Buscar detalhes do plano
+const fetchPlan = async () => {
+try {
+const response = await API.get(`/subscriptions/${planId}`);
+setPlan(response.data);
+} catch (err) {
+setError('Failed to load plan details');
+navigate('/subscription-plans');
+}
+};
+
+fetchPlan();
+}, [navigate]);
+
+const handlePayment = async () => {
+setLoading(true);
+setError(null);
+
+try {
+const response = await API.post('/subscriptions/subscribe', {
+planId: plan.id
+});
+
+// Limpar dados do checkout
+localStorage.removeItem('checkoutPlan');
+
+// Redirecionar para dashboard ou página de sucesso
+navigate('/dashboard');
+} catch (err) {
+setError('Payment failed');
+setLoading(false);
+}
+};
+
+const handleCancel = () => {
+// Limpar dados e voltar para planos
+localStorage.removeItem('checkoutPlan');
+navigate('/subscription-plans');
+};
+
+if (!plan) return
+Loading...;
+
+return (
+
+Checkout
+
+{plan.name}
+{plan.description}
+${plan.price}/month
+
+{error && <div className="error">{error}</div>}
+
+<div className="checkout-actions">
+<button
+onClick={handleCancel}
+className="cancel-btn"
+disabled={loading}
+>
+Cancel
+</button>
+<button
+onClick={handlePayment}
+className="pay-btn"
+disabled={loading}
+>
+{loading ? 'Processing...' : `Pay $${plan.price}`}
+</button>
+</div>
+</div>
+);
+};
+
+export default SubscriptionCheckout;
+
+4. Adicionar Limpeza de Estado no Logout (client/src/store/authSlice.js)
+const authSlice = createSlice({
+name: 'auth',
+initialState: {
+userInfo: null,
+loading: false,
+error: null,
+},
+reducers: {
+logout: (state) => {
+localStorage.removeItem('userInfo');
+localStorage.removeItem('checkoutPlan'); // Limpar checkout no logout
+state.userInfo = null;
+state.loading = false;
+},
+},
+// ... resto do código
+});
+
+5. Verificar Interceptor da API (client/src/utils/api.js)
+API.interceptors.response.use(
+(response) => response,
+(error) => {
+// Remover qualquer redirecionamento automático para checkout
+if (error.config?.url?.includes('/subscription-checkout')) {
+return Promise.reject(error);
+}
+
+if (error.response?.status === 401) {
+localStorage.removeItem('checkoutPlan'); // Limpar checkout em caso de 401
+store.dispatch(logout());
+window.location.href = '/login';
+}
+return Promise.reject(error);
+}
+);
+
+6. Adicionar Proteção contra Redirecionamento Indevido (client/src/App.js)
+function App() {
+const { userInfo, loading } = useSelector((state) => state.auth);
+const location = useLocation();
+
+// Efeito para limpar estado de checkout se não estiver no fluxo correto
+useEffect(() => {
+const checkoutData = localStorage.getItem('checkoutPlan');
+
+// Se houver dados de checkout mas não estiver na página de checkout
+if (checkoutData && !location.pathname.includes('/subscription-checkout')) {
+// Limpar apenas se não estiver vindo da página de planos
+if (!document.referrer.includes('/subscription-plans')) {
+localStorage.removeItem('checkoutPlan');
+}
+}
+}, [location.pathname]);
+
+// ... resto do código
+}
+
+Passos para Testar a Solução
+Limpar o localStorage:
+localStorage.clear();
+Fazer login e acessar subscription-plans:
+Deve carregar a página normalmente
+Não deve redirecionar automaticamente para checkout
+Clicar em "Subscribe":
+Deve redirecionar para subscription-checkout
+O plano selecionado deve estar visível
+Recarregar a página subscription-checkout:
+Deve permanecer na página de checkout
+Não deve redirecionar para planos
+Acessar subscription-plans diretamente:
+Deve limpar qualquer estado de checkout anterior
+Não deve redirecionar para checkout
+Solução de Problemas Específicos
+Se o redirecionamento acontecer ao recarregar a página:
+
+Verifique se há algum useEffect no SubscriptionPlans que esteja causando o redirecionamento
+Remova qualquer código como este do SubscriptionPlans:
+useEffect(() => {
+if (someCondition) {
+navigate('/subscription-checkout');
+}
+}, []);
+Se o problema persistir no logout:
+
+Adicione limpeza completa no logout:
+const handleLogout = () => {
+localStorage.clear(); // Limpar tudo
+store.dispatch(logout());
+navigate('/login');
+};
+Se for um problema de roteamento:
+
+Verifique se não há rotas conflitantes ou redirecionamentos no histórico
+No App.js, verifique se não há:
+<Route path="/subscription-plans" element={} />
+Esta solução deve resolver o problema de redirecionamento indesejado entre as páginas de planos e checkout.

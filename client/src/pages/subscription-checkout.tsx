@@ -177,6 +177,7 @@ const CheckoutForm = ({ clientSecret, planName, paymentMethod, amount }: Checkou
 export default function SubscriptionCheckout() {
   const [location] = useLocation();
   const [, setLocation] = useLocation();
+  const [checkoutValidated, setCheckoutValidated] = useState(false);
   const searchParams = new URLSearchParams(location.split('?')[1]);
   
   const clientSecret = searchParams.get('clientSecret');
@@ -185,10 +186,59 @@ export default function SubscriptionCheckout() {
   const amount = parseInt(searchParams.get('amount') || '0');
 
   useEffect(() => {
-    if (!clientSecret || !planName) {
-      setLocation('/subscription-plans');
-    }
-  }, [clientSecret, planName, setLocation]);
+    // Verify checkout data integrity
+    const validateCheckout = () => {
+      console.log('🔍 Validating checkout data...');
+      
+      // Check if we have valid URL parameters
+      if (!clientSecret || !planName || !amount) {
+        console.log('❌ Missing URL parameters, checking localStorage...');
+        
+        // Try to get data from localStorage as fallback
+        const storedData = localStorage.getItem('checkoutPlan');
+        if (storedData) {
+          try {
+            const parsedData = JSON.parse(storedData);
+            const dataAge = Date.now() - (parsedData.timestamp || 0);
+            
+            // Check if data is recent (less than 10 minutes old)
+            if (dataAge < 10 * 60 * 1000) {
+              console.log('✅ Valid stored checkout data found');
+              setCheckoutValidated(true);
+              return;
+            } else {
+              console.log('⏰ Stored checkout data expired');
+              localStorage.removeItem('checkoutPlan');
+            }
+          } catch (error) {
+            console.log('❌ Invalid stored checkout data');
+            localStorage.removeItem('checkoutPlan');
+          }
+        }
+        
+        console.log('🔄 Redirecting to subscription plans');
+        setLocation('/subscription-plans');
+        return;
+      }
+      
+      console.log('✅ Valid checkout parameters found');
+      setCheckoutValidated(true);
+    };
+
+    validateCheckout();
+  }, [clientSecret, planName, amount, setLocation]);
+
+  // Show loading while validating
+  if (!checkoutValidated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Validando dados de checkout...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!clientSecret || !planName) {
     return null;

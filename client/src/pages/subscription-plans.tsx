@@ -47,6 +47,18 @@ export default function SubscriptionPlans() {
   const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   const { user: storeUser } = useAuthStore();
 
+  // Clear any previous checkout state when component loads
+  useEffect(() => {
+    // Only clear if not coming from a login redirect
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromLogin = urlParams.get('from') === 'login';
+    
+    if (!fromLogin) {
+      localStorage.removeItem('checkoutPlan');
+      console.log('🧹 Cleared checkout state on subscription plans load');
+    }
+  }, []);
+
   // Processar assinatura pendente quando user fizer login
   const processPendingSubscription = () => {
     const pendingSubscription = localStorage.getItem('pendingSubscription');
@@ -146,7 +158,19 @@ export default function SubscriptionPlans() {
         description: "Redirecionando para pagamento...",
       });
       
-      // Build checkout URL with all required parameters
+      // Store checkout data in localStorage
+      const checkoutData = {
+        clientSecret: data.clientSecret,
+        planName: data.planName,
+        paymentMethod: data.paymentMethod,
+        amount: data.amount,
+        timestamp: Date.now()
+      };
+      
+      localStorage.setItem('checkoutPlan', JSON.stringify(checkoutData));
+      console.log('💾 Stored checkout data:', checkoutData);
+      
+      // Build checkout URL
       const searchParams = new URLSearchParams({
         clientSecret: data.clientSecret,
         planName: data.planName,
@@ -157,10 +181,10 @@ export default function SubscriptionPlans() {
       const checkoutUrl = `/subscription-checkout?${searchParams.toString()}`;
       console.log('🔗 Redirecting to:', checkoutUrl);
       
-      // Use timeout to ensure toast is shown
+      // Use timeout to ensure toast is shown and data is stored
       setTimeout(() => {
         window.location.href = checkoutUrl;
-      }, 500);
+      }, 800);
     },
     onError: (error: Error) => {
       console.log('❌ Subscription error:', error.message);
