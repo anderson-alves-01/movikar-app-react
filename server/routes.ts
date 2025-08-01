@@ -1495,6 +1495,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get current user's vehicles (authenticated route)
+  app.get("/api/users/my/vehicles", authenticateToken, async (req, res) => {
+    try {
+      const vehicles = await storage.getVehiclesByOwner(req.user!.id);
+      res.json(vehicles);
+    } catch (error) {
+      console.error("Get my vehicles error:", error);
+      res.status(500).json({ message: "Falha ao buscar veículos do usuário" });
+    }
+  });
+
   // Booking routes
   app.get("/api/bookings", authenticateToken, async (req, res) => {
     try {

@@ -25,8 +25,23 @@ export default function Vehicles() {
   const [forceRefresh, setForceRefresh] = useState(0);
 
   const { data: vehicles, isLoading, refetch } = useQuery<any[]>({
-    queryKey: ["/api/users/" + user?.id + "/vehicles", forceRefresh],
-    enabled: !!user,
+    queryKey: ["/api/users/my/vehicles", forceRefresh],
+    queryFn: async () => {
+      const response = await fetch('/api/users/my/vehicles', {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      if (!response.ok) {
+        if (response.status === 401) {
+          // User not authenticated, return empty array
+          return [];
+        }
+        throw new Error('Failed to fetch vehicles');
+      }
+      return response.json();
+    },
     staleTime: 0, // Always consider data stale to force fresh fetches
     gcTime: 0, // Don't cache results (was cacheTime in v4)
   });
@@ -63,7 +78,8 @@ export default function Vehicles() {
     mutationFn: ({ vehicleId, isAvailable }: { vehicleId: number; isAvailable: boolean }) =>
       apiRequest("PUT", `/api/vehicles/${vehicleId}`, { isAvailable }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/users/" + user?.id + "/vehicles"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users/my/vehicles"] });
+      setForceRefresh(prev => prev + 1);
       toast({
         title: "Sucesso",
         description: "Disponibilidade atualizada com sucesso",
@@ -82,7 +98,8 @@ export default function Vehicles() {
     mutationFn: (vehicleId: number) =>
       apiRequest("DELETE", `/api/vehicles/${vehicleId}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/users/" + user?.id + "/vehicles"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users/my/vehicles"] });
+      setForceRefresh(prev => prev + 1);
       toast({
         title: "Sucesso",
         description: "Veículo excluído com sucesso",

@@ -76,6 +76,7 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
       queryClient.removeQueries({ 
         predicate: (query) => 
           query.queryKey[0] === '/api/vehicles' || 
+          query.queryKey[0] === '/api/users/my/vehicles' ||
           (typeof query.queryKey[0] === 'string' && query.queryKey[0].includes('/vehicles'))
       });
       onOpenChange(false);

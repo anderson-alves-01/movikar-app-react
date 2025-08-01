@@ -88,7 +88,7 @@ export default function VehicleEdit() {
       });
       // Force immediate cache invalidation with refetch
       queryClient.invalidateQueries({ 
-        queryKey: ["/api/users/" + user?.id + "/vehicles"],
+        queryKey: ["/api/users/my/vehicles"],
         refetchType: 'active'
       });
       queryClient.invalidateQueries({ 
@@ -101,7 +101,7 @@ export default function VehicleEdit() {
       });
       // Force a complete cache reset for vehicle-related data
       queryClient.removeQueries({ 
-        queryKey: ["/api/users/" + user?.id + "/vehicles"] 
+        queryKey: ["/api/users/my/vehicles"] 
       });
       // Add a small delay to ensure cache is cleared before navigation
       setTimeout(() => {
