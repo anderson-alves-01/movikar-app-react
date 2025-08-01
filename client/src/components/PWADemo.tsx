@@ -150,11 +150,11 @@ export function PWADemo() {
             <AlertCircle className="h-4 w-4 mt-0.5 text-blue-600" />
             <div>
               {isAppStandalone ? (
-                <span>✨ Você está usando o CarShare como app nativo! Funciona offline e recebe notificações.</span>
+                <span>✨ Você está usando o alugae.mobi como app nativo! Funciona offline e recebe notificações.</span>
               ) : isInstallable ? (
-                <span>📱 Instale o CarShare na sua tela inicial para uma experiência melhor!</span>
+                <span>📱 Instale o alugae.mobi na sua tela inicial para uma experiência melhor!</span>
               ) : (
-                <span>🌐 CarShare funciona como PWA no seu navegador com cache offline.</span>
+                <span>🌐 alugae.mobi funciona como PWA no seu navegador com cache offline.</span>
               )}
             </div>
           </div>

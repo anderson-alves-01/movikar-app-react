@@ -36,7 +36,7 @@ export function InstallPrompt() {
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-sm text-gray-900">
-              Instalar CarShare
+              Instalar alugae.mobi
             </h3>
             <p className="text-xs text-gray-600 mt-1">
               Acesse mais rápido e receba notificações

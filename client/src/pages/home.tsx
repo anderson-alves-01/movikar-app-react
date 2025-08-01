@@ -236,7 +236,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="space-y-4">
-              <h3 className="text-2xl font-bold text-primary">CarShare</h3>
+              <h3 className="text-2xl font-bold text-primary">alugae.mobi</h3>
               <p className="text-gray-300">
                 A plataforma que conecta pessoas através do compartilhamento de veículos. Seguro, fácil e econômico.
               </p>
@@ -274,7 +274,7 @@ export default function Home() {
           </div>
 
           <div className="border-t border-gray-700 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400 text-sm">© 2024 CarShare. Todos os direitos reservados.</p>
+            <p className="text-gray-400 text-sm">© 2024 alugae.mobi. Todos os direitos reservados.</p>
             <div className="flex items-center space-x-6 mt-4 md:mt-0">
               <div className="flex items-center text-sm text-gray-400">
                 <span className="mr-2">🛡️</span>

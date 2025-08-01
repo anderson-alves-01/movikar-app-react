@@ -1,4 +1,4 @@
-const CACHE_NAME = 'carshare-v1';
+const CACHE_NAME = 'alugae-mobi-v1';
 const urlsToCache = [
   '/',
   '/static/js/bundle.js',

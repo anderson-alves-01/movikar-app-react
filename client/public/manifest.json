@@ -1,6 +1,6 @@
 {
-  "name": "CarShare - Aluguel de Carros",
-  "short_name": "CarShare",
+  "name": "alugae.mobi - Aluguel de Carros",
+  "short_name": "alugae.mobi",
   "description": "Plataforma de compartilhamento de veículos com reservas, pagamentos e contratos digitais",
   "start_url": "/",
   "display": "standalone",
@@ -30,7 +30,7 @@
       "sizes": "390x844",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Página inicial do CarShare"
+      "label": "Página inicial do alugae.mobi"
     },
     {
       "src": "/screenshots/vehicles-mobile.png",

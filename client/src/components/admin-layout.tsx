@@ -102,7 +102,7 @@ function AdminHeader() {
             </SheetContent>
           </Sheet>
           
-          <h1 className="text-lg font-semibold">CarShare Admin</h1>
+          <h1 className="text-lg font-semibold">alugae.mobi Admin</h1>
         </div>
         
         <div className="flex items-center gap-2">

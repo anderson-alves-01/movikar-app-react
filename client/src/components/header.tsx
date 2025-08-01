@@ -49,7 +49,7 @@ export default function Header() {
             {/* Logo */}
             <Link href="/">
               <div className="flex items-center cursor-pointer">
-                <h1 className="text-2xl font-bold text-primary">CarShare</h1>
+                <h1 className="text-2xl font-bold text-primary">alugae.mobi</h1>
               </div>
             </Link>
 
