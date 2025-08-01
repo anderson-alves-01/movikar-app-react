@@ -812,6 +812,17 @@ export const userSubscriptions = pgTable("user_subscriptions", {
   currentPeriodEnd: timestamp("current_period_end").notNull(),
   cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false).notNull(),
   cancelledAt: timestamp("cancelled_at"),
+  // Campos para armazenar valores reais pagos
+  paidAmount: decimal("paid_amount", { precision: 10, scale: 2 }), // Valor real pago pelo usuário
+  vehicleCount: integer("vehicle_count").default(2), // Quantidade de veículos na assinatura
+  // Metadata do pagamento
+  paymentIntentId: varchar("payment_intent_id", { length: 255 }), // Stripe payment intent ID
+  paymentMetadata: jsonb("payment_metadata").$type<{
+    originalAmount?: number;
+    discountApplied?: number;
+    vehicleCount?: number;
+    calculationDetails?: string;
+  }>(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

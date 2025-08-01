@@ -25,6 +25,17 @@ Preferred communication style: Simple, everyday language.
 - **Error Handling**: Enhanced error handling with proper user feedback and automatic retry mechanisms
 - **Session Management**: Improved logout functionality to clear all authentication and checkout related data
 
+### Dynamic Subscription Values System (Aug 1, 2025)
+- **Database Schema Enhancement**: Added new fields to user_subscriptions table for tracking real payment values:
+  - `paid_amount`: Stores the actual amount paid by the user (e.g., R$ 89.87 for 5 vehicles)
+  - `vehicle_count`: Number of vehicles included in the subscription
+  - `payment_intent_id`: Stripe payment intent ID for tracking
+  - `payment_metadata`: JSON metadata with calculation details
+- **Payment Value Tracking**: Modified subscription confirmation to extract and save real payment amounts from Stripe payment intents
+- **API Enhancement**: Created `/api/user/subscription/details` endpoint to display complete subscription information with actual paid values
+- **Legacy Support**: System differentiates between legacy subscriptions (pre-enhancement) and new subscriptions with full payment tracking
+- **Dynamic Pricing Preservation**: System now correctly saves dynamic pricing calculations instead of just base plan prices
+
 ## System Architecture
 
 ### Frontend

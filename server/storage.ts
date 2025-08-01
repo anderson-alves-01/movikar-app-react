@@ -2224,7 +2224,9 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(userSubscriptions)
       .leftJoin(subscriptionPlans, eq(userSubscriptions.planId, subscriptionPlans.id))
-      .where(eq(userSubscriptions.userId, userId));
+      .where(eq(userSubscriptions.userId, userId))
+      .orderBy(desc(userSubscriptions.createdAt))
+      .limit(1);
 
     if (result.length === 0 || !result[0].subscription_plans) {
       return undefined;

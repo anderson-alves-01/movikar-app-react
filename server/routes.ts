@@ -3625,6 +3625,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Nova rota para detalhes completos da assinatura com valores reais
+  app.get("/api/user/subscription/details", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      // Buscar assinatura mais recente do usuário
+      const subscription = await storage.getUserSubscriptionWithPlan(userId);
+      
+      if (!subscription) {
+        // Usuário sem assinatura formal - usar dados do perfil
+        return res.json({
+          planName: user.subscriptionPlan || 'free',
+          planDisplayName: user.subscriptionPlan === 'essencial' ? 'Plano Essencial' :
+                          user.subscriptionPlan === 'plus' ? 'Plano Plus' : 'Plano Gratuito',
+          status: user.subscriptionStatus || 'active',
+          paymentMethod: user.subscriptionPaymentMethod || 'monthly',
+          startDate: user.subscriptionStartDate,
+          endDate: user.subscriptionEndDate,
+          paidAmount: null,
+          vehicleCount: user.maxVehicleListings === -1 ? 'ilimitado' : (user.maxVehicleListings || 2),
+          paymentDetails: null,
+          isLegacySubscription: true
+        });
+      }
+
+      // Retornar dados completos da assinatura
+      res.json({
+        planName: subscription.plan?.name || 'free',
+        planDisplayName: subscription.plan?.displayName || 'Plano Gratuito',
+        status: subscription.status,
+        paymentMethod: subscription.paymentMethod,
+        startDate: subscription.currentPeriodStart,
+        endDate: subscription.currentPeriodEnd,
+        paidAmount: subscription.paidAmount ? parseFloat(subscription.paidAmount.toString()) : null,
+        vehicleCount: subscription.vehicleCount || 2,
+        paymentDetails: subscription.paymentMetadata,
+        paymentIntentId: subscription.paymentIntentId,
+        isLegacySubscription: false
+      });
+
+    } catch (error) {
+      console.error("Error fetching subscription details:", error);
+      res.status(500).json({ message: "Erro ao buscar detalhes da assinatura" });
+    }
+  });
+
   // Stripe Subscription Routes
   app.post("/api/create-subscription", authenticateToken, async (req, res) => {
     try {
@@ -3736,6 +3787,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const planName = paymentIntent.metadata.planName;
       const paymentMethod = paymentIntent.metadata.paymentMethod || 'monthly';
+      const vehicleCount = parseInt(paymentIntent.metadata.vehicleCount || '2');
+      const paidAmountCents = paymentIntent.amount;
+      const paidAmount = (paidAmountCents / 100).toFixed(2);
 
       // Get or create subscription plan
       let plan = await storage.getSubscriptionPlanByName(planName);
@@ -3785,7 +3839,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         highlightsAvailable: plan.highlightCount || 0
       });
 
-      // Create user subscription record
+      // Create user subscription record with real paid values
       await storage.createUserSubscription({
         userId,
         planId: plan.id,
@@ -3793,7 +3847,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         paymentMethod,
         currentPeriodStart: startDate,
         currentPeriodEnd: endDate,
-        cancelAtPeriodEnd: false
+        cancelAtPeriodEnd: false,
+        paidAmount: paidAmount, // Valor real pago pelo usuário
+        vehicleCount: vehicleCount, // Quantidade de veículos na assinatura
+        paymentIntentId: paymentIntentId, // ID do payment intent do Stripe
+        paymentMetadata: {
+          originalAmount: paidAmountCents,
+          vehicleCount: vehicleCount,
+          calculationDetails: `${planName} plan with ${vehicleCount} vehicles, ${paymentMethod} payment`
+        }
       });
 
       res.json({
