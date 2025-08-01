@@ -36,6 +36,15 @@ Preferred communication style: Simple, everyday language.
 - **Legacy Support**: System differentiates between legacy subscriptions (pre-enhancement) and new subscriptions with full payment tracking
 - **Dynamic Pricing Preservation**: System now correctly saves dynamic pricing calculations instead of just base plan prices
 
+### Vehicle Checkout System Fix (Aug 1, 2025)
+- **URL Length Issue Resolution**: Fixed HTTP 431 "Request Header Fields Too Large" error caused by base64 images in checkout URLs
+- **Server-Side Data Storage**: Implemented temporary checkout data storage system with 30-minute expiration
+- **New API Endpoints**: Added `/api/store-checkout-data` and `/api/checkout-data/:checkoutId` for secure data handling
+- **URL Optimization**: Reduced checkout URLs from 8000+ characters to ~60 characters using checkoutId system
+- **Backward Compatibility**: Maintained support for legacy URL-based data while transitioning to new system
+- **Security Enhancement**: Added user ownership verification and automatic cleanup of expired checkout data
+- **User Experience**: Eliminated checkout failures caused by overly long URLs containing vehicle images
+
 ## System Architecture
 
 ### Frontend
