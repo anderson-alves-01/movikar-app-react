@@ -3059,10 +3059,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const subscriptions = await db
         .select({
           id: userSubscriptions.id,
-          plan: userSubscriptions.planName,
+          planId: userSubscriptions.planId,
           status: userSubscriptions.status,
+          paymentMethod: userSubscriptions.paymentMethod,
           createdAt: userSubscriptions.createdAt,
-          amount: userSubscriptions.totalAmount,
+          stripeSubscriptionId: userSubscriptions.stripeSubscriptionId,
+          plan: {
+            id: subscriptionPlans.id,
+            name: subscriptionPlans.name,
+            displayName: subscriptionPlans.displayName,
+            monthlyPrice: subscriptionPlans.monthlyPrice,
+            annualPrice: subscriptionPlans.annualPrice
+          },
           user: {
             id: users.id,
             name: users.name,
@@ -3071,6 +3079,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
         .from(userSubscriptions)
         .leftJoin(users, eq(userSubscriptions.userId, users.id))
+        .leftJoin(subscriptionPlans, eq(userSubscriptions.planId, subscriptionPlans.id))
         .orderBy(desc(userSubscriptions.createdAt));
         
       res.json(subscriptions);
@@ -3094,8 +3103,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(eq(userSubscriptions.status, 'active'));
         
       const monthlyRevenue = await db
-        .select({ sum: sql<number>`sum(cast(total_amount as decimal))` })
+        .select({ 
+          sum: sql<number>`sum(
+            case 
+              when ${userSubscriptions.paymentMethod} = 'monthly' then cast(${subscriptionPlans.monthlyPrice} as decimal)
+              else cast(${subscriptionPlans.annualPrice} as decimal) / 12
+            end
+          )` 
+        })
         .from(userSubscriptions)
+        .leftJoin(subscriptionPlans, eq(userSubscriptions.planId, subscriptionPlans.id))
         .where(eq(userSubscriptions.status, 'active'));
         
       const stats = {

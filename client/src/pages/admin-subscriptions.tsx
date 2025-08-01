@@ -72,7 +72,7 @@ export default function AdminSubscriptions() {
     const matchesSearch = sub.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          sub.user?.email?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || sub.status === statusFilter;
-    const matchesPlan = planFilter === "all" || sub.plan === planFilter;
+    const matchesPlan = planFilter === "all" || sub.plan?.name === planFilter;
     return matchesSearch && matchesStatus && matchesPlan;
   }) : [];
 
@@ -265,15 +265,15 @@ export default function AdminSubscriptions() {
                             </div>
                             <div>
                               <div className="text-sm font-medium text-gray-900">
-                                {subscription.user.name}
+                                {subscription.user?.name || 'N/A'}
                               </div>
                               <div className="text-sm text-gray-500">
-                                {subscription.user.email}
+                                {subscription.user?.email || 'N/A'}
                               </div>
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>{getPlanBadge(subscription.plan)}</TableCell>
+                        <TableCell>{getPlanBadge(subscription.plan?.displayName || subscription.plan?.name || 'N/A')}</TableCell>
                         <TableCell>{getStatusBadge(subscription.status)}</TableCell>
                         <TableCell className="text-sm text-gray-600">
                           {formatDate(subscription.createdAt)}
@@ -282,7 +282,13 @@ export default function AdminSubscriptions() {
                           {subscription.nextPaymentDate ? formatDate(subscription.nextPaymentDate) : 'N/A'}
                         </TableCell>
                         <TableCell className="text-sm font-medium">
-                          {formatCurrency(subscription.amount)}
+                          {formatCurrency(
+                            parseFloat(
+                              subscription.paymentMethod === 'monthly' 
+                                ? subscription.plan?.monthlyPrice || '0'
+                                : subscription.plan?.annualPrice || '0'
+                            )
+                          )}
                         </TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
