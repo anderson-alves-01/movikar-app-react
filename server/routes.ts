@@ -1498,10 +1498,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get current user's vehicles (authenticated route)
   app.get("/api/users/my/vehicles", authenticateToken, async (req, res) => {
     try {
+      console.log("🚗 [API] Getting vehicles for user:", req.user!.id);
       const vehicles = await storage.getVehiclesByOwner(req.user!.id);
+      console.log("🚗 [API] Found vehicles count:", vehicles.length);
       res.json(vehicles);
     } catch (error) {
-      console.error("Get my vehicles error:", error);
+      console.error("❌ [API] Get my vehicles error:", error);
       res.status(500).json({ message: "Falha ao buscar veículos do usuário" });
     }
   });
