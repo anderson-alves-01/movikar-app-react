@@ -299,18 +299,22 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
         const newToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
         const newRefreshToken = jwt.sign({ userId: user.id }, JWT_SECRET + '_refresh', { expiresIn: '7d' });
 
-        // Set new cookies with consistent settings for development
-        res.cookie('token', newToken, {
+        // Set new cookies with Replit-friendly settings
+        const isReplit = !!process.env.REPL_ID;
+        const refreshCookieOptions = {
           httpOnly: true,
-          secure: false, // Development mode
-          sameSite: 'lax',
+          secure: isReplit, // true in Replit (HTTPS), false locally
+          sameSite: isReplit ? 'none' as const : 'lax' as const, // cross-origin support
+          path: '/'
+        };
+        
+        res.cookie('token', newToken, {
+          ...refreshCookieOptions,
           maxAge: 15 * 60 * 1000
         });
 
         res.cookie('refresh_token', newRefreshToken, {
-          httpOnly: true,
-          secure: false, // Development mode
-          sameSite: 'lax',
+          ...refreshCookieOptions,
           maxAge: 7 * 24 * 60 * 60 * 1000
         });
 
@@ -749,11 +753,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('🍪 Setting login cookies for user:', user.email);
 
-      // Set cookies with development-friendly configuration
+      // Set cookies with Replit-friendly configuration
+      const isReplit = !!process.env.REPL_ID;
       const cookieOptions = {
         httpOnly: true,
-        secure: false, // Must be false for HTTP in development
-        sameSite: 'lax' as const,
+        secure: isReplit, // true in Replit (HTTPS), false locally (HTTP)
+        sameSite: isReplit ? 'none' as const : 'lax' as const, // 'none' allows cross-origin in Replit
         path: '/',
         domain: undefined // Let browser determine domain
       };
@@ -768,7 +773,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
 
-      // Additional headers to ensure cookie transmission
+      // Additional headers to ensure cookie transmission in Replit
       res.header('Access-Control-Allow-Credentials', 'true');
       res.header('Access-Control-Expose-Headers', 'Set-Cookie');
 
