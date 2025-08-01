@@ -66,13 +66,33 @@ export default function Reservations() {
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
 
   const { data: renterBookings, isLoading: loadingRenter } = useQuery<Booking[]>({
-    queryKey: ["/api/bookings?type=renter"],
-    enabled: !!user, // Enable when user is authenticated
+    queryKey: ["/api/bookings", "renter"],
+    queryFn: async () => {
+      const response = await fetch('/api/bookings?type=renter', {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch renter bookings');
+      return response.json();
+    },
+    enabled: !!user,
   });
 
   const { data: ownerBookings, isLoading: loadingOwner } = useQuery<Booking[]>({
-    queryKey: ["/api/bookings?type=owner"],
-    enabled: !!user, // Enable when user is authenticated
+    queryKey: ["/api/bookings", "owner"],
+    queryFn: async () => {
+      const response = await fetch('/api/bookings?type=owner', {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch owner bookings');
+      return response.json();
+    },
+    enabled: !!user,
   });
 
   const { data: waitingQueue, isLoading: loadingQueue } = useQuery<WaitingQueueEntry[]>({

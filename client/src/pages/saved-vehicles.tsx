@@ -146,40 +146,8 @@ export default function SavedVehicles() {
 
   const allCategories = ["all", ...(Array.isArray(categories) ? categories : [])];
 
-  // Check if user is not authenticated
-  const token = getToken();
-  console.log('Saved Vehicles - Token:', token);
-  
-  if (!token) {
-    return (
-      <>
-        <Header />
-        <div className="min-h-screen bg-gray-50 py-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <Card className="text-center py-12">
-              <CardContent>
-                <div className="flex flex-col items-center">
-                  <BookmarkCheck className="w-16 h-16 text-gray-300 mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                    Login necessário
-                  </h3>
-                  <p className="text-gray-500 mb-6 max-w-md">
-                    Você precisa estar logado para ver seus veículos salvos.
-                  </p>
-                  <Button 
-                    onClick={() => window.location.href = '/auth'}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    Fazer Login
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </>
-    );
-  }
+  // Remove the token check from here - let queries handle auth gracefully
+  // Show login page only if explicitly unauthenticated from API response
 
   if (isLoading) {
     return (

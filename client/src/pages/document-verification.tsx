@@ -41,6 +41,13 @@ export default function DocumentVerification() {
   const [uploadingFiles, setUploadingFiles] = useState<{[key: string]: boolean}>({});
   const fileInputRefs = useRef<{[key: string]: HTMLInputElement | null}>({});
 
+  // Calculate progress value correctly
+  const calculateProgress = () => {
+    if (!documents || documents.length === 0) return 0;
+    const approvedCount = documents.filter(doc => doc.status === 'approved').length;
+    return Math.round((approvedCount / documentTypes.length) * 100);
+  };
+
   const { data: user, isLoading: userLoading } = useQuery<User>({
     queryKey: ['/api/auth/user'],
   });

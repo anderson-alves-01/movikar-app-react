@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import VehicleCard from '@/components/vehicle-card';
+import Header from '@/components/header';
 import { Sparkles, Eye, Search, TrendingUp } from 'lucide-react';
 
 interface VehicleWithOwner {
@@ -125,63 +126,65 @@ export default function Suggestions() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <Sparkles className="h-8 w-8 text-blue-600" />
-          <h1 className="text-3xl font-bold text-gray-900">Sugestões Personalizadas</h1>
+    <>
+      <Header />
+      <div className="container mx-auto p-6">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <Sparkles className="h-8 w-8 text-blue-600" />
+            <h1 className="text-3xl font-bold text-gray-900">Sugestões Personalizadas</h1>
+          </div>
+          <p className="text-gray-600">
+            Veículos recomendados baseados nas suas pesquisas e preferências
+          </p>
         </div>
-        <p className="text-gray-600">
-          Veículos recomendados baseados nas suas pesquisas e preferências
-        </p>
-      </div>
 
-      {/* Info Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Baseado em</CardTitle>
-            <Search className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">Pesquisas</div>
-            <p className="text-xs text-muted-foreground">
-              Suas buscas anteriores
-            </p>
-          </CardContent>
-        </Card>
+        {/* Info Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Baseado em</CardTitle>
+              <Search className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">Pesquisas</div>
+              <p className="text-xs text-muted-foreground">
+                Suas buscas anteriores
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Histórico de</CardTitle>
-            <Eye className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">Visualizações</div>
-            <p className="text-xs text-muted-foreground">
-              Veículos que você viu
-            </p>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Histórico de</CardTitle>
+              <Eye className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">Visualizações</div>
+              <p className="text-xs text-muted-foreground">
+                Veículos que você viu
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Algoritmo</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">Inteligente</div>
-            <p className="text-xs text-muted-foreground">
-              Aprende suas preferências
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Algoritmo</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">Inteligente</div>
+              <p className="text-xs text-muted-foreground">
+                Aprende suas preferências
+              </p>
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Suggestions */}
-      {suggestions && suggestions.length > 0 ? (
-        <div>
+        {/* Suggestions */}
+        {suggestions && suggestions.length > 0 ? (
+          <div>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900">
               Recomendações para Você
@@ -224,10 +227,10 @@ export default function Suggestions() {
             </Button>
           </div>
         </div>
-      )}
+        )}
 
-      {/* Tips */}
-      <div className="mt-12">
+        {/* Tips */}
+        <div className="mt-12">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -268,6 +271,7 @@ export default function Suggestions() {
           </CardContent>
         </Card>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

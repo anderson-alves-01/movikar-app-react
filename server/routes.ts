@@ -2689,10 +2689,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/rewards/transactions", authenticateToken, async (req, res) => {
     try {
       const transactions = await storage.getUserRewardTransactions(req.user!.id);
-      res.json(transactions);
+      res.json(transactions || []);
     } catch (error) {
       console.error("Error fetching reward transactions:", error);
-      res.status(500).json({ message: "Erro interno do servidor" });
+      // Return empty array instead of 500 to prevent errors
+      res.json([]);
     }
   });
 

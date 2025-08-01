@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Gift, Users, Copy, Coins, TrendingUp, Calendar, Check } from 'lucide-react';
+import Header from '@/components/header';
 
 interface UserRewards {
   id: number;
