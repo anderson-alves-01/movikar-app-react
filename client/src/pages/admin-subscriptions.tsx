@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Header from "@/components/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency } from "@/lib/currency";
 import { TableSkeleton, Loading } from "@/components/ui/loading";
+import { useAuthStore } from "@/lib/auth";
 
 export default function AdminSubscriptions() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -33,6 +34,7 @@ export default function AdminSubscriptions() {
   const [planFilter, setPlanFilter] = useState<string>("all");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
 
   // Fetch subscriptions
   const { data: subscriptions, isLoading: subscriptionsLoading } = useQuery({
