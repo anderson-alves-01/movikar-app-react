@@ -37,7 +37,6 @@ export function useAuth() {
           setAuth(userData, ''); // No token needed since using cookies
         } else {
           console.log('❌ useAuth - Not authenticated, clearing auth');
-          sessionStorage.removeItem('auth_token');
           clearAuth();
         }
       } catch (error) {

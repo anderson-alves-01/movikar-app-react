@@ -27,21 +27,27 @@ export default function Vehicles() {
   const { data: vehicles, isLoading, refetch } = useQuery<any[]>({
     queryKey: ["/api/users/my/vehicles", forceRefresh],
     queryFn: async () => {
+      console.log("📡 useQuery - Fetching vehicles...");
       const response = await fetch('/api/users/my/vehicles', {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         }
       });
+      console.log("📡 useQuery - Response status:", response.status);
+      
       if (!response.ok) {
         if (response.status === 401) {
-          // User not authenticated, return empty array
+          console.log("📡 useQuery - 401 Unauthorized, returning empty array");
           return [];
         }
         throw new Error('Failed to fetch vehicles');
       }
-      return response.json();
+      const data = await response.json();
+      console.log("📡 useQuery - Data received:", data.length, "vehicles");
+      return data;
     },
+    enabled: !!user, // Only run query if user is authenticated
     staleTime: 0, // Always consider data stale to force fresh fetches
     gcTime: 0, // Don't cache results (was cacheTime in v4)
   });
