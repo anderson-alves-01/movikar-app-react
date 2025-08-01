@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { FileText, CheckCircle, Clock, ExternalLink, Download } from 'lucide-react';
+import { FileText, CheckCircle, Clock, ExternalLink, Download, AlertTriangle } from 'lucide-react';
 
 export default function ContractPreview() {
   const [, contractParams] = useRoute('/contracts/:id');
@@ -41,12 +41,12 @@ export default function ContractPreview() {
   // Determine which data to use
   const isLoading = isLoadingContract || isLoadingBooking || isLoadingPreview;
   const contractData = contract || contractPreview;
-  const bookingData = booking || contract?.booking;
+  const bookingData = booking || (contract as any)?.booking;
 
   // Sign contract with DocuSign
   const signContractMutation = useMutation({
     mutationFn: async () => {
-      const idToUse = bookingId || (contract?.bookingId);
+      const idToUse = bookingId || (contract as any)?.bookingId;
       if (!idToUse) {
         throw new Error('ID da reserva não encontrado');
       }
@@ -112,6 +112,44 @@ export default function ContractPreview() {
     );
   }
 
+  // Check if contract is already signed
+  const isContractSigned = bookingData?.contractSigned || 
+                           bookingData?.status === 'contracted' ||
+                           (contractData as any)?.renterSigned || 
+                           (contractData as any)?.ownerSigned ||
+                           (contractData as any)?.status === 'completed';
+
+  const contractStatus = bookingData?.status || (contractData as any)?.status;
+
+  // Show status information in booking summary
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'contracted':
+        return 'default';
+      case 'approved':
+        return 'default';
+      case 'pending':
+        return 'secondary';
+      default:
+        return 'outline';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'contracted':
+        return 'Contratado';
+      case 'approved':
+        return 'Aprovado';
+      case 'pending':
+        return 'Pendente';
+      case 'cancelled':
+        return 'Cancelado';
+      default:
+        return status;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -141,10 +179,15 @@ export default function ContractPreview() {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Status</label>
-                  <div>
-                    <Badge variant={bookingData?.status === 'approved' ? 'default' : 'secondary'}>
-                      {bookingData?.status === 'approved' ? 'Aprovado' : bookingData?.status}
+                  <div className="flex gap-2">
+                    <Badge variant={getStatusBadgeVariant(contractStatus)}>
+                      {getStatusText(contractStatus)}
                     </Badge>
+                    {isContractSigned && (
+                      <Badge className="bg-green-600">
+                        Assinado
+                      </Badge>
+                    )}
                   </div>
                 </div>
                 <div>
@@ -171,7 +214,7 @@ export default function ContractPreview() {
                   <div className="text-center mb-6">
                     <h2 className="text-xl font-bold">CONTRATO DE LOCAÇÃO DE VEÍCULO</h2>
                     <p className="text-sm text-gray-600 mt-2">
-                      Número: CNT-{bookingData?.id || contractData?.id}-{Date.now().toString().slice(-6)}
+                      Número: CNT-{bookingData?.id || (contractData as any)?.id}-{Date.now().toString().slice(-6)}
                     </p>
                   </div>
 
@@ -229,35 +272,66 @@ export default function ContractPreview() {
           <Card>
             <CardContent className="pt-6">
               <div className="space-y-4">
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <ExternalLink className="h-5 w-5 text-blue-600" />
-                    <span className="font-medium text-blue-800">Assinatura Digital DocuSign</span>
+                {isContractSigned ? (
+                  // Contract already signed - show message
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                      <span className="font-medium text-green-800">Contrato Já Assinado</span>
+                    </div>
+                    <p className="text-sm text-green-700">
+                      Este contrato já foi assinado digitalmente e possui validade jurídica.
+                      Não é possível assinar novamente um contrato já finalizado.
+                    </p>
+                    <div className="mt-3">
+                      <Badge className="bg-green-600">
+                        Status: {contractStatus === 'contracted' ? 'Contratado' : 'Assinado'}
+                      </Badge>
+                    </div>
                   </div>
-                  <p className="text-sm text-blue-700">
-                    Você será redirecionado para a plataforma DocuSign para realizar a assinatura digital do contrato.
-                    A assinatura será válida juridicamente e reconhecida internacionalmente.
-                  </p>
-                </div>
+                ) : (
+                  // Contract not signed - show signing option
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ExternalLink className="h-5 w-5 text-blue-600" />
+                      <span className="font-medium text-blue-800">Assinatura Digital DocuSign</span>
+                    </div>
+                    <p className="text-sm text-blue-700">
+                      Você será redirecionado para a plataforma DocuSign para realizar a assinatura digital do contrato.
+                      A assinatura será válida juridicamente e reconhecida internacionalmente.
+                    </p>
+                  </div>
+                )}
 
                 <div className="flex gap-4">
-                  <Button
-                    onClick={() => signContractMutation.mutate()}
-                    disabled={signContractMutation.isPending}
-                    className="flex-1 bg-green-600 hover:bg-green-700"
-                  >
-                    {signContractMutation.isPending ? (
-                      <>
-                        <Clock className="h-4 w-4 mr-2 animate-spin" />
-                        Preparando...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        Assinar com DocuSign
-                      </>
-                    )}
-                  </Button>
+                  {!isContractSigned ? (
+                    <Button
+                      onClick={() => signContractMutation.mutate()}
+                      disabled={signContractMutation.isPending}
+                      className="flex-1 bg-green-600 hover:bg-green-700"
+                    >
+                      {signContractMutation.isPending ? (
+                        <>
+                          <Clock className="h-4 w-4 mr-2 animate-spin" />
+                          Preparando...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Assinar com DocuSign
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      disabled
+                      className="flex-1"
+                    >
+                      <AlertTriangle className="h-4 w-4 mr-2" />
+                      Contrato Já Assinado
+                    </Button>
+                  )}
                   
                   <Button
                     variant="outline"

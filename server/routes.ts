@@ -2815,6 +2815,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Reserva não encontrada" });
       }
 
+      // Check if user has permission to sign this contract
+      if (booking.renterId !== userId && booking.ownerId !== userId) {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      // Prevent re-signing already signed contracts
+      if (booking.contractSigned || booking.status === 'contracted') {
+        return res.status(400).json({ 
+          message: "Este contrato já foi assinado. Não é possível assinar novamente um contrato já finalizado." 
+        });
+      }
+
+      // Check if booking is in valid state for signing
+      if (booking.status !== 'approved') {
+        return res.status(400).json({ 
+          message: "A reserva deve estar aprovada para permitir assinatura do contrato." 
+        });
+      }
+
+      // Continue with DocuSign integration logic...ails(parseInt(bookingId));
+      if (!booking) {
+        return res.status(404).json({ message: "Reserva não encontrada" });
+      }
+
       // Check if user is the renter (only renter signs)
       if (booking.renterId !== userId) {
         return res.status(403).json({ message: "Apenas o locatário pode assinar o contrato" });
