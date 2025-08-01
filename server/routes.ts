@@ -3052,6 +3052,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin Subscription Management Routes
+  app.get("/api/admin/subscriptions", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      console.log("📋 Fetching admin subscriptions...");
+      const subscriptions = await db
+        .select({
+          id: userSubscriptions.id,
+          plan: userSubscriptions.planName,
+          status: userSubscriptions.status,
+          createdAt: userSubscriptions.createdAt,
+          amount: userSubscriptions.totalAmount,
+          user: {
+            id: users.id,
+            name: users.name,
+            email: users.email
+          }
+        })
+        .from(userSubscriptions)
+        .leftJoin(users, eq(userSubscriptions.userId, users.id))
+        .orderBy(desc(userSubscriptions.createdAt));
+        
+      res.json(subscriptions);
+    } catch (error) {
+      console.error("Error fetching admin subscriptions:", error);
+      res.status(500).json({ message: "Erro ao buscar assinaturas" });
+    }
+  });
+
+  app.get("/api/admin/subscription-stats", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      console.log("📊 Fetching subscription stats...");
+      
+      const totalSubscriptions = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(userSubscriptions);
+        
+      const activeSubscriptions = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(userSubscriptions)
+        .where(eq(userSubscriptions.status, 'active'));
+        
+      const monthlyRevenue = await db
+        .select({ sum: sql<number>`sum(cast(total_amount as decimal))` })
+        .from(userSubscriptions)
+        .where(eq(userSubscriptions.status, 'active'));
+        
+      const stats = {
+        totalSubscriptions: totalSubscriptions[0]?.count || 0,
+        activeSubscriptions: activeSubscriptions[0]?.count || 0,
+        monthlyRevenue: monthlyRevenue[0]?.sum || 0,
+        growthRate: 15 // Mock growth rate for now
+      };
+      
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching subscription stats:", error);
+      res.status(500).json({ message: "Erro ao buscar estatísticas" });
+    }
+  });
+
+  app.post("/api/admin/subscriptions/:id/cancel", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const subscriptionId = parseInt(req.params.id);
+      console.log("❌ Cancelling subscription:", subscriptionId);
+      
+      await db
+        .update(userSubscriptions)
+        .set({ 
+          status: 'cancelled'
+        })
+        .where(eq(userSubscriptions.id, subscriptionId));
+        
+      res.json({ message: "Assinatura cancelada com sucesso" });
+    } catch (error) {
+      console.error("Error cancelling subscription:", error);
+      res.status(500).json({ message: "Erro ao cancelar assinatura" });
+    }
+  });
+
   // Admin Settings API routes
   app.get("/api/admin/settings", authenticateToken, requireAdmin, async (req, res) => {
     try {

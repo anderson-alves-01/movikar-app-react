@@ -31,6 +31,11 @@ const adminNavItems = [
     icon: Calendar,
   },
   {
+    href: "/admin/subscriptions",
+    label: "Assinaturas",
+    icon: Calendar,
+  },
+  {
     href: "/admin/settings",
     label: "Configurações",
     icon: Settings,

@@ -318,6 +318,32 @@ export default function Profile() {
                         </div>
                       )}
                     </div>
+                    
+                    {/* Subscription Plan Display */}
+                    <div className="mt-4 flex items-center gap-3">
+                      <Badge 
+                        variant={user.subscriptionPlan === 'free' ? 'secondary' : user.subscriptionPlan === 'essencial' ? 'default' : 'destructive'}
+                        className="text-sm px-3 py-1"
+                      >
+                        <Star className="h-3 w-3 mr-1" />
+                        Plano {user.subscriptionPlan === 'free' ? 'Gratuito' : 
+                                user.subscriptionPlan === 'essencial' ? 'Essencial' : 
+                                user.subscriptionPlan === 'plus' ? 'Plus' : 'Desconhecido'}
+                      </Badge>
+                      {user.subscriptionStatus === 'active' && user.subscriptionPlan !== 'free' && (
+                        <Badge variant="outline" className="text-xs">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Ativo até {user.subscriptionEndDate ? new Date(user.subscriptionEndDate).toLocaleDateString('pt-BR') : 'N/A'}
+                        </Badge>
+                      )}
+                      {user.subscriptionPlan === 'free' && (
+                        <Button asChild variant="outline" size="sm">
+                          <Link href="/subscription-plans">
+                            Fazer upgrade
+                          </Link>
+                        </Button>
+                      )}
+                    </div>
                   </>
                 )}
               </div>

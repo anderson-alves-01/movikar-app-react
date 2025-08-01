@@ -38,6 +38,7 @@ import LoadingDemo from "@/pages/loading-demo";
 import AdminSettings from "@/pages/admin-settings";
 import AdminCouponsPage from "@/pages/admin-coupons";
 import AdminReports from "@/pages/admin-reports";
+import AdminSubscriptions from "@/pages/admin-subscriptions";
 import EarningsPage from "@/pages/earnings";
 import DebugPix from "@/pages/debug-pix";
 import SavedVehicles from "@/pages/saved-vehicles";
@@ -70,6 +71,7 @@ function Router() {
       <Route path="/admin/documents" component={AdminDocuments} />
       <Route path="/reservations" component={Reservations} />
       <Route path="/vehicles" component={Vehicles} />
+      <Route path="/my-vehicles" component={Vehicles} />
       <Route path="/messages" component={Messages} />
       <Route path="/contracts" component={Contracts} />
       <Route path="/contracts/:id" component={ContractPreview} />
@@ -79,6 +81,7 @@ function Router() {
       <Route path="/document-verification" component={DocumentVerification} />
       <Route path="/performance" component={PerformanceDashboard} />
       <Route path="/checkout/:vehicleId" component={Checkout} />
+      <Route path="/checkout" component={Checkout} />
       <Route path="/payment-success" component={PaymentSuccess} />
       <Route path="/contract-preview/:bookingId" component={ContractPreview} />
       <Route path="/contract-signed-success" component={ContractSignedSuccess} />
@@ -87,6 +90,7 @@ function Router() {
       <Route path="/loading-demo" component={LoadingDemo} />
       <Route path="/admin/settings" component={AdminSettings} />
       <Route path="/admin/reports" component={AdminReports} />
+      <Route path="/admin/subscriptions" component={AdminSubscriptions} />
       <Route path="/admin/coupons" component={AdminCouponsPage} />
       <Route path="/earnings" component={EarningsPage} />
       <Route path="/debug-pix" component={DebugPix} />

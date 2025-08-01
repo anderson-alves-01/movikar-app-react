@@ -269,6 +269,17 @@ export default function Checkout() {
     
     if (data) {
       try {
+        // Check if data is too long (HTTP 431 protection)
+        if (data.length > 8000) {
+          toast({
+            title: "Erro",
+            description: "URL muito longa. Tente novamente.",
+            variant: "destructive",
+          });
+          setLocation("/");
+          return;
+        }
+        
         const parsedData = JSON.parse(decodeURIComponent(data));
         setCheckoutData(parsedData);
       } catch (error) {

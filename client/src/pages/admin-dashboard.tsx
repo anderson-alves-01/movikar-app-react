@@ -13,7 +13,8 @@ import {
   Shield,
   Clock,
   AlertTriangle,
-  Ticket
+  Ticket,
+  CreditCard
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -112,6 +113,15 @@ export default function AdminDashboard() {
       href: "/admin/coupons",
       color: "bg-orange-500",
       stats: "Cupons ativos",
+      priority: false
+    },
+    {
+      title: "Assinaturas",
+      description: "Gerenciar assinaturas e planos da plataforma",
+      icon: CreditCard,
+      href: "/admin/subscriptions",
+      color: "bg-teal-500",
+      stats: "Assinaturas ativas",
       priority: false
     }
   ];
