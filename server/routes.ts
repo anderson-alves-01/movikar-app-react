@@ -1486,30 +1486,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/users/:id/vehicles", async (req, res) => {
+  // Get current user's vehicles (authenticated route)
+  app.get("/api/users/my/vehicles", authenticateToken, async (req, res) => {
+    try {
+      console.log("🚗 [API] Route accessed - my vehicles for user:", req.user?.id);
+      
+      // Test with basic pool query
+      const result = await pool.query(
+        'SELECT id, brand, model, year, color FROM vehicles WHERE owner_id = $1 LIMIT 10',
+        [req.user!.id]
+      );
+      
+      console.log("🚗 [API] Query result:", result.rows.length, "vehicles found");
+      res.json(result.rows);
+    } catch (error) {
+      console.error("❌ [API] Error in my vehicles:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  app.get("/api/users/:id(\\d+)/vehicles", async (req, res) => {
     try {
       const vehicles = await storage.getVehiclesByOwner(parseInt(req.params.id));
       res.json(vehicles);
     } catch (error) {
-      res.status(500).json({ message: "Falha ao buscar veículos do usuário" });
-    }
-  });
-
-  // Get current user's vehicles (authenticated route)
-  app.get("/api/users/my/vehicles", authenticateToken, async (req, res) => {
-    try {
-      console.log("🚗 [API] Getting vehicles for user:", req.user!.id);
-      
-      // Get vehicles with snake_case field names using pool query
-      const result = await pool.query(
-        'SELECT * FROM vehicles WHERE owner_id = $1 ORDER BY created_at DESC',
-        [req.user!.id]
-      );
-        
-      console.log("🚗 [API] Found vehicles count:", result.rows.length);
-      res.json(result.rows);
-    } catch (error) {
-      console.error("❌ [API] Get my vehicles error:", error);
       res.status(500).json({ message: "Falha ao buscar veículos do usuário" });
     }
   });
