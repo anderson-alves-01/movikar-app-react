@@ -86,11 +86,27 @@ export default function VehicleEdit() {
         title: "Sucesso!",
         description: "Veículo atualizado com sucesso",
       });
-      // Invalidate multiple cache keys that might contain this vehicle data
-      queryClient.invalidateQueries({ queryKey: ['/api/vehicles'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/vehicles', vehicleId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/users/" + user?.id + "/vehicles"] });
-      setLocation('/vehicles');
+      // Force immediate cache invalidation with refetch
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/users/" + user?.id + "/vehicles"],
+        refetchType: 'active'
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/vehicles', vehicleId],
+        refetchType: 'active'
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/vehicles'],
+        refetchType: 'active'
+      });
+      // Force a complete cache reset for vehicle-related data
+      queryClient.removeQueries({ 
+        queryKey: ["/api/users/" + user?.id + "/vehicles"] 
+      });
+      // Add a small delay to ensure cache is cleared before navigation
+      setTimeout(() => {
+        setLocation('/vehicles');
+      }, 100);
     },
     onError: (error: any) => {
       toast({

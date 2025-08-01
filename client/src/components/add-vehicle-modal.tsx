@@ -68,7 +68,16 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
         title: "Veículo cadastrado!",
         description: "Seu veículo foi cadastrado e está aguardando aprovação da documentação.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/vehicles'] });
+      // Force cache invalidation for all vehicle-related queries
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/vehicles'],
+        refetchType: 'active'
+      });
+      queryClient.removeQueries({ 
+        predicate: (query) => 
+          query.queryKey[0] === '/api/vehicles' || 
+          (typeof query.queryKey[0] === 'string' && query.queryKey[0].includes('/vehicles'))
+      });
       onOpenChange(false);
       resetForm();
     },

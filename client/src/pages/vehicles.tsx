@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useAuthStore } from "@/lib/auth";
@@ -22,11 +22,42 @@ export default function Vehicles() {
   const queryClient = useQueryClient();
   const [selectedVehicleForAvailability, setSelectedVehicleForAvailability] = useState<number | null>(null);
   const [showAddVehicleModal, setShowAddVehicleModal] = useState(false);
+  const [forceRefresh, setForceRefresh] = useState(0);
 
-  const { data: vehicles, isLoading } = useQuery<any[]>({
-    queryKey: ["/api/users/" + user?.id + "/vehicles"],
+  const { data: vehicles, isLoading, refetch } = useQuery<any[]>({
+    queryKey: ["/api/users/" + user?.id + "/vehicles", forceRefresh],
     enabled: !!user,
+    staleTime: 0, // Always consider data stale to force fresh fetches
+    gcTime: 0, // Don't cache results (was cacheTime in v4)
   });
+
+  // Listen for navigation back to this page to refresh data
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        setForceRefresh(prev => prev + 1);
+      }
+    };
+
+    const handleFocus = () => {
+      setForceRefresh(prev => prev + 1);
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
+  // Force refresh when component mounts
+  useEffect(() => {
+    if (user) {
+      setForceRefresh(prev => prev + 1);
+    }
+  }, [user]);
 
   const toggleAvailabilityMutation = useMutation({
     mutationFn: ({ vehicleId, isAvailable }: { vehicleId: number; isAvailable: boolean }) =>
