@@ -22,11 +22,22 @@ export function useAuth() {
         
         console.log('🔍 useAuth - Checking authentication...');
         
-        // Try authentication with cookies first (most reliable)
+        // Try authentication with cookies and Authorization header as fallback
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        };
+        
+        // Add Authorization header if token exists
+        const token = sessionStorage.getItem('auth_token');
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+          console.log('🔍 useAuth - Using Authorization header fallback');
+        }
+        
         const response = await fetch('/api/auth/user', {
           method: 'GET',
           credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
         });
 
         console.log('🔍 useAuth - Auth check response:', response.status);

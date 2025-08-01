@@ -23,6 +23,13 @@ export async function apiRequest(
     'Content-Type': 'application/json',
   };
 
+  // Add Authorization header if token exists in sessionStorage
+  const token = sessionStorage.getItem('auth_token');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+    console.log('📡 apiRequest - Using Authorization header');
+  }
+
   const fullUrl = url.startsWith('http') ? url : url;
   
   console.log(`📡 apiRequest - ${method} ${fullUrl}`, data ? 'with data' : 'no data');
@@ -52,6 +59,13 @@ export const getQueryFn: QueryFunction = async ({ queryKey }) => {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
+  
+  // Add Authorization header if token exists in sessionStorage
+  const token = sessionStorage.getItem('auth_token');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+    console.log('📡 getQueryFn - Using Authorization header');
+  }
   
   console.log('📡 getQueryFn - Making request to:', queryUrl);
   
