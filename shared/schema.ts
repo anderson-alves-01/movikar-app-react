@@ -707,7 +707,7 @@ export const adminSettings = pgTable("admin_settings", {
   maximumBookingDays: integer("maximum_booking_days").default(30).notNull(),
   cancellationPolicyDays: integer("cancellation_policy_days").default(2).notNull(),
   currency: varchar("currency", { length: 10 }).default("BRL").notNull(),
-  supportEmail: varchar("support_email", { length: 255 }).default("suporte@carshare.com").notNull(),
+  supportEmail: varchar("support_email", { length: 255 }).default("sac@alugae.mobi").notNull(),
   supportPhone: varchar("support_phone", { length: 50 }).default("(11) 9999-9999").notNull(),
   enablePixPayment: boolean("enable_pix_payment").default(false).notNull(),
   enablePixTransfer: boolean("enable_pix_transfer").default(true).notNull(),

@@ -34,7 +34,7 @@ export function PWADemo() {
     const granted = await requestNotificationPermission();
     if (granted) {
       sendLocalNotification(
-        "CarShare PWA",
+        "alugae.mobi PWA",
         "Notificações funcionando! Você receberá updates sobre suas reservas.",
         "/icons/icon-192x192.png"
       );
@@ -62,7 +62,7 @@ export function PWADemo() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Smartphone className="h-5 w-5 text-secondary" />
-          Status PWA CarShare
+          Status PWA alugae.mobi
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">

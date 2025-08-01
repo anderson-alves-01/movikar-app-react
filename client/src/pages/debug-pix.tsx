@@ -65,7 +65,7 @@ export default function DebugPix() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: 'admin@carshare.com',
+          email: 'admin@alugae.mobi',
           password: '123456'
         })
       });

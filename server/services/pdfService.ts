@@ -194,7 +194,7 @@ export async function generateContractPDF(contract: Contract, template: Contract
 export const defaultContractTemplate = `
 <div class="header">
     <h1>CONTRATO DE LOCAÇÃO DE VEÍCULO</h1>
-    <h2>CarShare - Plataforma de Aluguel de Carros</h2>
+    <h2>alugae.mobi - Plataforma de Aluguel de Carros</h2>
 </div>
 
 <div class="contract-number">
@@ -285,7 +285,7 @@ export const defaultContractTemplate = `
     <h3>DISPOSIÇÕES GERAIS</h3>
     <p>Este contrato é regido pelas leis brasileiras e qualquer divergência será resolvida no foro da comarca de São Paulo/SP.</p>
     <p>As partes concordam que a assinatura eletrônica tem a mesma validade jurídica da assinatura física.</p>
-    <p>Este contrato foi gerado automaticamente pela plataforma CarShare e possui validade legal.</p>
+    <p>Este contrato foi gerado automaticamente pela plataforma alugae.mobi e possui validade legal.</p>
 </div>
 
 <div class="signature-area">

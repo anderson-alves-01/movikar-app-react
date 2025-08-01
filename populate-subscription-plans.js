@@ -106,7 +106,7 @@ async function populateSubscriptionPlans() {
         pix_transfer_description, created_at, updated_at
       ) VALUES (
         1, 29.90, 59.90, 20.00, 10.00, 15.00, 1, 30, 2, 'BRL',
-        'suporte@carshare.com', '(11) 9999-9999', false, true,
+        'sac@alugae.mobi', '(11) 9999-9999', false, true,
         'Repasse CarShare', NOW(), NOW()
       ) ON CONFLICT (id) DO UPDATE SET
         essential_plan_price = EXCLUDED.essential_plan_price,

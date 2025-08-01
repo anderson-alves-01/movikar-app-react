@@ -60,9 +60,7 @@ export default function AdminUsersPage() {
   const { data: usersData, isLoading } = useQuery({
     queryKey: ['/api/admin/users', currentPage, pageSize, searchTerm, roleFilter, verificationFilter],
     queryFn: async () => {
-      if (!token) {
-        throw new Error('No authentication token');
-      }
+      // Cookies handle authentication, no need to check token
       
       const params = new URLSearchParams({
         page: currentPage.toString(),
@@ -74,9 +72,9 @@ export default function AdminUsersPage() {
       
       const response = await fetch(`/api/admin/users?${params}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Use cookies for authentication
       });
       
       if (!response.ok) {
@@ -88,7 +86,7 @@ export default function AdminUsersPage() {
       
       return response.json();
     },
-    enabled: !!token, // Only run query if token exists
+    enabled: true, // Always try to run the query, cookies handle auth
   });
 
   const users = usersData?.users || [];
@@ -126,13 +124,12 @@ export default function AdminUsersPage() {
   // Update user mutation
   const updateUserMutation = useMutation({
     mutationFn: async (data: { id: number; userData: Partial<User> }) => {
-      const currentToken = useAuthStore.getState().token;
       const response = await fetch(`/api/admin/users/${data.id}`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${currentToken}`,
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify(data.userData),
       });
       
@@ -158,13 +155,12 @@ export default function AdminUsersPage() {
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: number) => {
-      const currentToken = useAuthStore.getState().token;
       const response = await fetch(`/api/admin/users/${userId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${currentToken}`,
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
       });
       
       if (!response.ok) {
@@ -187,13 +183,13 @@ export default function AdminUsersPage() {
   // Create user mutation
   const createUserMutation = useMutation({
     mutationFn: async (userData: typeof newUserData) => {
-      const token = localStorage.getItem('token');
+      // Cookies handle authentication
       const response = await fetch('/api/admin/users', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify(userData),
       });
       

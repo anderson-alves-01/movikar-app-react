@@ -40,7 +40,7 @@ export default function LoadingDemo() {
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-4">
-              🎨 Sistema de Loading CarShare
+              🎨 Sistema de Loading alugae.mobi
             </h1>
             <p className="text-gray-600 max-w-2xl mx-auto">
               Demonstração completa dos componentes de loading personalizados criados para uma melhor experiência do usuário.

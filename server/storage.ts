@@ -1093,7 +1093,7 @@ export class DatabaseStorage implements IStorage {
             </div>
             
             <div style="text-align: center; margin-top: 30px; font-size: 10px; color: #666;">
-              <p>Este contrato foi gerado eletronicamente pela plataforma CarShare</p>
+              <p>Este contrato foi gerado eletronicamente pela plataforma alugae.mobi</p>
               <p>Data e hora da geração: {{contract.generatedAt}}</p>
             </div>
           </div>

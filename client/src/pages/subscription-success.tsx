@@ -183,8 +183,8 @@ export default function SubscriptionSuccess() {
 
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-6">
             Tem dúvidas? Entre em contato com nosso suporte prioritário em{" "}
-            <a href="mailto:suporte@carshare.com" className="text-blue-600 hover:underline">
-              suporte@carshare.com
+            <a href="mailto:sac@alugae.mobi" className="text-blue-600 hover:underline">
+              sac@alugae.mobi
             </a>
           </p>
         </div>

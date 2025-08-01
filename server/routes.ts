@@ -48,7 +48,7 @@ let currentAdminSettings: AdminSettings = {
   maximumBookingDays: 30,
   cancellationPolicyDays: 2,
   currency: "BRL",
-  supportEmail: "suporte@carshare.com",
+  supportEmail: "sac@alugae.mobi",
   supportPhone: "(11) 9999-9999",
   enablePixPayment: false,
   enablePixTransfer: true,

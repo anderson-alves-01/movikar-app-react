@@ -71,7 +71,9 @@ function Router() {
       <Route path="/admin/documents" component={AdminDocuments} />
       <Route path="/reservations" component={Reservations} />
       <Route path="/vehicles" component={Vehicles} />
+      <Route path="/vehicles/create" component={VehicleEdit} />
       <Route path="/my-vehicles" component={Vehicles} />
+      <Route path="/dashboard" component={Profile} />
       <Route path="/messages" component={Messages} />
       <Route path="/contracts" component={Contracts} />
       <Route path="/contracts/:id" component={ContractPreview} />
