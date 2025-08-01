@@ -255,7 +255,7 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
     console.log('❌ Auth middleware - No token found in cookies or headers');
     // Clear any stale cookies if no token
     res.clearCookie('token');
-    res.clearCookie('refreshToken');
+    res.clearCookie('refresh_token');
     return res.status(401).json({ message: 'Token de acesso obrigatório' });
   }
 
@@ -267,7 +267,7 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
     if (!user) {
       console.log('❌ Auth middleware - User not found for ID:', decoded.userId);
       res.clearCookie('token');
-      res.clearCookie('refreshToken');
+      res.clearCookie('refresh_token');
       return res.status(403).json({ message: 'Token inválido' });
     }
     
@@ -276,12 +276,12 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
     next();
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
-      // Try to refresh token from refreshToken cookie
-      const refreshToken = req.cookies?.refreshToken;
+      // Try to refresh token from refresh_token cookie
+      const refreshToken = req.cookies?.refresh_token;
       
       if (!refreshToken) {
         res.clearCookie('token');
-        res.clearCookie('refreshToken');
+        res.clearCookie('refresh_token');
         return res.status(401).json({ message: "Token expirado e refresh token não encontrado" });
       }
 
@@ -291,7 +291,7 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
         
         if (!user) {
           res.clearCookie('token');
-          res.clearCookie('refreshToken');
+          res.clearCookie('refresh_token');
           return res.status(401).json({ message: "Usuário não encontrado" });
         }
 
@@ -307,7 +307,7 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
           maxAge: 15 * 60 * 1000
         });
 
-        res.cookie('refreshToken', newRefreshToken, {
+        res.cookie('refresh_token', newRefreshToken, {
           httpOnly: true,
           secure: false, // Development mode
           sameSite: 'lax',
@@ -319,13 +319,13 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
       } catch (refreshError) {
         console.error('Refresh token error:', refreshError);
         res.clearCookie('token');
-        res.clearCookie('refreshToken');
+        res.clearCookie('refresh_token');
         return res.status(401).json({ message: "Refresh token inválido" });
       }
     } else {
       console.error('Token verification error:', error);
       res.clearCookie('token');
-      res.clearCookie('refreshToken');
+      res.clearCookie('refresh_token');
       return res.status(403).json({ message: 'Token inválido' });
     }
   }
@@ -659,7 +659,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         maxAge: 15 * 60 * 1000 // 15 minutes
       });
 
-      res.cookie('refreshToken', refreshToken, {
+      res.cookie('refresh_token', refreshToken, {
         httpOnly: true,
         secure: false, // Permite HTTPS e HTTP em desenvolvimento
         sameSite: 'lax', // Menos restritivo para desenvolvimento
@@ -707,7 +707,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         maxAge: 15 * 60 * 1000 // 15 minutes
       });
 
-      res.cookie('refreshToken', refreshToken, {
+      res.cookie('refresh_token', refreshToken, {
         ...cookieOptions,
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
@@ -749,7 +749,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       sameSite: 'lax',
       path: '/'
     });
-    res.clearCookie('refreshToken', {
+    res.clearCookie('refresh_token', {
       httpOnly: true,
       secure: false,
       sameSite: 'lax',
@@ -763,7 +763,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       sameSite: 'lax',
       expires: new Date(0)
     });
-    res.cookie('refreshToken', '', {
+    res.cookie('refresh_token', '', {
       httpOnly: true,
       secure: false,
       sameSite: 'lax',
@@ -778,7 +778,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('🔄 Refresh token attempt');
       
       // Try refresh token from cookies first, then from Authorization header
-      let refreshToken = req.cookies?.refreshToken;
+      let refreshToken = req.cookies?.refresh_token;
       
       // Fallback: check Authorization header for refresh token
       const authHeader = req.headers.authorization;

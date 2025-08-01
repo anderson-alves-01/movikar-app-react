@@ -84,7 +84,7 @@ export const requireOwnership = (resourceType: 'vehicle' | 'booking') => {
 // Refresh token middleware
 export const refreshToken = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const refreshToken = req.cookies?.refreshToken;
+    const refreshToken = req.cookies?.refresh_token;
 
     if (!refreshToken) {
       return res.status(401).json({ message: 'Refresh token não encontrado' });

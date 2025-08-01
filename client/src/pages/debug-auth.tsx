@@ -155,7 +155,7 @@ export default function DebugAuth() {
       // Try to read specific cookies
       const allCookies = document.cookie.split('; ');
       const tokenCookie = allCookies.find(c => c.startsWith('token='));
-      const refreshCookie = allCookies.find(c => c.startsWith('refreshToken='));
+      const refreshCookie = allCookies.find(c => c.startsWith('refresh_token='));
       
       addLog(`Token cookie: ${tokenCookie || 'Not found'}`);
       addLog(`Refresh cookie: ${refreshCookie || 'Not found'}`);

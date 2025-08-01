@@ -10,6 +10,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (Aug 2025)
 
+### Cookie Authentication System Fixes (Aug 1, 2025)
+- **Cookie Naming Standardization**: Fixed all inconsistent cookie naming from "refreshToken" to "refresh_token" across the entire system for consistency
+- **Authentication System Unified**: Completely standardized authentication to use httpOnly cookies exclusively with consistent naming
+- **Middleware Synchronization**: Updated all authentication middleware to use standardized "refresh_token" cookie names
+- **Login/Registration Fix**: Both login and registration endpoints now use consistent cookie naming conventions
+- **Admin Authentication**: Fixed admin authentication system with proper cookie handling and standardized naming
+
 ### Subscription System Fixes
 - **Authentication Simplified**: Completely refactored authentication to use httpOnly cookies exclusively, removing complex Authorization header handling for improved reliability
 - **Subscription Flow**: Fixed subscription-plans to subscription-checkout redirect issues with comprehensive state management
