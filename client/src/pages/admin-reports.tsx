@@ -47,7 +47,7 @@ export default function AdminReports() {
                 Relatórios Administrativos
               </h1>
               <p className="text-gray-600 mt-2">
-                Análises e métricas da plataforma CarShare
+                Análises e métricas da plataforma alugae
               </p>
             </div>
             <div className="flex gap-2">

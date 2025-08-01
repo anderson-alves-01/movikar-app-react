@@ -10,7 +10,7 @@ const __dirname = dirname(__filename);
 
 // Start the production server with error handling
 const startServer = () => {
-  console.log('Starting CarShare production server...');
+  console.log('Starting alugae production server...');
   
   const serverPath = join(__dirname, 'dist', 'index.js');
   const serverProcess = spawn('node', [serverPath], {
@@ -32,7 +32,7 @@ const startServer = () => {
     
     // Check if server is ready
     if (output.includes('serving on port')) {
-      console.log('✅ CarShare server is ready for deployment');
+      console.log('✅ alugae server is ready for deployment');
     }
   });
 

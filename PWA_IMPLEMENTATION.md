@@ -1,4 +1,4 @@
-# CarShare PWA - Implementação Imediata
+# alugae PWA - Implementação Imediata
 
 ## 🎯 Transformação em Progressive Web App
 
@@ -7,7 +7,7 @@
 #### 1. Web Manifest (`public/manifest.json`)
 ```json
 {
-  "name": "CarShare - Aluguel de Carros",
+  "name": "alugae - Aluguel de Carros",
   "short_name": "CarShare",
   "description": "Plataforma de compartilhamento de veículos",
   "start_url": "/",

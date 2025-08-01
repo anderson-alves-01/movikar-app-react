@@ -31,7 +31,7 @@ function AdminSettingsPage() {
     supportPhone: "(11) 9999-9999",
     enablePixPayment: false,
     enablePixTransfer: true,
-    pixTransferDescription: "Repasse CarShare",
+    pixTransferDescription: "Repasse alugae",
     essentialPlanPrice: 29.90,
     plusPlanPrice: 59.90,
     annualDiscountPercentage: 20.00,
@@ -81,7 +81,7 @@ function AdminSettingsPage() {
         supportPhone: currentSettings.supportPhone || "(11) 9999-9999",
         enablePixPayment: currentSettings.enablePixPayment || false,
         enablePixTransfer: currentSettings.enablePixTransfer || true,
-        pixTransferDescription: currentSettings.pixTransferDescription || "Repasse CarShare",
+        pixTransferDescription: currentSettings.pixTransferDescription || "Repasse alugae",
         essentialPlanPrice: currentSettings.essentialPlanPrice || 29.90,
         plusPlanPrice: currentSettings.plusPlanPrice || 59.90,
         annualDiscountPercentage: currentSettings.annualDiscountPercentage || 20.00,
@@ -495,7 +495,7 @@ function AdminSettingsPage() {
                     onChange={(e) => handleInputChange('pixTransferDescription', e.target.value)}
                     disabled={!isEditing}
                     className="mt-1"
-                    placeholder="Ex: Repasse CarShare"
+                    placeholder="Ex: Repasse alugae"
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     Texto que aparece na transferência PIX para os proprietários

@@ -13,7 +13,7 @@ export interface FeatureFlags {
 const defaultAdminSettings = {
   enablePixPayment: false,
   enablePixTransfer: true,
-  pixTransferDescription: "Repasse CarShare",
+  pixTransferDescription: "Repasse alugae",
 };
 
 /**

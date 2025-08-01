@@ -115,7 +115,7 @@ app.use((req, res, next) => {
         res.status(200).json({ 
           status: 'ok', 
           timestamp: new Date().toISOString(),
-          message: 'CarShare server is running'
+          message: 'alugae server is running'
         });
         return;
       }

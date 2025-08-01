@@ -193,7 +193,7 @@ export default function SubscriptionSuccess() {
         <Card className="mt-12 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
           <CardContent className="p-8 text-center">
             <h3 className="text-2xl font-bold mb-4">
-              Bem-vindo ao time premium do CarShare! 🚗
+              Bem-vindo ao time premium do alugae! 🚗
             </h3>
             <p className="text-lg opacity-90">
               Agora você faz parte de um grupo seleto de proprietários que maximizam

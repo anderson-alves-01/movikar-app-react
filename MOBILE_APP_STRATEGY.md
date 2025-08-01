@@ -1,11 +1,11 @@
-# CarShare - Estratégia de Publicação Mobile 2025
+# alugae - Estratégia de Publicação Mobile 2025
 
 ## 📱 Plano de Conversão para App Móvel
 
-### Opções Recomendadas para CarShare
+### Opções Recomendadas para alugae
 
 #### 1. **React Native (Recomendado) - Conversão Completa**
-**Por que é ideal para CarShare:**
+**Por que é ideal para alugae:**
 - Seu app já usa React/TypeScript - 70% do código pode ser reutilizado
 - Performance nativa para funcionalidades críticas (pagamentos, GPS, câmera)
 - Suporte completo para Stripe, DocuSign e outras integrações
@@ -108,7 +108,7 @@
 - Chamadas diretas entre usuários
 - Reconhecimento de voz para busca
 
-#### **Funcionalidades Específicas CarShare**
+#### **Funcionalidades Específicas alugae**
 - Verificação de documentos via câmera
 - Localização de veículos próximos
 - Chat em tempo real

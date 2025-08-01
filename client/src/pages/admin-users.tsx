@@ -358,7 +358,7 @@ export default function AdminUsersPage() {
               <div className="text-center py-8">
                 <p className="text-gray-600">Carregando usuários...</p>
               </div>
-            ) : filteredUsers.length === 0 ? (
+            ) : users.length === 0 ? (
               <div className="text-center py-8">
                 <Users className="h-12 w-12 mx-auto mb-4 text-gray-400" />
                 <p className="text-gray-600">Nenhum usuário encontrado</p>
@@ -379,7 +379,7 @@ export default function AdminUsersPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredUsers.map((user: User) => (
+                    {users.map((user: User) => (
                       <TableRow key={user.id}>
                         <TableCell>
                           <div>

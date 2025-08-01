@@ -84,7 +84,7 @@ self.addEventListener('fetch', (event) => {
 // Push notifications
 self.addEventListener('push', (event) => {
   let options = {
-    body: 'Nova notificação do CarShare',
+    body: 'Nova notificação do alugae',
     icon: '/icons/icon-192x192.png',
     badge: '/icons/icon-72x72.png',
     vibrate: [100, 50, 100],
@@ -113,7 +113,7 @@ self.addEventListener('push', (event) => {
   }
 
   event.waitUntil(
-    self.registration.showNotification('CarShare', options)
+    self.registration.showNotification('alugae', options)
   );
 });
 

@@ -139,7 +139,7 @@ export default function Auth() {
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-primary mb-2">CarShare</h1>
+          <h1 className="text-3xl font-bold text-primary mb-2">alugae</h1>
           <h2 className="text-2xl font-bold text-gray-900">
             {authMode === 'login' ? 'Entrar na sua conta' : 'Criar nova conta'}
           </h2>

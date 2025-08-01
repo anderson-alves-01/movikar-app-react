@@ -1,6 +1,6 @@
 {
-  "name": "CarShare - Aluguel de Carros",
-  "short_name": "CarShare",
+  "name": "alugae - Aluguel de Carros",
+  "short_name": "alugae",
   "description": "Plataforma de compartilhamento de veículos com reservas, pagamentos e contratos digitais",
   "start_url": "/",
   "display": "standalone",

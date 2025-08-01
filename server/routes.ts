@@ -52,7 +52,7 @@ let currentAdminSettings: AdminSettings = {
   supportPhone: "(11) 9999-9999",
   enablePixPayment: false,
   enablePixTransfer: true,
-  pixTransferDescription: "Repasse CarShare",
+  pixTransferDescription: "Repasse alugae",
   essentialPlanPrice: 29.90,
   plusPlanPrice: 59.90,
   annualDiscountPercentage: 15,

@@ -1,4 +1,4 @@
-# 🧪 GUIA DE HOMOLOGAÇÃO - CarShare Payment System
+# 🧪 GUIA DE HOMOLOGAÇÃO - alugae Payment System
 
 ## 🛡️ GARANTIAS DE SEGURANÇA
 
