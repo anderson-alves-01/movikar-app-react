@@ -2820,8 +2820,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Acesso negado" });
       }
 
-      // Prevent re-signing already signed contracts
-      if (booking.contractSigned || booking.status === 'contracted') {
+      // Check if contract already exists and is signed
+      const existingContracts = await storage.getContractsByBooking(parseInt(bookingId));
+      if (existingContracts.length > 0) {
+        const contract = existingContracts[0];
+        // Check if both parties have signed
+        if (contract.renterSigned && contract.ownerSigned) {
+          return res.status(400).json({ 
+            message: "Este contrato já foi assinado por ambas as partes. Não é possível assinar novamente um contrato já finalizado." 
+          });
+        }
+        // Check if current user already signed
+        const isRenter = booking.renterId === userId;
+        const isOwner = booking.ownerId === userId;
+        if ((isRenter && contract.renterSigned) || (isOwner && contract.ownerSigned)) {
+          return res.status(400).json({ 
+            message: "Você já assinou este contrato. Aguarde a assinatura da outra parte." 
+          });
+        }
+      }
+
+      // Prevent re-signing if booking status indicates completion
+      if (booking.status === 'contracted') {
         return res.status(400).json({ 
           message: "Este contrato já foi assinado. Não é possível assinar novamente um contrato já finalizado." 
         });
@@ -2832,16 +2852,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ 
           message: "A reserva deve estar aprovada para permitir assinatura do contrato." 
         });
-      }
-
-      // Continue with DocuSign integration logic...ails(parseInt(bookingId));
-      if (!booking) {
-        return res.status(404).json({ message: "Reserva não encontrada" });
-      }
-
-      // Check if user is the renter (only renter signs)
-      if (booking.renterId !== userId) {
-        return res.status(403).json({ message: "Apenas o locatário pode assinar o contrato" });
       }
 
       // Generate DocuSign envelope ID
@@ -2859,9 +2869,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Store signature session
-      const contracts = await storage.getContractsByBooking(parseInt(bookingId));
-      if (contracts.length > 0) {
-        await storage.updateContract(contracts[0].id, {
+      if (existingContracts.length > 0) {
+        await storage.updateContract(existingContracts[0].id, {
           status: 'awaiting_signature',
           externalDocumentId: envelopeId,
           signaturePlatform: 'docusign'

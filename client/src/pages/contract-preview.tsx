@@ -113,11 +113,11 @@ export default function ContractPreview() {
   }
 
   // Check if contract is already signed
-  const isContractSigned = bookingData?.contractSigned || 
-                           bookingData?.status === 'contracted' ||
+  const isContractSigned = bookingData?.status === 'contracted' ||
                            (contractData as any)?.renterSigned || 
                            (contractData as any)?.ownerSigned ||
-                           (contractData as any)?.status === 'completed';
+                           (contractData as any)?.status === 'completed' ||
+                           (contractData as any)?.status === 'signed';
 
   const contractStatus = bookingData?.status || (contractData as any)?.status;
 
