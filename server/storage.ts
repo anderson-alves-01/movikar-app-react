@@ -226,6 +226,14 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set(user)
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser || undefined;
+  }
 
 
   // Vehicles
