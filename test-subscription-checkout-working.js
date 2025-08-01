@@ -17,7 +17,7 @@ async function testSubscriptionCheckoutWorking() {
       credentials: 'include',
       body: JSON.stringify({
         email: 'admin@carshare.com',
-        password: 'admin123'
+        password: 'Senha123'
       })
     });
 
