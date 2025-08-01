@@ -299,17 +299,17 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
         const newToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
         const newRefreshToken = jwt.sign({ userId: user.id }, JWT_SECRET + '_refresh', { expiresIn: '7d' });
 
-        // Set new cookies with Replit-friendly settings
-        const isReplit = !!process.env.REPL_ID;
-        const refreshCookieOptions = {
+        // Set new cookies with consistent settings
+        const cookieOptions = {
           httpOnly: true,
-          secure: isReplit, // true in Replit (HTTPS), false locally
-          sameSite: isReplit ? 'none' as const : 'lax' as const, // cross-origin support
-          path: '/'
+          secure: false, // Set to false for development
+          sameSite: 'lax' as const,
+          path: '/',
+          domain: undefined // Let browser handle domain
         };
         
         res.cookie('token', newToken, {
-          ...refreshCookieOptions,
+          ...cookieOptions,
           maxAge: 15 * 60 * 1000
         });
 
@@ -753,14 +753,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('🍪 Setting login cookies for user:', user.email);
 
-      // Set cookies with Replit-friendly configuration
-      const isReplit = !!process.env.REPL_ID;
+      // Set cookies with development-friendly configuration
       const cookieOptions = {
         httpOnly: true,
-        secure: isReplit, // true in Replit (HTTPS), false locally (HTTP)
-        sameSite: isReplit ? 'none' as const : 'lax' as const, // 'none' allows cross-origin in Replit
+        secure: false, // Set to false for development compatibility
+        sameSite: 'lax' as const,
         path: '/',
-        domain: undefined // Let browser determine domain
       };
 
       res.cookie('token', token, {
