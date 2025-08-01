@@ -1,3 +1,4 @@
+import { lazy } from 'react';
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -100,6 +101,7 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/test-subscription" component={TestSubscription} />
+      <Route path="/test-auth-flow" component={lazy(() => import('@/pages/test-auth-flow'))} />
       <Route path="/debug-auth" component={DebugAuth} />
       <Route component={NotFound} />
     </Switch>
