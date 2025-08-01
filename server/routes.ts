@@ -3538,6 +3538,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const userId = req.user!.id;
       const { planName, paymentMethod = 'monthly', vehicleCount = 3 } = req.body;
+      
+      console.log('🎯 Create subscription - userId:', userId, 'planName:', planName);
 
       // Get user and admin settings
       const user = await storage.getUser(userId);
@@ -3620,8 +3622,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/subscription/confirm", authenticateToken, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = req.user!.id;
       const { paymentIntentId } = req.body;
+      
+      console.log('🎯 Subscription confirm - userId:', userId, 'paymentIntentId:', paymentIntentId);
 
       if (!stripe) {
         return res.status(500).json({ message: "Stripe não está configurado" });
@@ -3711,7 +3715,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/subscription/cancel", authenticateToken, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = req.user!.id;
       
       // Cancel user subscription
       const cancelledSubscription = await storage.cancelUserSubscription(userId);
