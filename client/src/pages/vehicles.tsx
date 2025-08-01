@@ -189,7 +189,7 @@ export default function Vehicles() {
                     )}
 
                     <div className="flex flex-wrap gap-1">
-                      {vehicle.features.slice(0, 3).map((feature, index) => (
+                      {vehicle.features.slice(0, 3).map((feature: string, index: number) => (
                         <Badge key={index} variant="outline" className="text-xs">
                           {feature}
                         </Badge>

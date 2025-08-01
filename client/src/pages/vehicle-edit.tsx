@@ -86,7 +86,10 @@ export default function VehicleEdit() {
         title: "Sucesso!",
         description: "Veículo atualizado com sucesso",
       });
+      // Invalidate multiple cache keys that might contain this vehicle data
       queryClient.invalidateQueries({ queryKey: ['/api/vehicles'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/vehicles', vehicleId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users/" + user?.id + "/vehicles"] });
       setLocation('/vehicles');
     },
     onError: (error: any) => {

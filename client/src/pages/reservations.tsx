@@ -127,8 +127,8 @@ export default function Reservations() {
       return response.json();
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bookings?type=owner"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/bookings?type=renter"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bookings", "owner"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bookings", "renter"] });
       
       // Check if a contract was created
       if (data.contractCreated) {
