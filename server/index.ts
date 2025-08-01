@@ -50,9 +50,24 @@ app.use(cookieParser());
 // Input sanitization
 app.use(sanitizeInput);
 
-// Body parser with size limits
+// Body parser with size limits and header limits to prevent HTTP 431
 app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+app.use(express.urlencoded({ extended: false, limit: '10mb', parameterLimit: 1000 }));
+
+// Set server limits to prevent HTTP 431 Request Header Fields Too Large
+app.use((req, res, next) => {
+  // Limit header size to prevent HTTP 431
+  const maxHeaderSize = 8192; // 8KB
+  const totalHeaderSize = JSON.stringify(req.headers).length;
+  
+  if (totalHeaderSize > maxHeaderSize) {
+    return res.status(431).json({ 
+      message: "Cabeçalhos da requisição muito grandes" 
+    });
+  }
+  
+  next();
+});
 
 app.use((req, res, next) => {
   const start = Date.now();

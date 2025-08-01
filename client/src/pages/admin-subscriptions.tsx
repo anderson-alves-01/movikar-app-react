@@ -182,6 +182,19 @@ export default function AdminSubscriptions() {
           </div>
         ) : null}
 
+        {/* Debug Info */}
+        <Card className="mb-4 border-yellow-200 bg-yellow-50">
+          <CardContent className="p-4">
+            <div className="text-sm">
+              <p><strong>Debug Estado:</strong></p>
+              <p>User: {user ? `${user.name} (${user.role})` : 'Not logged in'}</p>
+              <p>Subscriptions loading: {subscriptionsLoading ? 'Yes' : 'No'}</p>
+              <p>Subscriptions count: {Array.isArray(subscriptions) ? subscriptions.length : 'Not array'}</p>
+              <p>Raw subscriptions: {JSON.stringify(subscriptions)?.substring(0, 300)}...</p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Filters */}
         <Card className="mb-6">
           <CardContent className="p-6">
