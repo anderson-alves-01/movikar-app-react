@@ -89,7 +89,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
     };
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!user) {
@@ -130,14 +130,24 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
       }
     };
 
-    // Redirect to checkout with data
-    const encodedData = encodeURIComponent(JSON.stringify(checkoutData));
-    window.location.href = `/checkout/${vehicle.id}?data=${encodedData}`;
+    // Store data on server and redirect with checkoutId to avoid URL length issues
+    try {
+      const response = await apiRequest("POST", "/api/store-checkout-data", checkoutData);
+      const result = await response.json();
+      
+      // Redirect to checkout with checkout ID
+      window.location.href = `/checkout/${vehicle.id}?checkoutId=${result.checkoutId}`;
+    } catch (error) {
+      console.error("Error storing checkout data:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao preparar checkout. Tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
   const pricing = calculatePricing();
-
-
 
   return (
     <div className="space-y-6">

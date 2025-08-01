@@ -372,6 +372,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/auth', authLimiter);
   app.use('/api', generalLimiter);
 
+  // Store checkout data temporarily to avoid URL length issues
+  const checkoutDataStore = new Map();
+  
+  app.post("/api/store-checkout-data", authenticateToken, async (req, res) => {
+    try {
+      const checkoutData = req.body;
+      const checkoutId = `checkout_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Store data for 30 minutes
+      checkoutDataStore.set(checkoutId, {
+        data: checkoutData,
+        timestamp: Date.now(),
+        userId: req.user!.id
+      });
+      
+      // Clean up old entries (older than 30 minutes)
+      for (const [key, value] of checkoutDataStore.entries()) {
+        if (Date.now() - value.timestamp > 30 * 60 * 1000) {
+          checkoutDataStore.delete(key);
+        }
+      }
+      
+      res.json({ checkoutId });
+    } catch (error) {
+      console.error("Store checkout data error:", error);
+      res.status(500).json({ message: "Erro ao armazenar dados de checkout" });
+    }
+  });
+
+  app.get("/api/checkout-data/:checkoutId", authenticateToken, async (req, res) => {
+    try {
+      const { checkoutId } = req.params;
+      const stored = checkoutDataStore.get(checkoutId);
+      
+      if (!stored) {
+        return res.status(404).json({ message: "Dados de checkout não encontrados ou expirados" });
+      }
+      
+      // Verify ownership
+      if (stored.userId !== req.user!.id) {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+      
+      // Check if expired (30 minutes)
+      if (Date.now() - stored.timestamp > 30 * 60 * 1000) {
+        checkoutDataStore.delete(checkoutId);
+        return res.status(404).json({ message: "Dados de checkout expirados" });
+      }
+      
+      res.json(stored.data);
+    } catch (error) {
+      console.error("Get checkout data error:", error);
+      res.status(500).json({ message: "Erro ao recuperar dados de checkout" });
+    }
+  });
+
   // Payment routes for Stripe integration
   app.post("/api/create-payment-intent", authenticateToken, async (req, res) => {
     try {

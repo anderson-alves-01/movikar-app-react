@@ -262,36 +262,65 @@ export default function Checkout() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
-  // Get checkout data from URL params
+  // Get checkout data from URL params or server
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const data = urlParams.get('data');
-    
-    if (data) {
-      try {
-        // Check if data is too long (HTTP 431 protection)
-        if (data.length > 8000) {
+    const loadCheckoutData = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const data = urlParams.get('data');
+      const checkoutId = urlParams.get('checkoutId');
+      
+      if (checkoutId) {
+        // Load data from server using checkout ID
+        try {
+          const response = await apiRequest("GET", `/api/checkout-data/${checkoutId}`);
+          const serverData = await response.json();
+          setCheckoutData(serverData);
+        } catch (error) {
+          console.error("Error loading checkout data from server:", error);
           toast({
             title: "Erro",
-            description: "URL muito longa. Tente novamente.",
+            description: "Dados de checkout não encontrados ou expirados",
             variant: "destructive",
           });
           setLocation("/");
-          return;
         }
-        
-        const parsedData = JSON.parse(decodeURIComponent(data));
-        setCheckoutData(parsedData);
-      } catch (error) {
-        console.error("Error parsing checkout data:", error);
+      } else if (data) {
+        // Fallback to URL data (for compatibility)
+        try {
+          // Check if data is too long (HTTP 431 protection)
+          if (data.length > 8000) {
+            toast({
+              title: "Erro",
+              description: "URL muito longa. Tente novamente.",
+              variant: "destructive",
+            });
+            setLocation("/");
+            return;
+          }
+          
+          const parsedData = JSON.parse(decodeURIComponent(data));
+          setCheckoutData(parsedData);
+        } catch (error) {
+          console.error("Error parsing checkout data:", error);
+          toast({
+            title: "Erro",
+            description: "Dados de checkout inválidos",
+            variant: "destructive",
+          });
+          setLocation("/");
+        }
+      } else {
+        // No data found
         toast({
           title: "Erro",
-          description: "Dados de checkout inválidos",
+          description: "Dados de checkout não encontrados",
           variant: "destructive",
         });
         setLocation("/");
       }
-    }
+    };
+
+    loadCheckoutData();
   }, []);
 
   // Create payment intent when component loads
