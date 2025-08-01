@@ -9,41 +9,20 @@ import { BookmarkCheck, Search, Filter, Car, Clock, Heart, Plus } from "lucide-r
 import VehicleCard from "@/components/vehicle-card";
 import { Loading } from "@/components/ui/loading";
 import Header from "@/components/header";
-
-// Helper function to get token from localStorage
-const getToken = () => {
-  try {
-    const authStorage = localStorage.getItem('auth-storage');
-    if (authStorage) {
-      const authData = JSON.parse(authStorage);
-      return authData.state?.token || authData.token;
-    }
-  } catch (error) {
-    console.error('Error parsing auth token:', error);
-  }
-  return null;
-};
+import { useAuthStore } from "@/lib/auth";
 
 export default function SavedVehicles() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const { user } = useAuthStore();
 
-  // Fetch saved vehicles
+  // Fetch saved vehicles using cookies for authentication
   const { data: savedVehicles, isLoading: vehiclesLoading, error: vehiclesError } = useQuery({
     queryKey: ["/api/saved-vehicles"],
-    enabled: !!getToken(), // Enable when token is available
-    retry: false,
     queryFn: async () => {
-      const token = getToken();
-      console.log('🔄 [SavedVehicles] Query function executing, token:', token ? 'present' : 'missing');
-      
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
-      
       const response = await fetch('/api/saved-vehicles', {
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
@@ -58,6 +37,7 @@ export default function SavedVehicles() {
       console.log('✅ [SavedVehicles] API Success:', data);
       return data;
     },
+    enabled: !!user, // Enable when user is authenticated
   });
   
   console.log('🔍 [SavedVehicles] Query data:', {
@@ -65,33 +45,9 @@ export default function SavedVehicles() {
     isLoading: vehiclesLoading,
     error: vehiclesError,
     selectedCategory,
-    hasToken: !!getToken(),
-    tokenValue: getToken() ? 'Token presente' : 'Token ausente'
+    hasUser: !!user,
+    userEmail: user?.email
   });
-  
-  if (vehiclesError) {
-    console.error('🚨 [SavedVehicles] Query error:', vehiclesError);
-  }
-  
-  // Manual API test if data is undefined
-  if (!vehiclesLoading && !savedVehicles && !vehiclesError) {
-    console.log('🔧 [SavedVehicles] Data is undefined, testing API manually...');
-    const testAPI = async () => {
-      try {
-        const token = getToken();
-        if (token) {
-          const response = await fetch('/api/saved-vehicles', {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          const data = await response.json();
-          console.log('🧪 [SavedVehicles] Manual API test result:', data);
-        }
-      } catch (error) {
-        console.error('🚨 [SavedVehicles] Manual API test error:', error);
-      }
-    };
-    testAPI();
-  }
 
   // Fetch saved vehicle categories  
   const { data: categories, isLoading: categoriesLoading, error: categoriesError } = useQuery({
@@ -146,10 +102,39 @@ export default function SavedVehicles() {
 
   const allCategories = ["all", ...(Array.isArray(categories) ? categories : [])];
 
-  // Remove the token check from here - let queries handle auth gracefully
-  // Show login page only if explicitly unauthenticated from API response
+  // Show login message if user is not authenticated
+  if (!user) {
+    return (
+      <>
+        <Header />
+        <div className="min-h-screen bg-gray-50 py-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <Card className="text-center py-12">
+              <CardContent>
+                <div className="flex flex-col items-center">
+                  <BookmarkCheck className="w-16 h-16 text-gray-300 mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                    Login necessário
+                  </h3>
+                  <p className="text-gray-500 mb-6 max-w-md">
+                    Você precisa estar logado para ver seus veículos salvos.
+                  </p>
+                  <Button 
+                    onClick={() => window.location.href = '/auth'}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    Fazer Login
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </>
+    );
+  }
 
-  if (isLoading) {
+  if (vehiclesLoading) {
     return (
       <>
         <Header />
