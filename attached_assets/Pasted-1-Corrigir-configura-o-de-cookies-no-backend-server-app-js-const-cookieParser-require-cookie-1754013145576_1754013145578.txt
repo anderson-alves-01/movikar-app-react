@@ -1,0 +1,344 @@
+1. Corrigir configuração de cookies no backend (server/app.js)
+const cookieParser = require('cookie-parser');
+const express = require('express');
+
+app.use(cookieParser());
+
+// Configurar trust proxy para funcionar com Replit
+app.set('trust proxy', 1);
+
+// Configurar CORS para cookies
+app.use(cors({
+origin: process.env.CLIENT_URL || 'https://car-share.replit.app',
+credentials: true,
+methods: ['GET', 'POST', 'PUT', 'DELETE'],
+allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+2. Função de login corrigida (server/controllers/userController.js)
+const login = asyncHandler(async (req, res) => {
+const { email, password } = req.body;
+
+const user = await User.findOne({ email });
+
+if (user && (await user.matchPassword(password))) {
+// Gerar token
+const token = generateToken(user._id);
+
+// Configurar cookie HTTP-only
+res.cookie('token', token, {
+httpOnly: true,
+secure: process.env.NODE_ENV === 'production',
+sameSite: 'strict',
+maxAge: 15 * 60 * 1000,
+path: '/',
+domain: process.env.NODE_ENV === 'production' ? '.replit.app' : 'localhost'
+});
+
+// Não enviar token no corpo da resposta
+res.json({
+_id: user._id,
+name: user.name,
+email: user.email,
+});
+} else {
+res.status(401);
+throw new Error('Credenciais inválidas');
+}
+});
+
+3. Middleware de autenticação corrigido (server/middleware/authMiddleware.js)
+const jwt = require('jsonwebtoken');
+const asyncHandler = require('express-async-handler');
+
+const protect = asyncHandler(async (req, res, next) => {
+let token;
+
+// 1. Tentar obter token do cookie
+if (req.cookies && req.cookies.token) {
+token = req.cookies.token;
+}
+// 2. Se não encontrar no cookie, tentar no header Authorization
+else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+token = req.headers.authorization.split(' ');
+}
+
+if (!token) {
+res.status(401);
+throw new Error('Não autorizado, token não encontrado');
+}
+
+try {
+const decoded = jwt.verify(token, process.env.JWT_SECRET);
+req.user = await User.findById(decoded.id).select('-password');
+next();
+} catch (error) {
+console.error('Erro na verificação do token:', error);
+res.status(401);
+throw new Error('Não autorizado, token inválido');
+}
+});
+
+module.exports = { protect };
+
+4. Rota /api/auth/user corrigida (server/routes/userRoutes.js)
+router.get('/auth/user', protect, async (req, res) => {
+try {
+// O usuário já está disponível no req.user graças ao middleware protect
+const user = await User.findById(req.user._id).select('-password');
+
+if (user) {
+res.json({
+_id: user._id,
+name: user.name,
+email: user.email,
+});
+} else {
+res.status(404);
+throw new Error('Usuário não encontrado');
+}
+} catch (error) {
+console.error('Erro na rota /auth/user:', error);
+res.status(401);
+res.json({ message: 'Não autorizado' });
+}
+});
+
+5. Configuração do Axios corrigida (client/src/utils/api.js)
+import axios from 'axios';
+import store from '../store';
+
+const API = axios.create({
+baseURL: process.env.NODE_ENV === 'production'
+? 'https://car-share.replit.app/api'
+: '/api',
+withCredentials: true, // CRUCIAL para enviar/receber cookies
+headers: {
+'Content-Type': 'application/json',
+}
+});
+
+// Interceptor para adicionar token do localStorage (fallback)
+API.interceptors.request.use((config) => {
+const userInfo = localStorage.getItem('userInfo');
+if (userInfo) {
+const parsedUserInfo = JSON.parse(userInfo);
+if (parsedUserInfo.token) {
+config.headers.Authorization = Bearer ${parsedUserInfo.token};
+}
+}
+return config;
+});
+
+// Interceptor para tratar erros de autenticação
+API.interceptors.response.use(
+(response) => response,
+async (error) => {
+const originalRequest = error.config;
+
+// Se for erro 401 e não for uma tentativa de refresh
+if (error.response?.status === 401 && !originalRequest._retry) {
+originalRequest._retry = true;
+
+try {
+// Tentar fazer refresh do token
+const { data } = await axios.post('/api/users/refresh', {}, {
+withCredentials: true
+});
+
+// Atualizar token no localStorage
+localStorage.setItem('userInfo', JSON.stringify(data));
+
+// Atualizar token no header e refazer a requisição
+originalRequest.headers.Authorization = `Bearer ${data.token}`;
+return API(originalRequest);
+} catch (refreshError) {
+// Se refresh falhar, fazer logout
+localStorage.removeItem('userInfo');
+store.dispatch({ type: 'auth/logout' });
+window.location.href = '/login';
+return Promise.reject(refreshError);
+}
+}
+
+return Promise.reject(error);
+}
+);
+
+export default API;
+
+6. Adicionar rota de refresh token (server/routes/userRoutes.js)
+router.post('/refresh', async (req, res) => {
+try {
+const refreshToken = req.cookies?.refreshToken;
+
+if (!refreshToken) {
+return res.status(401).json({ message: 'Refresh token não encontrado' });
+}
+
+const decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET);
+const user = await User.findById(decoded.id).select('-password');
+
+if (!user) {
+return res.status(401).json({ message: 'Usuário não encontrado' });
+}
+
+// Gerar novo token de acesso
+const newToken = generateToken(user._id);
+
+// Atualizar cookie de acesso
+res.cookie('token', newToken, {
+httpOnly: true,
+secure: process.env.NODE_ENV === 'production',
+sameSite: 'strict',
+maxAge: 15 * 60 * 1000
+});
+
+res.json({
+_id: user._id,
+name: user.name,
+email: user.email,
+token: newToken
+});
+} catch (error) {
+console.error('Erro no refresh token:', error);
+res.status(401).json({ message: 'Refresh token inválido' });
+}
+});
+
+7. Modificar login para incluir refresh token (server/controllers/userController.js)
+const { generateToken, generateRefreshToken } = require('../utils/generateToken');
+
+const login = asyncHandler(async (req, res) => {
+const { email, password } = req.body;
+
+const user = await User.findOne({ email });
+
+if (user && (await user.matchPassword(password))) {
+const token = generateToken(user._id);
+const refreshToken = generateRefreshToken(user._id);
+
+// Configurar cookie de acesso
+res.cookie('token', token, {
+httpOnly: true,
+secure: process.env.NODE_ENV === 'production',
+sameSite: 'strict',
+maxAge: 15 * 60 * 1000
+});
+
+// Configurar cookie de refresh
+res.cookie('refreshToken', refreshToken, {
+httpOnly: true,
+secure: process.env.NODE_ENV === 'production',
+sameSite: 'strict',
+maxAge: 7 * 24 * 60 * 60 * 1000 // 7 dias
+});
+
+res.json({
+_id: user._id,
+name: user.name,
+email: user.email,
+});
+} else {
+res.status(401);
+throw new Error('Credenciais inválidas');
+}
+});
+
+8. Função para gerar refresh token (server/utils/generateToken.js)
+const jwt = require('jsonwebtoken');
+
+const generateToken = (id) => {
+return jwt.sign({ id }, process.env.JWT_SECRET, {
+expiresIn: '15m',
+});
+};
+
+const generateRefreshToken = (id) => {
+return jwt.sign({ id }, process.env.REFRESH_SECRET, {
+expiresIn: '7d',
+});
+};
+
+module.exports = { generateToken, generateRefreshToken };
+
+9. Variáveis de ambiente (.env)
+NODE_ENV=production
+JWT_SECRET=sua_chave_secreta_jwt_aqui
+REFRESH_SECRET=sua_chave_secreta_refresh_aqui
+CLIENT_URL=https://car-share.replit.app
+
+10. Adicionar rate limiting (server/app.js)
+const rateLimit = require('express-rate-limit');
+
+// Rate limiting para rotas de autenticação
+const authLimiter = rateLimit({
+windowMs: 15 * 60 * 1000, // 15 minutos
+max: 5, // limite de 5 requisições por IP
+message: 'Muitas tentativas de autenticação, tente novamente mais tarde',
+standardHeaders: true,
+legacyHeaders: false,
+});
+
+// Aplicar apenas às rotas de autenticação
+app.use('/api/users/login', authLimiter);
+app.use('/api/users/register', authLimiter);
+app.use('/api/auth/user', authLimiter);
+
+11. Componente de verificação de autenticação (client/src/components/AuthCheck.js)
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import API from '../utils/api';
+
+const AuthCheck = () => {
+const [user, setUser] = useState(null);
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState(null);
+const navigate = useNavigate();
+
+useEffect(() => {
+const checkAuth = async () => {
+try {
+const response = await API.get('/auth/user');
+setUser(response.data);
+} catch (err) {
+console.error('Erro na verificação de autenticação:', err);
+setError('Sessão expirada');
+setTimeout(() => navigate('/login'), 2000);
+} finally {
+setLoading(false);
+}
+};
+
+checkAuth();
+}, [navigate]);
+
+if (loading) return
+Verificando autenticação...;
+if (error) return
+{error};
+
+return (
+
+Bem-vindo, {user?.name}
+Email: {user?.email}
+
+);
+};
+
+export default AuthCheck;
+
+12. Remover log do PIX
+Procure e remova esta linha do código:
+console.log('🔐 Setting auth - PIX field: 11987654321');
+
+Resumo das correções:
+Configurar cookies HTTP-only com flags security e sameSite
+Adicionar trust proxy para funcionar com Replit
+Configurar CORS para permitir credenciais
+Middleware de autenticação verifica cookies e headers
+Implementar refresh token para renovação automática
+Configurar Axios com withCredentials: true
+Adicionar rate limiting para evitar 429
+Corrigir baseURL do Axios para produção
+Remover logs desnecessários
