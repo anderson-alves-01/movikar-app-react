@@ -217,6 +217,11 @@ export default function Auth() {
               {/* Password Field */}
               <div>
                 <Label htmlFor="password">Senha</Label>
+                {authMode === 'register' && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Mínimo 8 caracteres, com pelo menos: 1 número, 1 letra maiúscula e 1 minúscula
+                  </p>
+                )}
                 <div className="relative mt-1">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input

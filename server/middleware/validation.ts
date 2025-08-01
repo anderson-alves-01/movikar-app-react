@@ -16,14 +16,8 @@ export const validateUser = [
     .isLength({ max: 255 })
     .withMessage('Email muito longo'),
   body('password')
-    .isLength({ min: 8 })
-    .withMessage('Senha deve ter pelo menos 8 caracteres')
-    .matches(/\d/)
-    .withMessage('Senha deve conter pelo menos um número')
-    .matches(/[A-Z]/)
-    .withMessage('Senha deve conter pelo menos uma letra maiúscula')
-    .matches(/[a-z]/)
-    .withMessage('Senha deve conter pelo menos uma letra minúscula'),
+    .isLength({ min: 6 })
+    .withMessage('Senha deve ter pelo menos 6 caracteres'),
 ];
 
 // Vehicle validation
