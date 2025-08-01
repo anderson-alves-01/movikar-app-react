@@ -11,6 +11,7 @@ import { apiRequest } from "@/lib/queryClient";
 
 // Make sure to call `loadStripe` outside of a component's render to avoid
 // recreating the `Stripe` object on every render.
+console.log('🔑 Loading Stripe with public key:', import.meta.env.VITE_STRIPE_PUBLIC_KEY ? 'Present' : 'Missing');
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY!);
 
 interface CheckoutFormProps {
@@ -189,40 +190,41 @@ export default function SubscriptionCheckout() {
     // Verify checkout data integrity
     const validateCheckout = () => {
       console.log('🔍 Validating checkout data...');
+      console.log('URL params - clientSecret:', !!clientSecret, 'planName:', planName, 'amount:', amount);
       
       // Check if we have valid URL parameters
-      if (!clientSecret || !planName || !amount) {
-        console.log('❌ Missing URL parameters, checking localStorage...');
-        
-        // Try to get data from localStorage as fallback
-        const storedData = localStorage.getItem('checkoutPlan');
-        if (storedData) {
-          try {
-            const parsedData = JSON.parse(storedData);
-            const dataAge = Date.now() - (parsedData.timestamp || 0);
-            
-            // Check if data is recent (less than 10 minutes old)
-            if (dataAge < 10 * 60 * 1000) {
-              console.log('✅ Valid stored checkout data found');
-              setCheckoutValidated(true);
-              return;
-            } else {
-              console.log('⏰ Stored checkout data expired');
-              localStorage.removeItem('checkoutPlan');
-            }
-          } catch (error) {
-            console.log('❌ Invalid stored checkout data');
-            localStorage.removeItem('checkoutPlan');
-          }
-        }
-        
-        console.log('🔄 Redirecting to subscription plans');
-        setLocation('/subscription-plans');
+      if (clientSecret && planName && amount) {
+        console.log('✅ Valid checkout parameters found in URL');
+        setCheckoutValidated(true);
         return;
       }
       
-      console.log('✅ Valid checkout parameters found');
-      setCheckoutValidated(true);
+      console.log('❌ Missing URL parameters, checking localStorage...');
+      
+      // Try to get data from localStorage as fallback
+      const storedData = localStorage.getItem('checkoutPlan');
+      if (storedData) {
+        try {
+          const parsedData = JSON.parse(storedData);
+          const dataAge = Date.now() - (parsedData.timestamp || 0);
+          
+          // Check if data is recent (less than 10 minutes old)
+          if (dataAge < 10 * 60 * 1000) {
+            console.log('✅ Valid stored checkout data found');
+            setCheckoutValidated(true);
+            return;
+          } else {
+            console.log('⏰ Stored checkout data expired');
+            localStorage.removeItem('checkoutPlan');
+          }
+        } catch (error) {
+          console.log('❌ Invalid stored checkout data');
+          localStorage.removeItem('checkoutPlan');
+        }
+      }
+      
+      console.log('🔄 Redirecting to subscription plans');
+      setLocation('/subscription-plans');
     };
 
     validateCheckout();
@@ -240,7 +242,33 @@ export default function SubscriptionCheckout() {
     );
   }
 
-  if (!clientSecret || !planName) {
+  // Use URL params or fallback to stored data
+  let finalClientSecret = clientSecret;
+  let finalPlanName = planName;
+  let finalPaymentMethod = paymentMethod;
+  let finalAmount = amount;
+
+  // If URL params are missing, try to use stored data
+  if (!clientSecret || !planName || !amount) {
+    const storedData = localStorage.getItem('checkoutPlan');
+    if (storedData) {
+      try {
+        const parsedData = JSON.parse(storedData);
+        finalClientSecret = parsedData.clientSecret;
+        finalPlanName = parsedData.planName;
+        finalPaymentMethod = parsedData.paymentMethod || 'monthly';
+        finalAmount = parsedData.amount;
+        console.log('📋 Using stored checkout data');
+      } catch (error) {
+        console.log('❌ Failed to parse stored data');
+        return null;
+      }
+    } else {
+      return null;
+    }
+  }
+
+  if (!finalClientSecret || !finalPlanName) {
     return null;
   }
 
@@ -258,7 +286,7 @@ export default function SubscriptionCheckout() {
   };
 
   const options = {
-    clientSecret,
+    clientSecret: finalClientSecret,
     appearance,
   };
 
@@ -279,10 +307,10 @@ export default function SubscriptionCheckout() {
 
         <Elements stripe={stripePromise} options={options}>
           <CheckoutForm
-            clientSecret={clientSecret}
-            planName={planName}
-            paymentMethod={paymentMethod}
-            amount={amount}
+            clientSecret={finalClientSecret}
+            planName={finalPlanName}
+            paymentMethod={finalPaymentMethod}
+            amount={finalAmount}
           />
         </Elements>
       </div>

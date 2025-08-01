@@ -43,6 +43,7 @@ import DebugPix from "@/pages/debug-pix";
 import SavedVehicles from "@/pages/saved-vehicles";
 import SubscriptionPlans from "@/pages/subscription-plans";
 import SubscriptionCheckout from "@/pages/subscription-checkout";
+import SubscriptionCheckoutDebug from "@/pages/subscription-checkout-debug";
 import SubscriptionSuccess from "@/pages/subscription-success";
 import TestSubscription from "@/pages/test-subscription";
 import DebugAuth from "@/pages/debug-auth";
@@ -90,11 +91,8 @@ function Router() {
       <Route path="/earnings" component={EarningsPage} />
       <Route path="/debug-pix" component={DebugPix} />
       <Route path="/subscription-plans" component={SubscriptionPlans} />
-      <Route path="/subscription-checkout">
-        <ProtectedRoute requireAuth={true}>
-          <SubscriptionCheckout />
-        </ProtectedRoute>
-      </Route>
+      <Route path="/subscription-checkout" component={SubscriptionCheckout} />
+      <Route path="/subscription-checkout-debug" component={SubscriptionCheckoutDebug} />
       <Route path="/subscription-success">
         <ProtectedRoute requireAuth={true}>
           <SubscriptionSuccess />
