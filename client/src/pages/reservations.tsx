@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/lib/auth";
+import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,6 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency } from "@/lib/currency";
 import Header from "@/components/header";
-import { useState } from "react";
 
 interface Booking {
   id: number;
@@ -64,9 +64,10 @@ export default function Reservations() {
   const queryClient = useQueryClient();
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [forceRefresh, setForceRefresh] = useState(0);
 
   const { data: renterBookings, isLoading: loadingRenter } = useQuery<Booking[]>({
-    queryKey: ["/api/bookings", "renter"],
+    queryKey: ["/api/bookings", "renter", forceRefresh],
     queryFn: async () => {
       const response = await fetch('/api/bookings?type=renter', {
         credentials: 'include',
@@ -78,10 +79,12 @@ export default function Reservations() {
       return response.json();
     },
     enabled: !!user,
+    staleTime: 0,
+    gcTime: 0,
   });
 
   const { data: ownerBookings, isLoading: loadingOwner } = useQuery<Booking[]>({
-    queryKey: ["/api/bookings", "owner"],
+    queryKey: ["/api/bookings", "owner", forceRefresh],
     queryFn: async () => {
       const response = await fetch('/api/bookings?type=owner', {
         credentials: 'include',
@@ -93,20 +96,52 @@ export default function Reservations() {
       return response.json();
     },
     enabled: !!user,
+    staleTime: 0,
+    gcTime: 0,
   });
 
   const { data: waitingQueue, isLoading: loadingQueue } = useQuery<WaitingQueueEntry[]>({
-    queryKey: ["/api/users/" + user?.id + "/waiting-queue"],
-    enabled: !!user?.id, // Enable when user ID is available
+    queryKey: ["/api/users/" + user?.id + "/waiting-queue", forceRefresh],
+    enabled: !!user?.id,
+    staleTime: 0,
+    gcTime: 0,
   });
+
+  // Auto-refresh functionality
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        setForceRefresh(prev => prev + 1);
+      }
+    };
+
+    const handleFocus = () => {
+      setForceRefresh(prev => prev + 1);
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      setForceRefresh(prev => prev + 1);
+    }
+  }, [user]);
 
   const removeFromQueueMutation = useMutation({
     mutationFn: (queueId: number) =>
       apiRequest("DELETE", `/api/waiting-queue/${queueId}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ 
+      queryClient.removeQueries({ 
         queryKey: ["/api/users/" + user?.id + "/waiting-queue"] 
       });
+      setForceRefresh(prev => prev + 1);
       toast({
         title: "Sucesso",
         description: "Removido da fila de espera",
@@ -127,8 +162,14 @@ export default function Reservations() {
       return response.json();
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bookings", "owner"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/bookings", "renter"] });
+      // Force complete cache refresh
+      queryClient.removeQueries({ 
+        predicate: (query) => 
+          Array.isArray(query.queryKey) && 
+          (query.queryKey[0] === "/api/bookings" || 
+           (typeof query.queryKey[0] === 'string' && query.queryKey[0].includes('/bookings')))
+      });
+      setForceRefresh(prev => prev + 1);
       
       // Check if a contract was created
       if (data.contractCreated) {
