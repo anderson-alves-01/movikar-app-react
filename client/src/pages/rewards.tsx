@@ -53,6 +53,22 @@ export default function Rewards() {
   const [pointsToUse, setPointsToUse] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Generate a referral code when component mounts
+  useEffect(() => {
+    const generateReferralCode = () => {
+      const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let result = '';
+      for (let i = 0; i < 8; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+      }
+      return result;
+    };
+    
+    if (!referralCode) {
+      setReferralCode(generateReferralCode());
+    }
+  }, [referralCode]);
 
   // Fetch user rewards
   const { data: rewards, isLoading: rewardsLoading } = useQuery<UserRewards>({
@@ -152,8 +168,9 @@ export default function Rewards() {
   });
 
   const copyReferralCode = () => {
-    if (myReferralData?.referralCode) {
-      navigator.clipboard.writeText(myReferralData.referralCode);
+    const codeToUse = myReferralData?.referralCode || referralCode;
+    if (codeToUse) {
+      navigator.clipboard.writeText(codeToUse);
       toast({
         title: "Copiado!",
         description: "Código de convite copiado para a área de transferência",
@@ -200,11 +217,13 @@ export default function Rewards() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Sistema de Recompensas</h1>
-        <p className="text-gray-600">Ganhe pontos convidando amigos e use para desconto em reservas</p>
-      </div>
+    <>
+      <Header />
+      <div className="container mx-auto p-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Sistema de Recompensas</h1>
+          <p className="text-gray-600">Ganhe pontos convidando amigos e use para desconto em reservas</p>
+        </div>
 
       {/* Points Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -279,7 +298,7 @@ export default function Rewards() {
                   <label className="text-sm font-medium">Seu código de convite:</label>
                   <div className="flex items-center gap-2 mt-1">
                     <Input 
-                      value={myReferralData?.referralCode || 'Carregando...'}
+                      value={myReferralData?.referralCode || referralCode || 'Gerando código...'}
                       readOnly
                       className="font-mono text-lg"
                     />
@@ -458,5 +477,6 @@ export default function Rewards() {
         </TabsContent>
       </Tabs>
     </div>
+    </>
   );
 }

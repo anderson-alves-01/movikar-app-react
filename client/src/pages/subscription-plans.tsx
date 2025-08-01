@@ -272,13 +272,17 @@ export default function SubscriptionPlans() {
     );
   }
 
-  // Calculate dynamic pricing based on vehicle count
+  // Calculate dynamic pricing based on vehicle count (aligned with backend)
   const calculatePrice = (basePlan: string, vehicleCount: number, isAnnual: boolean) => {
     const basePrice = basePlan === 'essencial' ? 29.90 : 59.90;
-    const pricePerVehicle = basePlan === 'essencial' ? 5.99 : 9.99; // Per vehicle per month
-
-    const monthlyPrice = basePrice + (pricePerVehicle * Math.max(0, vehicleCount - 2)); // First 2 vehicles included in base price
-    const annualPrice = monthlyPrice * 12 * 0.8; // 20% discount for annual
+    const pricePerVehicle = basePlan === 'essencial' ? 5.99 : 9.99;
+    
+    // Calculate monthly price - additional vehicles cost extra
+    const monthlyPrice = basePrice + (pricePerVehicle * Math.max(0, vehicleCount - 2));
+    
+    // Annual price with 20% discount
+    const annualDiscount = 20; // Default 20% discount
+    const annualPrice = monthlyPrice * 12 * (1 - annualDiscount / 100);
 
     return isAnnual ? annualPrice : monthlyPrice;
   };

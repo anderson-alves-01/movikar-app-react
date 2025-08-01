@@ -392,7 +392,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Clean up old entries (older than 30 minutes)
-      for (const [key, value] of checkoutDataStore.entries()) {
+      for (const [key, value] of Array.from(checkoutDataStore.entries())) {
         if (Date.now() - value.timestamp > 30 * 60 * 1000) {
           checkoutDataStore.delete(key);
         }
