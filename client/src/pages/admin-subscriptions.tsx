@@ -286,13 +286,29 @@ export default function AdminSubscriptions() {
                           {subscription.nextPaymentDate ? formatDate(subscription.nextPaymentDate) : 'N/A'}
                         </TableCell>
                         <TableCell className="text-sm font-medium">
-                          {formatCurrency(
-                            parseFloat(
-                              subscription.paymentMethod === 'monthly' 
-                                ? subscription.plan?.monthlyPrice || '0'
-                                : subscription.plan?.annualPrice || '0'
-                            )
-                          )}
+                          <div className="space-y-1">
+                            <div className="font-semibold text-gray-900">
+                              {subscription.paidAmount 
+                                ? formatCurrency(parseFloat(subscription.paidAmount))
+                                : formatCurrency(
+                                    parseFloat(
+                                      subscription.paymentMethod === 'monthly' 
+                                        ? subscription.plan?.monthlyPrice || '0'
+                                        : subscription.plan?.annualPrice || '0'
+                                    )
+                                  )}
+                            </div>
+                            {subscription.vehicleCount && (
+                              <div className="text-xs text-gray-500">
+                                {subscription.vehicleCount} veículos
+                              </div>
+                            )}
+                            {subscription.paidAmount && (
+                              <div className="text-xs text-green-600">
+                                Valor real pago
+                              </div>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex space-x-2">

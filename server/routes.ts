@@ -3126,6 +3126,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           paymentMethod: userSubscriptions.paymentMethod,
           createdAt: userSubscriptions.createdAt,
           stripeSubscriptionId: userSubscriptions.stripeSubscriptionId,
+          paidAmount: userSubscriptions.paidAmount,
+          vehicleCount: userSubscriptions.vehicleCount,
+          paymentIntentId: userSubscriptions.paymentIntentId,
+          paymentMetadata: userSubscriptions.paymentMetadata,
           plan: {
             id: subscriptionPlans.id,
             name: subscriptionPlans.name,
