@@ -215,7 +215,7 @@ export default function Vehicles() {
                     </Badge>
                   </div>
                   <div className="text-sm text-gray-600">
-                    {vehicle.year} • {vehicle.category}
+                    {vehicle.year || 'N/A'} • {vehicle.category || 'Categoria não definida'}
                   </div>
                 </CardHeader>
 
@@ -236,13 +236,13 @@ export default function Vehicles() {
                   <div className="space-y-3">
                     <div className="flex items-center text-sm text-gray-600">
                       <MapPin className="w-4 h-4 mr-2" />
-                      {vehicle.location}
+                      {vehicle.location || 'Localização não informada'}
                     </div>
 
-                    {vehicle.rating > 0 && (
+                    {vehicle.rating && vehicle.rating > 0 && (
                       <div className="flex items-center text-sm text-gray-600">
                         <Star className="w-4 h-4 mr-2 text-yellow-400 fill-current" />
-                        {vehicle.rating.toFixed(1)} ({vehicle.reviewCount} avaliações)
+                        {Number(vehicle.rating).toFixed(1)} ({vehicle.reviewCount || 0} avaliações)
                       </div>
                     )}
 
@@ -253,14 +253,14 @@ export default function Vehicles() {
                     )}
 
                     <div className="flex flex-wrap gap-1">
-                      {vehicle.features.slice(0, 3).map((feature: string, index: number) => (
+                      {(vehicle.features || []).slice(0, 3).map((feature: string, index: number) => (
                         <Badge key={index} variant="outline" className="text-xs">
                           {feature}
                         </Badge>
                       ))}
-                      {vehicle.features.length > 3 && (
+                      {(vehicle.features || []).length > 3 && (
                         <Badge variant="outline" className="text-xs">
-                          +{vehicle.features.length - 3}
+                          +{(vehicle.features || []).length - 3}
                         </Badge>
                       )}
                     </div>
