@@ -201,124 +201,138 @@ export default function Vehicles() {
         ) : vehicles?.length ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {vehicles.map((vehicle) => (
-              <Card key={vehicle.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <CardTitle className="text-lg">
-                      {vehicle.brand} {vehicle.model}
-                    </CardTitle>
+              <Card key={vehicle.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                <div className="relative">
+                  {(vehicle.images && vehicle.images.length > 0) ? (
+                    <img 
+                      src={vehicle.images[0]}
+                      alt={`${vehicle.brand} ${vehicle.model} ${vehicle.year}`}
+                      className="w-full h-48 object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
+                      <Car className="w-12 h-12 text-gray-400" />
+                    </div>
+                  )}
+                  
+                  <div className="absolute top-3 left-3">
                     <Badge
                       variant={vehicle.isAvailable ? "default" : "secondary"}
-                      className={vehicle.isAvailable ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}
+                      className={vehicle.isAvailable ? "bg-success text-white" : "bg-warning text-gray-800"}
                     >
                       {vehicle.isAvailable ? "Disponível" : "Indisponível"}
                     </Badge>
                   </div>
-                  <div className="text-sm text-gray-600">
-                    {vehicle.year || 'N/A'} • {vehicle.category || 'Categoria não definida'}
+                </div>
+                
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-gray-800">
+                      {vehicle.brand} {vehicle.model} {vehicle.year}
+                    </h3>
+                    {vehicle.rating && Number(vehicle.rating) > 0 && (
+                      <div className="flex items-center">
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        <span className="text-sm text-gray-600 ml-1">{Number(vehicle.rating).toFixed(1)}</span>
+                      </div>
+                    )}
                   </div>
-                </CardHeader>
-
-                <CardContent>
-                  {(vehicle.images && vehicle.images.length > 0) && (
-                    <div className="mb-4">
-                      <img
-                        src={vehicle.images[0]}
-                        alt={`${vehicle.brand} ${vehicle.model}`}
-                        className="w-full h-48 object-cover rounded-md"
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                        }}
-                      />
+                  
+                  <div className="flex items-center text-sm text-gray-600 mb-3">
+                    <MapPin className="h-4 w-4 mr-1" />
+                    <span>{vehicle.location || 'Localização não informada'}</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex space-x-4 text-xs text-gray-500">
+                      <span>{vehicle.transmission || 'N/A'}</span>
+                      <span>{vehicle.fuel || 'N/A'}</span>
+                      <span>{vehicle.seats || 'N/A'} lugares</span>
                     </div>
+                  </div>
+
+                  {vehicle.description && (
+                    <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+                      {vehicle.description}
+                    </p>
                   )}
 
-                  <div className="space-y-3">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <MapPin className="w-4 h-4 mr-2" />
-                      {vehicle.location || 'Localização não informada'}
+                  <div className="flex flex-wrap gap-1 mb-3">
+                    {(vehicle.features || []).slice(0, 3).map((feature: string, index: number) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        {feature}
+                      </Badge>
+                    ))}
+                    {(vehicle.features || []).length > 3 && (
+                      <Badge variant="outline" className="text-xs">
+                        +{(vehicle.features || []).length - 3}
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <span className="text-2xl font-bold text-gray-800">
+                        {formatCurrency(vehicle.pricePerDay)}
+                      </span>
+                      <span className="text-sm text-gray-600">/dia</span>
                     </div>
+                  </div>
 
-                    {vehicle.rating && Number(vehicle.rating) > 0 && (
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Star className="w-4 h-4 mr-2 text-yellow-400 fill-current" />
-                        {Number(vehicle.rating).toFixed(1)} ({vehicle.total_bookings || 0} reservas)
-                      </div>
-                    )}
-
-                    {vehicle.description && (
-                      <p className="text-sm text-gray-600 line-clamp-2">
-                        {vehicle.description}
-                      </p>
-                    )}
-
-                    <div className="flex flex-wrap gap-1">
-                      {(vehicle.features || []).slice(0, 3).map((feature: string, index: number) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {feature}
-                        </Badge>
-                      ))}
-                      {(vehicle.features || []).length > 3 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{(vehicle.features || []).length - 3}
-                        </Badge>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setSelectedVehicleForAvailability(vehicle.id)}
+                      title="Gerenciar disponibilidade"
+                    >
+                      <Calendar className="w-4 h-4 mr-1" />
+                      Calendário
+                    </Button>
+                    
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleToggleAvailability(vehicle.id, vehicle.isAvailable)}
+                      disabled={toggleAvailabilityMutation.isPending}
+                    >
+                      {vehicle.isAvailable ? (
+                        <>
+                          <EyeOff className="w-4 h-4 mr-1" />
+                          Ocultar
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="w-4 h-4 mr-1" />
+                          Mostrar
+                        </>
                       )}
-                    </div>
-
-                    <div className="flex justify-between items-center pt-3 border-t">
-                      <div>
-                        <span className="text-lg font-semibold text-green-600">
-                          {formatCurrency(vehicle.pricePerDay)}
-                        </span>
-                        <span className="text-sm text-gray-600">/dia</span>
-                      </div>
-                      
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setSelectedVehicleForAvailability(vehicle.id)}
-                          title="Gerenciar disponibilidade"
-                        >
-                          <Calendar className="w-4 h-4" />
-                        </Button>
-                        
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleToggleAvailability(vehicle.id, vehicle.isAvailable)}
-                          disabled={toggleAvailabilityMutation.isPending}
-                        >
-                          {vehicle.isAvailable ? (
-                            <EyeOff className="w-4 h-4" />
-                          ) : (
-                            <Eye className="w-4 h-4" />
-                          )}
-                        </Button>
-                        
-                        <Link href={`/vehicle/${vehicle.id}/edit`}>
-                          <Button size="sm" variant="outline">
-                            <Edit3 className="w-4 h-4" />
-                          </Button>
-                        </Link>
-                        
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDeleteVehicle(vehicle.id)}
-                          disabled={deleteVehicleMutation.isPending}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    <Link href={`/vehicle/${vehicle.id}`}>
-                      <Button className="w-full mt-2" variant="outline">
-                        Ver Detalhes
+                    </Button>
+                    
+                    <Link href={`/vehicle/${vehicle.id}/edit`}>
+                      <Button size="sm" variant="outline">
+                        <Edit3 className="w-4 h-4 mr-1" />
+                        Editar
                       </Button>
                     </Link>
+                    
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleDeleteVehicle(vehicle.id)}
+                      disabled={deleteVehicleMutation.isPending}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
+
+                  <Link href={`/vehicle/${vehicle.id}`}>
+                    <Button 
+                      className="w-full bg-primary text-white hover:bg-red-600 transition-colors"
+                    >
+                      Ver mais
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             ))}
