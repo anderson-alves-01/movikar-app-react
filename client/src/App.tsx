@@ -48,6 +48,7 @@ import SubscriptionCheckoutDebug from "@/pages/subscription-checkout-debug";
 import SubscriptionSuccess from "@/pages/subscription-success";
 import TestSubscription from "@/pages/test-subscription";
 import DebugAuth from "@/pages/debug-auth";
+import AuthDebug from "@/pages/auth-debug";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt, IOSInstallPrompt } from "@/components/InstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
@@ -107,6 +108,7 @@ function Router() {
       <Route path="/test-subscription" component={TestSubscription} />
       <Route path="/test-auth-flow" component={lazy(() => import('@/pages/test-auth-flow'))} />
       <Route path="/debug-auth" component={DebugAuth} />
+      <Route path="/auth-debug" component={AuthDebug} />
       <Route component={NotFound} />
     </Switch>
   );
