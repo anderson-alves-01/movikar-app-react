@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Browser Login</title>
+</head>
+<body>
+    <h1>Test Login</h1>
+    <button onclick="testLogin()">Login</button>
+    <button onclick="testVehicles()">Get Vehicles</button>
+    <div id="result"></div>
+
+    <script>
+        async function testLogin() {
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ 
+                        email: 'admin@alugae.mobi', 
+                        password: 'admin123' 
+                    })
+                });
+                
+                const data = await response.json();
+                document.getElementById('result').innerHTML = `
+                    <h3>Login Result:</h3>
+                    <p>Status: ${response.status}</p>
+                    <p>User: ${data.user?.email}</p>
+                    <p>Token: ${data.token ? 'Present' : 'Missing'}</p>
+                    <p>Cookies: ${document.cookie}</p>
+                `;
+                
+                // Store token in sessionStorage for testing
+                if (data.token) {
+                    sessionStorage.setItem('auth_token', data.token);
+                    console.log('Token stored in sessionStorage');
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `Error: ${error.message}`;
+            }
+        }
+
+        async function testVehicles() {
+            try {
+                const token = sessionStorage.getItem('auth_token');
+                const headers = { 'Content-Type': 'application/json' };
+                
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                    console.log('Using Authorization header');
+                }
+                
+                const response = await fetch('/api/users/my/vehicles', {
+                    credentials: 'include',
+                    headers
+                });
+                
+                const data = await response.json();
+                document.getElementById('result').innerHTML = `
+                    <h3>Vehicles Result:</h3>
+                    <p>Status: ${response.status}</p>
+                    <p>Count: ${Array.isArray(data) ? data.length : 'Error'}</p>
+                    <p>Data: ${JSON.stringify(data, null, 2)}</p>
+                `;
+            } catch (error) {
+                document.getElementById('result').innerHTML = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -314,7 +314,7 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
         });
 
         res.cookie('refresh_token', newRefreshToken, {
-          ...refreshCookieOptions,
+          ...cookieOptions,
           maxAge: 7 * 24 * 60 * 60 * 1000
         });
 
@@ -753,11 +753,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('🍪 Setting login cookies for user:', user.email);
 
-      // Set cookies with development-friendly configuration
+      // Dynamic cookie configuration based on environment
+      const isReplit = !!process.env.REPL_ID;
+      const isProduction = process.env.NODE_ENV === 'production';
+      
       const cookieOptions = {
         httpOnly: true,
-        secure: false, // Set to false for development compatibility
-        sameSite: 'lax' as const,
+        secure: isReplit || isProduction, // secure in Replit/production
+        sameSite: isReplit ? 'none' as const : 'lax' as const, // 'none' for cross-origin in Replit
         path: '/',
       };
 
