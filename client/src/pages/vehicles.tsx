@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Edit3, Trash2, Car, MapPin, Star, Eye, EyeOff, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { formatCurrency } from "@/lib/currency";
+import { formatCurrency } from "@/utils/formatters";
 import Header from "@/components/header";
 import AddVehicleModal from "@/components/add-vehicle-modal";
 import VehicleAvailabilityManager from "@/components/vehicle-availability-manager";
@@ -220,10 +220,10 @@ export default function Vehicles() {
                 </CardHeader>
 
                 <CardContent>
-                  {vehicle.imageUrl && (
+                  {(vehicle.imageUrl || (vehicle.images && vehicle.images.length > 0)) && (
                     <div className="mb-4">
                       <img
-                        src={vehicle.imageUrl}
+                        src={vehicle.imageUrl || (vehicle.images && vehicle.images[0])}
                         alt={`${vehicle.brand} ${vehicle.model}`}
                         className="w-full h-48 object-cover rounded-md"
                         onError={(e) => {
@@ -239,10 +239,10 @@ export default function Vehicles() {
                       {vehicle.location || 'Localização não informada'}
                     </div>
 
-                    {vehicle.rating && vehicle.rating > 0 && (
+                    {vehicle.rating && Number(vehicle.rating) > 0 && (
                       <div className="flex items-center text-sm text-gray-600">
                         <Star className="w-4 h-4 mr-2 text-yellow-400 fill-current" />
-                        {Number(vehicle.rating).toFixed(1)} ({vehicle.reviewCount || 0} avaliações)
+                        {Number(vehicle.rating).toFixed(1)} ({vehicle.total_bookings || 0} reservas)
                       </div>
                     )}
 
@@ -268,7 +268,7 @@ export default function Vehicles() {
                     <div className="flex justify-between items-center pt-3 border-t">
                       <div>
                         <span className="text-lg font-semibold text-green-600">
-                          {formatCurrency(parseFloat(vehicle.pricePerDay))}
+                          {formatCurrency(vehicle.pricePerDay || vehicle.price_per_day)}
                         </span>
                         <span className="text-sm text-gray-600">/dia</span>
                       </div>
