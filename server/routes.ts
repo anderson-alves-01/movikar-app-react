@@ -1492,14 +1492,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("🚗 [API] Route accessed - my vehicles for user:", req.user?.id);
       
-      // Test with basic pool query
-      const result = await pool.query(
-        'SELECT id, brand, model, year, color FROM vehicles WHERE owner_id = $1 LIMIT 10',
-        [req.user!.id]
-      );
+      const vehicles = await storage.getVehiclesByOwner(req.user!.id);
       
-      console.log("🚗 [API] Query result:", result.rows.length, "vehicles found");
-      res.json(result.rows);
+      console.log("🚗 [API] Query result:", vehicles.length, "vehicles found");
+      console.log("🚗 [API] First vehicle fields:", vehicles.length > 0 ? Object.keys(vehicles[0]) : 'none');
+      
+      res.json(vehicles);
     } catch (error) {
       console.error("❌ [API] Error in my vehicles:", error);
       res.status(500).json({ message: "Erro interno do servidor" });

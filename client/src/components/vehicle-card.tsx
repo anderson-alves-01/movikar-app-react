@@ -54,7 +54,7 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
     hasToken: !!getToken()
   });
 
-  const isSaved = savedStatus?.isSaved || false;
+  const isSaved = (savedStatus as any)?.isSaved || false;
 
   // Save vehicle mutation
   const saveVehicleMutation = useMutation({
