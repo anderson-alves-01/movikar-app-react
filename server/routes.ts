@@ -32,7 +32,7 @@ import jwt from "jsonwebtoken";
 import path from "path";
 import fs from "fs";
 import { db, pool } from "./db";
-import { sql, eq, lte, gte, desc, ilike } from "drizzle-orm";
+import { sql, eq, lte, gte, desc, ilike, and, lt, asc, or } from "drizzle-orm";
 import Stripe from "stripe";
 import multer from "multer";
 // @ts-ignore
@@ -1190,13 +1190,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/dashboard/metrics", authenticateToken, requireAdmin, async (req, res) => {
     try {
       const timeRange = req.query.range || '30d';
+      const today = new Date();
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
-      // Calcular métricas usando Drizzle ORM
+      // Get current counts
       const [
         totalUsers,
-        totalVehicles,
+        activeVehicles,
+        todayBookings,
+        monthlyRevenue,
         totalBookings,
-        totalRevenue,
         avgRating,
         completedBookings,
         pendingBookings,
@@ -1205,16 +1210,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Total users
         db.select({ count: sql<number>`count(*)` }).from(users),
         
-        // Total vehicles
-        db.select({ count: sql<number>`count(*)` }).from(vehicles),
+        // Active vehicles (available)
+        db.select({ count: sql<number>`count(*)` })
+          .from(vehicles)
+          .where(eq(vehicles.isAvailable, true)),
+        
+        // Bookings today
+        db.select({ count: sql<number>`count(*)` })
+          .from(bookings)
+          .where(sql`DATE(${bookings.createdAt}) = CURRENT_DATE`),
+        
+        // Monthly revenue from completed bookings
+        db.select({ 
+          total: sql<number>`COALESCE(SUM(${bookings.totalPrice}), 0)` 
+        }).from(bookings)
+          .where(and(
+            eq(bookings.status, 'completed'),
+            gte(bookings.createdAt, startOfMonth)
+          )),
         
         // Total bookings
         db.select({ count: sql<number>`count(*)` }).from(bookings),
-        
-        // Total revenue from completed bookings
-        db.select({ 
-          total: sql<number>`COALESCE(SUM(${bookings.totalPrice}), 0)` 
-        }).from(bookings).where(eq(bookings.status, 'completed')),
         
         // Average rating
         db.select({ 
@@ -1237,43 +1253,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .where(eq(users.verificationStatus, 'verified'))
       ]);
       
-      // Calculate growth metrics (30 days ago)
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
-      const [oldUserCount, oldBookingCount] = await Promise.all([
+      // Calculate growth metrics (30 days comparison)
+      const [oldUserCount, oldBookingCount, lastMonthRevenue] = await Promise.all([
         db.select({ count: sql<number>`count(*)` })
           .from(users)
           .where(lte(users.createdAt, thirtyDaysAgo)),
         
         db.select({ count: sql<number>`count(*)` })
           .from(bookings)
-          .where(lte(bookings.createdAt, thirtyDaysAgo))
+          .where(lte(bookings.createdAt, thirtyDaysAgo)),
+          
+        db.select({ 
+          total: sql<number>`COALESCE(SUM(${bookings.totalPrice}), 0)` 
+        }).from(bookings)
+          .where(and(
+            eq(bookings.status, 'completed'),
+            gte(bookings.createdAt, new Date(today.getFullYear(), today.getMonth() - 1, 1)),
+            lt(bookings.createdAt, startOfMonth)
+          ))
       ]);
       
       const userGrowth = oldUserCount[0]?.count > 0 
         ? ((totalUsers[0].count - oldUserCount[0].count) / oldUserCount[0].count) * 100 
-        : 0;
+        : totalUsers[0].count > 0 ? 100 : 0;
       
       const bookingGrowth = oldBookingCount[0]?.count > 0 
         ? ((totalBookings[0].count - oldBookingCount[0].count) / oldBookingCount[0].count) * 100 
-        : 0;
+        : totalBookings[0].count > 0 ? 100 : 0;
+        
+      const revenueGrowth = lastMonthRevenue[0]?.total > 0
+        ? ((monthlyRevenue[0].total - lastMonthRevenue[0].total) / lastMonthRevenue[0].total) * 100
+        : monthlyRevenue[0].total > 0 ? 100 : 0;
       
       const metrics = {
         totalUsers: totalUsers[0].count,
-        totalVehicles: totalVehicles[0].count,
+        activeVehicles: activeVehicles[0].count,
+        todayBookings: todayBookings[0].count,
+        monthlyRevenue: parseFloat(monthlyRevenue[0].total.toString()),
         totalBookings: totalBookings[0].count,
-        totalRevenue: totalRevenue[0].total,
-        averageRating: parseFloat(avgRating[0].avg.toFixed(1)),
+        averageRating: parseFloat((Number(avgRating[0].avg) || 0).toFixed(1)),
         completedBookings: completedBookings[0].count,
         pendingBookings: pendingBookings[0].count,
         verifiedUsers: verifiedUsers[0].count,
-        activeListings: totalVehicles[0].count,
-        monthlyGrowth: parseFloat(bookingGrowth.toFixed(1)),
         userGrowth: parseFloat(userGrowth.toFixed(1)),
-        revenueGrowth: parseFloat((Math.random() * 30 + 5).toFixed(1)) // Simplified for now
+        bookingGrowth: parseFloat(bookingGrowth.toFixed(1)),
+        revenueGrowth: parseFloat(revenueGrowth.toFixed(1))
       };
       
+      console.log('📊 Dashboard metrics calculated:', metrics);
       res.json(metrics);
     } catch (error) {
       console.error("Dashboard metrics error:", error);
@@ -1281,42 +1308,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/dashboard/charts", authenticateToken, requireAdmin, async (req, res) => {
+  app.get("/api/admin/reports", authenticateToken, requireAdmin, async (req, res) => {
     try {
-      // Dados simulados para os gráficos - em produção viria do banco
-      const chartData = {
-        monthly: [
-          { name: 'Jan', revenue: 45000, bookings: 120, users: 450 },
-          { name: 'Fev', revenue: 52000, bookings: 135, users: 520 },
-          { name: 'Mar', revenue: 48000, bookings: 128, users: 580 },
-          { name: 'Abr', revenue: 61000, bookings: 152, users: 640 },
-          { name: 'Mai', revenue: 55000, bookings: 145, users: 720 },
-          { name: 'Jun', revenue: 67000, bookings: 168, users: 780 },
-        ],
-        bookingStatus: [
-          { name: 'Concluídas', value: 168 },
-          { name: 'Ativas', value: 45 },
-          { name: 'Pendentes', value: 23 },
-          { name: 'Canceladas', value: 12 },
-        ],
-        vehicleCategories: [
-          { name: 'Econômico', value: 45 },
-          { name: 'Intermediário', value: 38 },
-          { name: 'SUV', value: 28 },
-          { name: 'Luxo', value: 15 },
-          { name: 'Esportivo', value: 8 },
-        ],
+      console.log("📊 Fetching admin reports data...");
+      
+      const [
+        totalUsers,
+        totalVehicles,
+        totalRevenue,
+        activeBookings,
+        conversionRate,
+        avgRating,
+        bookingsByStatus,
+        vehiclesByCategory,
+        usersByType
+      ] = await Promise.all([
+        // Total users
+        db.select({ count: sql<number>`count(*)` }).from(users),
+        
+        // Total vehicles
+        db.select({ count: sql<number>`count(*)` }).from(vehicles),
+        
+        // Total revenue
+        db.select({ 
+          sum: sql<number>`COALESCE(SUM(${bookings.totalPrice}), 0)` 
+        }).from(bookings).where(eq(bookings.status, 'completed')),
+        
+        // Active bookings
+        db.select({ count: sql<number>`count(*)` })
+          .from(bookings)
+          .where(eq(bookings.status, 'active')),
+        
+        // Conversion rate (approved bookings / total bookings)
+        db.select({ 
+          approved: sql<number>`count(case when status in ('approved', 'active', 'completed') then 1 end)`,
+          total: sql<number>`count(*)`
+        }).from(bookings),
+        
+        // Average rating
+        db.select({ 
+          avg: sql<number>`COALESCE(AVG(${reviews.rating}), 0)` 
+        }).from(reviews),
+        
+        // Bookings by status
+        db.select({ 
+          status: bookings.status,
+          count: sql<number>`count(*)`
+        }).from(bookings).groupBy(bookings.status),
+        
+        // Vehicles by category
+        db.select({ 
+          category: vehicles.category,
+          count: sql<number>`count(*)`
+        }).from(vehicles).groupBy(vehicles.category),
+        
+        // Users by verification status
+        db.select({ 
+          verified: sql<number>`count(case when verification_status = 'verified' then 1 end)`,
+          pending: sql<number>`count(case when verification_status = 'pending' then 1 end)`,
+          total: sql<number>`count(*)`
+        }).from(users)
+      ]);
+      
+      const conversionPercentage = conversionRate[0]?.total > 0 
+        ? (conversionRate[0].approved / conversionRate[0].total) * 100 
+        : 0;
+      
+      const reportData = {
+        totalUsers: totalUsers[0].count,
+        totalVehicles: totalVehicles[0].count,
+        totalRevenue: parseFloat(totalRevenue[0].sum.toString()),
+        activeBookings: activeBookings[0].count,
+        conversionRate: parseFloat(conversionPercentage.toFixed(1)),
+        avgRating: parseFloat((Number(avgRating[0].avg) || 0).toFixed(1)),
+        bookingsByStatus: bookingsByStatus.map(item => ({
+          name: item.status === 'completed' ? 'Concluídas' :
+                item.status === 'active' ? 'Ativas' :
+                item.status === 'pending' ? 'Pendentes' :
+                item.status === 'cancelled' ? 'Canceladas' : item.status,
+          value: item.count
+        })),
+        vehiclesByCategory: vehiclesByCategory.map(item => ({
+          name: item.category === 'economico' ? 'Econômico' :
+                item.category === 'intermediario' ? 'Intermediário' :
+                item.category === 'suv' ? 'SUV' :
+                item.category === 'luxo' ? 'Luxo' :
+                item.category === 'esportivo' ? 'Esportivo' : item.category,
+          value: item.count
+        })),
         userActivity: [
-          { name: 'Ativos', value: 234 },
-          { name: 'Inativos', value: 89 },
-          { name: 'Novos', value: 67 },
+          { name: 'Verificados', value: usersByType[0]?.verified || 0 },
+          { name: 'Pendentes', value: usersByType[0]?.pending || 0 },
+          { name: 'Total', value: usersByType[0]?.total || 0 }
         ]
       };
       
-      res.json(chartData);
+      console.log('📊 Reports data calculated:', reportData);
+      res.json(reportData);
     } catch (error) {
-      console.error("Dashboard charts error:", error);
-      res.status(500).json({ message: "Falha ao buscar dados dos gráficos" });
+      console.error("Admin reports error:", error);
+      res.status(500).json({ message: "Falha ao buscar dados dos relatórios" });
     }
   });
 
@@ -3210,35 +3301,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("📊 Fetching subscription stats...");
       
-      const totalSubscriptions = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(userSubscriptions);
+      const today = new Date();
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const [
+        totalSubscriptions,
+        activeSubscriptions,
+        monthlyRevenue,
+        lastMonthRevenue
+      ] = await Promise.all([
+        // Total subscriptions
+        db.select({ count: sql<number>`count(*)` })
+          .from(userSubscriptions),
         
-      const activeSubscriptions = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(userSubscriptions)
-        .where(eq(userSubscriptions.status, 'active'));
+        // Active subscriptions
+        db.select({ count: sql<number>`count(*)` })
+          .from(userSubscriptions)
+          .where(eq(userSubscriptions.status, 'active')),
         
-      const monthlyRevenue = await db
-        .select({ 
-          sum: sql<number>`sum(
-            case 
-              when ${userSubscriptions.paymentMethod} = 'monthly' then cast(${subscriptionPlans.monthlyPrice} as decimal)
-              else cast(${subscriptionPlans.annualPrice} as decimal) / 12
-            end
-          )` 
+        // Current monthly revenue from paid amounts
+        db.select({ 
+          sum: sql<number>`COALESCE(SUM(
+            CASE 
+              WHEN ${userSubscriptions.paidAmount} IS NOT NULL 
+              THEN CAST(${userSubscriptions.paidAmount} AS decimal)
+              ELSE 0
+            END
+          ), 0)` 
         })
         .from(userSubscriptions)
-        .leftJoin(subscriptionPlans, eq(userSubscriptions.planId, subscriptionPlans.id))
-        .where(eq(userSubscriptions.status, 'active'));
+        .where(and(
+          eq(userSubscriptions.status, 'active'),
+          gte(userSubscriptions.createdAt, new Date(today.getFullYear(), today.getMonth(), 1))
+        )),
         
+        // Last month revenue for growth calculation
+        db.select({ 
+          sum: sql<number>`COALESCE(SUM(
+            CASE 
+              WHEN ${userSubscriptions.paidAmount} IS NOT NULL 
+              THEN CAST(${userSubscriptions.paidAmount} AS decimal)
+              ELSE 0
+            END
+          ), 0)` 
+        })
+        .from(userSubscriptions)
+        .where(and(
+          eq(userSubscriptions.status, 'active'),
+          gte(userSubscriptions.createdAt, new Date(today.getFullYear(), today.getMonth() - 1, 1)),
+          lt(userSubscriptions.createdAt, new Date(today.getFullYear(), today.getMonth(), 1))
+        ))
+      ]);
+      
+      // Calculate growth rate
+      const currentRevenue = monthlyRevenue[0]?.sum || 0;
+      const lastRevenue = lastMonthRevenue[0]?.sum || 0;
+      const growthRate = lastRevenue > 0 
+        ? ((currentRevenue - lastRevenue) / lastRevenue) * 100 
+        : currentRevenue > 0 ? 100 : 0;
+      
       const stats = {
         totalSubscriptions: totalSubscriptions[0]?.count || 0,
         activeSubscriptions: activeSubscriptions[0]?.count || 0,
-        monthlyRevenue: monthlyRevenue[0]?.sum || 0,
-        growthRate: 15 // Mock growth rate for now
+        monthlyRevenue: parseFloat(currentRevenue.toString()),
+        growthRate: parseFloat(growthRate.toFixed(1))
       };
       
+      console.log('📊 Subscription stats calculated:', stats);
       res.json(stats);
     } catch (error) {
       console.error("Error fetching subscription stats:", error);

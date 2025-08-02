@@ -81,9 +81,9 @@ export default function AdminReports() {
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">1,247</div>
+                  <div className="text-2xl font-bold">{reportsData?.totalUsers || 0}</div>
                   <p className="text-xs text-muted-foreground">
-                    +12% desde o mês passado
+                    Usuários registrados na plataforma
                   </p>
                 </CardContent>
               </Card>
@@ -95,9 +95,9 @@ export default function AdminReports() {
                   <Car className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">342</div>
+                  <div className="text-2xl font-bold">{reportsData?.totalVehicles || 0}</div>
                   <p className="text-xs text-muted-foreground">
-                    +8% desde o mês passado
+                    Veículos disponíveis para aluguel
                   </p>
                 </CardContent>
               </Card>
@@ -109,9 +109,11 @@ export default function AdminReports() {
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">R$ 45.231</div>
+                  <div className="text-2xl font-bold">
+                    R$ {reportsData?.totalRevenue?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    +23% desde o mês passado
+                    Receita de reservas concluídas
                   </p>
                 </CardContent>
               </Card>
@@ -123,9 +125,9 @@ export default function AdminReports() {
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">89</div>
+                  <div className="text-2xl font-bold">{reportsData?.activeBookings || 0}</div>
                   <p className="text-xs text-muted-foreground">
-                    +15% desde a semana passada
+                    Reservas em andamento
                   </p>
                 </CardContent>
               </Card>
@@ -137,9 +139,9 @@ export default function AdminReports() {
                   <BarChart3 className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">12.4%</div>
+                  <div className="text-2xl font-bold">{reportsData?.conversionRate || 0}%</div>
                   <p className="text-xs text-muted-foreground">
-                    +2.1% desde o mês passado
+                    Reservas aprovadas / Total de pedidos
                   </p>
                 </CardContent>
               </Card>
@@ -151,9 +153,9 @@ export default function AdminReports() {
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">4.8/5</div>
+                  <div className="text-2xl font-bold">{reportsData?.avgRating?.toFixed(1) || '0.0'}/5</div>
                   <p className="text-xs text-muted-foreground">
-                    Baseado em 523 avaliações
+                    Avaliação média dos usuários
                   </p>
                 </CardContent>
               </Card>

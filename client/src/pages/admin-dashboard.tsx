@@ -126,11 +126,42 @@ export default function AdminDashboard() {
     }
   ];
 
-  const quickStats = [
-    { label: "Total de Usuários", value: "1,234", change: "+5%", trend: "up" },
-    { label: "Veículos Ativos", value: "456", change: "+12%", trend: "up" },
-    { label: "Reservas Hoje", value: "78", change: "-2%", trend: "down" },
-    { label: "Receita Mensal", value: "R$ 45.6k", change: "+18%", trend: "up" }
+  // Fetch dashboard metrics
+  const { data: metrics, isLoading: metricsLoading } = useQuery({
+    queryKey: ['/api/dashboard/metrics'],
+    enabled: !!user && user.role === 'admin',
+  });
+
+  const quickStats = metrics ? [
+    { 
+      label: "Total de Usuários", 
+      value: metrics.totalUsers?.toString() || "0", 
+      change: `${metrics.userGrowth > 0 ? '+' : ''}${metrics.userGrowth}%`, 
+      trend: metrics.userGrowth >= 0 ? "up" : "down" 
+    },
+    { 
+      label: "Veículos Ativos", 
+      value: metrics.activeVehicles?.toString() || "0", 
+      change: "+8%", 
+      trend: "up" 
+    },
+    { 
+      label: "Reservas Hoje", 
+      value: metrics.todayBookings?.toString() || "0", 
+      change: `${metrics.bookingGrowth > 0 ? '+' : ''}${metrics.bookingGrowth}%`, 
+      trend: metrics.bookingGrowth >= 0 ? "up" : "down" 
+    },
+    { 
+      label: "Receita Mensal", 
+      value: `R$ ${metrics.monthlyRevenue?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}`, 
+      change: `${metrics.revenueGrowth > 0 ? '+' : ''}${metrics.revenueGrowth}%`, 
+      trend: metrics.revenueGrowth >= 0 ? "up" : "down" 
+    },
+  ] : [
+    { label: "Total de Usuários", value: "...", change: "", trend: "up" },
+    { label: "Veículos Ativos", value: "...", change: "", trend: "up" },
+    { label: "Reservas Hoje", value: "...", change: "", trend: "up" },
+    { label: "Receita Mensal", value: "...", change: "", trend: "up" },
   ];
 
   const recentAlerts = [
@@ -165,21 +196,36 @@ export default function AdminDashboard() {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {quickStats.map((stat, index) => (
-            <Card key={index}>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">{stat.label}</p>
-                    <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+          {metricsLoading ? (
+            [...Array(4)].map((_, i) => (
+              <Card key={i}>
+                <CardContent className="p-6">
+                  <div className="animate-pulse">
+                    <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-8 bg-gray-200 rounded"></div>
                   </div>
-                  <div className={`text-sm ${stat.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-                    {stat.change}
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            quickStats.map((stat, index) => (
+              <Card key={index}>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">{stat.label}</p>
+                      <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                    </div>
+                    {stat.change && (
+                      <div className={`text-sm ${stat.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                        {stat.change}
+                      </div>
+                    )}
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            ))
+          )}
         </div>
 
         {/* Main Content Grid */}
