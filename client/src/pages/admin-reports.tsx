@@ -43,7 +43,7 @@ export default function AdminReports() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                <BarChart3 className="h-8 w-8 text-primary" />
+                <BarChart3 className="h-8 w-8 text-orange-500" />
                 Relatórios Administrativos
               </h1>
               <p className="text-gray-600 mt-2">
@@ -81,7 +81,7 @@ export default function AdminReports() {
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{reportsData?.totalUsers || 0}</div>
+                  <div className="text-2xl font-bold">{reportsData?.totalUsers || "0"}</div>
                   <p className="text-xs text-muted-foreground">
                     Usuários registrados na plataforma
                   </p>
@@ -95,7 +95,7 @@ export default function AdminReports() {
                   <Car className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{reportsData?.totalVehicles || 0}</div>
+                  <div className="text-2xl font-bold">{reportsData?.totalVehicles || "0"}</div>
                   <p className="text-xs text-muted-foreground">
                     Veículos disponíveis para aluguel
                   </p>
