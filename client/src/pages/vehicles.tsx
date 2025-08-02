@@ -220,10 +220,10 @@ export default function Vehicles() {
                 </CardHeader>
 
                 <CardContent>
-                  {(vehicle.imageUrl || (vehicle.images && vehicle.images.length > 0)) && (
+                  {(vehicle.images && vehicle.images.length > 0) && (
                     <div className="mb-4">
                       <img
-                        src={vehicle.imageUrl || (vehicle.images && vehicle.images[0])}
+                        src={vehicle.images[0]}
                         alt={`${vehicle.brand} ${vehicle.model}`}
                         className="w-full h-48 object-cover rounded-md"
                         onError={(e) => {
@@ -268,7 +268,7 @@ export default function Vehicles() {
                     <div className="flex justify-between items-center pt-3 border-t">
                       <div>
                         <span className="text-lg font-semibold text-green-600">
-                          {formatCurrency(vehicle.pricePerDay || vehicle.price_per_day)}
+                          {formatCurrency(vehicle.pricePerDay)}
                         </span>
                         <span className="text-sm text-gray-600">/dia</span>
                       </div>

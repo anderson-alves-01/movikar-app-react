@@ -258,7 +258,44 @@ export class DatabaseStorage implements IStorage {
 
   async getVehiclesByOwner(ownerId: number): Promise<Vehicle[]> {
     return await db
-      .select()
+      .select({
+        id: vehicles.id,
+        ownerId: vehicles.ownerId,
+        brand: vehicles.brand,
+        model: vehicles.model,
+        year: vehicles.year,
+        color: vehicles.color,
+        licensePlate: vehicles.licensePlate,
+        renavam: vehicles.renavam,
+        category: vehicles.category,
+        pricePerDay: vehicles.pricePerDay,
+        pricePerWeek: vehicles.pricePerWeek,
+        pricePerMonth: vehicles.pricePerMonth,
+        location: vehicles.location,
+        latitude: vehicles.latitude,
+        longitude: vehicles.longitude,
+        description: vehicles.description,
+        features: vehicles.features,
+        images: vehicles.images,
+        isAvailable: vehicles.isAvailable,
+        isVerified: vehicles.isVerified,
+        transmission: vehicles.transmission,
+        fuel: vehicles.fuel,
+        seats: vehicles.seats,
+        rating: vehicles.rating,
+        totalBookings: vehicles.totalBookings,
+        crlvDocument: vehicles.crlvDocument,
+        status: vehicles.status,
+        statusReason: vehicles.statusReason,
+        reviewedBy: vehicles.reviewedBy,
+        reviewedAt: vehicles.reviewedAt,
+        createdAt: vehicles.createdAt,
+        updatedAt: vehicles.updatedAt,
+        isHighlighted: vehicles.isHighlighted,
+        highlightType: vehicles.highlightType,
+        highlightExpiresAt: vehicles.highlightExpiresAt,
+        highlightUsageCount: vehicles.highlightUsageCount,
+      })
       .from(vehicles)
       .where(eq(vehicles.ownerId, ownerId))
       .orderBy(desc(vehicles.createdAt));
