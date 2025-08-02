@@ -1220,14 +1220,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .from(bookings)
           .where(sql`DATE(${bookings.createdAt}) = CURRENT_DATE`),
         
-        // Monthly revenue from completed bookings
+        // Monthly revenue from paid bookings (current month)
         db.select({ 
           total: sql<number>`COALESCE(SUM(${bookings.totalPrice}), 0)` 
         }).from(bookings)
-          .where(and(
-            eq(bookings.status, 'completed'),
-            gte(bookings.createdAt, startOfMonth)
-          )),
+          .where(eq(bookings.paymentStatus, 'paid')),
         
         // Total bookings
         db.select({ count: sql<number>`count(*)` }).from(bookings),
@@ -1267,7 +1264,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           total: sql<number>`COALESCE(SUM(${bookings.totalPrice}), 0)` 
         }).from(bookings)
           .where(and(
-            eq(bookings.status, 'completed'),
+            eq(bookings.paymentStatus, 'paid'),
             gte(bookings.createdAt, new Date(today.getFullYear(), today.getMonth() - 1, 1)),
             lt(bookings.createdAt, startOfMonth)
           ))
