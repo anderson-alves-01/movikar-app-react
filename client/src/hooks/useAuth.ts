@@ -44,8 +44,10 @@ export function useAuth() {
 
         if (response.ok) {
           const userData = await response.json();
-          console.log('✅ useAuth - User authenticated via cookies:', userData.email);
-          setAuth(userData, ''); // No token needed since using cookies
+          console.log('✅ useAuth - User authenticated:', userData.email);
+          // Get token from sessionStorage if available
+          const storedToken = sessionStorage.getItem('auth_token');
+          setAuth(userData, storedToken || '');
         } else {
           console.log('❌ useAuth - Not authenticated, clearing auth');
           clearAuth();
@@ -83,18 +85,21 @@ export function useAuth() {
 
       const data = await response.json();
       console.log('✅ useAuth - Login successful for:', data.user.email);
+      console.log('💾 useAuth - Token received:', data.token ? 'Yes' : 'No');
       
-      // Store token temporarily in sessionStorage as fallback
+      // ALWAYS store token in sessionStorage for Authorization header fallback
       if (data.token) {
-        console.log('💾 Storing token in sessionStorage as fallback');
         sessionStorage.setItem('auth_token', data.token);
+        console.log('💾 useAuth - Token stored in sessionStorage');
       }
       
+      // Store in auth state
       setAuth(data.user, data.token || '');
       
-      // Force re-initialization to ensure auth state is fresh
-      setInitialized(false);
-      setLoading(false);
+      // Force page reload to ensure fresh auth state
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
       
       return data;
     } catch (error) {
