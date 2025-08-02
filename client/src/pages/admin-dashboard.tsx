@@ -31,6 +31,10 @@ export default function AdminDashboard() {
     staleTime: 60000, // 1 minute
   });
 
+  console.log('🔍 Admin Dashboard - User:', user?.email, 'Role:', user?.role);
+  console.log('🔍 Admin Dashboard - Metrics data:', metrics);
+  console.log('🔍 Admin Dashboard - Loading:', isLoading, 'Error:', error);
+
   // Verificar se é admin
   if (!user || user.role !== 'admin') {
     return (
@@ -143,27 +147,27 @@ export default function AdminDashboard() {
   const quickStats = metrics ? [
     { 
       label: "Total de Usuários", 
-      value: metrics.totalUsers?.toString() || "0", 
-      change: `${metrics.userGrowth > 0 ? '+' : ''}${metrics.userGrowth}%`, 
-      trend: metrics.userGrowth >= 0 ? "up" : "down" 
+      value: (metrics as any).totalUsers?.toString() || "0", 
+      change: `${(metrics as any).userGrowth > 0 ? '+' : ''}${(metrics as any).userGrowth}%`, 
+      trend: (metrics as any).userGrowth >= 0 ? "up" : "down" 
     },
     { 
       label: "Veículos Ativos", 
-      value: metrics.activeVehicles?.toString() || "0", 
+      value: (metrics as any).activeVehicles?.toString() || "0", 
       change: "+8%", 
       trend: "up" 
     },
     { 
       label: "Reservas Hoje", 
-      value: metrics.todayBookings?.toString() || "0", 
-      change: `${metrics.bookingGrowth > 0 ? '+' : ''}${metrics.bookingGrowth}%`, 
-      trend: metrics.bookingGrowth >= 0 ? "up" : "down" 
+      value: (metrics as any).todayBookings?.toString() || "0", 
+      change: `${(metrics as any).bookingGrowth > 0 ? '+' : ''}${(metrics as any).bookingGrowth}%`, 
+      trend: (metrics as any).bookingGrowth >= 0 ? "up" : "down" 
     },
     { 
       label: "Receita Mensal", 
-      value: `R$ ${metrics.monthlyRevenue?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}`, 
-      change: `${metrics.revenueGrowth > 0 ? '+' : ''}${metrics.revenueGrowth}%`, 
-      trend: metrics.revenueGrowth >= 0 ? "up" : "down" 
+      value: `R$ ${(metrics as any).monthlyRevenue?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}`, 
+      change: `${(metrics as any).revenueGrowth > 0 ? '+' : ''}${(metrics as any).revenueGrowth}%`, 
+      trend: (metrics as any).revenueGrowth >= 0 ? "up" : "down" 
     },
   ] : [
     { label: "Total de Usuários", value: "...", change: "", trend: "up" },
