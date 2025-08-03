@@ -30,7 +30,7 @@ export default function Auth() {
   const { setAuth } = useAuthStore();
   const { toast } = useToast();
 
-  // Check for referral code in URL parameters
+  // Check for referral code in URL parameters and validate it
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const refCode = urlParams.get('ref');
@@ -38,10 +38,30 @@ export default function Auth() {
     if (refCode) {
       setReferralCode(refCode);
       setAuthMode('register'); // Switch to register mode if there's a referral code
-      toast({
-        title: "🎉 Código de convite detectado!",
-        description: `Você foi convidado com o código: ${refCode}`,
-      });
+      
+      // Validate referral code and get inviter name
+      fetch(`/api/referrals/validate/${refCode}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.valid && data.inviterName) {
+            toast({
+              title: "🎉 Código de convite detectado!",
+              description: `Você foi convidado por ${data.inviterName}!`,
+            });
+          } else {
+            toast({
+              title: "🎉 Código de convite detectado!",
+              description: `Você foi convidado com o código: ${refCode}`,
+            });
+          }
+        })
+        .catch(() => {
+          // Fallback message if validation fails
+          toast({
+            title: "🎉 Código de convite detectado!",
+            description: `Você foi convidado com o código: ${refCode}`,
+          });
+        });
     }
   }, [toast]);
 

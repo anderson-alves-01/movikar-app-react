@@ -2822,6 +2822,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Validate referral code and get inviter info (no auth required)
+  app.get("/api/referrals/validate/:code", async (req, res) => {
+    try {
+      const { code } = req.params;
+      
+      // Validate referral code format (8 characters, alphanumeric)
+      if (!/^[A-Z0-9]{8}$/.test(code)) {
+        return res.status(400).json({ message: "Formato do código de convite inválido" });
+      }
+      
+      // Find referral by code
+      const referral = await storage.getReferralByCode(code);
+      
+      if (!referral) {
+        return res.status(404).json({ message: "Código de convite não encontrado" });
+      }
+      
+      // Get referrer user info
+      const referrerUser = await storage.getUserById(referral.referrerId);
+      
+      if (!referrerUser) {
+        return res.status(404).json({ message: "Usuário que fez o convite não encontrado" });
+      }
+      
+      res.json({ 
+        valid: true,
+        referralCode: code,
+        inviterName: referrerUser.name,
+        inviterEmail: referrerUser.email
+      });
+    } catch (error: any) {
+      console.error("Error validating referral code:", error);
+      res.status(500).json({ 
+        message: "Erro interno do servidor", 
+        details: error.message 
+      });
+    }
+  });
+
   app.get("/api/referrals/my-referrals", authenticateToken, async (req, res) => {
     try {
       const referrals = await storage.getUserReferrals(req.user!.id);
