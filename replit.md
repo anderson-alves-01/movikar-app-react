@@ -41,6 +41,19 @@ Preferred communication style: Simple, everyday language.
   - Single-use enforcement
   - User ownership verification
 
+### Points Usage System Implementation (Aug 3, 2025)
+- **Integrated Checkout Discounts**: Points can now be used for discounts during vehicle rental checkout (1 point = R$ 0.01)
+- **Subscription Discounts**: Points integration added to subscription checkout system with real-time discount calculation
+- **User Interface**: Added intuitive points usage interface with:
+  - Available points display
+  - Real-time discount preview
+  - Visual confirmation of applied discounts
+  - Updated price totals showing original and discounted amounts
+- **Backend Integration**: Enhanced `/api/rewards/use-points` endpoint integration with both checkout flows
+- **Transaction Tracking**: All point usage creates proper transaction records for audit trail
+- **Query Cache Management**: Automatic cache invalidation after point usage to ensure real-time balance updates
+- **Error Handling**: Comprehensive validation for insufficient points and proper user feedback
+
 ### Dynamic Subscription Values System (Aug 1, 2025)
 - **Database Schema Enhancement**: Added new fields to user_subscriptions table for tracking real payment values:
   - `paid_amount`: Stores the actual amount paid by the user (e.g., R$ 89.87 for 5 vehicles)

@@ -2,11 +2,15 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Crown, Star, Sparkles, ArrowLeft, CreditCard } from "lucide-react";
+import { Crown, Star, Sparkles, ArrowLeft, CreditCard, Coins, Percent, Loader2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 // Make sure to call `loadStripe` outside of a component's render to avoid
@@ -27,6 +31,59 @@ const CheckoutForm = ({ clientSecret, planName, paymentMethod, amount }: Checkou
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const [pointsToUse, setPointsToUse] = useState('');
+  const [appliedDiscount, setAppliedDiscount] = useState(0);
+  const queryClient = useQueryClient();
+
+  // Fetch user rewards
+  const { data: rewards } = useQuery<{
+    availablePoints: number;
+    totalPoints: number;
+  }>({
+    queryKey: ['/api/rewards/balance'],
+  });
+
+  // Apply points discount mutation
+  const applyPointsMutation = useMutation({
+    mutationFn: async (points: number) => {
+      const response = await apiRequest("POST", "/api/rewards/use-points", {
+        points,
+        description: `Desconto aplicado na assinatura ${planName} (${points} pontos)`,
+        bookingId: null,
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Erro ao aplicar pontos');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setAppliedDiscount(data.discountAmount);
+      toast({
+        title: "Desconto aplicado!",
+        description: `R$ ${data.discountAmount.toFixed(2)} de desconto aplicado na assinatura`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/rewards/balance'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleApplyPoints = () => {
+    const points = parseInt(pointsToUse);
+    if (points > 0 && points <= (rewards?.availablePoints || 0)) {
+      applyPointsMutation.mutate(points);
+    }
+  };
+
+  const finalAmount = amount - appliedDiscount;
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -124,15 +181,95 @@ const CheckoutForm = ({ clientSecret, planName, paymentMethod, amount }: Checkou
         </CardHeader>
         <CardContent className="text-center">
           <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            {formatAmount(amount)}
+            {formatAmount(appliedDiscount > 0 ? finalAmount : amount)}
           </div>
+          {appliedDiscount > 0 && (
+            <div className="text-lg text-gray-500 line-through mb-2">
+              {formatAmount(amount)}
+            </div>
+          )}
           {paymentMethod === 'annual' && (
             <Badge variant="secondary" className="mb-4">
               Economize 20% com o plano anual
             </Badge>
           )}
+          {appliedDiscount > 0 && (
+            <Badge variant="default" className="bg-green-600 mb-4">
+              Desconto de R$ {appliedDiscount.toFixed(2)} aplicado
+            </Badge>
+          )}
         </CardContent>
       </Card>
+
+      {/* Points Section */}
+      {rewards && rewards.availablePoints > 0 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Coins className="h-5 w-5 mr-2 text-yellow-600" />
+              Usar Pontos de Recompensa
+            </CardTitle>
+            <CardDescription>
+              Você tem {rewards.availablePoints} pontos disponíveis (= R$ {(rewards.availablePoints * 0.01).toFixed(2)})
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <Label htmlFor="pointsInput">Pontos a usar</Label>
+                  <Input
+                    id="pointsInput"
+                    type="number"
+                    placeholder="Digite a quantidade de pontos"
+                    value={pointsToUse}
+                    onChange={(e) => setPointsToUse(e.target.value)}
+                    min="1"
+                    max={Math.min(rewards.availablePoints, Math.floor(amount / 100 * 100))}
+                    className="mt-1"
+                  />
+                </div>
+                <div className="flex flex-col justify-end">
+                  <Button 
+                    onClick={handleApplyPoints}
+                    disabled={!pointsToUse || parseInt(pointsToUse) <= 0 || applyPointsMutation.isPending}
+                    variant="outline"
+                    className="whitespace-nowrap"
+                  >
+                    {applyPointsMutation.isPending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Aplicando...
+                      </>
+                    ) : (
+                      <>
+                        <Percent className="h-4 w-4 mr-2" />
+                        Aplicar Desconto
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+              
+              {pointsToUse && parseInt(pointsToUse) > 0 && (
+                <div className="bg-green-50 p-3 rounded-lg">
+                  <p className="text-sm text-green-800">
+                    Desconto de R$ {(parseInt(pointsToUse) * 0.01).toFixed(2)} será aplicado
+                  </p>
+                </div>
+              )}
+
+              {appliedDiscount > 0 && (
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <p className="text-sm text-blue-800 font-medium">
+                    ✅ Desconto de R$ {appliedDiscount.toFixed(2)} aplicado com sucesso!
+                  </p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -158,7 +295,7 @@ const CheckoutForm = ({ clientSecret, planName, paymentMethod, amount }: Checkou
                 {isLoading ? (
                   "Processando..."
                 ) : (
-                  `Pagar ${formatAmount(amount)}`
+                  `Pagar ${formatAmount(appliedDiscount > 0 ? finalAmount : amount)}`
                 )}
               </Button>
             </div>

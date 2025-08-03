@@ -2,7 +2,7 @@ import { useStripe, Elements, PaymentElement, useElements } from '@stripe/react-
 import { loadStripe } from '@stripe/stripe-js';
 import { useEffect, useState } from 'react';
 import { useRoute, useLocation } from 'wouter';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/lib/auth";
@@ -10,7 +10,10 @@ import Header from "@/components/header";
 import PaymentMethodSelector from "@/components/payment-method-selector";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, Shield, Calendar, Car, DollarSign, QrCode } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Loader2, ArrowLeft, Shield, Calendar, Car, DollarSign, QrCode, Coins, Percent } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
 import { getClientFeatureFlags } from "@shared/feature-flags";
 
@@ -47,6 +50,50 @@ const CheckoutForm = ({ checkoutData }: { checkoutData: CheckoutData }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const featureFlags = getClientFeatureFlags();
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'pix'>('card');
+  const [pointsToUse, setPointsToUse] = useState('');
+  const [appliedDiscount, setAppliedDiscount] = useState(0);
+  const queryClient = useQueryClient();
+
+  // Fetch user rewards
+  const { data: rewards } = useQuery<{
+    availablePoints: number;
+    totalPoints: number;
+  }>({
+    queryKey: ['/api/rewards/balance'],
+  });
+
+  // Apply points discount mutation
+  const applyPointsMutation = useMutation({
+    mutationFn: async (points: number) => {
+      const response = await apiRequest("POST", "/api/rewards/use-points", {
+        points,
+        description: `Desconto aplicado no aluguel (${points} pontos)`,
+        bookingId: null,
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Erro ao aplicar pontos');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setAppliedDiscount(data.discountAmount);
+      toast({
+        title: "Desconto aplicado!",
+        description: `R$ ${data.discountAmount.toFixed(2)} de desconto aplicado`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/rewards/balance'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,6 +147,14 @@ const CheckoutForm = ({ checkoutData }: { checkoutData: CheckoutData }) => {
 
   const days = calculateDays();
   const subtotal = parseFloat(checkoutData.totalPrice) - parseFloat(checkoutData.serviceFee) - parseFloat(checkoutData.insuranceFee);
+  const finalTotal = parseFloat(checkoutData.totalPrice) - appliedDiscount;
+
+  const handleApplyPoints = () => {
+    const points = parseInt(pointsToUse);
+    if (points > 0 && points <= (rewards?.availablePoints || 0)) {
+      applyPointsMutation.mutate(points);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -165,6 +220,76 @@ const CheckoutForm = ({ checkoutData }: { checkoutData: CheckoutData }) => {
               />
             )}
 
+            {/* Points Section */}
+            {rewards && rewards.availablePoints > 0 && (
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Coins className="h-5 w-5 mr-2 text-yellow-600" />
+                    Usar Pontos de Recompensa
+                  </CardTitle>
+                  <CardDescription>
+                    Você tem {rewards.availablePoints} pontos disponíveis (= R$ {(rewards.availablePoints * 0.01).toFixed(2)})
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex gap-4">
+                      <div className="flex-1">
+                        <Label htmlFor="pointsInput">Pontos a usar</Label>
+                        <Input
+                          id="pointsInput"
+                          type="number"
+                          placeholder="Digite a quantidade de pontos"
+                          value={pointsToUse}
+                          onChange={(e) => setPointsToUse(e.target.value)}
+                          min="1"
+                          max={Math.min(rewards.availablePoints, Math.floor(parseFloat(checkoutData.totalPrice) * 100))}
+                          className="mt-1"
+                        />
+                      </div>
+                      <div className="flex flex-col justify-end">
+                        <Button 
+                          onClick={handleApplyPoints}
+                          disabled={!pointsToUse || parseInt(pointsToUse) <= 0 || applyPointsMutation.isPending}
+                          variant="outline"
+                          className="whitespace-nowrap"
+                        >
+                          {applyPointsMutation.isPending ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Aplicando...
+                            </>
+                          ) : (
+                            <>
+                              <Percent className="h-4 w-4 mr-2" />
+                              Aplicar Desconto
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {pointsToUse && parseInt(pointsToUse) > 0 && (
+                      <div className="bg-green-50 p-3 rounded-lg">
+                        <p className="text-sm text-green-800">
+                          Desconto de R$ {(parseInt(pointsToUse) * 0.01).toFixed(2)} será aplicado
+                        </p>
+                      </div>
+                    )}
+
+                    {appliedDiscount > 0 && (
+                      <div className="bg-blue-50 p-3 rounded-lg">
+                        <p className="text-sm text-blue-800 font-medium">
+                          ✅ Desconto de R$ {appliedDiscount.toFixed(2)} aplicado com sucesso!
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Payment Form */}
             <Card>
               <CardHeader>
@@ -198,7 +323,7 @@ const CheckoutForm = ({ checkoutData }: { checkoutData: CheckoutData }) => {
                     ) : (
                       <>
                         {paymentMethod === 'pix' ? <QrCode className="h-4 w-4 mr-2" /> : <DollarSign className="h-4 w-4 mr-2" />}
-                        {paymentMethod === 'pix' ? 'Gerar PIX' : 'Confirmar Pagamento'} - {formatCurrency(parseFloat(checkoutData.totalPrice))}
+                        {paymentMethod === 'pix' ? 'Gerar PIX' : 'Confirmar Pagamento'} - {formatCurrency(finalTotal)}
                       </>
                     )}
                   </Button>
@@ -228,12 +353,25 @@ const CheckoutForm = ({ checkoutData }: { checkoutData: CheckoutData }) => {
                   <span>Seguro (5%)</span>
                   <span>{formatCurrency(parseFloat(checkoutData.insuranceFee))}</span>
                 </div>
+
+                {appliedDiscount > 0 && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>Desconto por pontos</span>
+                    <span>-{formatCurrency(appliedDiscount)}</span>
+                  </div>
+                )}
                 
                 <div className="border-t pt-4">
                   <div className="flex justify-between text-lg font-bold">
-                    <span>Total</span>
-                    <span>{formatCurrency(parseFloat(checkoutData.totalPrice))}</span>
+                    <span>Total{appliedDiscount > 0 ? ' (com desconto)' : ''}</span>
+                    <span>{formatCurrency(finalTotal)}</span>
                   </div>
+                  {appliedDiscount > 0 && (
+                    <div className="flex justify-between text-sm text-gray-500 line-through">
+                      <span>Total original</span>
+                      <span>{formatCurrency(parseFloat(checkoutData.totalPrice))}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="bg-blue-50 p-4 rounded-lg mt-6">
