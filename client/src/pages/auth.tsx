@@ -17,6 +17,7 @@ export default function Auth() {
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [showPassword, setShowPassword] = useState(false);
   const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [inviterName, setInviterName] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -44,6 +45,7 @@ export default function Auth() {
         .then(response => response.json())
         .then(data => {
           if (data.valid && data.inviterName) {
+            setInviterName(data.inviterName);
             toast({
               title: "🎉 Código de convite detectado!",
               description: `Você foi convidado por ${data.inviterName}!`,
@@ -220,7 +222,9 @@ export default function Auth() {
               <div className="flex items-center space-x-2 text-green-800">
                 <Gift className="h-5 w-5" />
                 <div>
-                  <p className="font-medium">Você foi convidado!</p>
+                  <p className="font-medium">
+                    {inviterName ? `Você foi convidado por ${inviterName}!` : 'Você foi convidado!'}
+                  </p>
                   <p className="text-sm">Código de convite: <span className="font-mono font-bold">{referralCode}</span></p>
                 </div>
               </div>
