@@ -59,6 +59,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/auth" component={Auth} />
       <Route path="/login" component={Auth} />
+      <Route path="/register" component={Auth} />
       <Route path="/profile" component={Profile} />
       <Route path="/vehicle/:id" component={VehicleDetail} />
       <Route path="/vehicle/:id/edit" component={VehicleEdit} />
