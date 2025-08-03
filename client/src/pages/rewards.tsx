@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Gift, Users, Copy, Coins, TrendingUp, Calendar, Check } from 'lucide-react';
+import { useLocation } from 'wouter';
+import { useAuthStore } from '@/lib/auth';
 import Header from '@/components/header';
 
 interface UserRewards {
@@ -54,6 +56,21 @@ export default function Rewards() {
   const [pointsToUse, setPointsToUse] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
+  const { user } = useAuthStore();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!user) {
+      toast({
+        title: "Acesso negado",
+        description: "Faça login para acessar o sistema de recompensas",
+        variant: "destructive",
+      });
+      setLocation('/auth');
+      return;
+    }
+  }, [user, setLocation, toast]);
   
   // Generate a referral code when component mounts
   useEffect(() => {
@@ -71,24 +88,28 @@ export default function Rewards() {
     }
   }, [referralCode]);
 
-  // Fetch user rewards
+  // Fetch user rewards - only if user is authenticated
   const { data: rewards, isLoading: rewardsLoading } = useQuery<UserRewards>({
     queryKey: ['/api/rewards/balance'],
+    enabled: !!user,
   });
 
-  // Fetch reward transactions
+  // Fetch reward transactions - only if user is authenticated
   const { data: transactions, isLoading: transactionsLoading } = useQuery<RewardTransaction[]>({
     queryKey: ['/api/rewards/transactions'],
+    enabled: !!user,
   });
 
-  // Fetch user referrals
+  // Fetch user referrals - only if user is authenticated
   const { data: referrals, isLoading: referralsLoading } = useQuery<Referral[]>({
     queryKey: ['/api/referrals/my-referrals'],
+    enabled: !!user,
   });
 
-  // Get user's referral code and link
+  // Get user's referral code and link - only if user is authenticated
   const { data: myReferralData } = useQuery<{ referralCode: string; referralLink: string }>({
     queryKey: ['/api/referrals/my-code'],
+    enabled: !!user,
   });
 
   // Use referral code mutation
@@ -204,15 +225,33 @@ export default function Rewards() {
     });
   };
 
+  // Show loading state if user not authenticated yet
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-800 mb-4">Carregando...</h1>
+            <p className="text-gray-600">Verificando autenticação...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (rewardsLoading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded"></div>
-            ))}
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-32 bg-gray-200 rounded"></div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
