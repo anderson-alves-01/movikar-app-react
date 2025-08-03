@@ -220,7 +220,7 @@ export const contractTemplates = pgTable("contract_templates", {
 export const referrals = pgTable("referrals", {
   id: serial("id").primaryKey(),
   referrerId: integer("referrer_id").references(() => users.id).notNull(),
-  referredId: integer("referred_id").references(() => users.id).notNull(),
+  referredId: integer("referred_id").references(() => users.id),
   referralCode: varchar("referral_code", { length: 20 }).notNull().unique(),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
   rewardPoints: integer("reward_points").default(100),
