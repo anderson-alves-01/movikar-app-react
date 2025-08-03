@@ -29,9 +29,35 @@ export default function Header() {
   // Disable unread message count to prevent auth loops
   const unreadCount = 0;
 
-  const handleLogout = () => {
-    clearAuth();
-    setLocation('/');
+  const handleLogout = async () => {
+    try {
+      // Call server logout endpoint to clear cookies
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      console.log('✅ Header - Server logout successful');
+    } catch (error) {
+      console.log('❌ Header - Server logout error:', error);
+    } finally {
+      // Clear client-side auth state
+      clearAuth();
+      
+      // Clear any remaining localStorage/sessionStorage data
+      sessionStorage.clear();
+      localStorage.removeItem('checkoutPlan');
+      localStorage.removeItem('pendingSubscription');
+      localStorage.removeItem('returnUrl');
+      localStorage.removeItem('auth_token');
+      
+      console.log('🧹 Header - All session data cleared');
+      
+      // Redirect to home
+      setLocation('/');
+      
+      // Force page reload to ensure clean state
+      window.location.reload();
+    }
   };
 
   const handleClearSearch = () => {

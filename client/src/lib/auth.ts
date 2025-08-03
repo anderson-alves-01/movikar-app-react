@@ -99,7 +99,24 @@ export const useAuthStore = create<AuthStore>()(
           console.error('Failed to refresh user data:', error);
         }
       },
-      clearAuth: () => set({ user: null, token: null, isLoading: false }),
+      clearAuth: () => {
+        // Clear Zustand state
+        set({ user: null, token: null, isLoading: false });
+        
+        // Clear any remaining storage data
+        try {
+          sessionStorage.clear();
+          localStorage.removeItem('checkoutPlan');
+          localStorage.removeItem('pendingSubscription');
+          localStorage.removeItem('returnUrl');
+          localStorage.removeItem('auth_token');
+        } catch (error) {
+          // Ignore storage errors
+        }
+        
+        // Clear query cache
+        queryClient.clear();
+      },
       setLoading: (isLoading) => set({ isLoading }),
     }),
     {
