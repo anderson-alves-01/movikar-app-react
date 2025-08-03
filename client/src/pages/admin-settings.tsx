@@ -88,9 +88,9 @@ function AdminSettingsPage() {
         enablePixPayment: currentSettings.enablePixPayment || false,
         enablePixTransfer: currentSettings.enablePixTransfer || true,
         pixTransferDescription: currentSettings.pixTransferDescription || "Repasse alugae",
-        essentialPlanPrice: parseFloat(currentSettings.essentialPlanPrice) || 29.90,
-        plusPlanPrice: parseFloat(currentSettings.plusPlanPrice) || 59.90,
-        annualDiscountPercentage: parseFloat(currentSettings.annualDiscountPercentage) || 20.00,
+        essentialPlanPrice: parseFloat(currentSettings.essentialPlanPrice?.toString() || "29.90"),
+        plusPlanPrice: parseFloat(currentSettings.plusPlanPrice?.toString() || "59.90"),
+        annualDiscountPercentage: parseFloat(currentSettings.annualDiscountPercentage?.toString() || "20.00"),
       });
     }
   }, [currentSettings]);
@@ -125,9 +125,9 @@ function AdminSettingsPage() {
           enablePixPayment: updatedData.enablePixPayment || false,
           enablePixTransfer: updatedData.enablePixTransfer || true,
           pixTransferDescription: updatedData.pixTransferDescription || "Repasse alugae",
-          essentialPlanPrice: parseFloat(updatedData.essentialPlanPrice) || 29.90,
-          plusPlanPrice: parseFloat(updatedData.plusPlanPrice) || 59.90,
-          annualDiscountPercentage: parseFloat(updatedData.annualDiscountPercentage) || 20.00,
+          essentialPlanPrice: parseFloat(updatedData.essentialPlanPrice?.toString() || "29.90"),
+          plusPlanPrice: parseFloat(updatedData.plusPlanPrice?.toString() || "59.90"),
+          annualDiscountPercentage: parseFloat(updatedData.annualDiscountPercentage?.toString() || "20.00"),
         });
       }
       

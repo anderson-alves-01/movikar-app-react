@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { getAuthHeaders } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency } from "@/lib/currency";
+import type { AdminSettings } from "@shared/admin-settings";
 
 interface BookingFormProps {
   vehicle: {
@@ -38,6 +39,17 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
   const { user } = useAuthStore();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Fetch admin settings for dynamic fee calculation
+  const { data: adminSettings } = useQuery({
+    queryKey: ['/api/admin/settings'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/admin/settings');
+      const data = await response.json();
+      return data as AdminSettings;
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
 
   const bookingMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -72,12 +84,25 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
     const days = calculateDays();
     const dailyRate = parseFloat(vehicle.pricePerDay);
     const subtotal = days * dailyRate;
-    const serviceRate = 0.09; // 9% service fee
-    const insuranceRate = 0.075; // 7.5% insurance fee
+    
+    // Use dynamic rates from admin settings
+    const serviceRate = (adminSettings?.serviceFeePercentage || 10) / 100; // Convert percentage to decimal
+    const insuranceRate = (adminSettings?.insuranceFeePercentage || 15) / 100; // Convert percentage to decimal
     
     const serviceFee = subtotal * serviceRate;
     const insuranceFee = subtotal * insuranceRate;
     const total = subtotal + serviceFee + insuranceFee;
+
+    console.log('💰 Calculating pricing with admin settings:', {
+      serviceFeePercentage: adminSettings?.serviceFeePercentage,
+      insuranceFeePercentage: adminSettings?.insuranceFeePercentage,
+      serviceRate,
+      insuranceRate,
+      subtotal,
+      serviceFee,
+      insuranceFee,
+      total
+    });
 
     return {
       days,
