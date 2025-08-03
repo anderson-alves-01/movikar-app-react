@@ -62,7 +62,9 @@ function AdminSettingsPage() {
     queryKey: ['/api/admin/settings'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/admin/settings');
-      return response as unknown as AdminSettings;
+      const data = await response.json();
+      console.log('📋 Admin settings loaded from API:', data);
+      return data as AdminSettings;
     },
     staleTime: 0, // Consider data immediately stale
     cacheTime: 0, // Don't cache the data
@@ -96,7 +98,10 @@ function AdminSettingsPage() {
   const updateSettingsMutation = useMutation({
     mutationFn: async (newSettings: AdminSettings) => {
       console.log('💾 Enviando configurações para salvar:', newSettings);
-      return await apiRequest('PUT', '/api/admin/settings', newSettings);
+      const response = await apiRequest('PUT', '/api/admin/settings', newSettings);
+      const data = await response.json();
+      console.log('💾 Resposta do servidor após salvar:', data);
+      return data;
     },
     onSuccess: (updatedData) => {
       console.log('✅ Configurações salvas com sucesso:', updatedData);
