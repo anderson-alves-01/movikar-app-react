@@ -31,6 +31,9 @@ Preferred communication style: Simple, everyday language.
 - **Visual Feedback**: Added referral banner showing the invitation code during registration
 - **Link Generation**: API endpoint now returns both `referralCode` and `referralLink` for easy sharing
 - **Auto-Application**: Referral codes are automatically applied after successful registration
+- **Simplified Interface**: Rewards page shows only link field with copy button (code field removed)
+- **Authentication Protection**: Page redirects to login if user not authenticated
+- **Cookie-Only Authentication**: System uses exclusively httpOnly cookies for security
 - **Security Validation**: Comprehensive validation system with multiple security layers:
   - Format validation (8-character alphanumeric)
   - Self-referral prevention with logging
