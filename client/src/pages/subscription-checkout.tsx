@@ -83,7 +83,7 @@ const CheckoutForm = ({ clientSecret, planName, paymentMethod, amount }: Checkou
     }
   };
 
-  const finalAmount = amount - appliedDiscount;
+  const finalAmount = amount - (appliedDiscount * 100); // Convert discount from reais to cents
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
