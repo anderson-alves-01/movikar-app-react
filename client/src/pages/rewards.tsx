@@ -86,8 +86,8 @@ export default function Rewards() {
     queryKey: ['/api/referrals/my-referrals'],
   });
 
-  // Get user's referral code
-  const { data: myReferralData } = useQuery<{ referralCode: string }>({
+  // Get user's referral code and link
+  const { data: myReferralData } = useQuery<{ referralCode: string; referralLink: string }>({
     queryKey: ['/api/referrals/my-code'],
   });
 
@@ -175,6 +175,17 @@ export default function Rewards() {
       toast({
         title: "Copiado!",
         description: "Código de convite copiado para a área de transferência",
+      });
+    }
+  };
+
+  const copyReferralLink = () => {
+    const linkToCopy = myReferralData?.referralLink;
+    if (linkToCopy) {
+      navigator.clipboard.writeText(linkToCopy);
+      toast({
+        title: "Link copiado!",
+        description: "Link de convite copiado para a área de transferência.",
       });
     }
   };
@@ -294,7 +305,7 @@ export default function Rewards() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center gap-4">
+              <div className="space-y-4">
                 <div className="flex-1">
                   <label className="text-sm font-medium">Seu código de convite:</label>
                   <div className="flex items-center gap-2 mt-1">
@@ -304,6 +315,20 @@ export default function Rewards() {
                       className="font-mono text-lg"
                     />
                     <Button onClick={copyReferralCode} variant="outline" size="icon">
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex-1">
+                  <label className="text-sm font-medium">Link de convite (mais fácil de compartilhar):</label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Input 
+                      value={myReferralData?.referralLink || 'Gerando link...'}
+                      readOnly
+                      className="text-sm"
+                    />
+                    <Button onClick={copyReferralLink} variant="outline" size="icon">
                       <Copy className="h-4 w-4" />
                     </Button>
                   </div>
