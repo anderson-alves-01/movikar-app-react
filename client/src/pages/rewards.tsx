@@ -168,16 +168,7 @@ export default function Rewards() {
     },
   });
 
-  const copyReferralCode = () => {
-    const codeToUse = myReferralData?.referralCode || referralCode;
-    if (codeToUse) {
-      navigator.clipboard.writeText(codeToUse);
-      toast({
-        title: "Copiado!",
-        description: "Código de convite copiado para a área de transferência",
-      });
-    }
-  };
+
 
   const copyReferralLink = () => {
     const linkToCopy = myReferralData?.referralLink;
@@ -301,46 +292,34 @@ export default function Rewards() {
                 Convide Amigos e Ganhe Pontos
               </CardTitle>
               <CardDescription>
-                Compartilhe seu código e ganhe 100 pontos para cada amigo que se cadastrar!
+                Compartilhe seu link de convite e ganhe 100 pontos para cada amigo que se cadastrar!
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-4">
-                <div className="flex-1">
-                  <label className="text-sm font-medium">Seu código de convite:</label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Input 
-                      value={myReferralData?.referralCode || referralCode || 'Gerando código...'}
-                      readOnly
-                      className="font-mono text-lg"
-                    />
-                    <Button onClick={copyReferralCode} variant="outline" size="icon">
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
+              <div className="flex-1">
+                <label className="text-sm font-medium">Seu link de convite:</label>
+                <div className="flex items-center gap-2 mt-1">
+                  <Input 
+                    value={myReferralData?.referralLink || 'Gerando link...'}
+                    readOnly
+                    className="text-sm"
+                  />
+                  <Button onClick={copyReferralLink} variant="outline" size="icon">
+                    <Copy className="h-4 w-4" />
+                  </Button>
                 </div>
-
-                <div className="flex-1">
-                  <label className="text-sm font-medium">Link de convite (mais fácil de compartilhar):</label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Input 
-                      value={myReferralData?.referralLink || 'Gerando link...'}
-                      readOnly
-                      className="text-sm"
-                    />
-                    <Button onClick={copyReferralLink} variant="outline" size="icon">
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Compartilhe este link para que seus amigos se cadastrem automaticamente
+                </p>
               </div>
               
               <div className="bg-blue-50 p-4 rounded-lg">
                 <h4 className="font-medium text-blue-900 mb-2">Como funciona:</h4>
                 <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• Compartilhe seu código com amigos</li>
+                  <li>• Compartilhe seu link com amigos</li>
+                  <li>• Eles são direcionados automaticamente para o cadastro</li>
                   <li>• Seu amigo ganha 50 pontos ao se cadastrar</li>
-                  <li>• Você ganha 100 pontos quando ele usar o código</li>
+                  <li>• Você ganha 100 pontos quando ele completar o cadastro</li>
                   <li>• Use os pontos para desconto em reservas (1 ponto = R$ 0,01)</li>
                 </ul>
               </div>
