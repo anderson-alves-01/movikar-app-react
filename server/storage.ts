@@ -1421,6 +1421,13 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(referrals.createdAt));
   }
 
+  async getAllReferrals(): Promise<Referral[]> {
+    return await db
+      .select()
+      .from(referrals)
+      .orderBy(desc(referrals.createdAt));
+  }
+
   async createReferral(referral: InsertReferral): Promise<Referral> {
     const [newReferral] = await db
       .insert(referrals)

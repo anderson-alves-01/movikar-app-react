@@ -149,6 +149,42 @@ export default function Rewards() {
     },
   });
 
+  // Process pending referrals mutation
+  const processPendingMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/referrals/process-pending', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Erro ao processar convites pendentes');
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Sucesso!",
+        description: data.message,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/rewards/balance'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/rewards/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/referrals/my-referrals'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Use points mutation
   const usePointsMutation = useMutation({
     mutationFn: async (points: number) => {
@@ -415,6 +451,27 @@ export default function Rewards() {
                 <p className="text-sm text-green-800">
                   Ao usar um código de convite, você ganha 50 pontos de bônus de boas-vindas!
                 </p>
+              </div>
+
+              <Separator />
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Processar Convites Pendentes</h4>
+                    <p className="text-sm text-gray-600">
+                      Ative pontos de convites que ainda não foram processados
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={() => processPendingMutation.mutate()}
+                    disabled={processPendingMutation.isPending}
+                    variant="outline"
+                    data-testid="button-process-pending"
+                  >
+                    {processPendingMutation.isPending ? 'Processando...' : 'Processar'}
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

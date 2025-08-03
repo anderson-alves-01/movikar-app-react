@@ -707,6 +707,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         password: hashedPassword,
       });
 
+      // Process any pending referral rewards for this user
+      try {
+        // Find referrals where this user is the referred user (was invited)
+        const allReferrals = await storage.getAllReferrals();
+        const referralAsReferred = allReferrals.find(r => 
+          r.referredId === user.id && 
+          r.status === 'pending_completion' && 
+          r.rewardStatus === 'pending'
+        );
+        
+        if (referralAsReferred) {
+          console.log(`🎁 Processing referral reward for new user ${user.id} from referral ${referralAsReferred.id}`);
+          await storage.processReferralReward(referralAsReferred.id);
+        }
+      } catch (error) {
+        console.error('Error processing referral reward:', error);
+        // Don't fail registration if referral processing fails
+      }
+
       // Generate token
       const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
       const refreshToken = jwt.sign({ userId: user.id }, JWT_SECRET + '_refresh', { expiresIn: '7d' });
@@ -2867,6 +2886,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(referrals);
     } catch (error) {
       console.error("Error fetching referrals:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Manual endpoint to process pending referral rewards
+  app.post("/api/referrals/process-pending", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      
+      // Find all referrals where this user is the referred user with pending rewards
+      const allReferrals = await storage.getAllReferrals();
+      const pendingReferrals = allReferrals.filter(r => 
+        r.referredId === userId && 
+        r.status === 'pending_completion' && 
+        r.rewardStatus === 'pending'
+      );
+      
+      let processedCount = 0;
+      for (const referral of pendingReferrals) {
+        try {
+          await storage.processReferralReward(referral.id);
+          processedCount++;
+          console.log(`✅ Processed referral reward ${referral.id} for user ${userId}`);
+        } catch (error) {
+          console.error(`❌ Failed to process referral ${referral.id}:`, error);
+        }
+      }
+      
+      res.json({ 
+        message: `Processados ${processedCount} códigos de convite pendentes`,
+        processedCount,
+        totalPending: pendingReferrals.length
+      });
+    } catch (error) {
+      console.error("Error processing pending referrals:", error);
       res.status(500).json({ message: "Erro interno do servidor" });
     }
   });
