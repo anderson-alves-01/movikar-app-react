@@ -2710,7 +2710,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("🎯 Created referral record:", referral.id);
       res.json({ referralCode: referral.referralCode });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating referral code:", error);
       res.status(500).json({ message: "Erro interno do servidor", details: error.message });
     }
@@ -2719,40 +2719,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/referrals/use-code", authenticateToken, async (req, res) => {
     try {
       const { referralCode } = req.body;
+      const userId = req.user!.id;
       
       if (!referralCode) {
         return res.status(400).json({ message: "Código de convite obrigatório" });
+      }
+      
+      // Validate referral code format (8 characters, alphanumeric)
+      if (!/^[A-Z0-9]{8}$/.test(referralCode)) {
+        return res.status(400).json({ message: "Formato do código de convite inválido" });
       }
       
       // Find referral by code
       const referral = await storage.getReferralByCode(referralCode);
       
       if (!referral) {
-        return res.status(404).json({ message: "Código de convite inválido" });
+        return res.status(404).json({ message: "Código de convite não encontrado" });
       }
       
-      if (referral.referrerId === req.user!.id) {
-        return res.status(400).json({ message: "Você não pode usar seu próprio código de convite" });
+      // Check if user is trying to use their own referral code
+      if (referral.referrerId === userId) {
+        console.log(`🚫 User ${userId} attempted to use their own referral code: ${referralCode}`);
+        return res.status(400).json({ 
+          message: "Você não pode usar seu próprio código de convite",
+          error: "SELF_REFERRAL_NOT_ALLOWED"
+        });
       }
       
+      // Check if user has already used any referral code
+      const existingUserReferrals = await storage.getUserReferrals(userId);
+      const userAsReferred = existingUserReferrals.find(r => r.referredId === userId);
+      
+      if (userAsReferred) {
+        return res.status(400).json({ 
+          message: "Você já utilizou um código de convite anteriormente",
+          error: "REFERRAL_ALREADY_USED"
+        });
+      }
+      
+      // Check if referral is already completed or has a referred user
       if (referral.status === 'completed') {
-        return res.status(400).json({ message: "Este código de convite já foi utilizado" });
+        return res.status(400).json({ 
+          message: "Este código de convite já foi utilizado por outro usuário",
+          error: "REFERRAL_CODE_EXPIRED"
+        });
+      }
+      
+      if (referral.referredId && referral.referredId !== userId) {
+        return res.status(400).json({ 
+          message: "Este código de convite já está sendo usado por outro usuário",
+          error: "REFERRAL_CODE_IN_USE"
+        });
+      }
+      
+      // Additional validation: Check if user has created any referrals (prevent circular referrals)
+      const userCreatedReferrals = await storage.getUserReferrals(referral.referrerId);
+      const circularCheck = userCreatedReferrals.find(r => r.referredId === userId);
+      
+      if (circularCheck) {
+        return res.status(400).json({ 
+          message: "Não é possível usar código de alguém que já usou o seu",
+          error: "CIRCULAR_REFERRAL_NOT_ALLOWED"
+        });
       }
       
       // Update referral with referred user
       await storage.updateReferral(referral.id, {
-        referredId: req.user!.id,
+        referredId: userId,
         status: 'pending_completion',
       });
       
-      // For now, skip the rewards system to avoid additional errors
-      // TODO: Implement reward system properly later
-      console.log("🎯 Referral code applied successfully, skipping rewards for now");
+      console.log(`✅ User ${userId} successfully applied referral code: ${referralCode} from user ${referral.referrerId}`);
       
-      res.json({ message: "Código de convite aplicado com sucesso!" });
-    } catch (error) {
+      res.json({ 
+        message: "Código de convite aplicado com sucesso!",
+        referralCode: referralCode,
+        success: true
+      });
+    } catch (error: any) {
       console.error("Error using referral code:", error);
-      res.status(500).json({ message: "Erro interno do servidor", details: error.message });
+      res.status(500).json({ 
+        message: "Erro interno do servidor", 
+        details: error.message,
+        error: "INTERNAL_SERVER_ERROR"
+      });
     }
   });
 
