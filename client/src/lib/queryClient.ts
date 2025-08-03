@@ -19,24 +19,15 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-
-  // Add Authorization header if token exists in sessionStorage
-  const token = sessionStorage.getItem('auth_token');
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-    console.log('📡 apiRequest - Using Authorization header');
-  }
-
   const fullUrl = url.startsWith('http') ? url : url;
   
   console.log(`📡 apiRequest - ${method} ${fullUrl}`, data ? 'with data' : 'no data');
   
   const res = await fetch(fullUrl, {
     method,
-    headers,
+    headers: {
+      'Content-Type': 'application/json',
+    },
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include", // Use cookies for authentication
   });
@@ -56,21 +47,9 @@ export async function apiRequest(
 export const getQueryFn: QueryFunction = async ({ queryKey }) => {
   const queryUrl = queryKey.join("/") as string;
   
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-  
-  // Add Authorization header if token exists in sessionStorage
-  const token = sessionStorage.getItem('auth_token');
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-    console.log('📡 getQueryFn - Using Authorization header');
-  }
-  
   console.log('📡 getQueryFn - Making request to:', queryUrl);
   
   const res = await fetch(queryUrl, {
-    headers,
     credentials: "include", // Use cookies for authentication
   });
 

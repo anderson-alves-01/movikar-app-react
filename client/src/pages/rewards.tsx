@@ -119,8 +119,8 @@ export default function Rewards() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
+        credentials: 'include',
         body: JSON.stringify({ referralCode: code }),
       });
 
@@ -156,8 +156,8 @@ export default function Rewards() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
+        credentials: 'include',
         body: JSON.stringify({ 
           points, 
           description: `Desconto de ${points} pontos aplicado` 
