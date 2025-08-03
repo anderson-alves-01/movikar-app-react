@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { Loading } from '@/components/ui/loading';
 
@@ -7,10 +8,15 @@ interface AuthProviderProps {
 }
 
 export default function AuthProvider({ children }: AuthProviderProps) {
+  const [location] = useLocation();
+  
+  // Skip auth check on auth pages to prevent 401 errors
+  const isAuthPage = location === '/auth' || location === '/login' || location.startsWith('/register');
+  
   const { initializing } = useAuth();
 
-  // Show loading while checking initial authentication
-  if (initializing) {
+  // Skip loading screen for auth pages
+  if (!isAuthPage && initializing) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center">

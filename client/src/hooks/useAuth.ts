@@ -15,6 +15,18 @@ export function useAuth() {
   // Verificação inicial de autenticação apenas uma vez
   useEffect(() => {
     if (initialized) return;
+    
+    // Skip auth check on auth pages to prevent unnecessary 401 errors
+    const isAuthPage = window.location.pathname === '/auth' || 
+                       window.location.pathname === '/login' || 
+                       window.location.pathname.startsWith('/register');
+    
+    if (isAuthPage) {
+      console.log('🔍 useAuth - Skipping auth check on auth page');
+      setLoading(false);
+      setInitialized(true);
+      return;
+    }
 
     const checkAuth = async () => {
       try {
