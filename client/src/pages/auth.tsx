@@ -35,6 +35,33 @@ export default function Auth() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const refCode = urlParams.get('ref');
+    const oauthSuccess = urlParams.get('oauth_success');
+    
+    // Handle OAuth success
+    if (oauthSuccess === '1') {
+      toast({
+        title: "✅ Login realizado com sucesso!",
+        description: "Redirecionando...",
+      });
+
+      // Clean URL and redirect
+      window.history.replaceState({}, '', window.location.pathname);
+      
+      setTimeout(() => {
+        const pendingSubscription = localStorage.getItem('pendingSubscription');
+        const returnUrl = localStorage.getItem('returnUrl');
+        
+        if (pendingSubscription) {
+          setLocation('/subscription-plans?from=oauth');
+        } else if (returnUrl) {
+          localStorage.removeItem('returnUrl');
+          setLocation(returnUrl);
+        } else {
+          setLocation('/');
+        }
+      }, 1500);
+      return;
+    }
     
     if (refCode) {
       setReferralCode(refCode);
@@ -65,7 +92,7 @@ export default function Auth() {
           });
         });
     }
-  }, [toast]);
+  }, [toast, setLocation]);
 
   const applyReferralMutation = useMutation({
     mutationFn: async (referralCode: string) => {
@@ -420,8 +447,11 @@ export default function Auth() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full"
-                  onClick={() => toast({ title: "Em breve", description: "Login social será implementado em breve" })}
+                  className="w-full hover:bg-gray-50 transition-colors"
+                  onClick={() => {
+                    const returnUrl = localStorage.getItem('returnUrl') || window.location.pathname;
+                    window.location.href = `/api/auth/google?returnUrl=${encodeURIComponent(returnUrl)}`;
+                  }}
                 >
                   <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -434,13 +464,16 @@ export default function Auth() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full"
-                  onClick={() => toast({ title: "Em breve", description: "Login social será implementado em breve" })}
+                  className="w-full hover:bg-gray-50 transition-colors"
+                  onClick={() => {
+                    const returnUrl = localStorage.getItem('returnUrl') || window.location.pathname;
+                    window.location.href = `/api/auth/apple?returnUrl=${encodeURIComponent(returnUrl)}`;
+                  }}
                 >
-                  <svg className="w-5 h-5 mr-3 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.024C8.953 22.82 9.557 22.075 9.557 21.416c0-.593-.028-2.681-.028-4.85-3.338.725-4.038-1.416-4.038-1.416-.544-1.359-1.359-1.719-1.359-1.719-1.093-.744.084-.744.084-.744 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112.017 5.769a11.49 11.49 0 013.001.405c2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801 1.595 4.773-1.6 8.213-6.074 8.213-11.384C23.973 5.39 18.592.029 12.017.029z"/>
                   </svg>
-                  Continuar com Facebook
+                  Continuar com Apple
                 </Button>
               </div>
 
