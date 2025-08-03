@@ -2691,7 +2691,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (activeReferral) {
         console.log("🎯 Returning existing active referral:", activeReferral.referralCode);
-        return res.json({ referralCode: activeReferral.referralCode });
+        
+        // Generate referral link for existing code
+        const baseUrl = process.env.FRONTEND_URL || `${req.protocol}://${req.get('host')}`;
+        const referralLink = `${baseUrl}/register?ref=${activeReferral.referralCode}`;
+        
+        return res.json({ 
+          referralCode: activeReferral.referralCode,
+          referralLink: referralLink
+        });
       }
       
       // Generate new referral code
@@ -2709,7 +2717,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       console.log("🎯 Created referral record:", referral.id);
-      res.json({ referralCode: referral.referralCode });
+      
+      // Generate referral link
+      const baseUrl = process.env.FRONTEND_URL || `${req.protocol}://${req.get('host')}`;
+      const referralLink = `${baseUrl}/register?ref=${referral.referralCode}`;
+      
+      res.json({ 
+        referralCode: referral.referralCode,
+        referralLink: referralLink
+      });
     } catch (error: any) {
       console.error("Error generating referral code:", error);
       res.status(500).json({ message: "Erro interno do servidor", details: error.message });

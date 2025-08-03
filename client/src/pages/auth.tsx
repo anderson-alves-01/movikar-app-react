@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff, Mail, Lock, User, Phone, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Phone, Loader2, Gift } from "lucide-react";
 import { useAuthStore } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -16,6 +16,7 @@ export default function Auth() {
   const [, setLocation] = useLocation();
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [showPassword, setShowPassword] = useState(false);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -28,6 +29,40 @@ export default function Auth() {
 
   const { setAuth } = useAuthStore();
   const { toast } = useToast();
+
+  // Check for referral code in URL parameters
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get('ref');
+    
+    if (refCode) {
+      setReferralCode(refCode);
+      setAuthMode('register'); // Switch to register mode if there's a referral code
+      toast({
+        title: "🎉 Código de convite detectado!",
+        description: `Você foi convidado com o código: ${refCode}`,
+      });
+    }
+  }, [toast]);
+
+  const applyReferralMutation = useMutation({
+    mutationFn: async (referralCode: string) => {
+      const response = await apiRequest('POST', '/api/referrals/use-code', {
+        referralCode
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "🎉 Código de convite aplicado!",
+        description: "Você ganhou pontos de recompensa!",
+      });
+    },
+    onError: (error: any) => {
+      console.warn('Failed to apply referral code:', error.message);
+      // Don't show error to user as it's not critical for registration
+    },
+  });
 
   const authMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -49,6 +84,13 @@ export default function Auth() {
     onSuccess: (data) => {
       // Para sistema httpOnly cookies, o token pode vir vazio
       setAuth(data.user, data.token || '');
+      
+      // Apply referral code if present and this is a registration
+      if (authMode === 'register' && referralCode) {
+        console.log('🎯 Applying referral code after registration:', referralCode);
+        applyReferralMutation.mutate(referralCode);
+      }
+      
       toast({
         title: authMode === 'login' ? "✅ Login realizado com sucesso!" : "✅ Conta criada!",
         description: authMode === 'login' 
@@ -150,6 +192,21 @@ export default function Auth() {
             }
           </p>
         </div>
+
+        {/* Referral Code Banner */}
+        {referralCode && authMode === 'register' && (
+          <Card className="border-green-200 bg-green-50">
+            <CardContent className="pt-4">
+              <div className="flex items-center space-x-2 text-green-800">
+                <Gift className="h-5 w-5" />
+                <div>
+                  <p className="font-medium">Você foi convidado!</p>
+                  <p className="text-sm">Código de convite: <span className="font-mono font-bold">{referralCode}</span></p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Auth Form */}
         <Card>

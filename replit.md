@@ -25,6 +25,19 @@ Preferred communication style: Simple, everyday language.
 - **Error Handling**: Enhanced error handling with proper user feedback and automatic retry mechanisms
 - **Session Management**: Improved logout functionality to clear all authentication and checkout related data
 
+### Referral Link System Implementation (Aug 3, 2025)
+- **Enhanced Referral System**: Modified referral system to generate shareable links instead of just codes
+- **Automatic Registration Flow**: URL parameter detection (`?ref=CODE`) automatically switches to registration mode
+- **Visual Feedback**: Added referral banner showing the invitation code during registration
+- **Link Generation**: API endpoint now returns both `referralCode` and `referralLink` for easy sharing
+- **Auto-Application**: Referral codes are automatically applied after successful registration
+- **Security Validation**: Comprehensive validation system with multiple security layers:
+  - Format validation (8-character alphanumeric)
+  - Self-referral prevention with logging
+  - Circular referral detection
+  - Single-use enforcement
+  - User ownership verification
+
 ### Dynamic Subscription Values System (Aug 1, 2025)
 - **Database Schema Enhancement**: Added new fields to user_subscriptions table for tracking real payment values:
   - `paid_amount`: Stores the actual amount paid by the user (e.g., R$ 89.87 for 5 vehicles)
