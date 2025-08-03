@@ -63,7 +63,11 @@ function AdminSettingsPage() {
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/admin/settings');
       return response as unknown as AdminSettings;
-    }
+    },
+    staleTime: 0, // Consider data immediately stale
+    cacheTime: 0, // Don't cache the data
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   // Update settings when data is loaded
@@ -96,9 +100,32 @@ function AdminSettingsPage() {
     },
     onSuccess: (updatedData) => {
       console.log('✅ Configurações salvas com sucesso:', updatedData);
-      // Force refetch to ensure UI shows latest data
+      
+      // Force aggressive cache invalidation and refetch
+      queryClient.removeQueries({ queryKey: ['/api/admin/settings'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/settings'] });
       queryClient.refetchQueries({ queryKey: ['/api/admin/settings'] });
+      
+      // Also update the local state immediately to prevent UI lag
+      if (updatedData && typeof updatedData === 'object') {
+        setSettings({
+          serviceFeePercentage: updatedData.serviceFeePercentage || 10,
+          insuranceFeePercentage: updatedData.insuranceFeePercentage || 15,
+          minimumBookingDays: updatedData.minimumBookingDays || 1,
+          maximumBookingDays: updatedData.maximumBookingDays || 30,
+          cancellationPolicyDays: updatedData.cancellationPolicyDays || 2,
+          currency: updatedData.currency || "BRL",
+          supportEmail: updatedData.supportEmail || "sac@alugae.mobi",
+          supportPhone: updatedData.supportPhone || "(11) 9999-9999",
+          enablePixPayment: updatedData.enablePixPayment || false,
+          enablePixTransfer: updatedData.enablePixTransfer || true,
+          pixTransferDescription: updatedData.pixTransferDescription || "Repasse alugae",
+          essentialPlanPrice: updatedData.essentialPlanPrice || 29.90,
+          plusPlanPrice: updatedData.plusPlanPrice || 59.90,
+          annualDiscountPercentage: updatedData.annualDiscountPercentage || 20.00,
+        });
+      }
+      
       toast({
         title: "Configurações Atualizadas",
         description: "As configurações do sistema foram salvas com sucesso no banco de dados.",
