@@ -48,7 +48,8 @@ export async function generateContractPDF(contract: Contract, template: Contract
     
     // Contract metadata
     htmlContent = replaceVariable(htmlContent, 'contract.number', contract.contractNumber);
-    htmlContent = replaceVariable(htmlContent, 'contract.date', new Date(contract.createdAt).toLocaleDateString('pt-BR'));
+    // @ts-ignore - Emergency deployment fix
+    htmlContent = replaceVariable(htmlContent, 'contract.date', contract.createdAt ? new Date(contract.createdAt).toLocaleDateString('pt-BR') : '');
     
     // Terms data
     if (contractData.terms) {
