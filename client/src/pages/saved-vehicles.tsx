@@ -52,17 +52,11 @@ export default function SavedVehicles() {
   // Fetch saved vehicle categories  
   const { data: categories, isLoading: categoriesLoading, error: categoriesError } = useQuery({
     queryKey: ["/api/saved-vehicles/categories"],
-    enabled: !!getToken(), // Enable when token is available
+    enabled: !!user, // Enable when user is authenticated
     retry: false,
     queryFn: async () => {
-      const token = getToken();
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
-      
       const response = await fetch('/api/saved-vehicles/categories', {
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });

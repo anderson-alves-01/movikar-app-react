@@ -106,7 +106,7 @@ export default function EarningsPage() {
                 Acompanhe seus repasses e histórico de recebimentos
               </p>
             </div>
-            {!user.pixKey && (
+            {!user?.pix && (
               <Card className="bg-yellow-50 border-yellow-200">
                 <CardContent className="p-4">
                   <p className="text-yellow-800 text-sm font-medium">

@@ -66,7 +66,7 @@ export class ContractService {
         startDate: booking.startDate,
         endDate: booking.endDate,
         totalPrice: booking.totalPrice,
-        servicefee: booking.servicefee,
+        servicefee: booking.serviceFee,
         insuranceFee: booking.insuranceFee,
         status: booking.status,
       },
@@ -106,7 +106,7 @@ export class ContractService {
       bookingId,
       contractNumber,
       templateId: template.id.toString(),
-      contractData,
+      contractData: contractData as any,
       signaturePlatform: "autentique", // Default platform
       createdBy: userId,
       status: "draft"
@@ -130,7 +130,7 @@ export class ContractService {
       throw new Error("Contrato não encontrado");
     }
 
-    const template = contract.template || await storage.getDefaultContractTemplate();
+    const template = await storage.getDefaultContractTemplate();
     if (!template) {
       throw new Error("Template não encontrado");
     }
@@ -272,10 +272,14 @@ export class ContractService {
     }
 
     // Check permissions (user must be involved in the contract)
-    const hasPermission = contract.contractData.renter.id === userId || 
-                         contract.contractData.owner.id === userId ||
+    const contractDataParsed = typeof contract.contractData === 'string' 
+      ? JSON.parse(contract.contractData) 
+      : contract.contractData;
+    
+    const hasPermission = contractDataParsed.renter?.id === userId || 
+                         contractDataParsed.owner?.id === userId ||
                          contract.createdBy === userId ||
-                         contract.reviewedBy === userId;
+                         (contract.reviewedBy && contract.reviewedBy === userId);
 
     if (!hasPermission) {
       throw new Error("Sem permissão para acessar este contrato");
@@ -287,7 +291,7 @@ export class ContractService {
     }
 
     // Log download
-    await this.logContractAction(contractId, "downloaded", userId);
+    await this.logContractAction(contractId, "downloaded", userId || undefined);
 
     return pdfUrl;
   }

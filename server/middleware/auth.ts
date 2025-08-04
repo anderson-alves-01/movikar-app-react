@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import { storage } from '../storage';
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";

@@ -144,15 +144,9 @@ export function sendLocalNotification(title: string, body: string, icon?: string
         body,
         icon: icon || '/icons/icon-192x192.png',
         badge: '/icons/icon-72x72.png',
-        vibrate: [200, 100, 200],
+        // vibrate: [200, 100, 200], // Commented out as it's not in NotificationOptions type
         tag: 'carshare-notification',
-        requireInteraction: false,
-        actions: [
-          {
-            action: 'view',
-            title: 'Ver'
-          }
-        ]
+        requireInteraction: false
       });
     });
   }

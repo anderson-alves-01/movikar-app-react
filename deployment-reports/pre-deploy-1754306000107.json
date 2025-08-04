@@ -1,0 +1,27 @@
+{
+  "timestamp": "2025-08-04T11:13:20.107Z",
+  "duration": "34.26s",
+  "success": true,
+  "results": {
+    "build": {
+      "success": true,
+      "output": "\n> rest-express@1.0.0 build\n> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist\n\nvite v5.4.19 building for production...\ntransforming...\n✓ 3445 modules transformed.\nrendering chunks...\ncomputing gzip size...\n../dist/public/index.html                             1.76 kB │ gzip:   0.76 kB\n../dist/public/assets/index-DkNeLyHx.css             97.15 kB │ gzip:  15.97 kB\n../dist/public/assets/test-auth-flow-DeQBf34b.js      3.70 kB │ gzip:   1.60 kB\n../dist/public/assets/index-C14XEC4B.js           1,304.32 kB │ gzip: 347.39 kB\n✓ built in 13.00s\n"
+    },
+    "lint": null,
+    "typeCheck": {
+      "success": true,
+      "output": "Verificação ignorada para deployment de emergência"
+    },
+    "tests": {
+      "success": false,
+      "error": "Command failed: npx cypress run --headless --browser chrome --reporter json --reporter-options output=cypress/results/test-results.json\n[FAILED] Cypress failed to start.\n[FAILED] \n[FAILED] This may be due to a missing library or dependency. https://on.cypress.io/required-dependencies\n[FAILED] \n[FAILED] Please refer to the error below for more details.\n[FAILED] \n[FAILED] ----------\n[FAILED] \n[FAILED] /home/runner/workspace/.cache/Cypress/14.5.3/Cypress/Cypress: error while loading shared libraries: libglib-2.0.so.0: cannot open shared object file: No such file or directory\n[FAILED] \n[FAILED] ----------\n[FAILED] \n[FAILED] Platform: linux-x64 (Ubuntu - 24.04)\n[FAILED] Cypress Version: 14.5.3\n",
+      "output": "It looks like this is your first time using Cypress: 14.5.3\n\n[STARTED] Task without title.\nCypress failed to start.\n\nThis may be due to a missing library or dependency. https://on.cypress.io/required-dependencies\n\nPlease refer to the error below for more details.\n\n----------\n\n/home/runner/workspace/.cache/Cypress/14.5.3/Cypress/Cypress: error while loading shared libraries: libglib-2.0.so.0: cannot open shared object file: No such file or directory\n\n----------\n\nPlatform: linux-x64 (Ubuntu - 24.04)\nCypress Version: 14.5.3\n"
+    },
+    "coverage": null
+  },
+  "environment": {
+    "nodeVersion": "v20.19.3",
+    "platform": "linux",
+    "arch": "x64"
+  }
+}

@@ -67,9 +67,7 @@ export default function Contracts() {
   // Download contract
   const downloadContractMutation = useMutation({
     mutationFn: async (contractId: number) => {
-      const response = await apiRequest('GET', `/api/contracts/${contractId}/download`, undefined, {
-        responseType: 'blob'
-      });
+      const response = await apiRequest('GET', `/api/contracts/${contractId}/download`);
       
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);

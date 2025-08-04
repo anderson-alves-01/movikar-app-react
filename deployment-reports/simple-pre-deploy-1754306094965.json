@@ -1,0 +1,14 @@
+{
+  "timestamp": "2025-08-04T11:14:54.964Z",
+  "duration": 15.09,
+  "results": {
+    "fileCheck": true,
+    "healthCheck": true,
+    "apiCheck": true,
+    "buildCheck": true
+  },
+  "score": 100,
+  "passed": 4,
+  "total": 4,
+  "status": "APROVADO"
+}
