@@ -7,14 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff, Mail, Lock, User, Phone, Loader2, Gift } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Phone, Loader2, Gift, MapPin } from "lucide-react";
 import { useAuthStore } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function Auth() {
   const [, setLocation] = useLocation();
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const currentPath = window.location.pathname;
+  const initialMode = currentPath === '/register' ? 'register' : 'login';
+  const [authMode, setAuthMode] = useState<'login' | 'register'>(initialMode);
   const [showPassword, setShowPassword] = useState(false);
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [inviterName, setInviterName] = useState<string | null>(null);
@@ -23,6 +25,7 @@ export default function Auth() {
     password: '',
     name: '',
     phone: '',
+    location: '',
     confirmPassword: '',
     rememberMe: false,
     acceptTerms: false,
@@ -199,6 +202,7 @@ export default function Auth() {
         password: formData.password,
         name: formData.name,
         phone: formData.phone,
+        location: formData.location,
       });
     } else {
       authMutation.mutate({
@@ -219,6 +223,7 @@ export default function Auth() {
       password: '',
       name: '',
       phone: '',
+      location: '',
       confirmPassword: '',
       rememberMe: false,
       acceptTerms: false,
@@ -361,6 +366,25 @@ export default function Auth() {
                 </div>
               </div>
 
+              {/* Location Field (Register only) */}
+              {authMode === 'register' && (
+                <div>
+                  <Label htmlFor="location">Localização</Label>
+                  <div className="relative mt-1">
+                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="location"
+                      type="text"
+                      className="pl-10"
+                      placeholder="São Paulo, SP"
+                      value={formData.location}
+                      onChange={(e) => handleInputChange('location', e.target.value)}
+                      data-testid="input-location"
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Confirm Password Field (Register only) */}
               {authMode === 'register' && (
                 <div>
@@ -375,7 +399,7 @@ export default function Auth() {
                       placeholder="••••••••"
                       value={formData.confirmPassword}
                       onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                      data-testid="input-location"
+                      data-testid="input-confirm-password"
                     />
                   </div>
                 </div>

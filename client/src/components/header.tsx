@@ -277,7 +277,7 @@ export default function Header() {
                         </>
                       )}
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleLogout}>
+                      <DropdownMenuItem onClick={handleLogout} data-testid="button-logout">
                         <LogOut className="h-4 w-4 mr-2" />
                         Sair
                       </DropdownMenuItem>
