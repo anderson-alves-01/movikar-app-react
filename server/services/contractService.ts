@@ -142,7 +142,7 @@ export class ContractService {
     await storage.updateContract(contractId, { pdfUrl });
     
     // Log preview generation
-    await this.logContractAction(contractId, "preview_generated", contract.createdBy);
+    await this.logContractAction(contractId, "preview_generated", contract.createdBy || undefined);
 
     return pdfUrl;
   }

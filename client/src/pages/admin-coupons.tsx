@@ -184,7 +184,7 @@ export default function AdminCouponsPage() {
     const now = new Date();
     if (!coupon.isActive) return { label: "Inativo", variant: "secondary" as const };
     if (coupon.validUntil && now > new Date(coupon.validUntil)) return { label: "Expirado", variant: "destructive" as const };
-    if (coupon.maxUses && coupon.usedCount >= coupon.maxUses) return { label: "Esgotado", variant: "outline" as const };
+    if (coupon.maxUses && (coupon.usedCount || 0) >= coupon.maxUses) return { label: "Esgotado", variant: "outline" as const };
     return { label: "Ativo", variant: "default" as const };
   };
 

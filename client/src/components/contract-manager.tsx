@@ -9,6 +9,15 @@ import { FileText, Download, Send, Eye, Clock, CheckCircle, XCircle, AlertTriang
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
+interface ContractData {
+  id: number;
+  contractNumber: string;
+  status: string;
+  createdAt: string;
+  signaturePlatform: string;
+  pdfUrl?: string;
+}
+
 interface ContractManagerProps {
   bookingId: number;
   open: boolean;
@@ -21,7 +30,7 @@ export default function ContractManager({ bookingId, open, onOpenChange }: Contr
   const queryClient = useQueryClient();
 
   // Get contracts for this booking
-  const { data: contracts = [], isLoading } = useQuery({
+  const { data: contracts = [], isLoading } = useQuery<ContractData[]>({
     queryKey: ['/api/bookings', bookingId, 'contracts'],
     enabled: open && !!bookingId,
   });
@@ -213,7 +222,7 @@ export default function ContractManager({ bookingId, open, onOpenChange }: Contr
             </Card>
           ) : (
             <div className="space-y-4">
-              {contracts.map((contract: any) => (
+              {contracts.map((contract: ContractData) => (
                 <Card key={contract.id} className="border border-gray-200">
                   <CardHeader>
                     <div className="flex items-center justify-between">

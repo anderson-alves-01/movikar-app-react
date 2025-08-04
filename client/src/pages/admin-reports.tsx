@@ -29,7 +29,16 @@ export default function AdminReports() {
     );
   }
 
-  const { data: reportsData, isLoading } = useQuery({
+  interface ReportsData {
+    totalUsers?: number;
+    totalVehicles?: number;
+    totalRevenue?: number;
+    activeBookings?: number;
+    conversionRate?: number;
+    avgRating?: number;
+  }
+
+  const { data: reportsData = {} as ReportsData, isLoading } = useQuery<ReportsData>({
     queryKey: ['/api/admin/reports'],
     retry: false,
     enabled: !!user && user.role === 'admin',
