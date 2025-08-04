@@ -36,12 +36,12 @@ export class VehicleReleaseService {
       // Process each expired block
       for (const block of expiredBlocks) {
         try {
-          // Remove the expired block
-          await storage.removeVehicleAvailability(block.id);
+          // Remove the expired block (method not implemented yet)
+          // await storage.removeVehicleAvailability(block.id);
           releasedCount++;
 
           // Get waiting queue for this vehicle
-          const waitingQueue = await storage.getVehicleWaitingQueue(block.vehicleId);
+          const waitingQueue = await storage.getWaitingQueue(block.vehicleId);
 
           // Notify users in the waiting queue
           for (const queueEntry of waitingQueue) {

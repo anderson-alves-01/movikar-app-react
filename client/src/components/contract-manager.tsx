@@ -16,6 +16,8 @@ interface ContractData {
   createdAt: string;
   signaturePlatform: string;
   pdfUrl?: string;
+  renterSigned?: boolean;
+  ownerSigned?: boolean;
 }
 
 interface ContractManagerProps {

@@ -40,8 +40,8 @@ export async function generateContractPDF(contract: Contract, template: Contract
     htmlContent = replaceVariable(htmlContent, 'owner.phone', contractData.owner.phone);
     
     // Booking data
-    htmlContent = replaceVariable(htmlContent, 'booking.startDate', new Date(contractData.booking.startDate).toLocaleDateString('pt-BR'));
-    htmlContent = replaceVariable(htmlContent, 'booking.endDate', new Date(contractData.booking.endDate).toLocaleDateString('pt-BR'));
+    htmlContent = replaceVariable(htmlContent, 'booking.startDate', contractData.booking.startDate ? new Date(contractData.booking.startDate).toLocaleDateString('pt-BR') : '');
+    htmlContent = replaceVariable(htmlContent, 'booking.endDate', contractData.booking.endDate ? new Date(contractData.booking.endDate).toLocaleDateString('pt-BR') : '');
     htmlContent = replaceVariable(htmlContent, 'booking.totalPrice', `R$ ${Number(contractData.booking.totalPrice).toFixed(2)}`);
     htmlContent = replaceVariable(htmlContent, 'booking.serviceFee', `R$ ${Number(contractData.booking.servicefee).toFixed(2)}`);
     htmlContent = replaceVariable(htmlContent, 'booking.insuranceFee', `R$ ${Number(contractData.booking.insuranceFee).toFixed(2)}`);
