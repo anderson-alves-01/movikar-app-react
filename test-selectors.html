@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Data-TestID Selectors</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .pass { background-color: #d4edda; border-color: #c3e6cb; }
+        .fail { background-color: #f8d7da; border-color: #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>Data-TestID Selector Testing</h1>
+    <div id="results"></div>
+
+    <script>
+        // Test selectors that Cypress is looking for
+        const testSelectors = [
+            'input-email',
+            'input-password', 
+            'button-submit',
+            'link-register',
+            'link-login',
+            'input-name',
+            'input-phone',
+            'input-location',
+            'input-confirm-password',
+            'header-user-menu',
+            'text-user-name',
+            'button-logout',
+            'button-login'
+        ];
+
+        function testSelector(selector) {
+            const element = document.querySelector(`[data-testid="${selector}"]`);
+            return {
+                selector,
+                found: !!element,
+                element: element
+            };
+        }
+
+        function runTests() {
+            const results = document.getElementById('results');
+            
+            fetch('http://localhost:5000/login')
+                .then(response => response.text())
+                .then(html => {
+                    // Create a temporary DOM to test against
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    
+                    let passCount = 0;
+                    let failCount = 0;
+                    
+                    testSelectors.forEach(selector => {
+                        const element = doc.querySelector(`[data-testid="${selector}"]`);
+                        const found = !!element;
+                        
+                        const div = document.createElement('div');
+                        div.className = `test ${found ? 'pass' : 'fail'}`;
+                        div.innerHTML = `
+                            <strong>${selector}</strong>: ${found ? 'FOUND' : 'NOT FOUND'}
+                            ${element ? `<br><small>Tag: ${element.tagName}, Classes: ${element.className}</small>` : ''}
+                        `;
+                        results.appendChild(div);
+                        
+                        if (found) passCount++;
+                        else failCount++;
+                    });
+                    
+                    const summary = document.createElement('div');
+                    summary.innerHTML = `<h2>Summary: ${passCount} passed, ${failCount} failed</h2>`;
+                    results.insertBefore(summary, results.firstChild);
+                })
+                .catch(error => {
+                    results.innerHTML = `<div class="fail">Error loading page: ${error}</div>`;
+                });
+        }
+
+        // Run tests when page loads
+        window.onload = runTests;
+    </script>
+</body>
+</html>

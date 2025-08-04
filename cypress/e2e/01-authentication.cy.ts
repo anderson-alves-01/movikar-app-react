@@ -3,16 +3,23 @@ describe('Authentication Flow', () => {
     // Clear any existing session
     cy.clearCookies()
     cy.clearLocalStorage()
+    // Wait for the application to be ready
     cy.visit('/')
+    cy.get('body').should('be.visible')
   })
 
   describe('Login', () => {
     it('should display login form correctly', () => {
       cy.visit('/login')
-      cy.get('[data-testid="input-email"]').should('be.visible')
-      cy.get('[data-testid="input-password"]').should('be.visible')
-      cy.get('[data-testid="button-submit"]').should('be.visible')
-      cy.get('[data-testid="link-register"]').should('be.visible')
+      // Wait for React to render the page
+      cy.get('body').should('be.visible')
+      cy.wait(1000) // Give React time to render
+      
+      // Check for the login form elements
+      cy.get('[data-testid="input-email"]', { timeout: 10000 }).should('be.visible')
+      cy.get('[data-testid="input-password"]', { timeout: 10000 }).should('be.visible')
+      cy.get('[data-testid="button-submit"]', { timeout: 10000 }).should('be.visible')
+      cy.get('[data-testid="link-register"]', { timeout: 10000 }).should('be.visible')
     })
 
     it('should show validation errors for empty fields', () => {
@@ -52,13 +59,18 @@ describe('Authentication Flow', () => {
   describe('Registration', () => {
     it('should display registration form correctly', () => {
       cy.visit('/register')
-      cy.get('[data-testid="input-name"]').should('be.visible')
-      cy.get('[data-testid="input-email"]').should('be.visible')
-      cy.get('[data-testid="input-password"]').should('be.visible')
-      cy.get('[data-testid="input-phone"]').should('be.visible')
-      cy.get('[data-testid="input-location"]').should('be.visible')
-      cy.get('[data-testid="button-submit"]').should('be.visible')
-      cy.get('[data-testid="link-login"]').should('be.visible')
+      // Wait for React to render the page
+      cy.get('body').should('be.visible')
+      cy.wait(1000) // Give React time to render
+      
+      // Check for the registration form elements
+      cy.get('[data-testid="input-name"]', { timeout: 10000 }).should('be.visible')
+      cy.get('[data-testid="input-email"]', { timeout: 10000 }).should('be.visible')
+      cy.get('[data-testid="input-password"]', { timeout: 10000 }).should('be.visible')
+      cy.get('[data-testid="input-phone"]', { timeout: 10000 }).should('be.visible')
+      cy.get('[data-testid="input-location"]', { timeout: 10000 }).should('be.visible')
+      cy.get('[data-testid="button-submit"]', { timeout: 10000 }).should('be.visible')
+      cy.get('[data-testid="link-login"]', { timeout: 10000 }).should('be.visible')
     })
 
     it('should show validation errors for empty fields', () => {
