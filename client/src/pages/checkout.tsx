@@ -31,6 +31,7 @@ interface CheckoutData {
   totalPrice: string;
   serviceFee: string;
   insuranceFee: string;
+  includeInsurance?: boolean;
   paymentIntentId?: string;
   vehicle: {
     id: number;
@@ -146,7 +147,8 @@ const CheckoutForm = ({ checkoutData }: { checkoutData: CheckoutData }) => {
   };
 
   const days = calculateDays();
-  const subtotal = parseFloat(checkoutData.totalPrice) - parseFloat(checkoutData.serviceFee) - parseFloat(checkoutData.insuranceFee);
+  const hasInsurance = checkoutData.includeInsurance !== false; // Default to true for existing bookings
+  const subtotal = parseFloat(checkoutData.totalPrice) - parseFloat(checkoutData.serviceFee) - (hasInsurance ? parseFloat(checkoutData.insuranceFee) : 0);
   const finalTotal = parseFloat(checkoutData.totalPrice) - appliedDiscount;
 
   const handleApplyPoints = () => {
@@ -349,10 +351,19 @@ const CheckoutForm = ({ checkoutData }: { checkoutData: CheckoutData }) => {
                   <span>{formatCurrency(parseFloat(checkoutData.serviceFee))}</span>
                 </div>
                 
-                <div className="flex justify-between text-sm text-gray-600">
-                  <span>Seguro (5%)</span>
-                  <span>{formatCurrency(parseFloat(checkoutData.insuranceFee))}</span>
-                </div>
+                {hasInsurance && (
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>Seguro (15%)</span>
+                    <span>{formatCurrency(parseFloat(checkoutData.insuranceFee))}</span>
+                  </div>
+                )}
+
+                {!hasInsurance && (
+                  <div className="flex justify-between text-sm text-red-500">
+                    <span>⚠️ Sem seguro</span>
+                    <span className="font-medium">R$ 0,00</span>
+                  </div>
+                )}
 
                 {appliedDiscount > 0 && (
                   <div className="flex justify-between text-sm text-green-600">

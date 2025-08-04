@@ -5,13 +5,14 @@ import { useAuthStore } from "@/lib/auth";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit3, Trash2, Car, MapPin, Star, Eye, EyeOff, Calendar } from "lucide-react";
+import { Plus, Edit3, Trash2, Car, MapPin, Star, Eye, EyeOff, Calendar, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency } from "@/utils/formatters";
 import Header from "@/components/header";
 import AddVehicleModal from "@/components/add-vehicle-modal";
 import VehicleAvailabilityManager from "@/components/vehicle-availability-manager";
+import VehicleHighlightManager from "@/components/vehicle-highlight-manager";
 import { TableSkeleton, Loading } from "@/components/ui/loading";
 
 import type { Vehicle } from "@/types";
@@ -21,6 +22,7 @@ export default function Vehicles() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedVehicleForAvailability, setSelectedVehicleForAvailability] = useState<number | null>(null);
+  const [selectedVehicleForHighlight, setSelectedVehicleForHighlight] = useState<number | null>(null);
   const [showAddVehicleModal, setShowAddVehicleModal] = useState(false);
   const [forceRefresh, setForceRefresh] = useState(0);
 
@@ -289,6 +291,17 @@ export default function Vehicles() {
                       <Calendar className="w-4 h-4 mr-1" />
                       Calendário
                     </Button>
+
+                    <Button
+                      size="sm"
+                      variant={vehicle.isHighlighted ? "default" : "outline"}
+                      onClick={() => setSelectedVehicleForHighlight(vehicle.id)}
+                      title="Destacar veículo"
+                      className={vehicle.isHighlighted ? "bg-yellow-500 hover:bg-yellow-600 text-white" : ""}
+                    >
+                      <Zap className="w-4 h-4 mr-1" />
+                      {vehicle.isHighlighted ? "Em Destaque" : "Destacar"}
+                    </Button>
                     
                     <Button
                       size="sm"
@@ -375,6 +388,33 @@ export default function Vehicles() {
               </div>
               <div className="p-6">
                 <VehicleAvailabilityManager vehicleId={selectedVehicleForAvailability} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Vehicle Highlight Manager Modal */}
+        {selectedVehicleForHighlight && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-4 border-b flex justify-between items-center">
+                <h2 className="text-xl font-semibold">Destacar Veículo</h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedVehicleForHighlight(null)}
+                >
+                  Fechar
+                </Button>
+              </div>
+              <div className="p-6">
+                <VehicleHighlightManager 
+                  vehicleId={selectedVehicleForHighlight} 
+                  onHighlightApplied={() => {
+                    setSelectedVehicleForHighlight(null);
+                    setForceRefresh(prev => prev + 1);
+                  }}
+                />
               </div>
             </div>
           </div>

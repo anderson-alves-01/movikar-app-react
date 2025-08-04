@@ -4498,9 +4498,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Vehicle Highlight Routes
+  app.get("/api/vehicles/:id/highlight-options", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const vehicleId = parseInt(req.params.id);
+
+      // Check if user owns the vehicle
+      const vehicle = await storage.getVehicle(vehicleId);
+      if (!vehicle || vehicle.ownerId !== userId) {
+        return res.status(403).json({ message: "Você não tem permissão para destacar este veículo" });
+      }
+
+      // Get subscription limits
+      const limits = await storage.checkUserSubscriptionLimits(userId);
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      // Determine available highlight types based on subscription
+      const availableHighlights = [];
+      
+      if (user.subscriptionPlan === 'essencial' || user.subscriptionPlan === 'plus') {
+        availableHighlights.push({
+          type: 'prata',
+          name: 'Destaque Prata',
+          description: '3x mais visualizações',
+          duration: '30 dias',
+          available: limits.highlightsAvailable > 0
+        });
+      }
+      
+      if (user.subscriptionPlan === 'plus') {
+        availableHighlights.push({
+          type: 'diamante',
+          name: 'Destaque Diamante',
+          description: '10x mais visualizações',
+          duration: '30 dias',
+          available: limits.highlightsAvailable > 0
+        });
+      }
+
+      res.json({
+        vehicle: {
+          id: vehicleId,
+          isHighlighted: vehicle.isHighlighted,
+          highlightType: vehicle.highlightType,
+          highlightExpiresAt: vehicle.highlightExpiresAt
+        },
+        user: {
+          subscriptionPlan: user.subscriptionPlan,
+          highlightsAvailable: limits.highlightsAvailable,
+          highlightsUsed: user.highlightsUsed || 0
+        },
+        availableHighlights
+      });
+
+    } catch (error) {
+      console.error("Error getting highlight options:", error);
+      res.status(500).json({ message: "Erro ao verificar opções de destaque" });
+    }
+  });
+
   app.post("/api/vehicles/:id/highlight", authenticateToken, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = req.user!.id;
       const vehicleId = parseInt(req.params.id);
       const { highlightType = 'prata' } = req.body;
 
@@ -4508,6 +4571,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const vehicle = await storage.getVehicle(vehicleId);
       if (!vehicle || vehicle.ownerId !== userId) {
         return res.status(403).json({ message: "Você não tem permissão para destacar este veículo" });
+      }
+
+      // Validate highlight type based on subscription
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      if (highlightType === 'diamante' && user.subscriptionPlan !== 'plus') {
+        return res.status(403).json({ message: "Destaque Diamante disponível apenas no Plano Plus" });
+      }
+
+      if (highlightType === 'prata' && !['essencial', 'plus'].includes(user.subscriptionPlan || '')) {
+        return res.status(403).json({ message: "Destaque Prata disponível apenas em planos pagos" });
       }
 
       // Use highlight

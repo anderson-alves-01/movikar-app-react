@@ -34,6 +34,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
   const [bookingData, setBookingData] = useState({
     startDate: '',
     endDate: '',
+    includeInsurance: true, // Default to true, but user can uncheck
   });
 
   const { user } = useAuthStore();
@@ -90,7 +91,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
     const insuranceRate = (adminSettings?.insuranceFeePercentage || 15) / 100; // Convert percentage to decimal
     
     const serviceFee = subtotal * serviceRate;
-    const insuranceFee = subtotal * insuranceRate;
+    const insuranceFee = bookingData.includeInsurance ? subtotal * insuranceRate : 0;
     const total = subtotal + serviceFee + insuranceFee;
 
     console.log('💰 Calculating pricing with admin settings:', {
@@ -145,6 +146,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
       totalPrice: pricing.total.toFixed(2),
       serviceFee: pricing.serviceFee.toFixed(2),
       insuranceFee: pricing.insuranceFee.toFixed(2),
+      includeInsurance: bookingData.includeInsurance,
       vehicle: {
         id: vehicle.id,
         brand: vehicle.brand,
@@ -225,6 +227,31 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
               </div>
             </div>
 
+            {/* Insurance Option */}
+            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+              <div className="flex items-start space-x-3">
+                <input
+                  type="checkbox"
+                  id="insurance-option"
+                  checked={bookingData.includeInsurance}
+                  onChange={(e) => setBookingData(prev => ({ ...prev, includeInsurance: e.target.checked }))}
+                  className="mt-1"
+                  data-testid="checkbox-insurance"
+                />
+                <div className="flex-1">
+                  <label htmlFor="insurance-option" className="font-medium text-gray-900 cursor-pointer">
+                    Seguro de Cobertura Básica
+                  </label>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Protege contra danos, furto e roubo. Recomendamos contratar para sua segurança.
+                  </p>
+                  <p className="text-sm text-green-600 font-medium mt-1">
+                    + R$ {pricing.days > 0 ? formatCurrency(pricing.subtotal * ((adminSettings?.insuranceFeePercentage || 15) / 100)) : '0,00'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* Price Breakdown */}
             {pricing.days > 0 && (
               <div className="border-t border-gray-200 pt-4 space-y-2">
@@ -238,10 +265,12 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
                   <span className="text-gray-600">Taxa de serviço</span>
                   <span className="text-gray-800">{formatCurrency(pricing.serviceFee)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Seguro</span>
-                  <span className="text-gray-800">{formatCurrency(pricing.insuranceFee)}</span>
-                </div>
+                {bookingData.includeInsurance && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Seguro</span>
+                    <span className="text-gray-800">{formatCurrency(pricing.insuranceFee)}</span>
+                  </div>
+                )}
                 <Separator />
                 <div className="flex justify-between font-semibold">
                   <span>Total</span>
