@@ -40,18 +40,12 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
     return null;
   };
 
-  // Check if vehicle is saved
+  // Check if vehicle is saved (only when authenticated)
+  const hasToken = !!getToken();
   const { data: savedStatus, error: savedError, isLoading: savedLoading } = useQuery({
     queryKey: ["/api/saved-vehicles/check", vehicle.id],
-    enabled: false, // Disabled to prevent auth loops
+    enabled: hasToken, // Only enabled when user is authenticated
     retry: false,
-  });
-  
-  console.log(`🔍 [VehicleCard] Vehicle ${vehicle.id} saved status:`, {
-    data: savedStatus,
-    error: savedError,
-    loading: savedLoading,
-    hasToken: !!getToken()
   });
 
   const isSaved = (savedStatus as any)?.isSaved || false;
@@ -77,11 +71,19 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
     },
     onError: (error: any) => {
       console.error('❌ [VehicleCard] Save error:', error);
-      toast({
-        title: "Erro ao salvar",
-        description: error.message || "Não foi possível salvar o veículo",
-        variant: "destructive",
-      });
+      if (error.message?.includes('401') || error.message?.includes('Token')) {
+        toast({
+          title: "Login necessário",
+          description: "Faça login para salvar veículos nos seus favoritos",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro ao salvar",
+          description: error.message || "Não foi possível salvar o veículo. Tente novamente.",
+          variant: "destructive",
+        });
+      }
     },
   });
 
@@ -103,11 +105,19 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
     },
     onError: (error: any) => {
       console.error('❌ [VehicleCard] Remove error:', error);
-      toast({
-        title: "Erro ao remover",
-        description: error.message || "Não foi possível remover o veículo",
-        variant: "destructive",
-      });
+      if (error.message?.includes('401') || error.message?.includes('Token')) {
+        toast({
+          title: "Sessão expirada",
+          description: "Sua sessão expirou. Faça login novamente.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro ao remover",
+          description: error.message || "Não foi possível remover o veículo. Tente novamente.",
+          variant: "destructive",
+        });
+      }
     },
   });
 
@@ -122,9 +132,9 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
       console.log('❌ [VehicleCard] No token, redirecting to login');
       toast({
         title: "Login necessário",
-        description: "Você precisa estar logado para salvar veículos",
-        variant: "destructive",
+        description: "Faça login para salvar veículos nos seus favoritos"
       });
+      setTimeout(() => navigate("/login"), 2000);
       return;
     }
 

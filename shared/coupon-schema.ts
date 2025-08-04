@@ -80,7 +80,7 @@ export function calculateDiscount(
   }
 
   // Check usage limit
-  if (coupon.maxUses && coupon.usedCount >= coupon.maxUses) {
+  if (coupon.maxUses && (coupon.usedCount || 0) >= coupon.maxUses) {
     return { discountAmount: 0, finalAmount: orderValue, isValid: false, error: "Cupom esgotado" };
   }
 

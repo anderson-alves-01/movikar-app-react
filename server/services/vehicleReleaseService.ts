@@ -1,4 +1,5 @@
 import { storage } from "../storage";
+import { notificationService, NotificationData } from "./notificationService";
 
 export interface ReleaseResult {
   releasedCount: number;
@@ -36,9 +37,8 @@ export class VehicleReleaseService {
       // Process each expired block
       for (const block of expiredBlocks) {
         try {
-          // Remove the expired block (method not implemented yet)
-    // @ts-ignore - Emergency deployment fix
-          // await storage.removeVehicleAvailability(block.id);
+          // Remove the expired block
+          await storage.removeVehicleAvailability(block.id);
           releasedCount++;
 
           // Get waiting queue for this vehicle
@@ -54,18 +54,30 @@ export class VehicleReleaseService {
             )) {
               const notification = {
                 userId: queueEntry.userId,
-    // @ts-ignore - Emergency deployment fix
                 vehicleId: block.vehicleId,
-    // @ts-ignore - Emergency deployment fix
-                userName: "Usuário", // queueEntry.user?.name || "Usuário", - user relation not available
-                vehicleName: "Veículo", // queueEntry.vehicle ? `${queueEntry.vehicle.brand} ${queueEntry.vehicle.model}` : "Veículo", - vehicle relation not available
-                message: `Boa notícia! Um veículo está disponível para suas datas desejadas. Reserve agora!`
+                userName: queueEntry.user?.name || "Usuário",
+                vehicleName: queueEntry.vehicle ? `${queueEntry.vehicle.brand} ${queueEntry.vehicle.model}` : "Veículo",
+                message: `Boa notícia! O veículo ${queueEntry.vehicle?.brand || ''} ${queueEntry.vehicle?.model || 'solicitado'} está disponível para suas datas desejadas (${queueEntry.desiredStartDate} - ${queueEntry.desiredEndDate}). Reserve agora!`
               };
 
               notifications.push(notification);
 
-              // Log the notification (in production, send email/SMS here)
-              console.log(`🔔 Notifying ${notification.userName} about available ${notification.vehicleName}`);
+              // Send enhanced notifications via notification service
+              const notificationData: NotificationData = {
+                userId: queueEntry.userId,
+                vehicleId: block.vehicleId,
+                userName: queueEntry.user?.name || "Usuário",
+                vehicleName: queueEntry.vehicle ? `${queueEntry.vehicle.brand} ${queueEntry.vehicle.model}` : "Veículo",
+                userEmail: queueEntry.user?.email,
+                userPhone: queueEntry.user?.phone || undefined,
+                message: notification.message,
+                desiredStartDate: queueEntry.desiredStartDate,
+                desiredEndDate: queueEntry.desiredEndDate
+              };
+
+              // Send notifications asynchronously
+              notificationService.sendVehicleAvailabilityNotification(notificationData)
+                .catch(error => console.error(`Failed to send notification to user ${queueEntry.userId}:`, error));
             }
           }
         } catch (error) {
