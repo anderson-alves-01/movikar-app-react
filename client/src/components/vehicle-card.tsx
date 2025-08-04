@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, MapPin, Heart, Plus, Check, Bookmark, BookmarkCheck } from "lucide-react";
+import { Star, MapPin, Heart, Plus, Check, Bookmark, BookmarkCheck, Crown, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useComparisonStore } from "@/lib/comparison";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -180,9 +180,21 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
     navigate(`/vehicle/${vehicle.id}`);
   };
 
+  // Check if vehicle is highlighted and active
+  const isHighlighted = (vehicle as any).isHighlighted && 
+                       (vehicle as any).highlightExpiresAt && 
+                       new Date((vehicle as any).highlightExpiresAt) > new Date();
+  const isDiamanteHighlight = isHighlighted && (vehicle as any).highlightType === 'diamante';
+
   return (
     <Card 
-      className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300"
+      className={`bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 ${
+        isHighlighted 
+          ? isDiamanteHighlight 
+            ? 'border-2 border-yellow-400 shadow-lg shadow-yellow-100' 
+            : 'border-2 border-gray-400 shadow-lg shadow-gray-100'
+          : 'border border-gray-200'
+      }`}
       data-testid={`card-vehicle-${vehicle.id}`}
     >
       <div className="relative cursor-pointer group" onClick={handleImageClick}>
@@ -198,8 +210,31 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
             Ver mais detalhes
           </div>
         </div>
-        <div className="absolute top-3 left-3 pointer-events-none">
+        <div className="absolute top-3 left-3 flex gap-2 pointer-events-none">
           {getStatusBadge()}
+          {/* Highlight Badge */}
+          {(vehicle as any).isHighlighted && (vehicle as any).highlightExpiresAt && 
+           new Date((vehicle as any).highlightExpiresAt) > new Date() && (
+            <Badge 
+              className={`${
+                (vehicle as any).highlightType === 'diamante' 
+                  ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-white shadow-lg' 
+                  : 'bg-gradient-to-r from-gray-300 to-gray-500 text-white shadow-md'
+              } font-bold`}
+            >
+              {(vehicle as any).highlightType === 'diamante' ? (
+                <>
+                  <Crown className="w-3 h-3 mr-1" />
+                  DIAMANTE
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-3 h-3 mr-1" />
+                  PRATA
+                </>
+              )}
+            </Badge>
+          )}
         </div>
         <div className="absolute top-3 right-3 flex gap-2">
           <Button

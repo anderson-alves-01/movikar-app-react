@@ -395,6 +395,7 @@ export class DatabaseStorage implements IStorage {
           v.price_per_day, v.price_per_week, v.price_per_month, v.description, 
           v.is_available, v.is_verified, v.rating, v.total_bookings, v.license_plate, 
           v.renavam, v.created_at, v.updated_at,
+          v.is_highlighted, v.highlight_type, v.highlight_expires_at, v.highlight_usage_count,
           u.name as owner_name,
           u.email as owner_email,
           u.phone as owner_phone,
@@ -403,7 +404,17 @@ export class DatabaseStorage implements IStorage {
         FROM vehicles v
         LEFT JOIN users u ON v.owner_id = u.id
         WHERE ${whereConditions.join(' AND ')}
-        ORDER BY v.created_at DESC
+        ORDER BY 
+          CASE 
+            WHEN v.is_highlighted = true AND v.highlight_expires_at > NOW() THEN
+              CASE v.highlight_type
+                WHEN 'diamante' THEN 1
+                WHEN 'prata' THEN 2
+                ELSE 3
+              END
+            ELSE 4
+          END,
+          v.created_at DESC
         LIMIT 50
       `;
       
@@ -438,6 +449,10 @@ export class DatabaseStorage implements IStorage {
         renavam: row.renavam,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
+        isHighlighted: row.is_highlighted,
+        highlightType: row.highlight_type,
+        highlightExpiresAt: row.highlight_expires_at,
+        highlightUsageCount: row.highlight_usage_count,
         owner: {
           id: row.owner_id,
           name: row.owner_name || 'Proprietário',
