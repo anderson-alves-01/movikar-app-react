@@ -12,6 +12,8 @@ Preferred communication style: Simple, everyday language.
 - **GitHub Actions Updated**: Pre-deployment workflow now uses our reliable Node.js testing system
 - **CI/CD Ready**: Exit codes and reporting suitable for automated deployment pipelines
 - **Alternative Testing Approach**: Developed Node.js-based testing that works reliably in both Replit and GitHub Actions environments
+- **Vehicle Highlight System**: Complete subscription-based vehicle highlighting system implemented with frontend management component and backend validation
+- **Optional Insurance**: Added optional insurance checkbox in checkout with conditional price calculations
 
 ## System Architecture
 
@@ -50,6 +52,7 @@ Preferred communication style: Simple, everyday language.
 - **Digital Contracts**: DocuSign integration for digital signatures, automatic contract creation upon booking approval, PDF generation, professional Brazilian contract template.
 - **Payments**: Stripe integration ("Alugar Agora" workflow), secure checkout, payment intent creation, post-payment redirection to contract.
 - **Subscription System**: Complete subscription management with tiered plans, secure Stripe checkout integration, proper state management, and robust redirect protection. Features checkout data validation, automatic state cleanup, and seamless authentication flow.
+- **Vehicle Highlight System**: Subscription-based vehicle highlighting with visual differentiation (Diamante/Prata badges), intelligent ordering, and usage tracking. Essencial plan: 3 highlights, Plus plan: 10 highlights. Complete frontend management interface with modal workflow.
 - **Admin Panel**: Comprehensive CRUD operations for users, vehicles, bookings, admin settings. Features include vehicle approval, document validation, performance dashboard with real-time data, and configurable service/insurance fees with feature toggles (e.g., PIX payment).
 - **User Experience**: Portuguese error messages, simplified document verification (CNH, residence proof), personalized vehicle suggestions, friend referral system, comprehensive loading states.
 - **Referral System**: Generates shareable links, detects URL parameters for automatic registration, auto-applies referral codes post-registration, and includes comprehensive security validation (format, self-referral, circular, single-use, ownership).
