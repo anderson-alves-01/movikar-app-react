@@ -181,12 +181,16 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
   };
 
   return (
-    <Card className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300">
+    <Card 
+      className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300"
+      data-testid={`card-vehicle-${vehicle.id}`}
+    >
       <div className="relative cursor-pointer group" onClick={handleImageClick}>
         <img 
           src={mainImage}
           alt={`${vehicle.brand} ${vehicle.model} ${vehicle.year}`}
           className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+          data-testid={`img-vehicle-${vehicle.id}`}
         />
         {/* Ver mais overlay on hover */}
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-500 flex items-center justify-center pointer-events-none">
@@ -250,8 +254,13 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
       
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="font-semibold text-gray-800">
-            {vehicle.brand} {vehicle.model} {vehicle.year}
+          <h3 
+            className="font-semibold text-gray-800"
+            data-testid={`text-brand-${vehicle.id}`}
+          >
+            <span data-testid={`text-model-${vehicle.id}`}>
+              {vehicle.brand} {vehicle.model} {vehicle.year}
+            </span>
           </h3>
           <div className="flex items-center">
             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
@@ -274,7 +283,10 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
         
         <div className="flex items-center justify-between">
           <div>
-            <span className="text-2xl font-bold text-gray-800">
+            <span 
+              className="text-2xl font-bold text-gray-800"
+              data-testid={`text-price-${vehicle.id}`}
+            >
               {formatPrice(vehicle.pricePerDay)}
             </span>
             <span className="text-sm text-gray-600">/dia</span>

@@ -151,7 +151,7 @@ export default function VehicleDetail() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" data-testid="vehicle-detail-container">
         {/* Back Button */}
         <div className="mb-6">
           <Button variant="ghost" asChild>
@@ -169,7 +169,9 @@ export default function VehicleDetail() {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-gray-800">
-                  {vehicle.brand} {vehicle.model} {vehicle.year}
+                  <span data-testid="text-vehicle-brand">{vehicle.brand}</span>{" "}
+                  <span data-testid="text-vehicle-model">{vehicle.model}</span>{" "}
+                  <span data-testid="text-vehicle-year">{vehicle.year}</span>
                 </h1>
                 <div className="flex items-center mt-2 text-gray-600">
                   <MapPin className="h-4 w-4 mr-1" />
@@ -193,7 +195,7 @@ export default function VehicleDetail() {
             {/* Image Gallery */}
             <Card>
               <CardContent className="p-0">
-                <div className="space-y-4">
+                <div className="space-y-4" data-testid="vehicle-images">
                   {/* Main Image */}
                   <img 
                     src={images[selectedImageIndex]}
@@ -222,7 +224,7 @@ export default function VehicleDetail() {
             </Card>
 
             {/* Vehicle Details */}
-            <Card>
+            <Card data-testid="vehicle-features">
               <CardContent className="p-6 space-y-6">
                 {/* Basic Info */}
                 <div>

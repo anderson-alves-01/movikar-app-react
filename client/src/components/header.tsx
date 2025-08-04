@@ -95,6 +95,7 @@ export default function Header() {
                     updateFilter('location', '');
                   }
                 }}
+                data-testid="input-search-header"
               />
               <div className="border-l border-gray-300 h-6 mx-4"></div>
               <Input 
@@ -184,7 +185,11 @@ export default function Header() {
                   {/* User Menu */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="flex items-center space-x-2 bg-white border border-gray-300 rounded-full px-3 py-2 hover:shadow-md transition-shadow">
+                      <Button 
+                        variant="ghost" 
+                        className="flex items-center space-x-2 bg-white border border-gray-300 rounded-full px-3 py-2 hover:shadow-md transition-shadow"
+                        data-testid="header-user-menu"
+                      >
                         <Menu className="h-4 w-4 text-gray-600" />
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={user.avatar} />
@@ -196,7 +201,7 @@ export default function Header() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-64">
                       <div className="px-4 py-2 border-b border-gray-200">
-                        <p className="text-sm font-medium text-gray-800">{user.name}</p>
+                        <p className="text-sm font-medium text-gray-800" data-testid="text-user-name">{user.name}</p>
                         <p className="text-sm text-gray-600">{user.email}</p>
                       </div>
                       <DropdownMenuItem asChild>
@@ -280,7 +285,7 @@ export default function Header() {
                   </DropdownMenu>
                 </>
               ) : (
-                <Button asChild>
+                <Button asChild data-testid="button-login">
                   <Link href="/auth">Entrar</Link>
                 </Button>
               )}

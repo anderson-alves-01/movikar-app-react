@@ -282,6 +282,7 @@ export default function Auth() {
                       placeholder="Seu nome completo"
                       value={formData.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
+                      data-testid="input-name"
                     />
                   </div>
                 </div>
@@ -300,6 +301,7 @@ export default function Auth() {
                       placeholder="(11) 99999-9999"
                       value={formData.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
+                      data-testid="input-phone"
                     />
                   </div>
                 </div>
@@ -318,6 +320,7 @@ export default function Auth() {
                     placeholder="seu@email.com"
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
+                    data-testid="input-email"
                   />
                 </div>
               </div>
@@ -340,6 +343,7 @@ export default function Auth() {
                     placeholder="••••••••"
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
+                    data-testid="input-password"
                   />
                   <Button
                     type="button"
@@ -371,6 +375,7 @@ export default function Auth() {
                       placeholder="••••••••"
                       value={formData.confirmPassword}
                       onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                      data-testid="input-location"
                     />
                   </div>
                 </div>
@@ -421,6 +426,7 @@ export default function Auth() {
                 type="submit"
                 className="w-full bg-primary text-white font-semibold hover:bg-red-600 transition-colors"
                 disabled={authMutation.isPending}
+                data-testid="button-submit"
               >
                 {authMutation.isPending ? (
                   <>
@@ -487,6 +493,7 @@ export default function Auth() {
                       variant="link"
                       className="text-primary hover:text-red-600 font-medium p-0"
                       onClick={switchMode}
+                      data-testid="link-register"
                     >
                       Cadastre-se
                     </Button>
@@ -499,6 +506,7 @@ export default function Auth() {
                       variant="link"
                       className="text-primary hover:text-red-600 font-medium p-0"
                       onClick={switchMode}
+                      data-testid="link-login"
                     >
                       Entrar
                     </Button>

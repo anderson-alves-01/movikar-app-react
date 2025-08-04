@@ -180,7 +180,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
       <Card className="bg-gray-50">
         <CardContent className="p-6">
           <div className="text-center mb-4">
-            <span className="text-3xl font-bold text-gray-800">
+            <span className="text-3xl font-bold text-gray-800" data-testid="text-price-per-day">
               {formatCurrency(parseFloat(vehicle.pricePerDay))}
             </span>
             <span className="text-gray-600">/dia</span>
@@ -196,7 +196,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
       </Card>
 
       {/* Booking Form */}
-      <Card className="bg-white border border-gray-200">
+      <Card className="bg-white border border-gray-200" data-testid="booking-form">
         <CardContent className="p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Date Selection */}
@@ -209,6 +209,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
                   className="h-12 text-sm"
                   value={bookingData.startDate}
                   onChange={(e) => setBookingData(prev => ({ ...prev, startDate: e.target.value }))}
+                  data-testid="input-start-date"
                 />
               </div>
               <div>
@@ -219,6 +220,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
                   className="h-12 text-sm"
                   value={bookingData.endDate}
                   onChange={(e) => setBookingData(prev => ({ ...prev, endDate: e.target.value }))}
+                  data-testid="input-end-date"
                 />
               </div>
             </div>
@@ -253,6 +255,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
               type="submit" 
               className="w-full bg-primary text-white font-semibold hover:bg-red-600 transition-colors"
               disabled={!user || !bookingData.startDate || !bookingData.endDate}
+              data-testid="button-book-now"
             >
               Alugar Agora
             </Button>
