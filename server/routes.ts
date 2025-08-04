@@ -39,6 +39,7 @@ import multer from "multer";
 import docusign from 'docusign-esign';
 import { getFeatureFlags } from "@shared/feature-flags";
 import type { AdminSettings } from "@shared/admin-settings";
+import { registerHealthRoutes } from "./routes/health";
 
 // In-memory storage for admin settings
 let currentAdminSettings: AdminSettings = {
@@ -4527,6 +4528,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Erro ao destacar veículo" });
     }
   });
+
+  // Register health check routes
+  registerHealthRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;

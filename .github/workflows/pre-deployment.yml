@@ -1,0 +1,132 @@
+name: Pre-Deployment Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+  CYPRESS_CACHE_FOLDER: ~/.cache/Cypress
+
+jobs:
+  pre-deployment:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: alugae_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: 📥 Checkout código
+      uses: actions/checkout@v4
+      
+    - name: 🟢 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: 📦 Instalar dependências
+      run: |
+        npm ci
+        npx cypress install
+        
+    - name: 🗄️ Setup banco de dados
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/alugae_test
+      run: |
+        npm run db:push
+        
+    - name: 🏗️ Build da aplicação
+      run: npm run build
+      
+    - name: 🔍 Verificação de tipos
+      run: npm run check
+      
+    - name: 🚀 Iniciar aplicação
+      env:
+        NODE_ENV: test
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/alugae_test
+        STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+        VITE_STRIPE_PUBLIC_KEY: ${{ secrets.VITE_STRIPE_PUBLIC_KEY }}
+      run: |
+        npm start &
+        sleep 10
+        curl --retry 10 --retry-delay 5 --retry-connrefused http://localhost:5000/api/health
+        
+    - name: 🧪 Executar testes Cypress
+      env:
+        CYPRESS_baseUrl: http://localhost:5000
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/alugae_test
+      run: |
+        mkdir -p cypress/results
+        npx cypress run \
+          --headless \
+          --browser chrome \
+          --reporter json \
+          --reporter-options output=cypress/results/test-results.json
+          
+    - name: 📊 Upload resultados dos testes
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: cypress-results
+        path: |
+          cypress/results/
+          cypress/screenshots/
+          cypress/videos/
+        retention-days: 30
+        
+    - name: 📋 Processar resultados
+      if: always()
+      run: |
+        if [ -f cypress/results/test-results.json ]; then
+          echo "## 📊 Resultados dos Testes" >> $GITHUB_STEP_SUMMARY
+          node -e "
+            const results = require('./cypress/results/test-results.json');
+            console.log('| Métrica | Valor |');
+            console.log('|---------|-------|');
+            console.log('| Total de testes | ' + results.stats.tests + ' |');
+            console.log('| Sucessos | ' + results.stats.passes + ' |');
+            console.log('| Falhas | ' + results.stats.failures + ' |');
+            console.log('| Duração | ' + (results.stats.duration / 1000).toFixed(2) + 's |');
+          " >> $GITHUB_STEP_SUMMARY
+        fi
+        
+    - name: ❌ Falha nos testes
+      if: failure()
+      run: |
+        echo "## ❌ Deployment Abortado" >> $GITHUB_STEP_SUMMARY
+        echo "Os testes falharam. Corrija os erros antes de fazer o deployment." >> $GITHUB_STEP_SUMMARY
+        exit 1
+        
+    - name: ✅ Sucesso nos testes
+      if: success()
+      run: |
+        echo "## ✅ Pré-Deployment Aprovado" >> $GITHUB_STEP_SUMMARY
+        echo "Todos os testes passaram! A aplicação está pronta para deployment." >> $GITHUB_STEP_SUMMARY
+
+  deployment-gate:
+    needs: pre-deployment
+    runs-on: ubuntu-latest
+    if: success()
+    
+    steps:
+    - name: 🎉 Aprovação para deployment
+      run: |
+        echo "🎉 Pré-deployment concluído com sucesso!"
+        echo "📦 Aplicação aprovada para deployment"
+        echo "🚀 Próximo passo: Execute o deployment"

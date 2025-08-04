@@ -1,0 +1,15 @@
+{
+  "scripts": {
+    "test": "cypress run --headless",
+    "test:open": "cypress open",
+    "test:ci": "cypress run --headless --browser chrome --reporter json",
+    "pre-deploy": "node scripts/pre-deploy.js",
+    "deploy": "node scripts/deploy.js",
+    "deploy:safe": "npm run pre-deploy && npm run deploy",
+    "test:smoke": "cypress run --spec 'cypress/e2e/01-authentication.cy.ts,cypress/e2e/03-booking-system.cy.ts' --headless",
+    "test:critical": "cypress run --spec 'cypress/e2e/01-authentication.cy.ts,cypress/e2e/03-booking-system.cy.ts,cypress/e2e/05-subscription-system.cy.ts' --headless",
+    "health-check": "curl -f http://localhost:5000/api/health || exit 1",
+    "backup:db": "pg_dump $DATABASE_URL > backups/backup-$(date +%Y%m%d-%H%M%S).sql",
+    "restore:db": "psql $DATABASE_URL < backups/latest-backup.sql"
+  }
+}

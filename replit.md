@@ -24,6 +24,10 @@ Preferred communication style: Simple, everyday language.
 - **Accessibility Tests**: Keyboard navigation, screen reader support, ARIA attributes, focus management, and mobile accessibility
 - **Test Infrastructure**: Custom commands, database helpers, API helpers, fixtures, and comprehensive documentation
 - **Configuration Files**: Complete Cypress configuration, environment variables, and CI/CD ready setup
+- **Pre-Deployment Process**: Automated testing pipeline that aborts deployment if any tests fail, including health checks and rollback capabilities
+- **CI/CD Integration**: GitHub Actions workflow for automated testing and deployment validation
+- **Test Scripts**: Flexible test runner with multiple test suites (smoke, critical, full, performance, accessibility)
+- **Health Monitoring**: Health check endpoints and monitoring system for deployment verification
 
 ### Cookie Authentication System Fixes (Aug 1, 2025)
 - **Cookie Naming Standardization**: Fixed all inconsistent cookie naming from "refreshToken" to "refresh_token" across the entire system for consistency
