@@ -335,6 +335,34 @@
                 }, 30000);
             }
         }
+        
+        // Function to run tests via API
+        async function runTests(testType = 'all') {
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = 'Executando...';
+            button.disabled = true;
+            
+            try {
+                const response = await fetch(`/api/run-tests?testType=${testType}`);
+                const result = await response.json();
+                
+                // Show results in a modal or console
+                console.log('Test Results:', result);
+                
+                if (result.success) {
+                    alert('Testes executados com sucesso! Veja o console para detalhes.');
+                } else {
+                    alert('Erro ao executar testes. Veja o console para detalhes.');
+                }
+            } catch (error) {
+                console.error('Error running tests:', error);
+                alert('Erro ao executar testes via API');
+            } finally {
+                button.textContent = originalText;
+                button.disabled = false;
+            }
+        }
     </script>
 </body>
 </html>

@@ -4532,6 +4532,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register health check routes
   registerHealthRoutes(app);
 
+  // Serve test visualization page
+  app.get("/view-tests.html", (req, res) => {
+    const testPagePath = path.join(process.cwd(), "public", "view-tests.html");
+    if (fs.existsSync(testPagePath)) {
+      res.sendFile(testPagePath);
+    } else {
+      res.status(404).send("Test visualization page not found");
+    }
+  });
+
+  // Test execution endpoint
+  app.get("/api/run-tests", async (req, res) => {
+    try {
+      const { exec } = await import('child_process');
+      const { promisify } = await import('util');
+      const execAsync = promisify(exec);
+      
+      const { testType = 'all' } = req.query;
+      let command;
+      
+      switch (testType) {
+        case 'functional':
+          command = 'node tests/functional-validator.js';
+          break;
+        case 'integration':
+          command = 'node tests/integration-tests.js';
+          break;
+        default:
+          command = 'node tests/run-all-tests.js';
+      }
+      
+      const { stdout, stderr } = await execAsync(command);
+      res.json({
+        success: true,
+        output: stdout,
+        error: stderr || null
+      });
+    } catch (error: any) {
+      res.json({
+        success: false,
+        output: error.stdout || '',
+        error: error.stderr || error.message
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
