@@ -24,6 +24,17 @@ export default function HeroSection({ onSearch }: HeroSectionProps) {
       startDate: searchData.startDate ? new Date(searchData.startDate) : undefined,
       endDate: searchData.endDate ? new Date(searchData.endDate) : undefined,
     });
+
+    // Scroll automático para a seção de resultados após buscar
+    setTimeout(() => {
+      const resultadosSection = document.getElementById('resultados');
+      if (resultadosSection) {
+        resultadosSection.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    }, 100);
   };
 
   return (

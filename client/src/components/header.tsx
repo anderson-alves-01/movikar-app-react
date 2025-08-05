@@ -184,14 +184,14 @@ export default function Header() {
                     </Button>
                   </Link>
 
-                  {/* Refresh User Data Button */}
+                  {/* Refresh User Data Button - Hidden on mobile */}
                   <Button 
                     variant="ghost" 
                     size="sm" 
                     onClick={handleRefreshUser}
                     disabled={refreshing}
                     title="Atualizar dados do usuário"
-                    className="relative"
+                    className="relative hidden sm:flex"
                   >
                     <RefreshCw className={`h-5 w-5 text-gray-600 ${refreshing ? 'animate-spin' : ''}`} />
                   </Button>
