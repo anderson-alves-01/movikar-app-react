@@ -1035,10 +1035,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         maxAge: 7 * 24 * 60 * 60 * 1000
       });
 
+      console.log('✅ OAuth cookies set for user:', user.email);
+
       // Determine redirect URL
       const returnUrl = decodedState.returnUrl || '/';
-      const finalRedirectUrl = returnUrl.startsWith('/') ? returnUrl : '/';
+      let finalRedirectUrl = returnUrl.startsWith('/') ? returnUrl : '/';
       
+      // Don't redirect back to auth pages after successful OAuth
+      if (finalRedirectUrl === '/auth' || finalRedirectUrl === '/login' || finalRedirectUrl.startsWith('/register')) {
+        finalRedirectUrl = '/';
+      }
+      
+      console.log('✅ OAuth success, redirecting to:', finalRedirectUrl);
       res.redirect(`${finalRedirectUrl}?oauth_success=1`);
 
     } catch (error) {

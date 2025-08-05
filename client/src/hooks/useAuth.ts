@@ -16,12 +16,16 @@ export function useAuth() {
   useEffect(() => {
     if (initialized) return;
     
-    // Skip auth check on auth pages to prevent unnecessary 401 errors
+    // Check for OAuth success parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const oauthSuccess = urlParams.get('oauth_success');
+    
+    // Skip auth check on auth pages to prevent unnecessary 401 errors, unless OAuth success
     const isAuthPage = window.location.pathname === '/auth' || 
                        window.location.pathname === '/login' || 
                        window.location.pathname.startsWith('/register');
     
-    if (isAuthPage) {
+    if (isAuthPage && !oauthSuccess) {
       console.log('🔍 useAuth - Skipping auth check on auth page');
       setLoading(false);
       setInitialized(true);

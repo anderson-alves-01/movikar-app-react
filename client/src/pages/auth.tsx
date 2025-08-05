@@ -50,6 +50,25 @@ export default function Auth() {
       // Clean URL and redirect
       window.history.replaceState({}, '', window.location.pathname);
       
+      // Force auth check to reload user data
+      const checkAuthAfterOAuth = async () => {
+        try {
+          const response = await fetch('/api/auth/user', {
+            method: 'GET',
+            credentials: 'include',
+          });
+
+          if (response.ok) {
+            const userData = await response.json();
+            setAuth(userData, '');
+          }
+        } catch (error) {
+          console.error('Failed to load user after OAuth:', error);
+        }
+      };
+
+      checkAuthAfterOAuth();
+      
       setTimeout(() => {
         const pendingSubscription = localStorage.getItem('pendingSubscription');
         const returnUrl = localStorage.getItem('returnUrl');

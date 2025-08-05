@@ -2,7 +2,7 @@ import Header from "@/components/header";
 import HeroSection from "@/components/hero-section";
 import VehicleCard from "@/components/vehicle-card";
 import VehicleFilters from "@/components/vehicle-filters";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SearchFilters } from "@/types";
 import { Loader2, Crown, Sparkles } from "lucide-react";
@@ -10,11 +10,55 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { useSearch } from "@/contexts/SearchContext";
 import { CarLoading, VehicleCardSkeleton } from "@/components/ui/loading";
+import { useAuthStore } from "@/lib/auth";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const { filters, clearFilters } = useSearch();
   const [localFilters, setLocalFilters] = useState<SearchFilters>({});
   const [showFilters, setShowFilters] = useState(false);
+  const { setAuth } = useAuthStore();
+  const { toast } = useToast();
+
+  // Handle OAuth success on home page
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const oauthSuccess = urlParams.get('oauth_success');
+    
+    if (oauthSuccess === '1') {
+      console.log('🔍 Home: OAuth success detected, loading user data...');
+      
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+      
+      // Force auth check to reload user data
+      const checkAuthAfterOAuth = async () => {
+        try {
+          const response = await fetch('/api/auth/user', {
+            method: 'GET',
+            credentials: 'include',
+          });
+
+          if (response.ok) {
+            const userData = await response.json();
+            console.log('✅ Home: User data loaded after OAuth:', userData.email);
+            setAuth(userData, '');
+            
+            toast({
+              title: "✅ Login realizado com sucesso!",
+              description: `Bem-vindo, ${userData.name}!`,
+            });
+          } else {
+            console.error('❌ Home: Failed to load user after OAuth');
+          }
+        } catch (error) {
+          console.error('❌ Home: Error loading user after OAuth:', error);
+        }
+      };
+
+      checkAuthAfterOAuth();
+    }
+  }, [setAuth, toast]);
   
   // Combine global filters from header with local filters
   const combinedFilters = { ...filters, ...localFilters };
