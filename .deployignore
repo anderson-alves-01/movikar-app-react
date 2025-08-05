@@ -1,0 +1,26 @@
+# Development files
+.git/
+.replit
+.upm/
+.breakpoints
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Node modules - will be rebuilt during deployment
+node_modules/
+
+# Test files
+cypress/
+test/
+tests/
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+
+# Development configs
+.eslintrc*
+.prettierrc*
+vite.config.local.ts
