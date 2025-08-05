@@ -12,10 +12,8 @@ export function useAuth() {
   const { user, isLoading, setAuth, clearAuth, setLoading } = useAuthStore();
   const [initialized, setInitialized] = useState(false);
 
-  // Verificação inicial de autenticação apenas uma vez
+  // Verificação inicial de autenticação com refresh automático
   useEffect(() => {
-    if (initialized) return;
-    
     // Check for OAuth success parameter
     const urlParams = new URLSearchParams(window.location.search);
     const oauthSuccess = urlParams.get('oauth_success');
@@ -38,9 +36,12 @@ export function useAuth() {
         
         console.log('🔍 useAuth - Checking authentication...');
         
-        // Try authentication with cookies and Authorization header as fallback
+        // Force cache bypass with no-cache headers
         const headers: Record<string, string> = {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
         };
         
         // Add Authorization header if token exists
@@ -50,7 +51,9 @@ export function useAuth() {
           console.log('🔍 useAuth - Using Authorization header fallback');
         }
         
-        const response = await fetch('/api/auth/user', {
+        // Add timestamp to prevent browser caching
+        const timestamp = new Date().getTime();
+        const response = await fetch(`/api/auth/user?_t=${timestamp}`, {
           method: 'GET',
           credentials: 'include',
           headers,
@@ -78,7 +81,17 @@ export function useAuth() {
     };
 
     checkAuth();
-  }, [initialized, setAuth, clearAuth, setLoading]);
+    
+    // Re-check auth periodically to handle cache issues
+    const authCheckInterval = setInterval(() => {
+      if (!isAuthPage && user) {
+        console.log('🔄 useAuth - Periodic auth refresh check');
+        checkAuth();
+      }
+    }, 30000); // Check every 30 seconds
+
+    return () => clearInterval(authCheckInterval);
+  }, [setAuth, clearAuth, setLoading, user]);
 
   const login = async (email: string, password: string) => {
     try {

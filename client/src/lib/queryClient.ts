@@ -49,8 +49,18 @@ export const getQueryFn: QueryFunction = async ({ queryKey }) => {
   
   console.log('📡 getQueryFn - Making request to:', queryUrl);
   
-  const res = await fetch(queryUrl, {
+  // Add timestamp to prevent browser caching and force fresh data
+  const separator = queryUrl.includes('?') ? '&' : '?';
+  const timestamp = new Date().getTime();
+  const urlWithTimestamp = `${queryUrl}${separator}_t=${timestamp}`;
+  
+  const res = await fetch(urlWithTimestamp, {
     credentials: "include", // Use cookies for authentication
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    },
   });
 
   console.log('📡 getQueryFn - Response status:', res.status);
@@ -70,11 +80,11 @@ export const queryClient = new QueryClient({
     queries: {
       queryFn: getQueryFn,
       refetchInterval: false,
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
-      refetchOnReconnect: false,
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      gcTime: 1000 * 60 * 10, // 10 minutes
+      refetchOnWindowFocus: true, // Refetch when window gains focus
+      refetchOnMount: true, // Always refetch on component mount
+      refetchOnReconnect: true, // Refetch when network reconnects
+      staleTime: 0, // Consider data always stale to force fresh requests
+      gcTime: 1000 * 60 * 2, // Reduce garbage collection time to 2 minutes
       retry: (failureCount, error) => {
         // Não fazer retry em erros 401
         if (error?.message?.includes('401')) return false;
@@ -86,3 +96,9 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+// Clear cache when user logs out or authentication changes
+export const clearAuthCache = () => {
+  queryClient.clear();
+  console.log('🧹 Auth cache cleared');
+};

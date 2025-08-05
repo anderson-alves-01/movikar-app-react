@@ -787,13 +787,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Dynamic cookie configuration based on environment
       const isReplit = !!process.env.REPL_ID;
       const isProduction = process.env.NODE_ENV === 'production';
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      
+      console.log('🔧 Environment:', { 
+        NODE_ENV: process.env.NODE_ENV, 
+        REPL_ID: !!process.env.REPL_ID,
+        isDevelopment, 
+        isProduction, 
+        isReplit 
+      });
+      
+      // Force development-friendly cookies in Replit development
+      const useSecureCookies = isProduction && !isDevelopment;
       
       const cookieOptions = {
         httpOnly: true,
-        secure: isReplit || isProduction, // secure in Replit/production
-        sameSite: isReplit ? 'none' as const : 'lax' as const, // 'none' for cross-origin in Replit
+        secure: useSecureCookies, // Only secure in actual production
+        sameSite: useSecureCookies ? 'none' as const : 'lax' as const, // Lax for development
         path: '/',
       };
+
+      console.log('🍪 Cookies set with options:', cookieOptions);
 
       res.cookie('token', token, {
         ...cookieOptions,

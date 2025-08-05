@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Search, Menu, User, MessageCircle, Car, LogOut, Shield, Bell, Gift, Sparkles, BarChart3, RotateCcw, DollarSign, BookmarkCheck, Crown } from "lucide-react";
+import { Search, Menu, User, MessageCircle, Car, LogOut, Shield, Bell, Gift, Sparkles, BarChart3, RotateCcw, DollarSign, BookmarkCheck, Crown, RefreshCw } from "lucide-react";
 import { useAuthStore } from "@/lib/auth";
 import { useSearch } from "@/contexts/SearchContext";
 import { buildSearchParams } from "@/lib/searchUtils";
@@ -23,8 +23,39 @@ export default function Header() {
   const [searchLocation, setSearchLocation] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const { user, token, clearAuth } = useAuthStore();
+  const [refreshing, setRefreshing] = useState(false);
+  const { user, token, clearAuth, refreshUser } = useAuthStore();
   const { updateFilter, clearFilters } = useSearch();
+
+  // Force refresh user data when component mounts
+  useEffect(() => {
+    const forceRefreshUser = async () => {
+      if (!user) {
+        console.log('🔄 Header - No user data, attempting refresh...');
+        try {
+          await refreshUser();
+        } catch (error) {
+          console.log('❌ Header - User refresh failed:', error);
+        }
+      }
+    };
+
+    forceRefreshUser();
+  }, [user, refreshUser]);
+
+  // Manual refresh function for user data
+  const handleRefreshUser = async () => {
+    setRefreshing(true);
+    try {
+      console.log('🔄 Header - Manual user refresh triggered');
+      await refreshUser();
+      // Force a small delay to show refresh feedback
+      setTimeout(() => setRefreshing(false), 500);
+    } catch (error) {
+      console.log('❌ Header - Manual refresh failed:', error);
+      setRefreshing(false);
+    }
+  };
 
   // Disable unread message count to prevent auth loops
   const unreadCount = 0;
@@ -166,6 +197,18 @@ export default function Header() {
                       Anunciar
                     </Button>
                   </Link>
+
+                  {/* Refresh User Data Button */}
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleRefreshUser}
+                    disabled={refreshing}
+                    title="Atualizar dados do usuário"
+                    className="relative"
+                  >
+                    <RefreshCw className={`h-5 w-5 text-gray-600 ${refreshing ? 'animate-spin' : ''}`} />
+                  </Button>
 
                   {/* Message Notification Bell */}
                   <Link href="/messages">

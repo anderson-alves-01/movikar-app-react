@@ -114,14 +114,24 @@ export const useAuthStore = create<AuthStore>()(
           // Ignore storage errors
         }
         
-        // Clear query cache
+        // Clear query cache with enhanced clearing
         queryClient.clear();
+        queryClient.invalidateQueries();
+        console.log('🧹 Auth cache and queries cleared');
       },
       setLoading: (isLoading) => set({ isLoading }),
     }),
     {
       name: 'auth-storage',
       partialize: (state) => ({ user: state.user, token: state.token }),
+      version: 2, // Increment version to force cache invalidation
+      migrate: (persistedState: any, version: number) => {
+        if (version < 2) {
+          // Clear old cache and return empty state
+          return { user: null, token: null };
+        }
+        return persistedState;
+      },
     }
   )
 );
