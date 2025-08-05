@@ -695,6 +695,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
   const APPLE_CLIENT_ID = process.env.APPLE_CLIENT_ID;
   const APPLE_CLIENT_SECRET = process.env.APPLE_CLIENT_SECRET;
+  const APPLE_PRIVATE_KEY = process.env.APPLE_PRIVATE_KEY;
+  const APPLE_TEAM_ID = process.env.APPLE_TEAM_ID;
+  const APPLE_KEY_ID = process.env.APPLE_KEY_ID;
   const OAUTH_REDIRECT_URI = process.env.OAUTH_REDIRECT_URI || `${process.env.BASE_URL || 'http://localhost:5000'}/api/auth/oauth/callback`;
 
   // Authentication routes
@@ -936,8 +939,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // OAuth Routes - Apple
   app.get("/api/auth/apple", (req, res) => {
-    if (!APPLE_CLIENT_ID) {
-      return res.status(500).json({ message: "Apple OAuth não configurado" });
+    if (!APPLE_CLIENT_ID || !APPLE_PRIVATE_KEY || !APPLE_TEAM_ID || !APPLE_KEY_ID) {
+      console.log('❌ Apple OAuth: Missing configuration');
+      return res.redirect(`/auth?error=${encodeURIComponent('Apple Sign In não está disponível no momento')}`);
     }
 
     const state = Buffer.from(JSON.stringify({
@@ -1082,17 +1086,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   async function handleAppleCallback(code: string) {
     try {
-      // Apple OAuth is more complex, requiring JWT signing
-      // For now, return mock data - in production you'd implement full Apple Sign In
       console.log('🍎 Apple OAuth callback received:', code);
       
-      // This is a simplified implementation
-      // Full Apple Sign In requires generating and signing JWT tokens
-      return {
-        email: 'user@icloud.com',
-        name: 'Apple User',
-        picture: null,
+      if (!APPLE_CLIENT_ID || !APPLE_PRIVATE_KEY || !APPLE_TEAM_ID || !APPLE_KEY_ID) {
+        console.error('❌ Apple OAuth: Missing required environment variables');
+        throw new Error('Apple OAuth not properly configured');
+      }
+
+      // Create client secret JWT for Apple
+      const now = Math.floor(Date.now() / 1000);
+      const clientSecretPayload = {
+        iss: APPLE_TEAM_ID,
+        iat: now,
+        exp: now + 15777000, // 6 months
+        aud: 'https://appleid.apple.com',
+        sub: APPLE_CLIENT_ID,
       };
+
+      const clientSecret = jwt.sign(clientSecretPayload, APPLE_PRIVATE_KEY.replace(/\\n/g, '\n'), {
+        algorithm: 'ES256',
+        header: {
+          kid: APPLE_KEY_ID,
+          alg: 'ES256'
+        }
+      });
+
+      // Exchange authorization code for access token
+      const tokenResponse = await fetch('https://appleid.apple.com/auth/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: APPLE_CLIENT_ID,
+          client_secret: clientSecret,
+          code,
+          grant_type: 'authorization_code',
+          redirect_uri: OAUTH_REDIRECT_URI,
+        }),
+      });
+
+      const tokenData = await tokenResponse.json();
+      
+      if (!tokenData.access_token && !tokenData.id_token) {
+        console.error('❌ Apple OAuth: No tokens received', tokenData);
+        throw new Error('No access token received from Apple');
+      }
+
+      // Decode the ID token to get user info
+      let userInfo = null;
+      if (tokenData.id_token) {
+        const decoded = jwt.decode(tokenData.id_token) as any;
+        userInfo = {
+          email: decoded.email,
+          name: decoded.name || 'Apple User',
+          picture: null,
+        };
+      }
+
+      return userInfo;
     } catch (error) {
       console.error('Apple OAuth error:', error);
       return null;

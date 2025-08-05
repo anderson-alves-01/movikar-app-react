@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, MapPin, Heart, Plus, Check, Bookmark, BookmarkCheck, Crown, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useComparisonStore } from "@/lib/comparison";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -21,27 +21,22 @@ export default function VehicleCard({ vehicle }: VehicleCardProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Get token helper function
-  const getToken = () => {
+  // Get token helper function with memoization to prevent loops
+  const getToken = useMemo(() => {
     try {
       const authStorage = localStorage.getItem('auth-storage');
-      console.log('🔍 [VehicleCard] Auth storage raw:', authStorage);
       if (authStorage) {
         const authData = JSON.parse(authStorage);
-        console.log('🔍 [VehicleCard] Auth data parsed:', authData);
-        const token = authData.state?.token || authData.token;
-        console.log('🔍 [VehicleCard] Token extracted:', token ? 'Present' : 'Missing');
-        return token;
+        return authData.state?.token || authData.token;
       }
     } catch (error) {
       console.error('❌ [VehicleCard] Error parsing auth token:', error);
     }
-    console.log('❌ [VehicleCard] No token found');
     return null;
-  };
+  }, []);
 
   // Check if vehicle is saved (only when authenticated)
-  const hasToken = !!getToken();
+  const hasToken = !!getToken;
   const { data: savedStatus, error: savedError, isLoading: savedLoading } = useQuery({
     queryKey: ["/api/saved-vehicles/check", vehicle.id],
     enabled: hasToken, // Only enabled when user is authenticated

@@ -1,0 +1,200 @@
+🔍 useAuth - Skipping auth check on auth page
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Objectstate: {user: null, token: null}version: 0[[Prototype]]: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth storage raw: {"state":{"user":null,"token":null},"version":0}
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Auth data parsed: Objectstate: token: nulluser: null[[Prototype]]: Objectversion: 0[[Prototype]]: Object
+index-Bu6cXPT7.js:502 🔍 [VehicleCard] Token extracted: Missing
+alugae.mobi/:1 Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner.
