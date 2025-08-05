@@ -1,30 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '@/lib/auth';
 import type { AuthUser } from '@/types';
 
 /**
- * Sistema de autenticação simplificado e robusto
- * - Evita loops infinitos de requisições
- * - Usa apenas cookies httpOnly para segurança
- * - Não faz requisições automáticas desnecessárias
+ * Sistema de autenticação simplificado
+ * - Executa apenas uma verificação inicial
+ * - Usa cookies httpOnly para segurança
+ * - Não faz loops de requisições
  */
 export function useAuth() {
   const { user, isLoading, setAuth, clearAuth, setLoading } = useAuthStore();
+  const hasCheckedAuth = useRef(false);
   const [initialized, setInitialized] = useState(false);
 
-  // Verificação inicial de autenticação com refresh automático
+  // Verificação única de autenticação no mount
   useEffect(() => {
-    // Check for OAuth success parameter
-    const urlParams = new URLSearchParams(window.location.search);
-    const oauthSuccess = urlParams.get('oauth_success');
-    
-    // Skip auth check on auth pages to prevent unnecessary 401 errors, unless OAuth success
+    // Evita múltiplas execuções
+    if (hasCheckedAuth.current) {
+      return;
+    }
+    hasCheckedAuth.current = true;
+
+    // Skip em páginas de autenticação
     const isAuthPage = window.location.pathname === '/auth' || 
                        window.location.pathname === '/login' || 
                        window.location.pathname.startsWith('/register');
     
-    if (isAuthPage && !oauthSuccess) {
-      console.log('🔍 useAuth - Skipping auth check on auth page');
+    if (isAuthPage) {
       setLoading(false);
       setInitialized(true);
       return;
@@ -34,45 +36,19 @@ export function useAuth() {
       try {
         setLoading(true);
         
-        console.log('🔍 useAuth - Checking authentication...');
-        
-        // Force cache bypass with no-cache headers
-        const headers: Record<string, string> = {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0',
-        };
-        
-        // Add Authorization header if token exists
-        const token = sessionStorage.getItem('auth_token');
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-          console.log('🔍 useAuth - Using Authorization header fallback');
-        }
-        
-        // Add timestamp to prevent browser caching
-        const timestamp = new Date().getTime();
-        const response = await fetch(`/api/auth/user?_t=${timestamp}`, {
+        // Requisição simples sem cache bypass excessivo
+        const response = await fetch('/api/auth/user', {
           method: 'GET',
           credentials: 'include',
-          headers,
         });
-
-        console.log('🔍 useAuth - Auth check response:', response.status);
 
         if (response.ok) {
           const userData = await response.json();
-          console.log('✅ useAuth - User authenticated:', userData.email);
-          // Get token from sessionStorage if available
-          const storedToken = sessionStorage.getItem('auth_token');
-          setAuth(userData, storedToken || '');
+          setAuth(userData, '');
         } else {
-          console.log('❌ useAuth - Not authenticated, clearing auth');
           clearAuth();
         }
       } catch (error) {
-        console.log('❌ useAuth - Auth check error:', error);
         clearAuth();
       } finally {
         setLoading(false);
@@ -81,17 +57,7 @@ export function useAuth() {
     };
 
     checkAuth();
-    
-    // Re-check auth periodically to handle cache issues
-    const authCheckInterval = setInterval(() => {
-      if (!isAuthPage && user) {
-        console.log('🔄 useAuth - Periodic auth refresh check');
-        checkAuth();
-      }
-    }, 30000); // Check every 30 seconds
-
-    return () => clearInterval(authCheckInterval);
-  }, [setAuth, clearAuth, setLoading, user]);
+  }, []); // Sem dependências
 
   const login = async (email: string, password: string) => {
     try {

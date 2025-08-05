@@ -27,21 +27,7 @@ export default function Header() {
   const { user, token, clearAuth, refreshUser } = useAuthStore();
   const { updateFilter, clearFilters } = useSearch();
 
-  // Force refresh user data when component mounts
-  useEffect(() => {
-    const forceRefreshUser = async () => {
-      if (!user) {
-        console.log('🔄 Header - No user data, attempting refresh...');
-        try {
-          await refreshUser();
-        } catch (error) {
-          console.log('❌ Header - User refresh failed:', error);
-        }
-      }
-    };
-
-    forceRefreshUser();
-  }, [user, refreshUser]);
+  // Removed automatic refresh to prevent loops - use manual refresh button instead
 
   // Manual refresh function for user data
   const handleRefreshUser = async () => {
