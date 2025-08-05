@@ -13,6 +13,7 @@ import {
   insertWaitingQueueSchema, 
   insertUserDocumentSchema, 
   users,
+  userDocuments,
   vehicles,
   bookings,
   reviews,
@@ -1273,39 +1274,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin Document Management Routes
   app.get("/api/admin/documents", authenticateToken, requireAdmin, async (req, res) => {
     try {
-      const result = await pool.query(`
-        SELECT 
-          d.id,
-          d.user_id,
-          u.name as user_name,
-          u.email as user_email,
-          d.document_type,
-          d.document_url,
-          d.document_number,
-          d.status,
-          d.rejection_reason,
-          d.uploaded_at,
-          d.reviewed_at,
-          d.reviewed_by
-        FROM user_documents d
-        JOIN users u ON d.user_id = u.id
-        ORDER BY d.uploaded_at DESC
-      `);
-      
-      const documents = result.rows.map((row: any) => ({
-        id: row.id,
-        userId: row.user_id,
-        userName: row.user_name,
-        userEmail: row.user_email,
-        documentType: row.document_type,
-        documentUrl: row.document_url,
-        documentNumber: row.document_number,
-        status: row.status,
-        rejectionReason: row.rejection_reason,
-        uploadedAt: row.uploaded_at,
-        reviewedAt: row.reviewed_at,
-        reviewedBy: row.reviewed_by,
-      }));
+      const documents = await db
+        .select({
+          id: userDocuments.id,
+          userId: userDocuments.userId,
+          userName: users.name,
+          userEmail: users.email,
+          documentType: userDocuments.documentType,
+          documentUrl: userDocuments.documentUrl,
+          documentNumber: userDocuments.documentNumber,
+          status: userDocuments.status,
+          rejectionReason: userDocuments.rejectionReason,
+          uploadedAt: userDocuments.uploadedAt,
+          reviewedAt: userDocuments.reviewedAt,
+          reviewedBy: userDocuments.reviewedBy,
+        })
+        .from(userDocuments)
+        .innerJoin(users, eq(userDocuments.userId, users.id))
+        .orderBy(desc(userDocuments.uploadedAt));
       
       res.json(documents);
     } catch (error) {
