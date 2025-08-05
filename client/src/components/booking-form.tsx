@@ -246,7 +246,10 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
                     Protege contra danos, furto e roubo. Recomendamos contratar para sua segurança.
                   </p>
                   <p className="text-sm text-green-600 font-medium mt-1">
-                    + R$ {pricing.days > 0 ? formatCurrency(pricing.subtotal * ((adminSettings?.insuranceFeePercentage || 15) / 100)) : '0,00'}
+                    {pricing.days > 0 
+                      ? `+ ${formatCurrency(pricing.subtotal * ((adminSettings?.insuranceFeePercentage || 15) / 100))}`
+                      : '+ Calculado automaticamente (15% do valor do aluguel)'
+                    }
                   </p>
                 </div>
               </div>
