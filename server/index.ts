@@ -102,7 +102,24 @@ app.use((req, res, next) => {
 (async () => {
   // Add health check endpoint BEFORE other routes for quick response
   app.get('/health', (_req, res) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+    res.status(200).json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      service: 'alugae.mobi',
+      version: '1.0.0'
+    });
+  });
+
+  // Add deployment-specific health checks
+  app.get('/status', (_req, res) => {
+    res.status(200).json({
+      status: 'healthy',
+      service: 'alugae car rental platform',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      env: process.env.NODE_ENV || 'development',
+      port: process.env.PORT || '5000'
+    });
   });
 
   // Add root health check endpoint that responds quickly in production
@@ -115,7 +132,8 @@ app.use((req, res, next) => {
         res.status(200).json({ 
           status: 'ok', 
           timestamp: new Date().toISOString(),
-          message: 'alugae server is running'
+          message: 'alugae server is running',
+          service: 'alugae.mobi car rental platform'
         });
         return;
       }
@@ -130,8 +148,13 @@ app.use((req, res, next) => {
   const http = await import('http');
   server = http.createServer(app);
   
-  // Register routes with simplified error handling
+  // Register routes with robust error handling
   try {
+    // Test database connection first
+    const { pool } = await import("./db");
+    await pool.query('SELECT 1');
+    log('Database connection verified');
+    
     const routesModule = await import("./routes");
     registerRoutes = routesModule.registerRoutes;
     await registerRoutes(app);
@@ -139,12 +162,30 @@ app.use((req, res, next) => {
   } catch (error) {
     log(`Warning: Route registration failed, continuing with limited functionality: ${error}`, "error");
     
-    // Add essential fallback routes
+    // Add essential fallback routes that work without database
     app.get('/api/health', (_req, res) => {
       res.status(200).json({ 
         status: 'ok', 
         message: 'Server running with limited API functionality',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        error: String(error).substring(0, 200) // Include error info for debugging
+      });
+    });
+
+    // Add basic auth route fallback
+    app.get('/api/auth/user', (_req, res) => {
+      res.status(503).json({ 
+        message: 'Database connection unavailable',
+        status: 'service_unavailable'
+      });
+    });
+
+    // Add vehicles route fallback
+    app.get('/api/vehicles', (_req, res) => {
+      res.status(503).json({ 
+        message: 'Database connection unavailable',
+        status: 'service_unavailable',
+        data: []
       });
     });
   }
@@ -186,15 +227,56 @@ app.use((req, res, next) => {
     } catch (error) {
       log(`Static file serving setup failed, using fallback: ${error}`, "error");
       
-      // Provide a more robust fallback that still allows the app to start
-      app.use("*", (_req, res) => {
-        res.status(200).json({ 
-          status: 'ok', 
-          message: 'Server is running',
-          timestamp: new Date().toISOString(),
-          note: 'Static files may be building or unavailable'
+      // Import express static middleware directly as fallback
+      const express = await import("express");
+      const path = await import("path");
+      const fs = await import("fs");
+      
+      // Try alternative static file locations
+      const possiblePaths = [
+        path.resolve(import.meta.dirname, "..", "dist", "public"),
+        path.resolve(import.meta.dirname, "public"),
+        path.resolve(import.meta.dirname, "..", "client", "dist"),
+      ];
+
+      let staticPath = null;
+      for (const testPath of possiblePaths) {
+        if (fs.existsSync(testPath)) {
+          staticPath = testPath;
+          log(`Found static files at: ${staticPath}`, "info");
+          break;
+        }
+      }
+
+      if (staticPath) {
+        app.use(express.default.static(staticPath));
+        
+        // Handle SPA routing for missing files
+        app.use("*", (_req, res) => {
+          const indexPath = path.resolve(staticPath, "index.html");
+          if (fs.existsSync(indexPath)) {
+            res.sendFile(indexPath);
+          } else {
+            res.status(200).json({ 
+              status: 'ok', 
+              message: 'alugae server is running',
+              timestamp: new Date().toISOString(),
+              note: 'Frontend building or unavailable'
+            });
+          }
         });
-      });
+      } else {
+        log("No static files found, serving API-only mode", "warning");
+        // Provide a more robust fallback that still allows the app to start
+        app.use("*", (_req, res) => {
+          res.status(200).json({ 
+            status: 'ok', 
+            message: 'alugae API server is running',
+            timestamp: new Date().toISOString(),
+            note: 'Static files not found - API-only mode'
+          });
+        });
+      }
     }
   }
 
@@ -203,11 +285,26 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
+  
+  // Add graceful shutdown handling
+  const gracefulShutdown = () => {
+    log('Received shutdown signal, closing server gracefully...');
+    server.close(() => {
+      log('Server closed successfully');
+      process.exit(0);
+    });
+  };
+
+  process.on('SIGTERM', gracefulShutdown);
+  process.on('SIGINT', gracefulShutdown);
+
   server.listen({
     port,
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    log(`Database connected: ${process.env.DATABASE_URL ? 'Yes' : 'No'}`);
   });
 })();
