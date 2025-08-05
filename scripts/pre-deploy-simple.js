@@ -10,6 +10,7 @@
 import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import { URL } from 'url';
 
 // Configurações
 const config = {
@@ -76,6 +77,29 @@ class SimplePreDeploy {
     console.log('='.repeat(60));
   }
 
+  // Sanitize URL to prevent command injection
+  sanitizeUrl(url) {
+    try {
+      const parsedUrl = new URL(url);
+      // Only allow http/https protocols and safe characters
+      if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+        throw new Error('Invalid protocol');
+      }
+      return parsedUrl.toString();
+    } catch (error) {
+      throw new Error(`Invalid URL: ${url}`);
+    }
+  }
+
+  // Sanitize endpoint path to prevent command injection
+  sanitizeEndpoint(endpoint) {
+    // Only allow alphanumeric, hyphens, underscores, forward slashes and dots
+    if (!/^[a-zA-Z0-9\-_/.]+$/.test(endpoint)) {
+      throw new Error(`Invalid endpoint: ${endpoint}`);
+    }
+    return endpoint;
+  }
+
   async executeCommand(command, timeout = 10000) {
     try {
       const result = execSync(command, {
@@ -132,8 +156,9 @@ class SimplePreDeploy {
     this.logSection('🏥 VERIFICANDO SAÚDE DA APLICAÇÃO');
     
     try {
+      const sanitizedUrl = this.sanitizeUrl(config.appUrl);
       const result = await this.executeCommand(
-        `curl -s ${config.appUrl}/api/health || echo "FAILED"`,
+        `curl -s ${sanitizedUrl}/api/health || echo "FAILED"`,
         10000
       );
 
@@ -166,8 +191,10 @@ class SimplePreDeploy {
     
     for (const endpoint of config.healthEndpoints) {
       try {
+        const sanitizedUrl = this.sanitizeUrl(config.appUrl);
+        const sanitizedEndpoint = this.sanitizeEndpoint(endpoint);
         const result = await this.executeCommand(
-          `curl -s -o /dev/null -w "%{http_code}" ${config.appUrl}${endpoint}`,
+          `curl -s -o /dev/null -w "%{http_code}" ${sanitizedUrl}${sanitizedEndpoint}`,
           5000
         );
         
