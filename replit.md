@@ -6,7 +6,17 @@ alugae.mobi is a full-stack car rental platform connecting car owners with rente
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
-## Recent Changes (August 5, 2025)
+## Recent Changes (August 6, 2025)
+- **Stripe Payment Integration Fixed**: Resolved 500 errors in payment intent creation by disabling PIX payments temporarily
+- **PIX Payment Disabled**: PIX requires special Stripe dashboard configuration not available in test environment
+- **Payment Security Maintained**: Restored user verification requirement for payment intent creation
+- **Card Payments Working**: Successfully creating Stripe payment intents with card-only method
+- **Enhanced Payment Logging**: Added comprehensive debug logs for payment flow troubleshooting
+- **Mobile Header Optimized**: Removed "atualizar dados" button for mobile users to improve UX
+- **Search Anchor Added**: Implemented smooth scroll to search results when search button is clicked
+- **Insurance Calculation Fixed**: Now uses dynamic adminSettings.insuranceFeePercentage instead of hardcoded value
+
+## Previous Changes (August 5, 2025)
 - **Authentication System Fixed**: Resolved infinite loop issues in useAuth hook and header refresh mechanisms
 - **Cookie Configuration**: Corrected development cookie settings (SameSite=Lax, no Secure flag) for proper browser compatibility
 - **Service Worker Optimization**: Minimized SW listeners to prevent browser extension conflicts and message channel errors

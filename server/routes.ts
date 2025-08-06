@@ -449,12 +449,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Usuário não encontrado" });
       }
       
-      // Remove verification requirement temporarily for testing
-      // if (user.verificationStatus !== 'verified') {
-      //   return res.status(403).json({ 
-      //     message: "Usuário não verificado. Complete a verificação de documentos antes de alugar um veículo." 
-      //   });
-      // }
+      if (user.verificationStatus !== 'verified') {
+        return res.status(403).json({ 
+          message: "Usuário não verificado. Complete a verificação de documentos antes de alugar um veículo." 
+        });
+      }
 
       // Get vehicle details
       const vehicle = await storage.getVehicle(vehicleId);
