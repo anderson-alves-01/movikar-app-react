@@ -258,11 +258,7 @@ export default function ContractPreview() {
                     </div>
                   </div>
 
-                  <div className="mt-8 pt-6 border-t">
-                    <p className="text-xs text-gray-500 text-center">
-                      Este é um preview do contrato. A versão final será gerada após a assinatura digital.
-                    </p>
-                  </div>
+
                 </div>
               </div>
             </CardContent>
