@@ -24,8 +24,8 @@ export function getFeatureFlags(adminSettings?: any): FeatureFlags {
   const settings = adminSettings || defaultAdminSettings;
   
   return {
-    // PIX payments enabled based on admin settings AND environment
-    pixPaymentEnabled: settings.enablePixPayment && (isProduction || process.env.ENABLE_PIX_PAYMENT === 'true'),
+    // PIX payments temporarily disabled due to Stripe configuration requirements
+    pixPaymentEnabled: false, // settings.enablePixPayment && (isProduction || process.env.ENABLE_PIX_PAYMENT === 'true'),
     
     // PIX transfers based on admin settings
     pixTransferEnabled: settings.enablePixTransfer,

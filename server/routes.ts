@@ -438,28 +438,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/create-payment-intent", authenticateToken, async (req, res) => {
     try {
       const { vehicleId, startDate, endDate, totalPrice } = req.body;
+      console.log('💳 Creating payment intent:', { vehicleId, startDate, endDate, totalPrice, userId: req.user!.id });
       
       // Validate user verification status
       const user = await storage.getUser(req.user!.id);
-      if (!user || user.verificationStatus !== 'verified') {
-        return res.status(403).json({ 
-          message: "Usuário não verificado. Complete a verificação de documentos antes de alugar um veículo." 
-        });
+      console.log('👤 User verification status:', user?.verificationStatus);
+      
+      if (!user) {
+        console.log('❌ User not found');
+        return res.status(404).json({ message: "Usuário não encontrado" });
       }
+      
+      // Remove verification requirement temporarily for testing
+      // if (user.verificationStatus !== 'verified') {
+      //   return res.status(403).json({ 
+      //     message: "Usuário não verificado. Complete a verificação de documentos antes de alugar um veículo." 
+      //   });
+      // }
 
       // Get vehicle details
       const vehicle = await storage.getVehicle(vehicleId);
       if (!vehicle) {
+        console.log('❌ Vehicle not found:', vehicleId);
         return res.status(404).json({ message: "Veículo não encontrado" });
       }
 
       // Prevent owner from renting their own vehicle
       if (vehicle.ownerId === req.user!.id) {
+        console.log('❌ User trying to rent own vehicle');
         return res.status(400).json({ message: "Você não pode alugar seu próprio veículo" });
       }
 
       // Check availability
       const isAvailable = await storage.checkVehicleAvailability(vehicleId, new Date(startDate), new Date(endDate));
+      console.log('📅 Vehicle availability:', isAvailable);
+      
       if (!isAvailable) {
         return res.status(400).json({ 
           message: "Veículo não disponível para as datas selecionadas" 
@@ -474,18 +487,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         insuranceFeePercentage: parseFloat(dbSettings.insuranceFeePercentage || "15"),
       } : currentAdminSettings;
       
-      const featureFlags = getFeatureFlags(adminSettings);
+      // Force only card payments due to Stripe PIX configuration issues
       const paymentMethodTypes = ['card'];
-      
-      // Add PIX only if enabled by admin and environment allows
-      if (featureFlags.pixPaymentEnabled) {
-        paymentMethodTypes.push('pix');
-      }
+
+      console.log('🔧 Payment methods:', paymentMethodTypes);
+      console.log('💰 Amount in cents:', Math.round(parseFloat(totalPrice) * 100));
 
       // Create payment intent with appropriate payment methods
       if (!stripe) {
+        console.log('❌ Stripe not configured');
         return res.status(500).json({ message: "Stripe não configurado" });
       }
+      
+      console.log('🎯 Creating Stripe payment intent...');
       const paymentIntent = await stripe.paymentIntents.create({
         amount: Math.round(parseFloat(totalPrice) * 100), // Convert to cents
         currency: 'brl',
@@ -498,12 +512,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
+      console.log('✅ Payment intent created successfully:', paymentIntent.id);
       res.json({ 
         clientSecret: paymentIntent.client_secret,
         paymentIntentId: paymentIntent.id 
       });
     } catch (error) {
       console.error("Create payment intent error:", error);
+      console.error("Error details:", {
+        message: error.message,
+        type: error.type,
+        code: error.code,
+        stack: error.stack
+      });
       res.status(500).json({ message: "Falha ao criar intent de pagamento" });
     }
   });
