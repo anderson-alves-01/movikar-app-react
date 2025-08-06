@@ -247,8 +247,8 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
                   </p>
                   <p className="text-sm text-green-600 font-medium mt-1">
                     {pricing.days > 0 
-                      ? `+ ${formatCurrency(pricing.subtotal * ((adminSettings?.insuranceFeePercentage || 15) / 100))}`
-                      : '+ Calculado automaticamente (15% do valor do aluguel)'
+                      ? `+ ${formatCurrency(pricing.insuranceFee)}`
+                      : `+ Calculado automaticamente (${adminSettings?.insuranceFeePercentage || 15}% do valor do aluguel)`
                     }
                   </p>
                 </div>
