@@ -227,16 +227,18 @@ export default function ContractPreview() {
                       <div className="space-y-3">
                         <div>
                           <p><strong>LOCADOR:</strong> {bookingData?.vehicle?.owner?.name || 'Nome do Locador'}</p>
-                          <p>CPF/CNPJ: _______________________</p>
-                          <p>Endereço: {bookingData?.vehicle?.location || '_______________________'}</p>
-                          <p>Telefone: {bookingData?.vehicle?.owner?.phone || '_______________________'}</p>
+                          <p>CPF/CNPJ: {bookingData?.vehicle?.owner?.cpf || bookingData?.vehicle?.owner?.cnpj || 'Documento não informado'}</p>
+                          <p>Endereço: {bookingData?.vehicle?.owner?.location || bookingData?.vehicle?.location || 'Endereço não informado'}</p>
+                          <p>Telefone: {bookingData?.vehicle?.owner?.phone || 'Telefone não informado'}</p>
+                          <p>E-mail: {bookingData?.vehicle?.owner?.email || 'E-mail não informado'}</p>
                         </div>
                         <div>
                           <p><strong>LOCATÁRIO:</strong> {bookingData?.renter?.name || 'Nome do Locatário'}</p>
-                          <p>CPF: _______________________</p>
-                          <p>CNH: _______________________</p>
-                          <p>Endereço: {bookingData?.renter?.location || '_______________________'}</p>
-                          <p>Telefone: {bookingData?.renter?.phone || '_______________________'}</p>
+                          <p>CPF: {bookingData?.renter?.cpf || 'CPF não informado'}</p>
+                          <p>CNH: {bookingData?.renter?.cnh || 'CNH não informada'}</p>
+                          <p>Endereço: {bookingData?.renter?.location || 'Endereço não informado'}</p>
+                          <p>Telefone: {bookingData?.renter?.phone || 'Telefone não informado'}</p>
+                          <p>E-mail: {bookingData?.renter?.email || 'E-mail não informado'}</p>
                         </div>
                       </div>
                     </div>
@@ -250,81 +252,178 @@ export default function ContractPreview() {
                       </p>
                       <div className="bg-gray-50 p-4 rounded border">
                         <p><strong>Marca/Modelo:</strong> {bookingData?.vehicle?.brand} {bookingData?.vehicle?.model}</p>
-                        <p><strong>Ano/Modelo:</strong> {bookingData?.vehicle?.year || '_______'}</p>
-                        <p><strong>Cor:</strong> {bookingData?.vehicle?.color || '_______________________'}</p>
-                        <p><strong>Placa:</strong> {bookingData?.vehicle?.licensePlate || '_______________________'}</p>
-                        <p><strong>Chassi:</strong> _______________________</p>
-                        <p><strong>RENAVAM:</strong> {bookingData?.vehicle?.renavam || '_______________________'}</p>
-                        <p><strong>Combustível:</strong> {bookingData?.vehicle?.fuelType || '_______________________'}</p>
+                        <p><strong>Ano/Modelo:</strong> {bookingData?.vehicle?.year || 'Ano não informado'}</p>
+                        <p><strong>Cor:</strong> {bookingData?.vehicle?.color || 'Cor não informada'}</p>
+                        <p><strong>Placa:</strong> {bookingData?.vehicle?.licensePlate || 'Placa não informada'}</p>
+                        <p><strong>Chassi:</strong> {bookingData?.vehicle?.chassi || 'Chassi não informado'}</p>
+                        <p><strong>RENAVAM:</strong> {bookingData?.vehicle?.renavam || 'RENAVAM não informado'}</p>
+                        <p><strong>Combustível:</strong> {bookingData?.vehicle?.fuelType || 'Tipo de combustível não informado'}</p>
+                        <p><strong>Categoria:</strong> {bookingData?.vehicle?.category || 'Categoria não informada'}</p>
+                        <p><strong>Transmissão:</strong> {bookingData?.vehicle?.transmission || 'Transmissão não informada'}</p>
                       </div>
                     </div>
 
                     {/* Prazo e Valor */}
                     <div>
                       <h3 className="font-bold mb-3 text-base">3. DO PRAZO E VALOR</h3>
-                      <p><strong>3.1</strong> A locação terá início em <strong>{new Date(bookingData?.startDate).toLocaleDateString('pt-BR')}</strong> às <strong>_____</strong> horas, 
-                      e término em <strong>{new Date(bookingData?.endDate).toLocaleDateString('pt-BR')}</strong> às <strong>_____</strong> horas.</p>
+                      <p><strong>3.1</strong> A locação terá início no dia <strong>{new Date(bookingData?.startDate).toLocaleDateString('pt-BR')}</strong> às <strong>09:00</strong> horas, 
+                      e término no dia <strong>{new Date(bookingData?.endDate).toLocaleDateString('pt-BR')}</strong> às <strong>18:00</strong> horas.</p>
                       
-                      <p className="mt-3"><strong>3.2</strong> O valor total da locação é de <strong>R$ {bookingData?.totalPrice}</strong>, 
-                      sendo pago da seguinte forma:</p>
-                      <ul className="list-disc ml-6 mt-2 space-y-1">
-                        <li>Valor da locação: R$ {(parseFloat(bookingData?.totalPrice || '0') - parseFloat(bookingData?.serviceFee || '0') - parseFloat(bookingData?.insuranceFee || '0')).toFixed(2)}</li>
-                        <li>Taxa de serviço: R$ {bookingData?.serviceFee || '0,00'}</li>
-                        <li>Seguro (opcional): R$ {bookingData?.insuranceFee || '0,00'}</li>
-                      </ul>
+                      <p><strong>3.1.1</strong> Local de entrega e devolução: <strong>{bookingData?.vehicle?.location || 'Local a ser definido entre as partes'}</strong></p>
                       
-                      <p className="mt-3"><strong>3.3</strong> O pagamento será efetuado via plataforma digital antes da retirada do veículo.</p>
+                      <p className="mt-3"><strong>3.2</strong> O valor total da locação é de <strong>R$ {bookingData?.totalPrice}</strong> 
+                      ({(() => {
+                        const total = parseFloat(bookingData?.totalPrice || '0');
+                        if (total < 100) return 'menos de cem reais';
+                        if (total < 1000) return `${Math.floor(total / 100) > 0 ? `${Math.floor(total / 100) === 1 ? 'cento' : `${Math.floor(total / 100) * 100 === 200 ? 'duzentos' : `${Math.floor(total / 100)}centos`}`} e ` : ''}${Math.floor(total % 100) > 0 ? `${Math.floor(total % 100)} reais` : ''}`;
+                        return `${Math.floor(total)} reais`;
+                      })()}), sendo discriminado da seguinte forma:</p>
+                      
+                      <div className="bg-blue-50 p-3 rounded mt-2">
+                        <ul className="space-y-1 text-sm">
+                          <li>• Valor base da locação: <strong>R$ {(parseFloat(bookingData?.totalPrice || '0') - parseFloat(bookingData?.serviceFee || '0') - parseFloat(bookingData?.insuranceFee || '0')).toFixed(2)}</strong></li>
+                          <li>• Taxa de serviço da plataforma: <strong>R$ {bookingData?.serviceFee || '0,00'}</strong></li>
+                          {parseFloat(bookingData?.insuranceFee || '0') > 0 && (
+                            <li>• Seguro opcional: <strong>R$ {bookingData?.insuranceFee || '0,00'}</strong></li>
+                          )}
+                          <li className="border-t pt-1 font-semibold">• Valor total: <strong>R$ {bookingData?.totalPrice}</strong></li>
+                        </ul>
+                      </div>
+                      
+                      <p className="mt-3"><strong>3.3</strong> O pagamento foi/será efetuado integralmente via plataforma digital Stripe, 
+                      antes da entrega do veículo, conforme comprovante de pagamento anexo a este contrato.</p>
+                      
+                      <p><strong>3.4</strong> Em caso de atraso na devolução, será cobrada diária adicional proporcional ao valor da locação, 
+                      calculada por hora ou fração, limitada ao valor de uma diária completa.</p>
+                    </div>
+
+                    {/* Estado do Veículo */}
+                    <div>
+                      <h3 className="font-bold mb-3 text-base">4. DO ESTADO DO VEÍCULO</h3>
+                      <p><strong>4.1</strong> O veículo será entregue ao LOCATÁRIO em perfeito estado de funcionamento, 
+                      conservação e limpeza, com todos os equipamentos obrigatórios e opcionais em funcionamento.</p>
+                      
+                      <p><strong>4.2</strong> No ato da entrega, será realizada vistoria conjunta do veículo, 
+                      registrando-se fotograficamente o estado atual para comparação na devolução.</p>
+                      
+                      <p><strong>4.3</strong> O veículo será entregue com o tanque de combustível cheio e deverá ser 
+                      devolvido nas mesmas condições, sob pena de cobrança do valor correspondente ao abastecimento.</p>
                     </div>
 
                     {/* Obrigações do Locatário */}
                     <div>
-                      <h3 className="font-bold mb-3 text-base">4. DAS OBRIGAÇÕES DO LOCATÁRIO</h3>
+                      <h3 className="font-bold mb-3 text-base">5. DAS OBRIGAÇÕES DO LOCATÁRIO</h3>
                       <p className="mb-2">O LOCATÁRIO obriga-se a:</p>
                       <ul className="list-disc ml-6 space-y-1">
-                        <li>Utilizar o veículo exclusivamente para os fins a que se destina;</li>
-                        <li>Conservar o veículo em perfeito estado de funcionamento e limpeza;</li>
-                        <li>Devolver o veículo no local, data e hora acordados;</li>
-                        <li>Responsabilizar-se por todas as infrações de trânsito cometidas durante o período de locação;</li>
-                        <li>Comunicar imediatamente ao LOCADOR qualquer acidente, roubo, furto ou problema mecânico;</li>
-                        <li>Não permitir que terceiros conduzam o veículo sem autorização expressa do LOCADOR;</li>
-                        <li>Manter o veículo sempre com documentação em dia;</li>
-                        <li>Não transportar cargas ou passageiros em desacordo com as especificações do veículo;</li>
-                        <li>Arcar com despesas de combustível durante o período de locação.</li>
+                        <li>Utilizar o veículo exclusivamente para fins particulares e dentro do território nacional;</li>
+                        <li>Conservar o veículo em perfeito estado de funcionamento, limpeza e conservação;</li>
+                        <li>Devolver o veículo no local, data e hora acordados, nas mesmas condições de entrega;</li>
+                        <li>Responsabilizar-se integralmente por todas as infrações de trânsito cometidas durante o período de locação;</li>
+                        <li>Comunicar imediatamente ao LOCADOR, por escrito ou via plataforma, qualquer acidente, roubo, furto, avaria ou problema mecânico;</li>
+                        <li>Não permitir que terceiros conduzam o veículo sem autorização prévia e expressa do LOCADOR;</li>
+                        <li>Manter sempre em sua posse a documentação do veículo e sua CNH válida;</li>
+                        <li>Não transportar cargas ou passageiros em desacordo com as especificações técnicas do veículo;</li>
+                        <li>Arcar com todas as despesas de combustível durante o período de locação;</li>
+                        <li>Não fumar no interior do veículo;</li>
+                        <li>Não transportar animais sem autorização prévia;</li>
+                        <li>Respeitar rigorosamente as normas de trânsito e estacionamento;</li>
+                        <li>Não utilizar o veículo para fins comerciais, transporte remunerado ou participação em competições;</li>
+                        <li>Zelar pela segurança do veículo, mantendo-o sempre trancado quando estacionado.</li>
                       </ul>
                     </div>
 
                     {/* Obrigações do Locador */}
                     <div>
-                      <h3 className="font-bold mb-3 text-base">5. DAS OBRIGAÇÕES DO LOCADOR</h3>
+                      <h3 className="font-bold mb-3 text-base">6. DAS OBRIGAÇÕES DO LOCADOR</h3>
                       <p className="mb-2">O LOCADOR obriga-se a:</p>
                       <ul className="list-disc ml-6 space-y-1">
-                        <li>Entregar o veículo em perfeitas condições de uso e funcionamento;</li>
-                        <li>Fornecer toda a documentação necessária do veículo;</li>
-                        <li>Garantir que o veículo possui seguro obrigatório em dia;</li>
-                        <li>Responsabilizar-se por defeitos mecânicos não causados pelo LOCATÁRIO;</li>
-                        <li>Prestar assistência em caso de problemas mecânicos do veículo.</li>
+                        <li>Entregar o veículo em perfeitas condições de uso, funcionamento, limpeza e conservação;</li>
+                        <li>Fornecer toda a documentação obrigatória do veículo (CRLV, comprovante de seguro, etc.);</li>
+                        <li>Garantir que o veículo possui seguro DPVAT e demais seguros obrigatórios em dia;</li>
+                        <li>Responsabilizar-se por defeitos mecânicos preexistentes ou não causados pelo LOCATÁRIO;</li>
+                        <li>Prestar assistência técnica em caso de problemas mecânicos do veículo;</li>
+                        <li>Manter o veículo em dia com revisões e manutenções preventivas;</li>
+                        <li>Fornecer equipamentos de segurança obrigatórios (estepe, macaco, triângulo, etc.);</li>
+                        <li>Garantir que o veículo não possui débitos de IPVA, multas ou outros encargos;</li>
+                        <li>Disponibilizar número de contato para emergências durante todo o período da locação.</li>
                       </ul>
+                    </div>
+
+                    {/* Seguros e Responsabilidades */}
+                    <div>
+                      <h3 className="font-bold mb-3 text-base">7. DOS SEGUROS E RESPONSABILIDADES</h3>
+                      <p><strong>7.1</strong> O veículo possui seguro obrigatório (DPVAT) em vigência, 
+                      cobrindo danos pessoais causados por veículos automotores de via terrestre.</p>
+                      
+                      {parseFloat(bookingData?.insuranceFee || '0') > 0 ? (
+                        <p><strong>7.2</strong> Foi contratado seguro adicional opcional no valor de R$ {bookingData?.insuranceFee}, 
+                        cobrindo danos ao veículo conforme condições da seguradora.</p>
+                      ) : (
+                        <p><strong>7.2</strong> O LOCATÁRIO optou por não contratar seguro adicional, assumindo integral 
+                        responsabilidade por eventuais danos ao veículo.</p>
+                      )}
+                      
+                      <p><strong>7.3</strong> Em caso de sinistro, o LOCATÁRIO deverá comunicar imediatamente à autoridade competente 
+                      e ao LOCADOR, fornecendo todos os documentos necessários.</p>
                     </div>
 
                     {/* Penalidades */}
                     <div>
-                      <h3 className="font-bold mb-3 text-base">6. DAS PENALIDADES</h3>
-                      <p><strong>6.1</strong> O não cumprimento das obrigações aqui estabelecidas sujeitará a parte infratora ao pagamento de multa equivalente a 20% do valor do contrato.</p>
-                      <p><strong>6.2</strong> A devolução do veículo em atraso sujeitará o LOCATÁRIO ao pagamento de diária adicional proporcional.</p>
-                      <p><strong>6.3</strong> Danos ao veículo serão de inteira responsabilidade do LOCATÁRIO.</p>
+                      <h3 className="font-bold mb-3 text-base">8. DAS PENALIDADES E INFRAÇÕES</h3>
+                      <p><strong>8.1</strong> O não cumprimento das obrigações estabelecidas neste contrato 
+                      sujeitará a parte infratora ao pagamento de multa equivalente a 20% (vinte por cento) do valor total da locação.</p>
+                      
+                      <p><strong>8.2</strong> A devolução do veículo em atraso sujeitará o LOCATÁRIO ao pagamento de 
+                      R$ {(parseFloat(bookingData?.totalPrice || '0') / 
+                      Math.max(1, Math.ceil((new Date(bookingData?.endDate || new Date()).getTime() - new Date(bookingData?.startDate || new Date()).getTime()) / (1000 * 3600 * 24)))).toFixed(2)} 
+                      por dia ou fração de atraso.</p>
+                      
+                      <p><strong>8.3</strong> Danos ao veículo serão de inteira responsabilidade do LOCATÁRIO, 
+                      que deverá arcar com os custos de reparo conforme orçamentos apresentados pelo LOCADOR.</p>
+                      
+                      <p><strong>8.4</strong> Todas as infrações de trânsito cometidas durante o período de locação, 
+                      bem como seus valores e pontuações na CNH, são de responsabilidade exclusiva do LOCATÁRIO.</p>
+                      
+                      <p><strong>8.5</strong> O descumprimento das normas de utilização (fumo, animais, uso comercial) 
+                      sujeitará o LOCATÁRIO a multa de R$ 200,00 (duzentos reais) por infração.</p>
                     </div>
 
-                    {/* Foro */}
+                    {/* Resolução de Conflitos */}
                     <div>
-                      <h3 className="font-bold mb-3 text-base">7. DO FORO</h3>
-                      <p>As partes elegem o foro da comarca onde se encontra o veículo para dirimir quaisquer questões oriundas do presente contrato.</p>
+                      <h3 className="font-bold mb-3 text-base">9. DA RESOLUÇÃO DE CONFLITOS</h3>
+                      <p><strong>9.1</strong> As partes comprometem-se a buscar solução amigável para eventuais conflitos, 
+                      utilizando preferencialmente a mediação através da plataforma alugae.mobi.</p>
+                      
+                      <p><strong>9.2</strong> Não sendo possível a solução amigável, as partes elegem o foro da comarca de 
+                      <strong> {bookingData?.vehicle?.location?.split(',').slice(-2).join(',').trim() || 'Brasília, DF'} </strong> 
+                      para dirimir quaisquer questões oriundas do presente contrato.</p>
+                    </div>
+
+                    {/* Disposições Gerais */}
+                    <div>
+                      <h3 className="font-bold mb-3 text-base">10. DISPOSIÇÕES GERAIS</h3>
+                      <p><strong>10.1</strong> Este contrato obedece às disposições do Código Civil Brasileiro e demais legislações aplicáveis.</p>
+                      
+                      <p><strong>10.2</strong> Qualquer alteração neste contrato deverá ser feita por escrito e aceita por ambas as partes.</p>
+                      
+                      <p><strong>10.3</strong> A invalidade de qualquer cláusula não prejudicará a validade das demais.</p>
+                      
+                      <p><strong>10.4</strong> Este contrato foi intermediado pela plataforma digital alugae.mobi, 
+                      que atua como facilitadora da relação entre as partes.</p>
                     </div>
 
                     {/* Assinatura Digital */}
                     <div>
-                      <h3 className="font-bold mb-3 text-base">8. DA ASSINATURA DIGITAL</h3>
-                      <p>O presente contrato será assinado digitalmente através da plataforma DocuSign, 
-                      garantindo autenticidade, integridade e validade jurídica conforme a legislação brasileira vigente.</p>
+                      <h3 className="font-bold mb-3 text-base">11. DA ASSINATURA DIGITAL</h3>
+                      <p><strong>11.1</strong> O presente contrato será assinado digitalmente através da plataforma DocuSign, 
+                      garantindo autenticidade, integridade, validade jurídica e eficácia probatória conforme a 
+                      Lei nº 11.419/2006 e Medida Provisória nº 2.200-2/2001.</p>
+                      
+                      <p><strong>11.2</strong> As assinaturas digitais têm a mesma validade legal das assinaturas manuscritas, 
+                      sendo reconhecidas pelo ordenamento jurídico brasileiro.</p>
+                      
+                      <p><strong>11.3</strong> O certificado digital utilizado garante a identidade dos signatários 
+                      e a integridade do documento assinado.</p>
                     </div>
 
                     <div className="mt-8 pt-6 border-t text-center">
