@@ -2490,6 +2490,97 @@ export class DatabaseStorage implements IStorage {
 
     return true;
   }
+
+  // Payout system methods
+  async getPendingPayoutBookings(): Promise<any[]> {
+    try {
+      // Buscar bookings pagos que não têm repasse processado
+      const result = await db
+        .select({
+          id: bookings.id,
+          totalPrice: bookings.totalPrice,
+          paymentStatus: bookings.paymentStatus,
+          paymentConfirmedAt: bookings.paymentConfirmedAt,
+          vehicleOwnerId: vehicles.ownerId,
+          renterId: bookings.renterId,
+          hasInsurance: bookings.hasInsurance
+        })
+        .from(bookings)
+        .leftJoin(vehicles, eq(bookings.vehicleId, vehicles.id))
+        .leftJoin(payouts, eq(payouts.bookingId, bookings.id))
+        .where(
+          and(
+            eq(bookings.paymentStatus, 'paid'),
+            eq(bookings.status, 'confirmed'),
+            isNull(payouts.id) // Não tem repasse criado ainda
+          )
+        )
+        .limit(50);
+
+      return result;
+    } catch (error) {
+      console.error("Error fetching pending payout bookings:", error);
+      return [];
+    }
+  }
+
+  async createPayout(payoutData: {
+    bookingId: number;
+    ownerId: number;
+    renterId: number;
+    totalBookingAmount: string;
+    serviceFee: string;
+    insuranceFee: string;
+    netAmount: string;
+    ownerPix: string;
+    status: string;
+    method: string;
+  }): Promise<number> {
+    const [result] = await db
+      .insert(payouts)
+      .values({
+        ...payoutData,
+        couponDiscount: '0.00',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning({ id: payouts.id });
+
+    return result.id;
+  }
+
+  async updatePayoutStatus(payoutId: number, updates: {
+    status?: string;
+    reference?: string;
+    failureReason?: string;
+    processedAt?: Date;
+  }): Promise<void> {
+    await db
+      .update(payouts)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(eq(payouts.id, payoutId));
+  }
+
+  async getPayoutsByStatus(status: string, limit: number = 50): Promise<any[]> {
+    return await db
+      .select()
+      .from(payouts)
+      .where(eq(payouts.status, status))
+      .orderBy(desc(payouts.createdAt))
+      .limit(limit);
+  }
+
+  async getPayoutHistory(ownerId: number, limit: number = 50): Promise<any[]> {
+    return await db
+      .select()
+      .from(payouts)
+      .where(eq(payouts.ownerId, ownerId))
+      .orderBy(desc(payouts.createdAt))
+      .limit(limit);
+  }
 }
 
 export const storage = new DatabaseStorage();

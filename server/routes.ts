@@ -4170,62 +4170,174 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "BookingId e PaymentIntentId são obrigatórios" });
       }
 
-      // Sample booking data for now (in production would fetch from database)
-      const sampleBooking = {
-        id: bookingId,
-        totalPrice: "250.00",
-        ownerId: 123,
-        renterId: req.user!.id
-      };
+      // Buscar dados reais da reserva
+      const booking = await storage.getBooking(bookingId);
+      if (!booking) {
+        return res.status(404).json({ message: "Reserva não encontrada" });
+      }
 
-      // Sample owner data (in production would fetch from database)
-      const sampleOwner = {
-        id: 123,
-        pix: "owner@email.com" // Using the new field name
-      };
+      // Buscar dados do proprietário
+      const owner = await storage.getUser(booking.vehicle.ownerId);
+      if (!owner) {
+        return res.status(404).json({ message: "Proprietário não encontrado" });
+      }
 
-      if (!sampleOwner.pix) {
+      if (!owner.pix) {
         return res.status(400).json({ message: "Proprietário não possui chave PIX cadastrada" });
       }
 
-      // Sample admin settings (in production would fetch from database)
-      const serviceFeePercent = 10;
-      const insuranceFeePercent = 5;
+      // Buscar configurações administrativas
+      const adminSettings = await storage.getAdminSettings();
+      const serviceFeePercent = parseFloat(adminSettings?.serviceFeePercentage || "10");
+      const insuranceFeePercent = parseFloat(adminSettings?.insuranceFeePercentage || "15");
       
-      const totalPrice = parseFloat(sampleBooking.totalPrice);
+      const totalPrice = parseFloat(booking.totalPrice);
       const serviceFee = Math.round((totalPrice * serviceFeePercent) / 100 * 100) / 100;
-      const insuranceFee = Math.round((totalPrice * insuranceFeePercent) / 100 * 100) / 100;
+      const insuranceFee = booking.hasInsurance ? Math.round((totalPrice * insuranceFeePercent) / 100 * 100) / 100 : 0;
       const netAmount = Math.round((totalPrice - serviceFee - insuranceFee) * 100) / 100;
 
-      // Create payment transfer record (sample implementation)
-      const transfer = {
-        id: Date.now(),
-        bookingId: sampleBooking.id,
-        ownerId: sampleBooking.ownerId,
-        renterId: sampleBooking.renterId,
-        totalBookingAmount: totalPrice.toString(),
-        serviceFee: serviceFee.toString(),
-        insuranceFee: insuranceFee.toString(),
-        couponDiscount: '0',
-        netAmount: netAmount.toString(),
-        ownerPix: sampleOwner.pix,
-        status: 'pending',
-        method: 'transfer',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+      // Importar serviço PIX
+      const { PixPayoutService } = await import('./services/pixPayoutService.js');
+      const pixService = new PixPayoutService();
 
-      // In production, this would trigger actual PIX transfer
-      console.log("Transfer created:", transfer);
+      // Processar repasse com validações anti-fraude
+      const result = await pixService.processPayoutWithFraudCheck({
+        bookingId: booking.id,
+        ownerId: owner.id,
+        renterId: booking.renterId,
+        totalAmount: totalPrice,
+        serviceFee,
+        insuranceFee,
+        netAmount,
+        ownerPix: owner.pix
+      });
+
+      if (result.success) {
+        res.json({
+          success: true,
+          payoutId: result.payoutId,
+          message: result.message,
+          requiresManualReview: result.requiresManualReview
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          message: result.message
+        });
+      }
+
+    } catch (error: any) {
+      console.error("Error processing payment transfer:", error);
+      res.status(500).json({ message: "Erro ao processar repasse" });
+    }
+  });
+
+  // Admin: Aprovar repasse em revisão manual
+  app.post("/api/admin/approve-payout/:payoutId", authenticateToken, async (req, res) => {
+    try {
+      const user = req.user!;
+      if (user.role !== 'admin') {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      const payoutId = parseInt(req.params.payoutId);
+      const { approved, reason } = req.body;
+
+      // Importar e executar aprovação
+      const { PixPayoutService } = await import('./services/pixPayoutService.js');
+      const pixService = new PixPayoutService();
+      
+      // TODO: Implementar método de aprovação manual
+      // const result = await pixService.processManualApproval(payoutId, approved, reason);
 
       res.json({
         success: true,
-        transfer,
-        message: "Repasse processado com sucesso. O proprietário receberá o valor em até 2 dias úteis."
+        message: approved ? "Repasse aprovado e processado" : "Repasse rejeitado"
       });
-    } catch (error) {
-      console.error("Error processing payment transfer:", error);
-      res.status(500).json({ message: "Erro ao processar repasse" });
+
+    } catch (error: any) {
+      console.error("Error approving payout:", error);
+      res.status(500).json({ message: "Erro ao aprovar repasse" });
+    }
+  });
+
+  // Webhook Stripe para trigger automático
+  app.post("/api/webhooks/stripe", async (req, res) => {
+    try {
+      // TODO: Validar assinatura do webhook Stripe
+      const event = req.body;
+
+      const { autoPayoutService } = await import('./services/autoPayoutService.js');
+      await autoPayoutService.handleStripeWebhook(event);
+
+      res.json({ received: true });
+
+    } catch (error: any) {
+      console.error("Error handling Stripe webhook:", error);
+      res.status(500).json({ message: "Webhook error" });
+    }
+  });
+
+  // Trigger manual de repasse (para testes)
+  app.post("/api/admin/trigger-payout/:bookingId", authenticateToken, async (req, res) => {
+    try {
+      const user = req.user!;
+      if (user.role !== 'admin') {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      const bookingId = parseInt(req.params.bookingId);
+      
+      const { autoPayoutService } = await import('./services/autoPayoutService.js');
+      await autoPayoutService.triggerPayoutAfterPayment(bookingId);
+
+      res.json({
+        success: true,
+        message: "Trigger de repasse executado"
+      });
+
+    } catch (error: any) {
+      console.error("Error triggering payout:", error);
+      res.status(500).json({ message: "Erro ao executar trigger" });
+    }
+  });
+
+  // Admin: Estatísticas de repasses
+  app.get("/api/admin/payout-stats", authenticateToken, async (req, res) => {
+    try {
+      const user = req.user!;
+      if (user.role !== 'admin') {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      const statsQuery = `
+        SELECT 
+          COUNT(CASE WHEN status = 'pending' THEN 1 END) as total_pending,
+          COUNT(CASE WHEN status = 'completed' THEN 1 END) as total_completed,
+          COUNT(CASE WHEN status = 'failed' THEN 1 END) as total_failed,
+          COUNT(CASE WHEN status = 'manual_review' THEN 1 END) as total_manual_review,
+          SUM(CASE WHEN status = 'pending' THEN CAST(net_amount AS DECIMAL(10,2)) ELSE 0 END) as total_amount_pending,
+          SUM(CASE WHEN status = 'completed' THEN CAST(net_amount AS DECIMAL(10,2)) ELSE 0 END) as total_amount_completed
+        FROM payouts
+      `;
+
+      const result = await pool.query(statsQuery);
+      const row = result.rows[0];
+
+      const stats = {
+        totalPending: parseInt(row.total_pending || '0'),
+        totalCompleted: parseInt(row.total_completed || '0'),
+        totalFailed: parseInt(row.total_failed || '0'),
+        totalManualReview: parseInt(row.total_manual_review || '0'),
+        totalAmountPending: parseFloat(row.total_amount_pending || '0'),
+        totalAmountCompleted: parseFloat(row.total_amount_completed || '0'),
+      };
+
+      res.json(stats);
+
+    } catch (error: any) {
+      console.error("Error fetching payout stats:", error);
+      res.status(500).json({ message: "Erro ao buscar estatísticas" });
     }
   });
 
