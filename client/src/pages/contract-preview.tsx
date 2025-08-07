@@ -211,50 +211,127 @@ export default function ContractPreview() {
               <div className="prose max-w-none">
                 <div className="bg-white border rounded-lg p-6 shadow-sm">
                   
-                  <div className="text-center mb-6">
-                    <h2 className="text-xl font-bold">CONTRATO DE LOCAÇÃO DE VEÍCULO</h2>
-                    <p className="text-sm text-gray-600 mt-2">
-                      Número: CNT-{bookingData?.id || (contractData as any)?.id}-{Date.now().toString().slice(-6)}
-                    </p>
+                  <div className="text-center mb-8">
+                    <h2 className="text-xl font-bold mb-4">CONTRATO DE LOCAÇÃO DE AUTOMÓVEL POR PRAZO DETERMINADO</h2>
+                    <div className="text-sm space-y-1">
+                      <p><strong>Contrato Nº:</strong> {bookingData?.id || (contractData as any)?.id}-{new Date().getFullYear()}</p>
+                      <p><strong>Data:</strong> {new Date().toLocaleDateString('pt-BR')}</p>
+                    </div>
                   </div>
 
-                  <div className="space-y-4 text-sm">
+                  <div className="space-y-6 text-sm leading-relaxed">
+                    
+                    {/* Qualificação das Partes */}
                     <div>
-                      <h3 className="font-semibold mb-2">1. PARTES CONTRATANTES</h3>
-                      <p><strong>LOCADOR:</strong> {bookingData?.vehicle?.owner?.name || 'Proprietário do Veículo'}</p>
-                      <p><strong>LOCATÁRIO:</strong> {bookingData?.renter?.name || 'Locatário'}</p>
+                      <h3 className="font-bold mb-3 text-base">1. QUALIFICAÇÃO DAS PARTES</h3>
+                      <div className="space-y-3">
+                        <div>
+                          <p><strong>LOCADOR:</strong> {bookingData?.vehicle?.owner?.name || 'Nome do Locador'}</p>
+                          <p>CPF/CNPJ: _______________________</p>
+                          <p>Endereço: {bookingData?.vehicle?.location || '_______________________'}</p>
+                          <p>Telefone: {bookingData?.vehicle?.owner?.phone || '_______________________'}</p>
+                        </div>
+                        <div>
+                          <p><strong>LOCATÁRIO:</strong> {bookingData?.renter?.name || 'Nome do Locatário'}</p>
+                          <p>CPF: _______________________</p>
+                          <p>CNH: _______________________</p>
+                          <p>Endereço: {bookingData?.renter?.location || '_______________________'}</p>
+                          <p>Telefone: {bookingData?.renter?.phone || '_______________________'}</p>
+                        </div>
+                      </div>
                     </div>
 
+                    {/* Objeto do Contrato */}
                     <div>
-                      <h3 className="font-semibold mb-2">2. OBJETO DO CONTRATO</h3>
-                      <p>O LOCADOR concede ao LOCATÁRIO, em caráter temporário e oneroso, o uso do veículo:</p>
-                      <p><strong>Marca/Modelo:</strong> {bookingData?.vehicle?.brand} {bookingData?.vehicle?.model} {bookingData?.vehicle?.year}</p>
-                      <p><strong>Placa:</strong> {bookingData?.vehicle?.licensePlate || 'A definir'}</p>
+                      <h3 className="font-bold mb-3 text-base">2. DO OBJETO</h3>
+                      <p className="mb-3">
+                        O presente contrato tem por objeto a locação do veículo automotor abaixo discriminado, 
+                        de propriedade do LOCADOR, pelo prazo e condições aqui estabelecidas:
+                      </p>
+                      <div className="bg-gray-50 p-4 rounded border">
+                        <p><strong>Marca/Modelo:</strong> {bookingData?.vehicle?.brand} {bookingData?.vehicle?.model}</p>
+                        <p><strong>Ano/Modelo:</strong> {bookingData?.vehicle?.year || '_______'}</p>
+                        <p><strong>Cor:</strong> {bookingData?.vehicle?.color || '_______________________'}</p>
+                        <p><strong>Placa:</strong> {bookingData?.vehicle?.licensePlate || '_______________________'}</p>
+                        <p><strong>Chassi:</strong> _______________________</p>
+                        <p><strong>RENAVAM:</strong> {bookingData?.vehicle?.renavam || '_______________________'}</p>
+                        <p><strong>Combustível:</strong> {bookingData?.vehicle?.fuelType || '_______________________'}</p>
+                      </div>
                     </div>
 
+                    {/* Prazo e Valor */}
                     <div>
-                      <h3 className="font-semibold mb-2">3. PERÍODO E VALORES</h3>
-                      <p><strong>Período:</strong> {new Date(bookingData?.startDate).toLocaleDateString('pt-BR')} às {new Date(bookingData?.endDate).toLocaleDateString('pt-BR')}</p>
-                      <p><strong>Valor da Locação:</strong> R$ {bookingData?.totalPrice}</p>
-                      <p><strong>Taxa de Serviço:</strong> R$ {bookingData?.serviceFee || '0,00'}</p>
-                      <p><strong>Seguro:</strong> R$ {bookingData?.insuranceFee || '0,00'}</p>
-                    </div>
-
-                    <div>
-                      <h3 className="font-semibold mb-2">4. RESPONSABILIDADES</h3>
-                      <p>O LOCATÁRIO compromete-se a:</p>
+                      <h3 className="font-bold mb-3 text-base">3. DO PRAZO E VALOR</h3>
+                      <p><strong>3.1</strong> A locação terá início em <strong>{new Date(bookingData?.startDate).toLocaleDateString('pt-BR')}</strong> às <strong>_____</strong> horas, 
+                      e término em <strong>{new Date(bookingData?.endDate).toLocaleDateString('pt-BR')}</strong> às <strong>_____</strong> horas.</p>
+                      
+                      <p className="mt-3"><strong>3.2</strong> O valor total da locação é de <strong>R$ {bookingData?.totalPrice}</strong>, 
+                      sendo pago da seguinte forma:</p>
                       <ul className="list-disc ml-6 mt-2 space-y-1">
-                        <li>Utilizar o veículo com cuidado e responsabilidade</li>
-                        <li>Devolver o veículo nas mesmas condições de entrega</li>
-                        <li>Comunicar imediatamente qualquer acidente ou problema</li>
-                        <li>Respeitar todas as leis de trânsito</li>
-                        <li>Não transferir a posse do veículo a terceiros</li>
+                        <li>Valor da locação: R$ {(parseFloat(bookingData?.totalPrice || '0') - parseFloat(bookingData?.serviceFee || '0') - parseFloat(bookingData?.insuranceFee || '0')).toFixed(2)}</li>
+                        <li>Taxa de serviço: R$ {bookingData?.serviceFee || '0,00'}</li>
+                        <li>Seguro (opcional): R$ {bookingData?.insuranceFee || '0,00'}</li>
+                      </ul>
+                      
+                      <p className="mt-3"><strong>3.3</strong> O pagamento será efetuado via plataforma digital antes da retirada do veículo.</p>
+                    </div>
+
+                    {/* Obrigações do Locatário */}
+                    <div>
+                      <h3 className="font-bold mb-3 text-base">4. DAS OBRIGAÇÕES DO LOCATÁRIO</h3>
+                      <p className="mb-2">O LOCATÁRIO obriga-se a:</p>
+                      <ul className="list-disc ml-6 space-y-1">
+                        <li>Utilizar o veículo exclusivamente para os fins a que se destina;</li>
+                        <li>Conservar o veículo em perfeito estado de funcionamento e limpeza;</li>
+                        <li>Devolver o veículo no local, data e hora acordados;</li>
+                        <li>Responsabilizar-se por todas as infrações de trânsito cometidas durante o período de locação;</li>
+                        <li>Comunicar imediatamente ao LOCADOR qualquer acidente, roubo, furto ou problema mecânico;</li>
+                        <li>Não permitir que terceiros conduzam o veículo sem autorização expressa do LOCADOR;</li>
+                        <li>Manter o veículo sempre com documentação em dia;</li>
+                        <li>Não transportar cargas ou passageiros em desacordo com as especificações do veículo;</li>
+                        <li>Arcar com despesas de combustível durante o período de locação.</li>
                       </ul>
                     </div>
 
+                    {/* Obrigações do Locador */}
                     <div>
-                      <h3 className="font-semibold mb-2">5. ASSINATURA DIGITAL</h3>
-                      <p>Este contrato será assinado digitalmente através da plataforma DocuSign, garantindo autenticidade e validade jurídica internacional.</p>
+                      <h3 className="font-bold mb-3 text-base">5. DAS OBRIGAÇÕES DO LOCADOR</h3>
+                      <p className="mb-2">O LOCADOR obriga-se a:</p>
+                      <ul className="list-disc ml-6 space-y-1">
+                        <li>Entregar o veículo em perfeitas condições de uso e funcionamento;</li>
+                        <li>Fornecer toda a documentação necessária do veículo;</li>
+                        <li>Garantir que o veículo possui seguro obrigatório em dia;</li>
+                        <li>Responsabilizar-se por defeitos mecânicos não causados pelo LOCATÁRIO;</li>
+                        <li>Prestar assistência em caso de problemas mecânicos do veículo.</li>
+                      </ul>
+                    </div>
+
+                    {/* Penalidades */}
+                    <div>
+                      <h3 className="font-bold mb-3 text-base">6. DAS PENALIDADES</h3>
+                      <p><strong>6.1</strong> O não cumprimento das obrigações aqui estabelecidas sujeitará a parte infratora ao pagamento de multa equivalente a 20% do valor do contrato.</p>
+                      <p><strong>6.2</strong> A devolução do veículo em atraso sujeitará o LOCATÁRIO ao pagamento de diária adicional proporcional.</p>
+                      <p><strong>6.3</strong> Danos ao veículo serão de inteira responsabilidade do LOCATÁRIO.</p>
+                    </div>
+
+                    {/* Foro */}
+                    <div>
+                      <h3 className="font-bold mb-3 text-base">7. DO FORO</h3>
+                      <p>As partes elegem o foro da comarca onde se encontra o veículo para dirimir quaisquer questões oriundas do presente contrato.</p>
+                    </div>
+
+                    {/* Assinatura Digital */}
+                    <div>
+                      <h3 className="font-bold mb-3 text-base">8. DA ASSINATURA DIGITAL</h3>
+                      <p>O presente contrato será assinado digitalmente através da plataforma DocuSign, 
+                      garantindo autenticidade, integridade e validade jurídica conforme a legislação brasileira vigente.</p>
+                    </div>
+
+                    <div className="mt-8 pt-6 border-t text-center">
+                      <p className="font-medium">E, por estarem assim justos e contratados, assinam o presente instrumento.</p>
+                      <p className="mt-4 text-xs text-gray-500">
+                        Contrato gerado eletronicamente via plataforma alugae.mobi
+                      </p>
                     </div>
                   </div>
 
