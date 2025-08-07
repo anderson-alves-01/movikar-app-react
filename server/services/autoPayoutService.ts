@@ -28,26 +28,45 @@ export class AutoPayoutService {
         return;
       }
 
-      // 3. Aguardar período de segurança (ex: 2 horas após pagamento)
-      const SECURITY_DELAY_HOURS = 2;
-      const paymentTime = booking.paymentConfirmedAt || booking.updatedAt;
+      // 3. Verificar se existe vistoria aprovada
+      const inspection = await storage.getInspectionByBooking(bookingId);
+      if (!inspection) {
+        console.log("⏳ Aguardando vistoria do veículo para booking:", bookingId);
+        return;
+      }
+
+      if (inspection.approvalDecision !== true) {
+        if (inspection.approvalDecision === false) {
+          console.log("❌ Vistoria reprovada, processando estorno para booking:", bookingId);
+          await this.processRefundForRejectedInspection(booking, inspection);
+        } else {
+          console.log("⏳ Vistoria ainda pendente de decisão para booking:", bookingId);
+        }
+        return;
+      }
+
+      console.log("✅ Vistoria aprovada, prosseguindo com repasse para booking:", bookingId);
+
+      // 4. Aguardar período de segurança após aprovação da vistoria
+      const SECURITY_DELAY_HOURS = 1; // Reduzido para 1 hora após vistoria aprovada
+      const inspectionTime = inspection.decidedAt || inspection.updatedAt;
       const securityDelay = SECURITY_DELAY_HOURS * 60 * 60 * 1000;
       
-      if (paymentTime && Date.now() - new Date(paymentTime).getTime() < securityDelay) {
-        console.log("⏰ Ainda dentro do período de segurança, aguardando...");
+      if (inspectionTime && Date.now() - new Date(inspectionTime).getTime() < securityDelay) {
+        console.log("⏰ Ainda dentro do período de segurança pós-vistoria, aguardando...");
         // Agendar para depois
         setTimeout(() => this.triggerPayoutAfterPayment(bookingId), securityDelay);
         return;
       }
 
-      // 4. Buscar proprietário
+      // 5. Buscar proprietário
       const owner = await storage.getUser(booking.vehicle.ownerId);
       if (!owner?.pix) {
         console.error("❌ Proprietário sem PIX cadastrado:", booking.vehicle.ownerId);
         return;
       }
 
-      // 5. Calcular valores
+      // 6. Calcular valores
       const adminSettings = await storage.getAdminSettings();
       const serviceFeePercent = parseFloat(adminSettings?.serviceFeePercentage || "10");
       const insuranceFeePercent = parseFloat(adminSettings?.insuranceFeePercentage || "15");
@@ -57,7 +76,7 @@ export class AutoPayoutService {
       const insuranceFee = booking.hasInsurance ? Math.round((totalPrice * insuranceFeePercent) / 100 * 100) / 100 : 0;
       const netAmount = Math.round((totalPrice - serviceFee - insuranceFee) * 100) / 100;
 
-      // 6. Processar repasse com anti-fraude
+      // 7. Processar repasse com anti-fraude
       const result = await this.pixService.processPayoutWithFraudCheck({
         bookingId: booking.id,
         ownerId: owner.id,
@@ -77,6 +96,81 @@ export class AutoPayoutService {
 
     } catch (error) {
       console.error("❌ Erro no trigger automático de repasse:", error);
+    }
+  }
+
+  /**
+   * Processar estorno quando vistoria é rejeitada
+   */
+  private async processRefundForRejectedInspection(booking: any, inspection: any): Promise<void> {
+    try {
+      console.log("🔄 Processando estorno para vistoria rejeitada - Booking:", booking.id);
+      
+      // Verificar se já foi processado
+      if (booking.refundProcessed) {
+        console.log("ℹ️ Estorno já processado para booking:", booking.id);
+        return;
+      }
+
+      // Buscar dados do locatário
+      const renter = await storage.getUser(booking.renterId);
+      if (!renter?.pix) {
+        console.error("❌ Locatário sem PIX cadastrado para estorno:", booking.renterId);
+        
+        // Marcar para estorno manual
+        await storage.updateBooking(booking.id, {
+          status: 'refund_pending',
+          refundReason: `Vistoria rejeitada: ${inspection.rejectionReason}`,
+          refundStatus: 'manual_required'
+        });
+        return;
+      }
+
+      // Calcular valor total a estornar (sem descontar taxas)
+      const refundAmount = parseFloat(booking.totalPrice);
+      
+      // Tentar processar estorno via PIX
+      const refundResult = await this.pixService.processRefund({
+        bookingId: booking.id,
+        renterId: booking.renterId,
+        amount: refundAmount,
+        renterPix: renter.pix,
+        reason: `Estorno por vistoria rejeitada: ${inspection.rejectionReason}`
+      });
+
+      if (refundResult.success) {
+        // Atualizar status da reserva
+        await storage.updateBooking(booking.id, {
+          status: 'refunded',
+          refundProcessed: true,
+          refundAmount: refundAmount.toString(),
+          refundReason: `Vistoria rejeitada: ${inspection.rejectionReason}`,
+          refundStatus: 'completed',
+          refundProcessedAt: new Date()
+        });
+
+        console.log("✅ Estorno processado com sucesso para booking:", booking.id);
+      } else {
+        console.error("❌ Falha no estorno automático:", refundResult.message);
+        
+        // Marcar para estorno manual
+        await storage.updateBooking(booking.id, {
+          status: 'refund_pending',
+          refundReason: `Vistoria rejeitada: ${inspection.rejectionReason}`,
+          refundStatus: 'failed_auto',
+          refundError: refundResult.message
+        });
+      }
+
+    } catch (error) {
+      console.error("❌ Erro no processamento de estorno:", error);
+      
+      // Marcar para estorno manual em caso de erro
+      await storage.updateBooking(booking.id, {
+        status: 'refund_pending',
+        refundReason: `Vistoria rejeitada: ${inspection.rejectionReason}`,
+        refundStatus: 'error'
+      });
     }
   }
 

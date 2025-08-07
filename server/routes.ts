@@ -11,7 +11,8 @@ import {
   insertVehicleBrandSchema, 
   insertVehicleAvailabilitySchema, 
   insertWaitingQueueSchema, 
-  insertUserDocumentSchema, 
+  insertUserDocumentSchema,
+  insertVehicleInspectionSchema,
   users,
   userDocuments,
   vehicles,
@@ -19,11 +20,13 @@ import {
   reviews,
   subscriptionPlans,
   userSubscriptions,
+  vehicleInspections,
   type User, 
   type VehicleBrand, 
   type UserDocument,
   type SubscriptionPlan,
-  type UserSubscription
+  type UserSubscription,
+  type VehicleInspection
 } from "@shared/schema";
 import { ZodError } from "zod";
 // import { contractService } from "./services/contractService.js";
@@ -2113,7 +2116,154 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Vehicle Inspection routes
+  app.get("/api/inspections/booking/:bookingId", authenticateToken, async (req, res) => {
+    try {
+      const inspection = await storage.getInspectionByBooking(parseInt(req.params.bookingId));
+      res.json(inspection);
+    } catch (error) {
+      console.error("Get inspection error:", error);
+      res.status(500).json({ message: "Falha ao buscar vistoria" });
+    }
+  });
 
+  app.get("/api/inspections/renter", authenticateToken, async (req, res) => {
+    try {
+      const inspections = await storage.getInspectionsByRenter(req.user!.id);
+      res.json(inspections);
+    } catch (error) {
+      console.error("Get renter inspections error:", error);
+      res.status(500).json({ message: "Falha ao buscar vistorias do locatário" });
+    }
+  });
+
+  app.get("/api/inspections/owner", authenticateToken, async (req, res) => {
+    try {
+      const inspections = await storage.getInspectionsByOwner(req.user!.id);
+      res.json(inspections);
+    } catch (error) {
+      console.error("Get owner inspections error:", error);
+      res.status(500).json({ message: "Falha ao buscar vistorias do proprietário" });
+    }
+  });
+
+  app.post("/api/inspections", authenticateToken, async (req, res) => {
+    try {
+      const inspectionData = insertVehicleInspectionSchema.parse({
+        ...req.body,
+        renterId: req.user!.id,
+      });
+
+      // Verificar se a reserva pertence ao usuário
+      const booking = await storage.getBooking(inspectionData.bookingId);
+      if (!booking || booking.renterId !== req.user!.id) {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      // Verificar se já existe vistoria para essa reserva
+      const existingInspection = await storage.getInspectionByBooking(inspectionData.bookingId);
+      if (existingInspection) {
+        return res.status(400).json({ message: "Já existe uma vistoria para esta reserva" });
+      }
+
+      const inspection = await storage.createVehicleInspection(inspectionData);
+      res.status(201).json(inspection);
+    } catch (error) {
+      console.error("Create inspection error:", error);
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Dados inválidos", errors: error.errors });
+      }
+      res.status(500).json({ message: "Falha ao criar vistoria" });
+    }
+  });
+
+  app.put("/api/inspections/:id", authenticateToken, async (req, res) => {
+    try {
+      const inspection = await storage.getVehicleInspection(parseInt(req.params.id));
+      if (!inspection) {
+        return res.status(404).json({ message: "Vistoria não encontrada" });
+      }
+
+      // Verificar se o usuário pode editar esta vistoria (é o locatário)
+      if (inspection.renterId !== req.user!.id) {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      const updateData = insertVehicleInspectionSchema.partial().parse(req.body);
+      const updatedInspection = await storage.updateVehicleInspection(parseInt(req.params.id), updateData);
+      
+      if (!updatedInspection) {
+        return res.status(404).json({ message: "Vistoria não encontrada" });
+      }
+
+      res.json(updatedInspection);
+    } catch (error) {
+      console.error("Update inspection error:", error);
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Dados inválidos", errors: error.errors });
+      }
+      res.status(500).json({ message: "Falha ao atualizar vistoria" });
+    }
+  });
+
+  app.post("/api/inspections/:id/approve", authenticateToken, async (req, res) => {
+    try {
+      const inspection = await storage.getVehicleInspection(parseInt(req.params.id));
+      if (!inspection) {
+        return res.status(404).json({ message: "Vistoria não encontrada" });
+      }
+
+      // Verificar se o usuário pode aprovar esta vistoria (é o locatário)
+      if (inspection.renterId !== req.user!.id) {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      const approvedInspection = await storage.approveInspection(parseInt(req.params.id));
+      
+      if (!approvedInspection) {
+        return res.status(404).json({ message: "Vistoria não encontrada" });
+      }
+
+      // TODO: Aqui seria o trigger para processar o pagamento ao proprietário
+      
+      res.json(approvedInspection);
+    } catch (error) {
+      console.error("Approve inspection error:", error);
+      res.status(500).json({ message: "Falha ao aprovar vistoria" });
+    }
+  });
+
+  app.post("/api/inspections/:id/reject", authenticateToken, async (req, res) => {
+    try {
+      const { reason, refundAmount } = req.body;
+      if (!reason) {
+        return res.status(400).json({ message: "Motivo da rejeição é obrigatório" });
+      }
+
+      const inspection = await storage.getVehicleInspection(parseInt(req.params.id));
+      if (!inspection) {
+        return res.status(404).json({ message: "Vistoria não encontrada" });
+      }
+
+      // Verificar se o usuário pode rejeitar esta vistoria (é o locatário)
+      if (inspection.renterId !== req.user!.id) {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      const rejectedInspection = await storage.rejectInspection(parseInt(req.params.id), reason, refundAmount);
+      
+      if (!rejectedInspection) {
+        return res.status(404).json({ message: "Vistoria não encontrada" });
+      }
+
+      // TODO: Aqui seria o trigger para processar o estorno ao locatário
+      
+      res.json(rejectedInspection);
+    } catch (error) {
+      console.error("Reject inspection error:", error);
+      res.status(500).json({ message: "Falha ao rejeitar vistoria" });
+    }
+  });
 
   // Vehicle Brands Management (Admin)
   app.get("/api/vehicle-brands", async (req, res) => {

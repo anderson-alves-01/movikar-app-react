@@ -49,6 +49,7 @@ import SubscriptionSuccess from "@/pages/subscription-success";
 import TestSubscription from "@/pages/test-subscription";
 import DebugAuth from "@/pages/debug-auth";
 import AuthDebug from "@/pages/auth-debug";
+import Inspection from "@/pages/inspection";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt, IOSInstallPrompt } from "@/components/InstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
@@ -78,6 +79,7 @@ function Router() {
       <Route path="/dashboard" component={Profile} />
       <Route path="/messages" component={Messages} />
       <Route path="/contracts" component={Contracts} />
+      <Route path="/inspection" component={Inspection} />
       <Route path="/contracts/:id" component={ContractPreview} />
       <Route path="/rewards" component={Rewards} />
       <Route path="/suggestions" component={Suggestions} />

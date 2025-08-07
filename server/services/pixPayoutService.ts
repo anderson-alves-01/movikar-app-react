@@ -1,10 +1,10 @@
-import { db } from "../storage.js";
+import { db } from "../db.js";
 import { payouts, users, bookings, vehicles } from "../../shared/schema.js";
 import { eq, and, gte, lte, desc } from "drizzle-orm";
 import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2024-06-20",
+  apiVersion: "2025-07-30.basil",
 });
 
 export interface PayoutRequest {
@@ -238,7 +238,7 @@ export class PixPayoutService {
     }
 
     // Padrão de valores muito similares (possível automação)
-    const amounts = recentPayouts.map(p => parseFloat(p.netAmount));
+    const amounts = recentPayouts.map((p: any) => parseFloat(p.netAmount));
     const uniqueAmounts = new Set(amounts);
     
     if (amounts.length > 5 && uniqueAmounts.size === 1) {
@@ -246,7 +246,7 @@ export class PixPayoutService {
     }
 
     // Muitas falhas recentes
-    const failedCount = recentPayouts.filter(p => p.status === 'failed').length;
+    const failedCount = recentPayouts.filter((p: any) => p.status === 'failed').length;
     if (failedCount > 3) {
       return { score: 20, flag: "Muitas falhas recentes de repasse" };
     }
@@ -275,7 +275,7 @@ export class PixPayoutService {
         )
       );
 
-    const todayTotal = todayPayouts.reduce((sum, p) => sum + parseFloat(p.netAmount), 0);
+    const todayTotal = todayPayouts.reduce((sum: number, p: any) => sum + parseFloat(p.netAmount), 0);
     const newTotal = todayTotal + currentAmount;
 
     if (newTotal > this.MAX_DAILY_PAYOUT) {
@@ -542,6 +542,163 @@ export class PixPayoutService {
     });
 
     // Implementar notificação real (email, SMS, push)
+  }
+
+  /**
+   * Processar estorno para locatário
+   */
+  async processRefund(request: {
+    bookingId: number;
+    renterId: number;
+    amount: number;
+    renterPix: string;
+    reason: string;
+  }): Promise<{
+    success: boolean;
+    refundId?: number;
+    message: string;
+  }> {
+    try {
+      console.log("🔄 Processando estorno PIX:", {
+        bookingId: request.bookingId,
+        amount: request.amount,
+        reason: request.reason
+      });
+
+      // 1. Validar chave PIX do locatário
+      if (!this.isValidPixKey(request.renterPix)) {
+        return {
+          success: false,
+          message: "Chave PIX do locatário inválida"
+        };
+      }
+
+      // 2. Criar registro de estorno
+      const refundId = await this.createRefundRecord(request);
+
+      // 3. Executar transferência PIX de estorno
+      const transferResult = await this.executeRefundTransfer(request);
+
+      if (transferResult.success) {
+        // 4. Atualizar status para completed
+        await db
+          .update(payouts)
+          .set({
+            status: 'completed',
+            reference: transferResult.reference,
+            processedAt: new Date(),
+            updatedAt: new Date()
+          })
+          .where(eq(payouts.id, refundId));
+
+        return {
+          success: true,
+          refundId,
+          message: `Estorno de R$ ${request.amount.toFixed(2)} processado com sucesso!`
+        };
+
+      } else {
+        // 4. Marcar como falha
+        await db
+          .update(payouts)
+          .set({
+            status: 'failed',
+            failureReason: transferResult.error,
+            updatedAt: new Date()
+          })
+          .where(eq(payouts.id, refundId));
+
+        return {
+          success: false,
+          message: `Falha no estorno: ${transferResult.error}`
+        };
+      }
+
+    } catch (error) {
+      console.error("❌ Erro no processamento de estorno:", error);
+      return {
+        success: false,
+        message: "Erro interno no processamento do estorno"
+      };
+    }
+  }
+
+  /**
+   * Criar registro de estorno
+   */
+  private async createRefundRecord(request: {
+    bookingId: number;
+    renterId: number;
+    amount: number;
+    renterPix: string;
+    reason: string;
+  }): Promise<number> {
+    const [refund] = await db
+      .insert(payouts)
+      .values({
+        bookingId: request.bookingId,
+        ownerId: 0, // Sistema
+        renterId: request.renterId,
+        totalBookingAmount: request.amount.toString(),
+        serviceFee: '0.00',
+        insuranceFee: '0.00',
+        couponDiscount: '0.00',
+        netAmount: request.amount.toString(),
+        ownerPix: request.renterPix, // Usar o PIX do locatário
+        status: 'processing',
+        method: 'pix_refund',
+        failureReason: request.reason,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning({ id: payouts.id });
+
+    return refund.id;
+  }
+
+  /**
+   * Executar transferência PIX de estorno
+   */
+  private async executeRefundTransfer(request: {
+    bookingId: number;
+    renterId: number;
+    amount: number;
+    renterPix: string;
+    reason: string;
+  }): Promise<{
+    success: boolean;
+    reference?: string;
+    error?: string;
+  }> {
+    try {
+      console.log("💰 Executando estorno PIX:", {
+        destination: request.renterPix,
+        amount: request.amount,
+        reason: request.reason
+      });
+
+      // Simular delay de processamento
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Simular falha em 2% dos casos (menor que pagamentos)
+      if (Math.random() < 0.02) {
+        return {
+          success: false,
+          error: "Falha temporária no sistema bancário para estorno"
+        };
+      }
+
+      return {
+        success: true,
+        reference: `REFUND_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      };
+
+    } catch (error) {
+      return {
+        success: false,
+        error: "Falha na comunicação com sistema bancário para estorno"
+      };
+    }
   }
 
   /**

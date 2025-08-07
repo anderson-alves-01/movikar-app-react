@@ -366,6 +366,10 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   activities: many(userActivity),
   documents: many(userDocuments),
   savedVehicles: many(savedVehicles),
+  inspectionsAsRenter: many(vehicleInspections, { relationName: "inspectionsAsRenter" }),
+  inspectionsAsOwner: many(vehicleInspections, { relationName: "inspectionsAsOwner" }),
+  payoutsAsOwner: many(payouts, { relationName: "payoutsAsOwner" }),
+  payoutsAsRenter: many(payouts, { relationName: "payoutsAsRenter" }),
 }));
 
 export const userDocumentsRelations = relations(userDocuments, ({ one }) => ({
@@ -563,6 +567,10 @@ export const savedVehiclesRelations = relations(savedVehicles, ({ one }) => ({
   }),
 }));
 
+
+
+
+
 // Zod schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -692,6 +700,8 @@ export const updateSavedVehicleSchema = createInsertSchema(savedVehicles).omit({
   createdAt: true,
 }).partial();
 
+
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertSavedVehicle = z.infer<typeof insertSavedVehicleSchema>;
@@ -780,6 +790,85 @@ export const payouts = pgTable("payouts", {
 
 export type Payout = typeof payouts.$inferSelect;
 export type InsertPayout = typeof payouts.$inferInsert;
+
+// Vehicle Inspections table - Sistema de vistoria antes do repasse
+export const vehicleInspections = pgTable("vehicle_inspections", {
+  id: serial("id").primaryKey(),
+  bookingId: integer("booking_id").references(() => bookings.id).notNull(),
+  renterId: integer("renter_id").references(() => users.id).notNull(), // Locatário que faz a vistoria
+  ownerId: integer("owner_id").references(() => users.id).notNull(), // Proprietário do veículo
+  vehicleId: integer("vehicle_id").references(() => vehicles.id).notNull(),
+  
+  // Dados da vistoria
+  mileage: integer("mileage").notNull(), // Quilometragem atual
+  fuelLevel: varchar("fuel_level", { length: 20 }).notNull(), // empty, quarter, half, three_quarters, full
+  vehicleCondition: varchar("vehicle_condition", { length: 20 }).notNull(), // excellent, good, fair, poor
+  
+  // Fotos da vistoria
+  photos: jsonb("photos").$type<string[]>().default([]), // URLs das fotos
+  
+  // Observações e problemas encontrados
+  observations: text("observations"), // Observações gerais do locatário
+  damages: jsonb("damages").$type<{
+    type: string; // scratch, dent, broken_glass, interior_damage, etc
+    location: string; // front, rear, left_side, right_side, interior
+    severity: string; // minor, moderate, severe
+    description: string;
+    photo?: string; // URL da foto específica do dano
+  }[]>().default([]),
+  
+  // Decisão da vistoria
+  status: varchar("status", { length: 20 }).default("pending").notNull(), // pending, approved, rejected
+  approvalDecision: boolean("approval_decision"), // true = aprovado, false = rejeitado
+  rejectionReason: text("rejection_reason"), // Motivo da rejeição
+  
+  // Valores para reembolso (se rejeitado)
+  refundAmount: decimal("refund_amount", { precision: 10, scale: 2 }), // Valor a ser reembolsado
+  refundReason: text("refund_reason"), // Motivo específico do reembolso
+  
+  // Timestamps
+  inspectedAt: timestamp("inspected_at").defaultNow(),
+  decidedAt: timestamp("decided_at"), // Quando a decisão foi tomada
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type VehicleInspection = typeof vehicleInspections.$inferSelect;
+export type InsertVehicleInspection = typeof vehicleInspections.$inferInsert;
+
+export const insertVehicleInspectionSchema = createInsertSchema(vehicleInspections).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  inspectedAt: true,
+  decidedAt: true,
+}).extend({
+  mileage: z.number().min(0, "Quilometragem deve ser um número positivo"),
+  fuelLevel: z.enum(["empty", "quarter", "half", "three_quarters", "full"], {
+    required_error: "Nível de combustível é obrigatório",
+  }),
+  vehicleCondition: z.enum(["excellent", "good", "fair", "poor"], {
+    required_error: "Condição do veículo é obrigatória",
+  }),
+  observations: z.string().optional(),
+  photos: z.array(z.string()).min(1, "Pelo menos uma foto é obrigatória"),
+  damages: z.array(z.object({
+    type: z.string().min(1, "Tipo de dano é obrigatório"),
+    location: z.string().min(1, "Localização do dano é obrigatória"),
+    severity: z.enum(["minor", "moderate", "severe"]),
+    description: z.string().min(1, "Descrição do dano é obrigatória"),
+    photo: z.string().optional(),
+  })).default([]),
+  approvalDecision: z.boolean({
+    required_error: "Decisão de aprovação é obrigatória",
+  }),
+  rejectionReason: z.string().optional(),
+  refundAmount: z.union([z.string(), z.number()]).optional().transform(val => val ? String(val) : undefined),
+  refundReason: z.string().optional(),
+});
+
+export type InsertVehicleInspectionForm = z.infer<typeof insertVehicleInspectionSchema>;
 
 // Subscription Plans table
 export const subscriptionPlans = pgTable("subscription_plans", {
@@ -884,3 +973,42 @@ export type UserWithStats = User & {
   renterBookings?: Booking[];
   ownerBookings?: Booking[];
 };
+
+// Additional relations for new tables
+export const vehicleInspectionsRelations = relations(vehicleInspections, ({ one }) => ({
+  booking: one(bookings, {
+    fields: [vehicleInspections.bookingId],
+    references: [bookings.id],
+  }),
+  renter: one(users, {
+    fields: [vehicleInspections.renterId],
+    references: [users.id],
+    relationName: "inspectionsAsRenter",
+  }),
+  owner: one(users, {
+    fields: [vehicleInspections.ownerId],
+    references: [users.id],
+    relationName: "inspectionsAsOwner",
+  }),
+  vehicle: one(vehicles, {
+    fields: [vehicleInspections.vehicleId],
+    references: [vehicles.id],
+  }),
+}));
+
+export const payoutsRelations = relations(payouts, ({ one }) => ({
+  booking: one(bookings, {
+    fields: [payouts.bookingId],
+    references: [bookings.id],
+  }),
+  owner: one(users, {
+    fields: [payouts.ownerId],
+    references: [users.id],
+    relationName: "payoutsAsOwner",
+  }),
+  renter: one(users, {
+    fields: [payouts.renterId],
+    references: [users.id],
+    relationName: "payoutsAsRenter",
+  }),
+}));

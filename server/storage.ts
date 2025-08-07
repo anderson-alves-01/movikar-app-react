@@ -1,5 +1,5 @@
 import { 
-  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity, adminSettings, savedVehicles, coupons, subscriptionPlans, userSubscriptions,
+  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity, adminSettings, savedVehicles, coupons, subscriptionPlans, userSubscriptions, vehicleInspections,
   type User, type InsertUser, type Vehicle, type InsertVehicle, 
   type Booking, type InsertBooking, type Review, type InsertReview,
   type Message, type InsertMessage, type VehicleWithOwner, type BookingWithDetails,
@@ -11,7 +11,8 @@ import {
   type UserActivity, type InsertUserActivity, type AdminSettings, type InsertAdminSettings,
   type SavedVehicle, type InsertSavedVehicle, type UpdateSavedVehicle,
   type Coupon, type InsertCoupon, type SubscriptionPlan, type InsertSubscriptionPlan,
-  type UserSubscription, type InsertUserSubscription
+  type UserSubscription, type InsertUserSubscription,
+  type VehicleInspection, type InsertVehicleInspection
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, and, gte, lte, desc, asc, or, like, ilike, sql, lt, ne, inArray, not } from "drizzle-orm";
@@ -205,6 +206,16 @@ export interface IStorage {
   createCoupon(data: InsertCoupon): Promise<Coupon>;
   updateCoupon(id: number, data: Partial<InsertCoupon>): Promise<Coupon | undefined>;
   deleteCoupon(id: number): Promise<boolean>;
+
+  // Vehicle Inspection methods
+  getVehicleInspection(id: number): Promise<VehicleInspection | undefined>;
+  getInspectionByBooking(bookingId: number): Promise<VehicleInspection | undefined>;
+  getInspectionsByRenter(renterId: number): Promise<VehicleInspection[]>;
+  getInspectionsByOwner(ownerId: number): Promise<VehicleInspection[]>;
+  createVehicleInspection(inspection: InsertVehicleInspection): Promise<VehicleInspection>;
+  updateVehicleInspection(id: number, inspection: Partial<InsertVehicleInspection>): Promise<VehicleInspection | undefined>;
+  approveInspection(id: number): Promise<VehicleInspection | undefined>;
+  rejectInspection(id: number, reason: string, refundAmount?: string): Promise<VehicleInspection | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2580,6 +2591,95 @@ export class DatabaseStorage implements IStorage {
       .where(eq(payouts.ownerId, ownerId))
       .orderBy(desc(payouts.createdAt))
       .limit(limit);
+  }
+
+  // Vehicle Inspection methods
+  async getVehicleInspection(id: number): Promise<VehicleInspection | undefined> {
+    const [inspection] = await db
+      .select()
+      .from(vehicleInspections)
+      .where(eq(vehicleInspections.id, id));
+    return inspection || undefined;
+  }
+
+  async getInspectionByBooking(bookingId: number): Promise<VehicleInspection | undefined> {
+    const [inspection] = await db
+      .select()
+      .from(vehicleInspections)
+      .where(eq(vehicleInspections.bookingId, bookingId));
+    return inspection || undefined;
+  }
+
+  async getInspectionsByRenter(renterId: number): Promise<VehicleInspection[]> {
+    return await db
+      .select()
+      .from(vehicleInspections)
+      .where(eq(vehicleInspections.renterId, renterId))
+      .orderBy(desc(vehicleInspections.createdAt));
+  }
+
+  async getInspectionsByOwner(ownerId: number): Promise<VehicleInspection[]> {
+    return await db
+      .select()
+      .from(vehicleInspections)
+      .leftJoin(bookings, eq(vehicleInspections.bookingId, bookings.id))
+      .leftJoin(vehicles, eq(bookings.vehicleId, vehicles.id))
+      .where(eq(vehicles.ownerId, ownerId))
+      .orderBy(desc(vehicleInspections.createdAt));
+  }
+
+  async createVehicleInspection(inspection: InsertVehicleInspection): Promise<VehicleInspection> {
+    const [newInspection] = await db
+      .insert(vehicleInspections)
+      .values({
+        ...inspection,
+        inspectedAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    return newInspection;
+  }
+
+  async updateVehicleInspection(id: number, inspection: Partial<InsertVehicleInspection>): Promise<VehicleInspection | undefined> {
+    const [updatedInspection] = await db
+      .update(vehicleInspections)
+      .set({
+        ...inspection,
+        updatedAt: new Date()
+      })
+      .where(eq(vehicleInspections.id, id))
+      .returning();
+    return updatedInspection || undefined;
+  }
+
+  async approveInspection(id: number): Promise<VehicleInspection | undefined> {
+    const [inspection] = await db
+      .update(vehicleInspections)
+      .set({
+        approvalDecision: true,
+        decidedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(vehicleInspections.id, id))
+      .returning();
+    return inspection || undefined;
+  }
+
+  async rejectInspection(id: number, reason: string, refundAmount?: string): Promise<VehicleInspection | undefined> {
+    const [inspection] = await db
+      .update(vehicleInspections)
+      .set({
+        approvalDecision: false,
+        rejectionReason: reason,
+        refundAmount,
+        refundReason: reason,
+        decidedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(vehicleInspections.id, id))
+      .returning();
+    return inspection || undefined;
   }
 }
 
