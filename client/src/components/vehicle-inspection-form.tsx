@@ -164,14 +164,15 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
     console.log("📸 Total de fotos:", photos.length);
     console.log("🚨 Danos:", damages);
 
-    // Temporariamente permitir envio sem fotos para testes
-    // TODO: Reativar validação de fotos em produção
+    // Validação obrigatória de fotos
     if (photos.length === 0) {
-      console.log("⚠️ Aviso: Nenhuma foto adicionada - continuando para teste");
-      // Adicionar uma foto fictícia para teste
-      const testPhoto = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
-      setPhotos([testPhoto]);
-      console.log("📸 Foto de teste adicionada");
+      console.log("❌ Erro: Nenhuma foto adicionada");
+      toast({
+        title: "Fotos obrigatórias",
+        description: "Por favor, adicione pelo menos uma foto do veículo antes de finalizar a vistoria.",
+        variant: "destructive",
+      });
+      return;
     }
 
     // Validação de motivo de reprovação
@@ -185,12 +186,9 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
       return;
     }
 
-    // Usar as fotos atualizadas
-    const currentPhotos = photos.length > 0 ? photos : ["data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="];
-    
     const inspectionData = {
       ...data,
-      photos: currentPhotos,
+      photos,
       damages,
     };
 
@@ -391,10 +389,10 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
                 )}
 
                 {photos.length === 0 && (
-                  <div className="text-center text-gray-500 py-8 border-2 border-dashed border-gray-300 rounded-lg">
-                    <Camera className="h-12 w-12 mx-auto mb-2 text-gray-400" />
-                    <p>Nenhuma foto adicionada ainda</p>
-                    <p className="text-sm">Pelo menos uma foto é obrigatória</p>
+                  <div className="text-center text-gray-500 py-8 border-2 border-dashed border-red-300 rounded-lg bg-red-50">
+                    <Camera className="h-12 w-12 mx-auto mb-2 text-red-400" />
+                    <p className="font-medium text-red-700">Nenhuma foto adicionada ainda</p>
+                    <p className="text-sm text-red-600">⚠️ Pelo menos uma foto é obrigatória para finalizar a vistoria</p>
                   </div>
                 )}
               </div>
