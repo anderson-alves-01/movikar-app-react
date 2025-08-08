@@ -84,16 +84,20 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
     },
     onSuccess: (inspection) => {
       console.log("🎉 Sucesso na mutação:", inspection);
+      setIsSubmitting(false); // Garantir que o loading seja removido
       toast({
         title: "Vistoria criada com sucesso!",
         description: "A vistoria foi registrada e será processada.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/inspections"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inspections/renter"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
       onInspectionComplete?.(inspection);
     },
     onError: (error: any) => {
       console.error("💥 Erro na mutação:", error);
       console.error("💥 Erro stack:", error.stack);
+      setIsSubmitting(false); // Garantir que o loading seja removido
       toast({
         title: "Erro ao criar vistoria",
         description: error.message || "Ocorreu um erro inesperado.",
@@ -140,11 +144,23 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
     console.log("📸 Fotos:", photos);
     console.log("🚨 Danos:", damages);
 
+    // Validação de fotos obrigatórias
     if (photos.length === 0) {
       console.log("❌ Erro: Nenhuma foto adicionada");
       toast({
         title: "Fotos obrigatórias",
         description: "Por favor, adicione pelo menos uma foto do veículo.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validação de motivo de reprovação
+    if (!data.approvalDecision && (!data.rejectionReason || data.rejectionReason.trim() === "")) {
+      console.log("❌ Erro: Motivo de reprovação obrigatório");
+      toast({
+        title: "Motivo da reprovação obrigatório",
+        description: "Por favor, informe o motivo da reprovação da vistoria.",
         variant: "destructive",
       });
       return;
@@ -164,7 +180,7 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
       console.log("✅ Vistoria criada com sucesso:", result);
     } catch (error) {
       console.error("❌ Erro ao criar vistoria:", error);
-    } finally {
+      // Garantir que o loading seja removido mesmo em caso de erro
       setIsSubmitting(false);
     }
   };
@@ -186,7 +202,14 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
       </Card>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form 
+          onSubmit={(e) => {
+            console.log("📋 Form submit event triggered!");
+            console.log("📋 Form data:", form.getValues());
+            form.handleSubmit(onSubmit)(e);
+          }} 
+          className="space-y-6"
+        >
           {/* Informações Básicas */}
           <Card>
             <CardHeader>
@@ -561,10 +584,21 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
             <Button
               type="submit"
               disabled={isSubmitting || createInspectionMutation.isPending}
-              className="min-w-32"
+              className="min-w-32 bg-blue-600 hover:bg-blue-700 text-white"
               data-testid="button-submit-inspection"
+              onClick={(e) => {
+                console.log("🖱️ Botão clicado!");
+                // O evento será propagado normalmente para o form submit
+              }}
             >
-              {isSubmitting || createInspectionMutation.isPending ? "Salvando..." : "Finalizar Vistoria"}
+              {isSubmitting || createInspectionMutation.isPending ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Salvando...
+                </div>
+              ) : (
+                "Finalizar Vistoria"
+              )}
             </Button>
           </div>
         </form>
