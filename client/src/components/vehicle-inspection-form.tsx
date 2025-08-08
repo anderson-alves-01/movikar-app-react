@@ -74,9 +74,22 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
 
   const createInspectionMutation = useMutation({
     mutationFn: async (data: InsertVehicleInspectionForm) => {
-      return apiRequest("/api/inspections", "POST", data);
+      console.log("🚀 Enviando requisição para API...");
+      console.log("📋 Dados enviados:", JSON.stringify(data, null, 2));
+      
+      const response = await apiRequest("/api/inspections", "POST", data);
+      console.log("✅ Resposta da API:", response);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("❌ Resposta de erro da API:", errorText);
+        throw new Error(errorText || "Erro desconhecido da API");
+      }
+      
+      return response.json();
     },
     onSuccess: (inspection) => {
+      console.log("🎉 Sucesso na mutação:", inspection);
       toast({
         title: "Vistoria criada com sucesso!",
         description: "A vistoria foi registrada e será processada.",
@@ -85,7 +98,8 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
       onInspectionComplete?.(inspection);
     },
     onError: (error: any) => {
-      console.error("Erro ao criar vistoria:", error);
+      console.error("💥 Erro na mutação:", error);
+      console.error("💥 Erro stack:", error.stack);
       toast({
         title: "Erro ao criar vistoria",
         description: error.message || "Ocorreu um erro inesperado.",
@@ -127,7 +141,13 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
   };
 
   const onSubmit = async (data: InsertVehicleInspectionForm) => {
+    console.log("🔍 Iniciando envio da vistoria...");
+    console.log("📝 Dados do formulário:", data);
+    console.log("📸 Fotos:", photos);
+    console.log("🚨 Danos:", damages);
+
     if (photos.length === 0) {
+      console.log("❌ Erro: Nenhuma foto adicionada");
       toast({
         title: "Fotos obrigatórias",
         description: "Por favor, adicione pelo menos uma foto do veículo.",
@@ -142,9 +162,14 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
       damages,
     };
 
+    console.log("📤 Dados completos da vistoria:", inspectionData);
+
     setIsSubmitting(true);
     try {
-      await createInspectionMutation.mutateAsync(inspectionData);
+      const result = await createInspectionMutation.mutateAsync(inspectionData);
+      console.log("✅ Vistoria criada com sucesso:", result);
+    } catch (error) {
+      console.error("❌ Erro ao criar vistoria:", error);
     } finally {
       setIsSubmitting(false);
     }
