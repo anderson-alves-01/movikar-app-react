@@ -158,6 +158,7 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
   };
 
   const onSubmit = async (data: InsertVehicleInspectionForm) => {
+    console.log("🚀 FUNÇÃO onSubmit CHAMADA!");
     console.log("🔍 Iniciando envio da vistoria...");
     console.log("📝 Dados do formulário:", data);
     console.log("📸 Fotos disponíveis:", photos);
