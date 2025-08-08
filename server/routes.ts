@@ -13,6 +13,7 @@ import {
   insertWaitingQueueSchema, 
   insertUserDocumentSchema,
   insertVehicleInspectionSchema,
+  insertVehicleInspectionFormSchema,
   users,
   userDocuments,
   vehicles,
@@ -2149,24 +2150,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/inspections", authenticateToken, async (req, res) => {
     try {
-      const inspectionData = insertVehicleInspectionSchema.parse({
-        ...req.body,
-        renterId: req.user!.id,
-      });
-
       // Verificar se a reserva pertence ao usuário
-      const booking = await storage.getBooking(inspectionData.bookingId);
+      const booking = await storage.getBooking(req.body.bookingId);
       if (!booking || booking.renterId !== req.user!.id) {
         return res.status(403).json({ message: "Acesso negado" });
       }
 
       // Verificar se já existe vistoria para essa reserva
-      const existingInspection = await storage.getInspectionByBooking(inspectionData.bookingId);
+      const existingInspection = await storage.getInspectionByBooking(req.body.bookingId);
       if (existingInspection) {
         return res.status(400).json({ message: "Já existe uma vistoria para esta reserva" });
       }
 
-      const inspection = await storage.createVehicleInspection(inspectionData);
+      // Validar apenas os dados do formulário
+      const validatedData = insertVehicleInspectionFormSchema.parse(req.body);
+      
+      // Combinar dados validados com campos automáticos
+      const finalInspectionData = {
+        ...validatedData,
+        renterId: req.user!.id,
+        ownerId: booking.ownerId,
+      };
+
+      const inspection = await storage.createVehicleInspection(finalInspectionData);
       res.status(201).json(inspection);
     } catch (error) {
       console.error("Create inspection error:", error);

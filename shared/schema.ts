@@ -837,13 +837,10 @@ export const vehicleInspections = pgTable("vehicle_inspections", {
 export type VehicleInspection = typeof vehicleInspections.$inferSelect;
 export type InsertVehicleInspection = typeof vehicleInspections.$inferInsert;
 
-export const insertVehicleInspectionSchema = createInsertSchema(vehicleInspections).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-  inspectedAt: true,
-  decidedAt: true,
-}).extend({
+// Schema para validação do formulário (sem campos automáticos)
+export const insertVehicleInspectionFormSchema = z.object({
+  bookingId: z.number().min(1, "ID da reserva é obrigatório"),
+  vehicleId: z.number().min(1, "ID do veículo é obrigatório"),
   mileage: z.number().min(0, "Quilometragem deve ser um número positivo"),
   fuelLevel: z.enum(["empty", "quarter", "half", "three_quarters", "full"], {
     required_error: "Nível de combustível é obrigatório",
@@ -868,7 +865,16 @@ export const insertVehicleInspectionSchema = createInsertSchema(vehicleInspectio
   refundReason: z.string().optional(),
 });
 
-export type InsertVehicleInspectionForm = z.infer<typeof insertVehicleInspectionSchema>;
+// Schema completo para inserção no banco (mantido para compatibilidade)
+export const insertVehicleInspectionSchema = createInsertSchema(vehicleInspections).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  inspectedAt: true,
+  decidedAt: true,
+});
+
+export type InsertVehicleInspectionForm = z.infer<typeof insertVehicleInspectionFormSchema>;
 
 // Subscription Plans table
 export const subscriptionPlans = pgTable("subscription_plans", {
