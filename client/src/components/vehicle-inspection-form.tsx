@@ -164,6 +164,17 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
     console.log("📸 Total de fotos:", photos.length);
     console.log("🚨 Danos:", damages);
 
+    // Validação de quilometragem
+    if (!data.mileage || data.mileage <= 0) {
+      console.log("❌ Erro: Quilometragem inválida");
+      toast({
+        title: "Quilometragem obrigatória",
+        description: "Por favor, informe uma quilometragem válida (maior que zero).",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Validação obrigatória de fotos
     if (photos.length === 0) {
       console.log("❌ Erro: Nenhuma foto adicionada");
@@ -256,6 +267,7 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
                       <FormControl>
                         <Input
                           type="number"
+                          min="1"
                           placeholder="Ex: 50000"
                           {...field}
                           onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
