@@ -77,14 +77,8 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
       console.log("🚀 Enviando requisição para API...");
       console.log("📋 Dados enviados:", JSON.stringify(data, null, 2));
       
-      const response = await apiRequest("/api/inspections", "POST", data);
+      const response = await apiRequest("POST", "/api/inspections", data);
       console.log("✅ Resposta da API:", response);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("❌ Resposta de erro da API:", errorText);
-        throw new Error(errorText || "Erro desconhecido da API");
-      }
       
       return response.json();
     },

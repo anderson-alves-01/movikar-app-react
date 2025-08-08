@@ -23,11 +23,23 @@ export async function apiRequest(
   
   console.log(`📡 apiRequest - ${method} ${fullUrl}`, data ? 'with data' : 'no data');
   
+  // Get token from sessionStorage as fallback
+  const token = sessionStorage.getItem('auth_token');
+  console.log(`📡 apiRequest - Token found:`, token ? 'Yes' : 'No');
+  
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  
+  // Add Authorization header if token exists
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+    console.log(`📡 apiRequest - Adding Authorization header`);
+  }
+  
   const res = await fetch(fullUrl, {
     method,
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers,
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include", // Use cookies for authentication
   });
@@ -49,6 +61,22 @@ export const getQueryFn: QueryFunction = async ({ queryKey }) => {
   
   console.log('📡 getQueryFn - Making request to:', queryUrl);
   
+  // Get token from sessionStorage as fallback
+  const token = sessionStorage.getItem('auth_token');
+  console.log(`📡 getQueryFn - Token found:`, token ? 'Yes' : 'No');
+  
+  const headers: Record<string, string> = {
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+  };
+  
+  // Add Authorization header if token exists
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+    console.log(`📡 getQueryFn - Adding Authorization header`);
+  }
+  
   // Add timestamp to prevent browser caching and force fresh data
   const separator = queryUrl.includes('?') ? '&' : '?';
   const timestamp = new Date().getTime();
@@ -56,11 +84,7 @@ export const getQueryFn: QueryFunction = async ({ queryKey }) => {
   
   const res = await fetch(urlWithTimestamp, {
     credentials: "include", // Use cookies for authentication
-    headers: {
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0',
-    },
+    headers,
   });
 
   console.log('📡 getQueryFn - Response status:', res.status);
