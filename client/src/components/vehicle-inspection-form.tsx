@@ -158,7 +158,9 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
   };
 
   const onSubmit = async (data: InsertVehicleInspectionForm) => {
-    console.log("🚀 FUNÇÃO onSubmit CHAMADA!");
+    console.clear(); // Limpar console para melhor visualização
+    console.log("🚀🚀🚀 FUNÇÃO onSubmit CHAMADA! 🚀🚀🚀");
+    console.log("=".repeat(50));
     console.log("🔍 Iniciando envio da vistoria...");
     console.log("📝 Dados do formulário:", data);
     console.log("📸 Fotos disponíveis:", photos);
@@ -278,8 +280,13 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
       <Form {...form}>
         <form 
           onSubmit={(e) => {
-            console.log("📋 Form submit event triggered!");
+            console.clear();
+            console.log("📋📋📋 FORM SUBMIT EVENT TRIGGERED! 📋📋📋");
+            console.log("=".repeat(60));
             console.log("📋 Form data:", form.getValues());
+            console.log("📋 Form válido?", form.formState.isValid);
+            console.log("📋 Erros do form:", form.formState.errors);
+            console.log("📋 Chamando handleSubmit...");
             form.handleSubmit(onSubmit)(e);
           }} 
           className="space-y-6"
@@ -662,7 +669,13 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
               className="min-w-32 bg-blue-600 hover:bg-blue-700 text-white"
               data-testid="button-submit-inspection"
               onClick={(e) => {
-                console.log("🖱️ Botão clicado!");
+                console.clear();
+                console.log("🖱️🖱️🖱️ BOTÃO FINALIZAR VISTORIA CLICADO! 🖱️🖱️🖱️");
+                console.log("=".repeat(60));
+                console.log("📊 Estado atual do formulário:", form.getValues());
+                console.log("📸 Total de fotos:", photos.length);
+                console.log("🔄 isSubmitting:", isSubmitting);
+                console.log("🔄 isPending:", createInspectionMutation.isPending);
                 // O evento será propagado normalmente para o form submit
               }}
             >
