@@ -164,9 +164,15 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
     console.log("📸 Total de fotos:", photos.length);
     console.log("🚨 Danos:", damages);
 
-    // Validação de quilometragem
+    // Validação de quilometragem com log detalhado
+    console.log("🔍 Verificando quilometragem:", {
+      value: data.mileage,
+      type: typeof data.mileage,
+      isValid: data.mileage && data.mileage > 0
+    });
+    
     if (!data.mileage || data.mileage <= 0) {
-      console.log("❌ Erro: Quilometragem inválida");
+      console.log("❌ PAROU AQUI: Quilometragem inválida");
       toast({
         title: "Quilometragem obrigatória",
         description: "Por favor, informe uma quilometragem válida (maior que zero).",
@@ -174,10 +180,16 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
       });
       return;
     }
+    console.log("✅ Quilometragem válida, continuando...");
 
-    // Validação obrigatória de fotos
+    // Validação obrigatória de fotos com log detalhado
+    console.log("🔍 Verificando fotos:", {
+      count: photos.length,
+      isValid: photos.length > 0
+    });
+    
     if (photos.length === 0) {
-      console.log("❌ Erro: Nenhuma foto adicionada");
+      console.log("❌ PAROU AQUI: Nenhuma foto adicionada");
       toast({
         title: "Fotos obrigatórias",
         description: "Por favor, adicione pelo menos uma foto do veículo antes de finalizar a vistoria.",
@@ -185,10 +197,18 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
       });
       return;
     }
+    console.log("✅ Fotos válidas, continuando...");
 
-    // Validação de motivo de reprovação
+    // Validação de motivo de reprovação com log detalhado
+    console.log("🔍 Verificando aprovação/reprovação:", {
+      approvalDecision: data.approvalDecision,
+      rejectionReason: data.rejectionReason,
+      rejectionReasonTrimmed: data.rejectionReason?.trim(),
+      needsRejectionReason: !data.approvalDecision
+    });
+    
     if (!data.approvalDecision && (!data.rejectionReason || data.rejectionReason.trim() === "")) {
-      console.log("❌ Erro: Motivo de reprovação obrigatório");
+      console.log("❌ PAROU AQUI: Motivo de reprovação obrigatório");
       toast({
         title: "Motivo da reprovação obrigatório",
         description: "Por favor, informe o motivo da reprovação da vistoria.",
@@ -196,7 +216,10 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
       });
       return;
     }
+    console.log("✅ Decisão de aprovação válida, continuando...");
 
+    console.log("🎯 Chegou até aqui! Preparando dados para envio...");
+    
     const inspectionData = {
       ...data,
       photos,
@@ -205,18 +228,30 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
 
     console.log("📤 Dados completos da vistoria:", inspectionData);
     console.log("📤 Total de fotos no envio:", inspectionData.photos.length);
+    console.log("📤 Estrutura completa dos dados:", JSON.stringify(inspectionData, null, 2));
 
+    console.log("🔄 Definindo isSubmitting como true...");
     setIsSubmitting(true);
+    
     try {
       console.log("🚀 Chamando mutation...");
+      console.log("🚀 Mutation object:", createInspectionMutation);
+      console.log("🚀 Mutation state:", {
+        isPending: createInspectionMutation.isPending,
+        isIdle: createInspectionMutation.isIdle,
+        isSuccess: createInspectionMutation.isSuccess,
+        isError: createInspectionMutation.isError
+      });
+      
       const result = await createInspectionMutation.mutateAsync(inspectionData);
       console.log("✅ Vistoria criada com sucesso:", result);
     } catch (error) {
       console.error("❌ Erro ao criar vistoria:", error);
       console.error("❌ Detalhes do erro:", {
-        message: error.message,
-        stack: error.stack,
-        response: error.response
+        message: error?.message,
+        stack: error?.stack,
+        response: error?.response,
+        name: error?.name
       });
       // Garantir que o loading seja removido mesmo em caso de erro
       setIsSubmitting(false);
