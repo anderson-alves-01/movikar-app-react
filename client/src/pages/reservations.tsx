@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CalendarDays, MapPin, Car, User, Clock, X, FileText, Eye, PenTool } from "lucide-react";
+import { CalendarDays, MapPin, Car, User, Clock, X, FileText, Eye, PenTool, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency } from "@/lib/currency";
@@ -250,6 +250,19 @@ export default function Reservations() {
     }
   };
 
+  const handleInspection = (bookingId: number) => {
+    window.location.href = `/inspection?bookingId=${bookingId}`;
+  };
+
+  const shouldShowInspectionButton = (booking: Booking) => {
+    // Mostrar botão de vistoria se:
+    // - Reserva está paga (paymentStatus === 'paid')
+    // - Reserva está confirmada/aprovada
+    // - É uma reserva como locatário
+    return booking.paymentStatus === 'paid' && 
+           (booking.status === 'confirmed' || booking.status === 'approved');
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "approved":
@@ -349,13 +362,28 @@ export default function Reservations() {
                         <span className="text-lg font-semibold text-green-600">
                           {formatCurrency(booking.totalPrice)}
                         </span>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleViewDetails(booking.id)}
-                        >
-                          Ver Detalhes
-                        </Button>
+                        <div className="flex gap-2">
+                          {shouldShowInspectionButton(booking) && (
+                            <Button 
+                              size="sm" 
+                              variant="default"
+                              onClick={() => handleInspection(booking.id)}
+                              className="bg-orange-600 hover:bg-orange-700"
+                              data-testid={`button-inspection-${booking.id}`}
+                            >
+                              <Search className="w-4 h-4 mr-1" />
+                              Vistoria
+                            </Button>
+                          )}
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleViewDetails(booking.id)}
+                            data-testid={`button-details-${booking.id}`}
+                          >
+                            Ver Detalhes
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
