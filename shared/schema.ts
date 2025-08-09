@@ -849,7 +849,7 @@ export const insertVehicleInspectionFormSchema = z.object({
     required_error: "Condição do veículo é obrigatória",
   }),
   observations: z.string().optional(),
-  photos: z.array(z.string()).min(1, "Pelo menos uma foto é obrigatória"),
+  photos: z.array(z.string()).default([]),
   damages: z.array(z.object({
     type: z.string().min(1, "Tipo de dano é obrigatório"),
     location: z.string().min(1, "Localização do dano é obrigatória"),
