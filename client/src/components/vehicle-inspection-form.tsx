@@ -49,6 +49,7 @@ const DAMAGE_TYPES = [
   "Pneu furado", "Problema mecânico", "Interior danificado", "Outros"
 ];
 
+// FORCE CACHE REFRESH - v2.0
 export function VehicleInspectionForm({ booking, onInspectionComplete }: VehicleInspectionFormProps) {
   const [photos, setPhotos] = useState<string[]>([]);
   const [damages, setDamages] = useState<DamageItem[]>([]);
