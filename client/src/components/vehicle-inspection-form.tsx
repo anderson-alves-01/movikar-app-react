@@ -282,18 +282,19 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
           onSubmit={form.handleSubmit(
             (data) => {
               console.clear();
-              console.log("✅✅✅ FORM VALIDATION PASSED! ✅✅✅");
+              console.log("🟢🟢🟢 NEW CODE - FORM VALIDATION PASSED! 🟢🟢🟢");
               console.log("=".repeat(60));
-              console.log("📋 Form data válido:", data);
+              console.log("✅ Form data válido:", data);
+              console.log("✅ Validation successful - calling onSubmit");
               onSubmit(data);
             },
             (errors) => {
               console.clear();
-              console.log("❌❌❌ FORM VALIDATION FAILED! ❌❌❌");
+              console.log("🔴🔴🔴 NEW CODE - FORM VALIDATION FAILED! 🔴🔴🔴");
               console.log("=".repeat(60));
-              console.log("📋 Form data:", form.getValues());
-              console.log("📋 Erros de validação:", errors);
-              console.log("📋 Form state:", {
+              console.log("❌ Form data:", form.getValues());
+              console.log("❌ Validation errors:", errors);
+              console.log("❌ Form state:", {
                 isValid: form.formState.isValid,
                 isValidating: form.formState.isValidating,
                 isDirty: form.formState.isDirty,
