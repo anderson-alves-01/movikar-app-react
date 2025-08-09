@@ -279,16 +279,28 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
 
       <Form {...form}>
         <form 
-          onSubmit={(e) => {
-            console.clear();
-            console.log("📋📋📋 FORM SUBMIT EVENT TRIGGERED! 📋📋📋");
-            console.log("=".repeat(60));
-            console.log("📋 Form data:", form.getValues());
-            console.log("📋 Form válido?", form.formState.isValid);
-            console.log("📋 Erros do form:", form.formState.errors);
-            console.log("📋 Chamando handleSubmit...");
-            form.handleSubmit(onSubmit)(e);
-          }} 
+          onSubmit={form.handleSubmit(
+            (data) => {
+              console.clear();
+              console.log("✅✅✅ FORM VALIDATION PASSED! ✅✅✅");
+              console.log("=".repeat(60));
+              console.log("📋 Form data válido:", data);
+              onSubmit(data);
+            },
+            (errors) => {
+              console.clear();
+              console.log("❌❌❌ FORM VALIDATION FAILED! ❌❌❌");
+              console.log("=".repeat(60));
+              console.log("📋 Form data:", form.getValues());
+              console.log("📋 Erros de validação:", errors);
+              console.log("📋 Form state:", {
+                isValid: form.formState.isValid,
+                isValidating: form.formState.isValidating,
+                isDirty: form.formState.isDirty,
+                isSubmitting: form.formState.isSubmitting
+              });
+            }
+          )}
           className="space-y-6"
         >
           {/* Informações Básicas */}
