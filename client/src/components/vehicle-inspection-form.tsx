@@ -49,8 +49,8 @@ const DAMAGE_TYPES = [
   "Pneu furado", "Problema mecânico", "Interior danificado", "Outros"
 ];
 
-// FORCE CACHE REFRESH - v2.0
-export function VehicleInspectionForm({ booking, onInspectionComplete }: VehicleInspectionFormProps) {
+// CACHE CLEAR v3.0 - FINAL
+export function VehicleInspectionFormV3({ booking, onInspectionComplete }: VehicleInspectionFormProps) {
   const [photos, setPhotos] = useState<string[]>([]);
   const [damages, setDamages] = useState<DamageItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -682,16 +682,6 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
               disabled={isSubmitting || createInspectionMutation.isPending}
               className="min-w-32 bg-blue-600 hover:bg-blue-700 text-white"
               data-testid="button-submit-inspection"
-              onClick={(e) => {
-                console.clear();
-                console.log("🖱️🖱️🖱️ BOTÃO FINALIZAR VISTORIA CLICADO! 🖱️🖱️🖱️");
-                console.log("=".repeat(60));
-                console.log("📊 Estado atual do formulário:", form.getValues());
-                console.log("📸 Total de fotos:", photos.length);
-                console.log("🔄 isSubmitting:", isSubmitting);
-                console.log("🔄 isPending:", createInspectionMutation.isPending);
-                // O evento será propagado normalmente para o form submit
-              }}
             >
               {isSubmitting || createInspectionMutation.isPending ? (
                 <div className="flex items-center gap-2">

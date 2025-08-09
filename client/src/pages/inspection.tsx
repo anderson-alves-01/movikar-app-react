@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { VehicleInspectionForm } from "@/components/vehicle-inspection-form";
+import { VehicleInspectionFormV3 as VehicleInspectionForm } from "@/components/vehicle-inspection-form";
 import { ArrowLeft, Car, Calendar, MapPin, Clock, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import type { BookingWithDetails, VehicleInspection } from "@shared/schema";
 
