@@ -11,7 +11,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Camera, Plus, X, Car, Fuel, Gauge, AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
-import { insertVehicleInspectionSchema, type InsertVehicleInspectionForm, type BookingWithDetails } from "@shared/schema";
+import { insertVehicleInspectionFormSchema, type InsertVehicleInspectionForm, type BookingWithDetails } from "@shared/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -57,7 +57,7 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
   const queryClient = useQueryClient();
 
   const form = useForm<InsertVehicleInspectionForm>({
-    resolver: zodResolver(insertVehicleInspectionSchema),
+    resolver: zodResolver(insertVehicleInspectionFormSchema),
     defaultValues: {
       bookingId: booking.id,
       vehicleId: booking.vehicleId,
@@ -251,10 +251,10 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
     } catch (error) {
       console.error("❌ Erro ao criar vistoria:", error);
       console.error("❌ Detalhes do erro:", {
-        message: error?.message,
-        stack: error?.stack,
-        response: error?.response,
-        name: error?.name
+        message: (error as any)?.message,
+        stack: (error as any)?.stack,
+        response: (error as any)?.response,
+        name: (error as any)?.name
       });
       // Garantir que o loading seja removido mesmo em caso de erro
       setIsSubmitting(false);
