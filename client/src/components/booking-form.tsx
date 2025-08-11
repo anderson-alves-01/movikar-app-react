@@ -60,7 +60,8 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
       if (!response.ok) {
         throw new Error('Failed to fetch unavailable dates');
       }
-      return response.json() as string[];
+      const data = await response.json();
+      return data as string[];
     },
   });
 
@@ -266,23 +267,56 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
               </div>
             </div>
 
-            {/* Date Conflict Warning */}
-            {unavailableDates.length > 0 && (bookingData.startDate || bookingData.endDate) && (
-              <div className="border border-orange-200 bg-orange-50 rounded-lg p-3">
+            {/* Unavailable Dates Display */}
+            {loadingDates && (
+              <div className="border border-blue-200 bg-blue-50 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />
+                  <span className="text-sm text-blue-700">Carregando datas indisponíveis...</span>
+                </div>
+              </div>
+            )}
+
+            {/* Show unavailable dates */}
+            {!loadingDates && unavailableDates.length > 0 && (
+              <div className="border border-yellow-200 bg-yellow-50 rounded-lg p-3">
                 <div className="flex items-start gap-3">
-                  <AlertTriangle className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                  <Calendar className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
                   <div className="text-sm">
-                    <p className="text-orange-800 font-medium mb-1">
-                      Atenção às datas indisponíveis
+                    <p className="text-yellow-800 font-medium mb-2">
+                      Datas já reservadas (indisponíveis):
                     </p>
-                    <p className="text-orange-700">
-                      Este veículo tem reservas confirmadas em algumas datas. Verifique se suas datas não conflitam com os períodos já reservados.
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      {unavailableDates.map((date, index) => {
+                        const dateObj = new Date(date);
+                        const formattedDate = dateObj.toLocaleDateString('pt-BR', {
+                          day: '2-digit',
+                          month: '2-digit'
+                        });
+                        return (
+                          <span key={index} className="bg-yellow-200 text-yellow-800 px-2 py-1 rounded text-center">
+                            {formattedDate}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Date Conflict Warning */}
+            {hasDateConflict() && (
+              <div className="border border-red-200 bg-red-50 rounded-lg p-3">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm">
+                    <p className="text-red-800 font-medium mb-1">
+                      ⚠️ Conflito de datas detectado!
                     </p>
-                    {loadingDates && (
-                      <p className="text-orange-600 mt-1 text-xs">
-                        Carregando datas indisponíveis...
-                      </p>
-                    )}
+                    <p className="text-red-700">
+                      As datas selecionadas conflitam com reservas existentes. Por favor, escolha outras datas disponíveis.
+                    </p>
                   </div>
                 </div>
               </div>
