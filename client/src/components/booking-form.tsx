@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Star, Loader2 } from "lucide-react";
+import { Star, Loader2, Calendar, AlertTriangle } from "lucide-react";
 import { useAuthStore } from "@/lib/auth";
 import { getAuthHeaders } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -50,6 +50,18 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
       return data as AdminSettings;
     },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+
+  // Fetch unavailable dates for the vehicle
+  const { data: unavailableDates = [], isLoading: loadingDates } = useQuery({
+    queryKey: ['/api/vehicles', vehicle.id, 'unavailable-dates'],
+    queryFn: async () => {
+      const response = await fetch(`/api/vehicles/${vehicle.id}/unavailable-dates`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch unavailable dates');
+      }
+      return response.json() as string[];
+    },
   });
 
   const bookingMutation = useMutation({
@@ -115,6 +127,21 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
     };
   };
 
+  const hasDateConflict = () => {
+    if (!bookingData.startDate || !bookingData.endDate || unavailableDates.length === 0) {
+      return false;
+    }
+
+    const start = new Date(bookingData.startDate);
+    const end = new Date(bookingData.endDate);
+    
+    // Check if any unavailable date falls within the selected range
+    return unavailableDates.some(unavailableDate => {
+      const unavailable = new Date(unavailableDate);
+      return unavailable >= start && unavailable <= end;
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -131,6 +158,16 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
       toast({
         title: "Datas obrigatórias",
         description: "Selecione as datas de retirada e devolução",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check for date conflicts
+    if (hasDateConflict()) {
+      toast({
+        title: "Datas indisponíveis",
+        description: "As datas selecionadas conflitam com reservas existentes. Escolha outras datas.",
         variant: "destructive",
       });
       return;
@@ -212,6 +249,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
                   value={bookingData.startDate}
                   onChange={(e) => setBookingData(prev => ({ ...prev, startDate: e.target.value }))}
                   data-testid="input-start-date"
+                  min={new Date().toISOString().split('T')[0]}
                 />
               </div>
               <div>
@@ -223,9 +261,32 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
                   value={bookingData.endDate}
                   onChange={(e) => setBookingData(prev => ({ ...prev, endDate: e.target.value }))}
                   data-testid="input-end-date"
+                  min={bookingData.startDate || new Date().toISOString().split('T')[0]}
                 />
               </div>
             </div>
+
+            {/* Date Conflict Warning */}
+            {unavailableDates.length > 0 && (bookingData.startDate || bookingData.endDate) && (
+              <div className="border border-orange-200 bg-orange-50 rounded-lg p-3">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm">
+                    <p className="text-orange-800 font-medium mb-1">
+                      Atenção às datas indisponíveis
+                    </p>
+                    <p className="text-orange-700">
+                      Este veículo tem reservas confirmadas em algumas datas. Verifique se suas datas não conflitam com os períodos já reservados.
+                    </p>
+                    {loadingDates && (
+                      <p className="text-orange-600 mt-1 text-xs">
+                        Carregando datas indisponíveis...
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Insurance Option */}
             <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">

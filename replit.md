@@ -6,7 +6,16 @@ alugae.mobi is a full-stack car rental platform connecting car owners with rente
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
-## Recent Changes (August 6, 2025)
+## Recent Changes (August 11, 2025)
+- **Calendar Date Blocking Implemented**: Added comprehensive system to block unavailable dates in vehicle booking calendar
+- **Unavailable Dates API**: Created `/api/vehicles/:id/unavailable-dates` endpoint to fetch blocked dates based on existing bookings
+- **Smart Date Validation**: Booking form now validates selected dates against confirmed reservations in real-time
+- **Visual Conflict Warnings**: Added orange warning alerts when users select conflicting dates with existing bookings
+- **Disabled State Management**: Submit button automatically disables and shows "Datas indisponíveis" when date conflicts detected
+- **Date Range Constraints**: Implemented minimum date validation (today) and logical date ordering in booking form
+- **Inspection Status Fixed**: Resolved "aguardando_vistoria" status display issues in profile page with proper badge and action buttons
+
+## Previous Changes (August 6, 2025)
 - **Stripe Payment Integration Fixed**: Resolved 500 errors in payment intent creation by disabling PIX payments temporarily
 - **PIX Payment Disabled**: PIX requires special Stripe dashboard configuration not available in test environment
 - **Payment Security Maintained**: Restored user verification requirement for payment intent creation
@@ -72,7 +81,7 @@ Preferred communication style: Simple, everyday language.
 ### Core Features
 - **Authentication**: JWT-based cookie authentication, role-based access, protected routes. Simplified authentication system using httpOnly cookies exclusively for enhanced security and reliability.
 - **Vehicle Management**: Comprehensive listings with images, location-based search, dynamic pricing, availability calendar, waiting queue, automatic vehicle release. Vehicle approval workflow with CRLV document upload and administrative review. Vehicle validation system for models, license plates, and RENAVAM.
-- **Booking System**: Real-time availability, status workflow, payment tracking, booking history, automatic date blocking upon contract signing.
+- **Booking System**: Real-time availability, status workflow, payment tracking, booking history, automatic date blocking upon contract signing. Enhanced calendar system with intelligent date blocking for existing reservations and visual conflict warnings.
 - **Search & Filtering**: Location, category, price, features, transmission, date-based availability.
 - **Messaging**: Real-time, booking-specific threads, read/unread status.
 - **Digital Contracts**: DocuSign integration for digital signatures, automatic contract creation upon booking approval, PDF generation, professional Brazilian contract template.

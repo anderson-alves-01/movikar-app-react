@@ -46,6 +46,7 @@ export interface IStorage {
   createVehicle(vehicle: InsertVehicle): Promise<Vehicle>;
   updateVehicle(id: number, vehicle: Partial<InsertVehicle>): Promise<Vehicle | undefined>;
   deleteVehicle(id: number): Promise<boolean>;
+  getVehicleUnavailableDates(vehicleId: number): Promise<string[]>;
 
   // Bookings
   getBooking(id: number): Promise<BookingWithDetails | undefined>;
@@ -537,6 +538,43 @@ export class DatabaseStorage implements IStorage {
       .from(bookings)
       .where(eq(bookings.vehicleId, vehicleId));
     return (result?.count || 0) > 0;
+  }
+
+  // Get unavailable dates for a vehicle based on existing bookings
+  async getVehicleUnavailableDates(vehicleId: number): Promise<string[]> {
+    const confirmedBookings = await db
+      .select({
+        startDate: bookings.startDate,
+        endDate: bookings.endDate,
+      })
+      .from(bookings)
+      .where(
+        and(
+          eq(bookings.vehicleId, vehicleId),
+          or(
+            eq(bookings.status, 'approved'),
+            eq(bookings.status, 'confirmed'), 
+            eq(bookings.status, 'active'),
+            eq(bookings.status, 'aguardando_vistoria'),
+            eq(bookings.status, 'awaiting_inspection'),
+            eq(bookings.status, 'completed')
+          )
+        )
+      );
+
+    const unavailableDates: string[] = [];
+    
+    confirmedBookings.forEach(booking => {
+      const start = new Date(booking.startDate);
+      const end = new Date(booking.endDate);
+      
+      // Add all dates in the range (inclusive)
+      for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+        unavailableDates.push(date.toISOString().split('T')[0]);
+      }
+    });
+
+    return unavailableDates;
   }
 
   // Bookings

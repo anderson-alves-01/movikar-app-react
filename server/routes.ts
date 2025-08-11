@@ -1896,6 +1896,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get unavailable dates for a vehicle
+  app.get("/api/vehicles/:id/unavailable-dates", async (req, res) => {
+    try {
+      const vehicleId = parseInt(req.params.id);
+      const unavailableDates = await storage.getVehicleUnavailableDates(vehicleId);
+      res.json(unavailableDates);
+    } catch (error) {
+      console.error("Error fetching unavailable dates:", error);
+      res.status(500).json({ message: "Falha ao buscar datas indisponíveis" });
+    }
+  });
+
   // Booking routes
   app.get("/api/bookings", authenticateToken, async (req, res) => {
     try {
