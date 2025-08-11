@@ -90,8 +90,19 @@ export default function Profile() {
 
   // Fetch user vehicles
   const { data: userVehicles, isLoading: vehiclesLoading } = useQuery({
-    queryKey: ['/api/vehicles/my-vehicles'],
+    queryKey: ['/api/users/my/vehicles'],
+    queryFn: async () => {
+      const response = await fetch('/api/users/my/vehicles', {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch user vehicles');
+      return response.json();
+    },
     enabled: !!user,
+    staleTime: 5000,
   });
 
   // Update user mutation
