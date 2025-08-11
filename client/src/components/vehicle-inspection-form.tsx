@@ -57,6 +57,20 @@ export function VehicleInspectionFormV3({ booking, onInspectionComplete }: Vehic
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Verificação de segurança para booking
+  if (!booking || !booking.id || !booking.vehicleId) {
+    console.error("VehicleInspectionForm: booking inválido", booking);
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <Card>
+          <CardContent className="text-center py-8">
+            <p className="text-red-600">Erro: Dados da reserva não encontrados</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   const form = useForm<InsertVehicleInspectionForm>({
     resolver: zodResolver(insertVehicleInspectionFormSchema),
     defaultValues: {
@@ -76,48 +90,39 @@ export function VehicleInspectionFormV3({ booking, onInspectionComplete }: Vehic
   const createInspectionMutation = useMutation({
     mutationFn: async (data: InsertVehicleInspectionForm) => {
       console.log("🚀 Enviando requisição para API...");
-      console.log("📋 Dados enviados:", JSON.stringify(data, null, 2));
-      console.log("📋 Validação dos dados antes do envio:");
-      console.log("   - bookingId:", data.bookingId);
-      console.log("   - vehicleId:", data.vehicleId);
-      console.log("   - fotos:", data.photos?.length || 0);
-      console.log("   - aprovação:", data.approvalDecision);
       
-      try {
-        const response = await apiRequest("POST", "/api/inspections", data);
-        console.log("✅ Resposta da API status:", response.status);
-        console.log("✅ Resposta da API headers:", response.headers);
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("❌ Erro na resposta da API:", errorText);
-          throw new Error(`API Error: ${response.status} - ${errorText}`);
-        }
-        
-        const result = await response.json();
-        console.log("✅ Dados da resposta:", result);
-        return result;
-      } catch (error) {
-        console.error("💥 Erro na requisição:", error);
-        throw error;
+      const response = await apiRequest("POST", "/api/inspections", data);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
       }
+      
+      return response.json();
     },
     onSuccess: (inspection) => {
-      console.log("🎉 Sucesso na mutação:", inspection);
-      setIsSubmitting(false); // Garantir que o loading seja removido
+      console.log("✅ Vistoria criada com sucesso");
+      setIsSubmitting(false);
       toast({
         title: "Vistoria criada com sucesso!",
         description: "A vistoria foi registrada e será processada.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/inspections"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/inspections/renter"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
-      onInspectionComplete?.(inspection);
+      
+      // Invalidar queries de forma segura
+      try {
+        queryClient.invalidateQueries({ queryKey: ["/api/inspections"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
+      } catch (error) {
+        console.warn("Erro ao invalidar queries:", error);
+      }
+      
+      if (onInspectionComplete) {
+        onInspectionComplete(inspection);
+      }
     },
     onError: (error: any) => {
-      console.error("💥 Erro na mutação:", error);
-      console.error("💥 Erro stack:", error.stack);
-      setIsSubmitting(false); // Garantir que o loading seja removido
+      console.error("❌ Erro na mutação:", error);
+      setIsSubmitting(false);
       toast({
         title: "Erro ao criar vistoria",
         description: error.message || "Ocorreu um erro inesperado.",
@@ -159,24 +164,10 @@ export function VehicleInspectionFormV3({ booking, onInspectionComplete }: Vehic
   };
 
   const onSubmit = async (data: InsertVehicleInspectionForm) => {
-    console.clear(); // Limpar console para melhor visualização
-    console.log("🚀🚀🚀 FUNÇÃO onSubmit CHAMADA! 🚀🚀🚀");
-    console.log("=".repeat(50));
-    console.log("🔍 Iniciando envio da vistoria...");
-    console.log("📝 Dados do formulário:", data);
-    console.log("📸 Fotos disponíveis:", photos);
-    console.log("📸 Total de fotos:", photos.length);
-    console.log("🚨 Danos:", damages);
-
-    // Validação de quilometragem com log detalhado
-    console.log("🔍 Verificando quilometragem:", {
-      value: data.mileage,
-      type: typeof data.mileage,
-      isValid: data.mileage && data.mileage > 0
-    });
+    console.log("🚀 Iniciando envio da vistoria...");
     
+    // Validação de quilometragem
     if (!data.mileage || data.mileage <= 0) {
-      console.log("❌ PAROU AQUI: Quilometragem inválida");
       toast({
         title: "Quilometragem obrigatória",
         description: "Por favor, informe uma quilometragem válida (maior que zero).",
@@ -184,16 +175,9 @@ export function VehicleInspectionFormV3({ booking, onInspectionComplete }: Vehic
       });
       return;
     }
-    console.log("✅ Quilometragem válida, continuando...");
 
-    // Validação obrigatória de fotos com log detalhado
-    console.log("🔍 Verificando fotos:", {
-      count: photos.length,
-      isValid: photos.length > 0
-    });
-    
+    // Validação obrigatória de fotos
     if (photos.length === 0) {
-      console.log("❌ PAROU AQUI: Nenhuma foto adicionada");
       toast({
         title: "Fotos obrigatórias",
         description: "Por favor, adicione pelo menos uma foto do veículo antes de finalizar a vistoria.",
@@ -201,18 +185,9 @@ export function VehicleInspectionFormV3({ booking, onInspectionComplete }: Vehic
       });
       return;
     }
-    console.log("✅ Fotos válidas, continuando...");
 
-    // Validação de motivo de reprovação com log detalhado
-    console.log("🔍 Verificando aprovação/reprovação:", {
-      approvalDecision: data.approvalDecision,
-      rejectionReason: data.rejectionReason,
-      rejectionReasonTrimmed: data.rejectionReason?.trim(),
-      needsRejectionReason: !data.approvalDecision
-    });
-    
+    // Validação de motivo de reprovação
     if (!data.approvalDecision && (!data.rejectionReason || data.rejectionReason.trim() === "")) {
-      console.log("❌ PAROU AQUI: Motivo de reprovação obrigatório");
       toast({
         title: "Motivo da reprovação obrigatório",
         description: "Por favor, informe o motivo da reprovação da vistoria.",
@@ -220,9 +195,6 @@ export function VehicleInspectionFormV3({ booking, onInspectionComplete }: Vehic
       });
       return;
     }
-    console.log("✅ Decisão de aprovação válida, continuando...");
-
-    console.log("🎯 Chegou até aqui! Preparando dados para envio...");
     
     const inspectionData = {
       ...data,
@@ -230,34 +202,12 @@ export function VehicleInspectionFormV3({ booking, onInspectionComplete }: Vehic
       damages,
     };
 
-    console.log("📤 Dados completos da vistoria:", inspectionData);
-    console.log("📤 Total de fotos no envio:", inspectionData.photos.length);
-    console.log("📤 Estrutura completa dos dados:", JSON.stringify(inspectionData, null, 2));
-
-    console.log("🔄 Definindo isSubmitting como true...");
     setIsSubmitting(true);
     
     try {
-      console.log("🚀 Chamando mutation...");
-      console.log("🚀 Mutation object:", createInspectionMutation);
-      console.log("🚀 Mutation state:", {
-        isPending: createInspectionMutation.isPending,
-        isIdle: createInspectionMutation.isIdle,
-        isSuccess: createInspectionMutation.isSuccess,
-        isError: createInspectionMutation.isError
-      });
-      
-      const result = await createInspectionMutation.mutateAsync(inspectionData);
-      console.log("✅ Vistoria criada com sucesso:", result);
+      await createInspectionMutation.mutateAsync(inspectionData);
     } catch (error) {
       console.error("❌ Erro ao criar vistoria:", error);
-      console.error("❌ Detalhes do erro:", {
-        message: (error as any)?.message,
-        stack: (error as any)?.stack,
-        response: (error as any)?.response,
-        name: (error as any)?.name
-      });
-      // Garantir que o loading seja removido mesmo em caso de erro
       setIsSubmitting(false);
     }
   };
