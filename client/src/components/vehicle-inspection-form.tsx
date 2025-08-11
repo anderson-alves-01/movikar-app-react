@@ -57,20 +57,6 @@ export function VehicleInspectionFormV3({ booking, onInspectionComplete }: Vehic
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Verificação de segurança para booking
-  if (!booking || !booking.id || !booking.vehicleId) {
-    console.error("VehicleInspectionForm: booking inválido", booking);
-    return (
-      <div className="max-w-4xl mx-auto p-6">
-        <Card>
-          <CardContent className="text-center py-8">
-            <p className="text-red-600">Erro: Dados da reserva não encontrados</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   const form = useForm<InsertVehicleInspectionForm>({
     resolver: zodResolver(insertVehicleInspectionFormSchema),
     defaultValues: {
@@ -211,6 +197,20 @@ export function VehicleInspectionFormV3({ booking, onInspectionComplete }: Vehic
       setIsSubmitting(false);
     }
   };
+
+  // Verificação de segurança para booking - após todos os hooks
+  if (!booking || !booking.id || !booking.vehicleId) {
+    console.error("VehicleInspectionForm: booking inválido", booking);
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <Card>
+          <CardContent className="text-center py-8">
+            <p className="text-red-600">Erro: Dados da reserva não encontrados</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
