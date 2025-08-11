@@ -25,7 +25,9 @@ import {
   FileText,
   CheckCircle,
   XCircle,
-  Clock
+  Clock,
+  AlertTriangle,
+  ClipboardCheck
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -167,6 +169,16 @@ export default function Profile() {
         return <Badge className="bg-blue-100 text-blue-800">Concluído</Badge>;
       case "confirmed":
         return <Badge className="bg-green-100 text-green-800">Confirmado</Badge>;
+      case "aguardando_vistoria":
+        return <Badge className="bg-orange-100 text-orange-800">
+          <AlertTriangle className="h-3 w-3 mr-1" />
+          Aguardando Vistoria
+        </Badge>;
+      case "awaiting_inspection":
+        return <Badge className="bg-orange-100 text-orange-800">
+          <AlertTriangle className="h-3 w-3 mr-1" />
+          Aguardando Vistoria
+        </Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -456,6 +468,18 @@ export default function Profile() {
                                   Contratos
                                 </Button>
                               )}
+                              {(booking.status === 'aguardando_vistoria' || booking.status === 'awaiting_inspection') && (
+                                <Button 
+                                  variant="default" 
+                                  size="sm"
+                                  asChild
+                                >
+                                  <Link href={`/inspection/${booking.id}`}>
+                                    <ClipboardCheck className="h-4 w-4 mr-2" />
+                                    Fazer Vistoria
+                                  </Link>
+                                </Button>
+                              )}
                             </div>
                             
                             {booking.status === 'pending' && (
@@ -561,6 +585,19 @@ export default function Profile() {
                                   Rejeitar
                                 </Button>
                               </div>
+                            )}
+                            
+                            {(booking.status === 'aguardando_vistoria' || booking.status === 'awaiting_inspection') && (
+                              <Button 
+                                variant="default" 
+                                size="sm"
+                                asChild
+                              >
+                                <Link href={`/inspection/${booking.id}`}>
+                                  <ClipboardCheck className="h-4 w-4 mr-2" />
+                                  Fazer Vistoria
+                                </Link>
+                              </Button>
                             )}
                           </div>
                         </CardContent>
