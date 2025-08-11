@@ -239,31 +239,65 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
       <Card className="bg-white border border-gray-200" data-testid="booking-form">
         <CardContent className="p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Date Selection */}
+            {/* Date Selection with Enhanced Validation */}
             <div className="grid grid-cols-1 gap-4">
               <div>
                 <Label className="block text-sm font-medium text-gray-700 mb-2">Retirada</Label>
                 <Input 
                   type="date" 
                   required
-                  className="h-12 text-sm"
+                  className={`h-12 text-sm ${hasDateConflict() ? 'border-red-500 bg-red-50' : ''}`}
                   value={bookingData.startDate}
-                  onChange={(e) => setBookingData(prev => ({ ...prev, startDate: e.target.value }))}
+                  onChange={(e) => {
+                    setBookingData(prev => ({ ...prev, startDate: e.target.value }));
+                    // Auto-validate on change
+                    if (unavailableDates.includes(e.target.value)) {
+                      toast({
+                        title: "Data Indisponível",
+                        description: "Esta data já está reservada. Escolha outra data.",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
                   data-testid="input-start-date"
                   min={new Date().toISOString().split('T')[0]}
                 />
+                {/* Show conflicting start date warning */}
+                {bookingData.startDate && unavailableDates.includes(bookingData.startDate) && (
+                  <p className="text-red-600 text-xs mt-1 flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    Data não disponível - escolha outra
+                  </p>
+                )}
               </div>
               <div>
                 <Label className="block text-sm font-medium text-gray-700 mb-2">Devolução</Label>
                 <Input 
                   type="date" 
                   required
-                  className="h-12 text-sm"
+                  className={`h-12 text-sm ${hasDateConflict() ? 'border-red-500 bg-red-50' : ''}`}
                   value={bookingData.endDate}
-                  onChange={(e) => setBookingData(prev => ({ ...prev, endDate: e.target.value }))}
+                  onChange={(e) => {
+                    setBookingData(prev => ({ ...prev, endDate: e.target.value }));
+                    // Auto-validate on change
+                    if (unavailableDates.includes(e.target.value)) {
+                      toast({
+                        title: "Data Indisponível",
+                        description: "Esta data já está reservada. Escolha outra data.",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
                   data-testid="input-end-date"
                   min={bookingData.startDate || new Date().toISOString().split('T')[0]}
                 />
+                {/* Show conflicting end date warning */}
+                {bookingData.endDate && unavailableDates.includes(bookingData.endDate) && (
+                  <p className="text-red-600 text-xs mt-1 flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    Data não disponível - escolha outra
+                  </p>
+                )}
               </div>
             </div>
 
@@ -380,11 +414,22 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
             {/* Submit Button */}
             <Button 
               type="submit" 
-              className="w-full bg-primary text-white font-semibold hover:bg-red-600 transition-colors"
-              disabled={!user || !bookingData.startDate || !bookingData.endDate}
+              className={`w-full font-semibold transition-colors ${
+                hasDateConflict() 
+                  ? 'bg-red-500 hover:bg-red-600 cursor-not-allowed text-white' 
+                  : 'bg-primary text-white hover:bg-red-600'
+              }`}
+              disabled={!user || !bookingData.startDate || !bookingData.endDate || hasDateConflict()}
               data-testid="button-book-now"
             >
-              Alugar Agora
+              {hasDateConflict() ? (
+                <span className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  Datas indisponíveis - Escolha outras datas
+                </span>
+              ) : (
+                pricing.days > 0 ? `Alugar Agora - ${formatCurrency(pricing.total)}` : 'Alugar Agora'
+              )}
             </Button>
             
             <p className="text-xs text-gray-500 text-center">

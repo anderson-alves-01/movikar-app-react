@@ -587,10 +587,12 @@ export default function Profile() {
                               </div>
                             )}
                             
-                            {(booking.status === 'aguardando_vistoria' || booking.status === 'awaiting_inspection') && (
+                            {/* Vistoria Button - Multiple status check for robustness */}
+                            {(['aguardando_vistoria', 'awaiting_inspection'].includes(booking.status)) && (
                               <Button 
                                 variant="default" 
                                 size="sm"
+                                className="bg-orange-600 hover:bg-orange-700 text-white"
                                 asChild
                               >
                                 <Link href={`/inspection/${booking.id}`}>
@@ -599,6 +601,8 @@ export default function Profile() {
                                 </Link>
                               </Button>
                             )}
+                            
+
                           </div>
                         </CardContent>
                       </Card>
