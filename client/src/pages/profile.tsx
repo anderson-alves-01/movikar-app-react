@@ -223,9 +223,9 @@ export default function Profile() {
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-left">
                 <h3 className="font-semibold text-blue-800 mb-2">Para testar o botão de vistoria:</h3>
                 <div className="text-sm text-blue-700 space-y-1">
-                  <p>• Use o email: <strong>admin@test.com</strong></p>
+                  <p>• Use o email: <strong>asouzamax@gmail.com</strong></p>
                   <p>• Use a senha: <strong>123456</strong></p>
-                  <p>• Após o login, você verá uma reserva com botão "Fazer Vistoria"</p>
+                  <p>• Após o login, você verá reserva do Fiat Uno com botão "Fazer Vistoria"</p>
                 </div>
               </div>
               
