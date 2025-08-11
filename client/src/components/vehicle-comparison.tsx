@@ -11,7 +11,9 @@ import { Link } from "wouter";
 export default function VehicleComparison() {
   const { vehicles, isOpen, toggleComparison, removeVehicle, clearComparison } = useComparisonStore();
 
-  if (vehicles.length === 0) return null;
+  if (vehicles.length === 0) {
+    return null;
+  }
 
   const getFeatureComparison = () => {
     const allFeatures = new Set<string>();
