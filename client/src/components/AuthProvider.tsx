@@ -9,11 +9,10 @@ interface AuthProviderProps {
 
 export default function AuthProvider({ children }: AuthProviderProps) {
   const [location] = useLocation();
+  const { initializing } = useAuth();
   
   // Skip auth check on auth pages to prevent 401 errors
   const isAuthPage = location === '/auth' || location === '/login' || location.startsWith('/register');
-  
-  const { initializing } = useAuth();
 
   // Skip loading screen for auth pages
   if (!isAuthPage && initializing) {

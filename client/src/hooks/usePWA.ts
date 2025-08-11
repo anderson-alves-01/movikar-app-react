@@ -39,7 +39,9 @@ export function usePWA() {
   }, []);
 
   const installApp = async () => {
-    if (!deferredPrompt) return false;
+    if (!deferredPrompt) {
+      return false;
+    }
 
     try {
       deferredPrompt.prompt();

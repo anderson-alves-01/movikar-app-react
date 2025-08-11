@@ -14,7 +14,9 @@ export function useAuth() {
 
   // Verificação inicial de autenticação apenas uma vez
   useEffect(() => {
-    if (initialized) return;
+    if (initialized) {
+      return;
+    }
 
     const checkAuth = async () => {
       try {
