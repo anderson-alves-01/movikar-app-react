@@ -73,7 +73,7 @@ export class AutoPayoutService {
       
       const totalPrice = parseFloat(booking.totalPrice);
       const serviceFee = Math.round((totalPrice * serviceFeePercent) / 100 * 100) / 100;
-      const insuranceFee = booking.hasInsurance ? Math.round((totalPrice * insuranceFeePercent) / 100 * 100) / 100 : 0;
+      const insuranceFee = booking.insuranceFee ? parseFloat(booking.insuranceFee) : 0;
       const netAmount = Math.round((totalPrice - serviceFee - insuranceFee) * 100) / 100;
 
       // 7. Processar repasse com anti-fraude
@@ -119,9 +119,7 @@ export class AutoPayoutService {
         
         // Marcar para estorno manual
         await storage.updateBooking(booking.id, {
-          status: 'refund_pending',
-          refundReason: `Vistoria rejeitada: ${inspection.rejectionReason}`,
-          refundStatus: 'manual_required'
+          status: 'refund_pending'
         });
         return;
       }
@@ -141,12 +139,7 @@ export class AutoPayoutService {
       if (refundResult.success) {
         // Atualizar status da reserva
         await storage.updateBooking(booking.id, {
-          status: 'refunded',
-          refundProcessed: true,
-          refundAmount: refundAmount.toString(),
-          refundReason: `Vistoria rejeitada: ${inspection.rejectionReason}`,
-          refundStatus: 'completed',
-          refundProcessedAt: new Date()
+          status: 'refunded'
         });
 
         console.log("✅ Estorno processado com sucesso para booking:", booking.id);
@@ -155,10 +148,7 @@ export class AutoPayoutService {
         
         // Marcar para estorno manual
         await storage.updateBooking(booking.id, {
-          status: 'refund_pending',
-          refundReason: `Vistoria rejeitada: ${inspection.rejectionReason}`,
-          refundStatus: 'failed_auto',
-          refundError: refundResult.message
+          status: 'refund_pending'
         });
       }
 
@@ -167,9 +157,7 @@ export class AutoPayoutService {
       
       // Marcar para estorno manual em caso de erro
       await storage.updateBooking(booking.id, {
-        status: 'refund_pending',
-        refundReason: `Vistoria rejeitada: ${inspection.rejectionReason}`,
-        refundStatus: 'error'
+        status: 'refund_pending'
       });
     }
   }

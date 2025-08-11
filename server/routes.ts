@@ -2230,7 +2230,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Vistoria não encontrada" });
       }
 
-      // TODO: Aqui seria o trigger para processar o pagamento ao proprietário
+      // Trigger automático para processar repasse ao proprietário
+      try {
+        const { autoPayoutService } = await import("./services/autoPayoutService.js");
+        console.log("🚀 Vistoria aprovada, disparando repasse automático para booking:", approvedInspection.bookingId);
+        
+        // Trigger imediato (sem delay de segurança para teste)
+        setTimeout(() => {
+          autoPayoutService.triggerPayoutAfterPayment(approvedInspection.bookingId);
+        }, 5000); // 5 segundos de delay apenas para garantir que a aprovação foi salva
+        
+      } catch (error) {
+        console.error("❌ Erro ao disparar repasse automático:", error);
+      }
       
       res.json(approvedInspection);
     } catch (error) {
