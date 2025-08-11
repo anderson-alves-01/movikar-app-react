@@ -311,29 +311,33 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
               </div>
             )}
 
-            {/* Show unavailable dates */}
+            {/* Show unavailable dates - enhanced visual display */}
             {!loadingDates && unavailableDates.length > 0 && (
-              <div className="border border-yellow-200 bg-yellow-50 rounded-lg p-3">
+              <div className="border border-orange-300 bg-orange-50 rounded-lg p-4">
                 <div className="flex items-start gap-3">
-                  <Calendar className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                  <Calendar className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
                   <div className="text-sm">
-                    <p className="text-yellow-800 font-medium mb-2">
-                      Datas já reservadas (indisponíveis):
+                    <p className="text-orange-800 font-semibold mb-3">
+                      📅 Datas já reservadas (indisponíveis):
                     </p>
-                    <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div className="grid grid-cols-4 gap-2 text-xs">
                       {unavailableDates.map((date, index) => {
                         const dateObj = new Date(date);
                         const formattedDate = dateObj.toLocaleDateString('pt-BR', {
                           day: '2-digit',
-                          month: '2-digit'
+                          month: '2-digit',
+                          year: '2-digit'
                         });
                         return (
-                          <span key={index} className="bg-yellow-200 text-yellow-800 px-2 py-1 rounded text-center">
+                          <span key={index} className="bg-red-200 text-red-900 px-2 py-1.5 rounded-md text-center font-medium border border-red-300">
                             {formattedDate}
                           </span>
                         );
                       })}
                     </div>
+                    <p className="text-orange-700 text-xs mt-2 italic">
+                      ℹ️ Total: {unavailableDates.length} dia(s) indisponível(is)
+                    </p>
                   </div>
                 </div>
               </div>
