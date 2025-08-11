@@ -261,8 +261,8 @@ export default function Reservations() {
   };
 
   const shouldShowInspectionButton = (booking: Booking) => {
-    // Não mostrar mais o botão de vistoria - substituído por status
-    return false;
+    // Mostrar botão de vistoria apenas para locatários quando o status é "aguardando_vistoria"
+    return booking.status === "aguardando_vistoria" && booking.paymentStatus === "paid";
   };
 
   const getInspectionBadge = (booking: Booking) => {
@@ -411,6 +411,17 @@ export default function Reservations() {
                             {formatCurrency(booking.totalPrice)}
                           </span>
                           <div className="flex gap-2">
+                            {shouldShowInspectionButton(booking) && (
+                              <Button 
+                                size="sm" 
+                                className="bg-orange-600 hover:bg-orange-700 text-white"
+                                onClick={() => handleInspection(booking.id)}
+                                data-testid={`button-inspection-${booking.id}`}
+                              >
+                                <PenTool className="w-4 h-4 mr-1" />
+                                Fazer Vistoria
+                              </Button>
+                            )}
                             <Button 
                               size="sm" 
                               variant="outline"
