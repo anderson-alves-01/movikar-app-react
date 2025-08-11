@@ -92,7 +92,7 @@ export default function Reservations() {
   const { data: ownerBookings, isLoading: loadingOwner } = useQuery<Booking[]>({
     queryKey: ["/api/bookings", "owner", forceRefresh],
     queryFn: async () => {
-      const response = await fetch('/api/bookings?type=owner', {
+      const response = await fetch('/api/bookings?type=owner&includeInspections=true', {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -257,7 +257,7 @@ export default function Reservations() {
   };
 
   const handleInspection = (bookingId: number) => {
-    window.location.href = `/inspection?bookingId=${bookingId}`;
+    window.location.href = `/inspection/${bookingId}`;
   };
 
   const shouldShowInspectionButton = (booking: Booking) => {
@@ -312,6 +312,8 @@ export default function Reservations() {
         return "bg-red-100 text-red-800";
       case "completed":
         return "bg-blue-100 text-blue-800";
+      case "aguardando_vistoria":
+        return "bg-orange-100 text-orange-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -378,6 +380,7 @@ export default function Reservations() {
                         {booking.status === "approved" && "Aprovado"}
                         {booking.status === "rejected" && "Rejeitado"}
                         {booking.status === "completed" && "Concluído"}
+                        {booking.status === "aguardando_vistoria" && "Aguardando Vistoria"}
                       </Badge>
                     </div>
                   </CardHeader>
@@ -463,6 +466,7 @@ export default function Reservations() {
                         {booking.status === "approved" && "Aprovado"}
                         {booking.status === "rejected" && "Rejeitado"}
                         {booking.status === "completed" && "Concluído"}
+                        {booking.status === "aguardando_vistoria" && "Aguardando Vistoria"}
                       </Badge>
                     </div>
                   </CardHeader>
@@ -482,40 +486,58 @@ export default function Reservations() {
                           Locatário: {booking.renter.name}
                         </div>
                       )}
-                      <div className="flex justify-between items-center pt-3 border-t">
-                        <span className="text-lg font-semibold text-green-600">
-                          {formatCurrency(booking.totalPrice)}
-                        </span>
-                        <div className="flex gap-2">
-                          {booking.status === "pending" && (
-                            <>
+                      <div className="space-y-3">
+                        {getInspectionBadge(booking) && (
+                          <div className="flex justify-start">
+                            {getInspectionBadge(booking)}
+                          </div>
+                        )}
+                        <div className="flex justify-between items-center pt-3 border-t">
+                          <span className="text-lg font-semibold text-green-600">
+                            {formatCurrency(booking.totalPrice)}
+                          </span>
+                          <div className="flex gap-2">
+                            {booking.status === "pending" && (
+                              <>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="text-green-600 border-green-600 hover:bg-green-50"
+                                  onClick={() => handleBookingAction(booking.id, "approved")}
+                                  disabled={updateBookingMutation.isPending}
+                                >
+                                  Aprovar
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="text-red-600 border-red-600 hover:bg-red-50"
+                                  onClick={() => handleBookingAction(booking.id, "rejected")}
+                                  disabled={updateBookingMutation.isPending}
+                                >
+                                  Rejeitar
+                                </Button>
+                              </>
+                            )}
+                            {booking.status === "aguardando_vistoria" && (
                               <Button 
                                 size="sm" 
-                                variant="outline" 
-                                className="text-green-600 border-green-600 hover:bg-green-50"
-                                onClick={() => handleBookingAction(booking.id, "approved")}
-                                disabled={updateBookingMutation.isPending}
+                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                                onClick={() => handleInspection(booking.id)}
+                                data-testid={`button-inspection-${booking.id}`}
                               >
-                                Aprovar
+                                <PenTool className="w-4 h-4 mr-1" />
+                                Fazer Vistoria
                               </Button>
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                className="text-red-600 border-red-600 hover:bg-red-50"
-                                onClick={() => handleBookingAction(booking.id, "rejected")}
-                                disabled={updateBookingMutation.isPending}
-                              >
-                                Rejeitar
-                              </Button>
-                            </>
-                          )}
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleViewDetails(booking.id)}
-                          >
-                            Ver Detalhes
-                          </Button>
+                            )}
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleViewDetails(booking.id)}
+                            >
+                              Ver Detalhes
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>

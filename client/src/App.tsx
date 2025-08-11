@@ -80,6 +80,7 @@ function Router() {
       <Route path="/messages" component={Messages} />
       <Route path="/contracts" component={Contracts} />
       <Route path="/inspection" component={Inspection} />
+      <Route path="/inspection/:id" component={Inspection} />
       <Route path="/contracts/:id" component={ContractPreview} />
       <Route path="/rewards" component={Rewards} />
       <Route path="/suggestions" component={Suggestions} />
