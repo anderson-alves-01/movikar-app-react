@@ -1900,7 +1900,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/bookings", authenticateToken, async (req, res) => {
     try {
       const type = req.query.type as 'renter' | 'owner' || 'renter';
-      const bookings = await storage.getBookingsByUser(req.user!.id, type);
+      const includeInspections = req.query.includeInspections === 'true';
+      const bookings = await storage.getBookingsByUser(req.user!.id, type, includeInspections);
       res.json(bookings);
     } catch (error) {
       res.status(500).json({ message: "Falha ao buscar reservas" });

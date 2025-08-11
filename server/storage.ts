@@ -49,7 +49,7 @@ export interface IStorage {
 
   // Bookings
   getBooking(id: number): Promise<BookingWithDetails | undefined>;
-  getBookingsByUser(userId: number, type: 'renter' | 'owner'): Promise<BookingWithDetails[]>;
+  getBookingsByUser(userId: number, type: 'renter' | 'owner', includeInspections?: boolean): Promise<BookingWithDetails[]>;
   getBookingsByVehicle(vehicleId: number): Promise<Booking[]>;
   getBookingByPaymentIntent(paymentIntentId: string): Promise<Booking | undefined>;
   createBooking(booking: InsertBooking): Promise<Booking>;
@@ -566,14 +566,21 @@ export class DatabaseStorage implements IStorage {
   }
     // @ts-ignore - Emergency deployment fix
 
-  async getBookingsByUser(userId: number, type: 'renter' | 'owner'): Promise<BookingWithDetails[]> {
+  async getBookingsByUser(userId: number, type: 'renter' | 'owner', includeInspections: boolean = false): Promise<BookingWithDetails[]> {
     const field = type === 'renter' ? bookings.renterId : bookings.ownerId;
     
-    const results = await db
+    const query = db
       .select()
       .from(bookings)
       .leftJoin(vehicles, eq(bookings.vehicleId, vehicles.id))
-      .leftJoin(users, eq(vehicles.ownerId, users.id))
+      .leftJoin(users, eq(vehicles.ownerId, users.id));
+
+    // Include inspections if requested
+    if (includeInspections) {
+      query.leftJoin(vehicleInspections, eq(vehicleInspections.bookingId, bookings.id));
+    }
+
+    const results = await query
       .where(eq(field, userId))
       .orderBy(desc(bookings.createdAt));
 
@@ -581,7 +588,7 @@ export class DatabaseStorage implements IStorage {
       results.map(async (result) => {
         const [renter] = await db.select().from(users).where(eq(users.id, result.bookings.renterId));
         
-        return {
+        const bookingData: any = {
           ...result.bookings,
           vehicle: {
             ...result.vehicles!,
@@ -590,6 +597,13 @@ export class DatabaseStorage implements IStorage {
           renter: renter!,
           owner: result.users!,
         };
+
+        // Add inspection data if included
+        if (includeInspections && result.vehicle_inspections) {
+          bookingData.inspection = result.vehicle_inspections;
+        }
+
+        return bookingData;
       })
     );
 

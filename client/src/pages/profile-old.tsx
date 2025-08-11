@@ -1,36 +1,37 @@
 import { useState, useEffect } from "react";
-import { Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuthStore } from "@/lib/auth";
+import { Link } from "wouter";
+import Header from "@/components/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import ContractManager from "@/components/contract-manager";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { 
   User, 
-  Edit, 
+  Star, 
+  Car, 
+  Calendar, 
+  MapPin, 
   Phone, 
   Mail, 
-  MapPin, 
-  Star, 
-  Loader2, 
-  Calendar,
-  Car,
+  Edit, 
+  Loader2,
   MessageCircle,
-  FileText,
   CheckCircle,
   XCircle,
-  Clock
+  Clock,
+  FileText
 } from "lucide-react";
+import { useAuthStore } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency } from "@/lib/currency";
-import Header from "@/components/header";
+import ContractManager from "@/components/contract-manager";
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
@@ -47,6 +48,10 @@ export default function Profile() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Debug: Log user data para identificar problema
+  console.log('🔍 Profile Debug - User data:', user);
+  console.log('🔍 Profile Debug - User keys:', user ? Object.keys(user) : 'No user');
+
   // Force refresh user data on component mount
   useEffect(() => {
     if (user && !user.pix) {
@@ -58,7 +63,7 @@ export default function Profile() {
   const { data: renterBookings, isLoading: renterBookingsLoading } = useQuery({
     queryKey: ['/api/bookings', 'renter'],
     queryFn: async () => {
-      const response = await fetch('/api/bookings?type=renter&includeInspections=true', {
+      const response = await fetch('/api/bookings?type=renter', {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -75,7 +80,7 @@ export default function Profile() {
   const { data: ownerBookings, isLoading: ownerBookingsLoading } = useQuery({
     queryKey: ['/api/bookings', 'owner'],
     queryFn: async () => {
-      const response = await fetch('/api/bookings?type=owner&includeInspections=true', {
+      const response = await fetch('/api/bookings?type=owner', {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -90,23 +95,24 @@ export default function Profile() {
 
   // Fetch user vehicles
   const { data: userVehicles, isLoading: vehiclesLoading } = useQuery({
-    queryKey: ['/api/vehicles/my-vehicles'],
-    enabled: !!user,
+    queryKey: ['/api/users/my/vehicles'],
+    enabled: !!user, // Only fetch when user is authenticated
   });
 
   // Update user mutation
   const updateUserMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest('PUT', '/api/auth/user', data);
+      const response = await apiRequest('PUT', `/api/users/${user?.id}`, data);
       return response.json();
     },
-    onSuccess: (data) => {
-      setAuth(data);
+    onSuccess: (updatedUser) => {
+      setAuth(updatedUser, useAuthStore.getState().token!);
       setIsEditing(false);
       toast({
         title: "Perfil atualizado!",
         description: "Suas informações foram atualizadas com sucesso.",
       });
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
     },
     onError: (error: any) => {
       toast({
@@ -184,6 +190,8 @@ export default function Profile() {
     delete dataToSend.pixKey; // Remover pixKey
     updateUserMutation.mutate(dataToSend);
   };
+
+
 
   if (!user) {
     return (
@@ -520,34 +528,39 @@ export default function Profile() {
                           
                           <div className="flex items-center justify-between">
                             <div className="flex space-x-2">
-                              <Button variant="outline" size="sm" asChild>
-                                <Link href={`/vehicle/${booking.vehicle.id}`}>
-                                  Ver veículo
-                                </Link>
-                              </Button>
                               <Button variant="outline" size="sm">
                                 <MessageCircle className="h-4 w-4 mr-2" />
                                 Conversar
                               </Button>
+                              {(booking.status === 'approved' || booking.status === 'active' || booking.status === 'completed') && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedBookingId(booking.id);
+                                    setContractManagerOpen(true);
+                                  }}
+                                >
+                                  <FileText className="h-4 w-4 mr-2" />
+                                  Contratos
+                                </Button>
+                              )}
                             </div>
                             
                             {booking.status === 'pending' && (
                               <div className="flex space-x-2">
                                 <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => handleBookingAction(booking.id, 'approved')}
-                                >
-                                  <CheckCircle className="h-4 w-4 mr-2" />
-                                  Aprovar
-                                </Button>
-                                <Button 
                                   variant="destructive" 
                                   size="sm"
                                   onClick={() => handleBookingAction(booking.id, 'rejected')}
                                 >
-                                  <XCircle className="h-4 w-4 mr-2" />
                                   Rejeitar
+                                </Button>
+                                <Button 
+                                  size="sm"
+                                  onClick={() => handleBookingAction(booking.id, 'approved')}
+                                >
+                                  Aprovar
                                 </Button>
                               </div>
                             )}
@@ -559,10 +572,7 @@ export default function Profile() {
                 ) : (
                   <div className="text-center py-8">
                     <Car className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">Nenhuma reserva nos seus veículos ainda</p>
-                    <Button className="mt-4" asChild>
-                      <Link href="/add-vehicle">Adicionar veículo</Link>
-                    </Button>
+                    <p className="text-gray-600">Nenhuma reserva para seus veículos ainda</p>
                   </div>
                 )}
               </CardContent>
@@ -582,28 +592,41 @@ export default function Profile() {
                     <p className="text-gray-600">Carregando veículos...</p>
                   </div>
                 ) : userVehicles && Array.isArray(userVehicles) && userVehicles.length > 0 ? (
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {userVehicles.map((vehicle: any) => (
-                      <Card key={vehicle.id} className="overflow-hidden">
-                        <img
-                          src={vehicle.images?.[0] || "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200"}
-                          alt={`${vehicle.brand} ${vehicle.model}`}
-                          className="w-full h-48 object-cover"
-                        />
+                      <Card key={vehicle.id} className="border border-gray-200">
                         <CardContent className="p-4">
+                          <img
+                            src={vehicle.images?.[0] || "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200"}
+                            alt={`${vehicle.brand} ${vehicle.model}`}
+                            className="w-full h-40 rounded-lg object-cover mb-4"
+                          />
+                          
                           <h3 className="font-semibold text-gray-800 mb-2">
                             {vehicle.brand} {vehicle.model} {vehicle.year}
                           </h3>
-                          <p className="text-sm text-gray-600 mb-2">
-                            {vehicle.location}
-                          </p>
-                          <div className="flex items-center justify-between">
-                            <span className="text-lg font-bold text-primary">
-                              {formatCurrency(vehicle.pricePerDay)}/dia
-                            </span>
+                          
+                          <div className="flex items-center justify-between mb-2">
+                            <Badge variant={vehicle.isAvailable ? "default" : "secondary"}>
+                              {vehicle.isAvailable ? "Disponível" : "Indisponível"}
+                            </Badge>
+                            <div className="flex items-center">
+                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
+                              <span className="text-sm">{vehicle.rating}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="text-lg font-bold text-gray-800 mb-4">
+                            {formatCurrency(vehicle.pricePerDay)}/dia
+                          </div>
+                          
+                          <div className="flex space-x-2">
+                            <Button variant="outline" size="sm" className="flex-1">
+                              Editar
+                            </Button>
                             <Button variant="outline" size="sm" asChild>
                               <Link href={`/vehicle/${vehicle.id}`}>
-                                Ver detalhes
+                                Ver
                               </Link>
                             </Button>
                           </div>
@@ -614,9 +637,9 @@ export default function Profile() {
                 ) : (
                   <div className="text-center py-8">
                     <Car className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">Você ainda não tem veículos cadastrados</p>
-                    <Button className="mt-4" asChild>
-                      <Link href="/add-vehicle">Adicionar primeiro veículo</Link>
+                    <p className="text-gray-600">Você ainda não cadastrou nenhum veículo</p>
+                    <Button className="mt-4">
+                      Anunciar meu primeiro carro
                     </Button>
                   </div>
                 )}
@@ -624,16 +647,19 @@ export default function Profile() {
             </Card>
           </TabsContent>
         </Tabs>
-
-        {/* Contract Manager */}
-        {selectedBookingId && (
-          <ContractManager 
-            bookingId={selectedBookingId}
-            open={contractManagerOpen}
-            onOpenChange={setContractManagerOpen}
-          />
-        )}
       </div>
+
+      {/* Contract Manager Modal */}
+      {selectedBookingId && (
+        <ContractManager
+          bookingId={selectedBookingId}
+          open={contractManagerOpen}
+          onOpenChange={(open) => {
+            setContractManagerOpen(open);
+            if (!open) setSelectedBookingId(null);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { VehicleInspectionFormV3 as VehicleInspectionForm } from "@/components/vehicle-inspection-form";
 import { ArrowLeft, Car, Calendar, MapPin, Clock, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import type { BookingWithDetails, VehicleInspection } from "@shared/schema";
+import Header from "@/components/header";
 
 export default function InspectionPage() {
   const [, setLocation] = useLocation();
@@ -69,6 +70,7 @@ export default function InspectionPage() {
   if (showInspectionForm && selectedBooking) {
     return (
       <div className="min-h-screen bg-gray-50">
+        <Header />
         <div className="bg-white border-b px-4 py-3">
           <Button
             variant="ghost"
@@ -99,10 +101,19 @@ export default function InspectionPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Header />
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
+              <Button 
+                onClick={() => setLocation('/reservations')}
+                variant="ghost" 
+                className="mb-4"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Voltar para Reservas
+              </Button>
               <h1 className="text-2xl font-bold text-gray-900">Vistorias de Veículos</h1>
               <p className="text-gray-600">Gerencie as vistorias dos seus aluguéis</p>
             </div>

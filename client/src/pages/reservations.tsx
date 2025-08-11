@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CalendarDays, MapPin, Car, User, Clock, X, FileText, Eye, PenTool, Search } from "lucide-react";
+import { CalendarDays, MapPin, Car, User, Clock, X, FileText, Eye, PenTool, Search, CheckCircle2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency } from "@/lib/currency";
@@ -37,6 +37,12 @@ interface Booking {
     id: number;
     name: string;
     profileImage?: string;
+  };
+  inspection?: {
+    id: number;
+    status: string;
+    approvalDecision?: boolean;
+    inspectedAt?: string;
   };
 }
 
@@ -69,7 +75,7 @@ export default function Reservations() {
   const { data: renterBookings, isLoading: loadingRenter } = useQuery<Booking[]>({
     queryKey: ["/api/bookings", "renter", forceRefresh],
     queryFn: async () => {
-      const response = await fetch('/api/bookings?type=renter', {
+      const response = await fetch('/api/bookings?type=renter&includeInspections=true', {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -255,12 +261,45 @@ export default function Reservations() {
   };
 
   const shouldShowInspectionButton = (booking: Booking) => {
-    // Mostrar botão de vistoria se:
-    // - Reserva está paga (paymentStatus === 'paid')
-    // - Reserva está confirmada/aprovada
-    // - É uma reserva como locatário
-    return booking.paymentStatus === 'paid' && 
-           (booking.status === 'confirmed' || booking.status === 'approved');
+    // Não mostrar mais o botão de vistoria - substituído por status
+    return false;
+  };
+
+  const getInspectionBadge = (booking: Booking) => {
+    if (!booking.inspection) {
+      if (booking.paymentStatus === 'paid' && (booking.status === 'confirmed' || booking.status === 'approved')) {
+        return (
+          <Badge className="bg-orange-100 text-orange-800">
+            <AlertTriangle className="w-3 h-3 mr-1" />
+            Aguardando Vistoria
+          </Badge>
+        );
+      }
+      return null;
+    }
+
+    if (booking.inspection.approvalDecision === true) {
+      return (
+        <Badge className="bg-green-100 text-green-800">
+          <CheckCircle2 className="w-3 h-3 mr-1" />
+          Vistoriado ✓
+        </Badge>
+      );
+    } else if (booking.inspection.approvalDecision === false) {
+      return (
+        <Badge className="bg-red-100 text-red-800">
+          <X className="w-3 h-3 mr-1" />
+          Vistoria Reprovada
+        </Badge>
+      );
+    } else {
+      return (
+        <Badge className="bg-yellow-100 text-yellow-800">
+          <Clock className="w-3 h-3 mr-1" />
+          Vistoria Pendente
+        </Badge>
+      );
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -358,31 +397,26 @@ export default function Reservations() {
                           Proprietário: {booking.owner.name}
                         </div>
                       )}
-                      <div className="flex justify-between items-center pt-3 border-t">
-                        <span className="text-lg font-semibold text-green-600">
-                          {formatCurrency(booking.totalPrice)}
-                        </span>
-                        <div className="flex gap-2">
-                          {shouldShowInspectionButton(booking) && (
+                      <div className="space-y-3">
+                        {getInspectionBadge(booking) && (
+                          <div className="flex justify-start">
+                            {getInspectionBadge(booking)}
+                          </div>
+                        )}
+                        <div className="flex justify-between items-center pt-3 border-t">
+                          <span className="text-lg font-semibold text-green-600">
+                            {formatCurrency(booking.totalPrice)}
+                          </span>
+                          <div className="flex gap-2">
                             <Button 
                               size="sm" 
-                              variant="default"
-                              onClick={() => handleInspection(booking.id)}
-                              className="bg-orange-600 hover:bg-orange-700"
-                              data-testid={`button-inspection-${booking.id}`}
+                              variant="outline"
+                              onClick={() => handleViewDetails(booking.id)}
+                              data-testid={`button-details-${booking.id}`}
                             >
-                              <Search className="w-4 h-4 mr-1" />
-                              Vistoria
+                              Ver Detalhes
                             </Button>
-                          )}
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleViewDetails(booking.id)}
-                            data-testid={`button-details-${booking.id}`}
-                          >
-                            Ver Detalhes
-                          </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
