@@ -218,7 +218,7 @@ export default function Profile() {
               <User className="h-16 w-16 text-gray-400 mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-gray-800 mb-2">Acesso restrito</h2>
               <p className="text-gray-600 mb-6">Você precisa estar logado para acessar seu perfil</p>
-              
+
               {/* Help for testing */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-left">
                 <h3 className="font-semibold text-blue-800 mb-2">Para testar o botão de vistoria:</h3>
@@ -228,7 +228,7 @@ export default function Profile() {
                   <p>• Após o login, você verá reserva do Fiat Uno com botão "Fazer Vistoria"</p>
                 </div>
               </div>
-              
+
               <Button asChild>
                 <Link href="/auth">Fazer login</Link>
               </Button>
@@ -242,7 +242,7 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Profile Header */}
         <Card className="mb-8">
@@ -254,7 +254,7 @@ export default function Profile() {
                   <User className="h-12 w-12" />
                 </AvatarFallback>
               </Avatar>
-              
+
               <div className="flex-1">
                 {isEditing ? (
                   <div className="space-y-4">
@@ -327,7 +327,7 @@ export default function Profile() {
                         Editar
                       </Button>
                     </div>
-                    
+
                     <div className="flex items-center space-x-4 text-sm text-gray-600 mb-4">
                       <div className="flex items-center">
                         <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
@@ -338,7 +338,7 @@ export default function Profile() {
                       <span>•</span>
                       <span>Membro desde 2024</span>
                     </div>
-                    
+
                     <div className="space-y-2 text-sm text-gray-600">
                       <div className="flex items-center">
                         <Mail className="h-4 w-4 mr-2" />
@@ -363,7 +363,7 @@ export default function Profile() {
                         </div>
                       )}
                     </div>
-                    
+
                     {/* Subscription Plan Display */}
                     <div className="mt-4 flex items-center gap-3">
                       <Badge 
@@ -392,7 +392,7 @@ export default function Profile() {
                   </>
                 )}
               </div>
-              
+
               <div className="text-right">
                 <div className="text-2xl font-bold text-success">
                   {formatCurrency(parseFloat(user.totalEarnings))}
@@ -454,7 +454,7 @@ export default function Profile() {
                               </div>
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center justify-between">
                             <div className="flex space-x-2">
                               <Button variant="outline" size="sm" asChild>
@@ -492,7 +492,7 @@ export default function Profile() {
                                 </Button>
                               )}
                             </div>
-                            
+
                             {booking.status === 'pending' && (
                               <Button 
                                 variant="destructive" 
@@ -563,7 +563,7 @@ export default function Profile() {
                               </div>
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center justify-between">
                             <div className="flex space-x-2">
                               <Button variant="outline" size="sm" asChild>
@@ -576,7 +576,7 @@ export default function Profile() {
                                 Conversar
                               </Button>
                             </div>
-                            
+
                             {booking.status === 'pending' && (
                               <div className="flex space-x-2">
                                 <Button 
@@ -597,7 +597,7 @@ export default function Profile() {
                                 </Button>
                               </div>
                             )}
-                            
+
                             {/* Vistoria Button - Multiple status check for robustness */}
                             {(['aguardando_vistoria', 'awaiting_inspection'].includes(booking.status)) && (
                               <Button 
@@ -612,7 +612,7 @@ export default function Profile() {
                                 </Link>
                               </Button>
                             )}
-                            
+
 
                           </div>
                         </CardContent>
