@@ -106,7 +106,7 @@ async function createDocuSignEnvelope(params: {
   signerName: string;
 }): Promise<string> {
   const { booking, envelopeId, returnUrl, signerEmail, signerName } = params;
-  
+
   // In development mode, return a mock DocuSign URL
   if (process.env.NODE_ENV === 'development') {
     // Extract base URL from return URL to use same domain
@@ -122,11 +122,11 @@ async function createDocuSignEnvelope(params: {
     // Initialize DocuSign API client
     const apiClient = new docusign.ApiClient();
     apiClient.setBasePath(DOCUSIGN_BASE_URI);
-    
+
     // JWT Authentication with DocuSign
     const jwtLifeSec = 10 * 60; // 10 minutes
     const scopes = "signature impersonation";
-    
+
     const token = apiClient.requestJWTUserToken(
       DOCUSIGN_INTEGRATION_KEY,
       DOCUSIGN_USER_ID,
@@ -136,27 +136,27 @@ async function createDocuSignEnvelope(params: {
     );
 
     apiClient.addDefaultHeader('Authorization', 'Bearer ' + token.accessToken);
-    
+
     // Create envelope definition
     const envelopeDefinition = new docusign.EnvelopeDefinition();
     envelopeDefinition.emailSubject = `Contrato de Locação - Veículo ${booking.vehicle?.brand} ${booking.vehicle?.model}`;
-    
+
     // Create document from contract template
     const doc1 = new docusign.Document();
     doc1.documentBase64 = await generateContractPDF(booking);
     doc1.name = 'Contrato de Locação';
     doc1.fileExtension = 'pdf';
     doc1.documentId = '1';
-    
+
     envelopeDefinition.documents = [doc1];
-    
+
     // Create signer
     const signer = new docusign.Signer();
     signer.email = signerEmail;
     signer.name = signerName;
     signer.recipientId = '1';
     signer.routingOrder = '1';
-    
+
     // Create sign here tab
     const signHere = new docusign.SignHere();
     signHere.documentId = '1';
@@ -165,20 +165,20 @@ async function createDocuSignEnvelope(params: {
     signHere.tabLabel = 'SignHereTab';
     signHere.xPosition = '195';
     signHere.yPosition = '147';
-    
+
     signer.tabs = new docusign.Tabs();
     signer.tabs.signHereTabs = [signHere];
-    
+
     envelopeDefinition.recipients = new docusign.Recipients();
     envelopeDefinition.recipients.signers = [signer];
     envelopeDefinition.status = 'sent';
-    
+
     // Send envelope
     const envelopesApi = new docusign.EnvelopesApi(apiClient);
     const results = await envelopesApi.createEnvelope(DOCUSIGN_ACCOUNT_ID, {
       envelopeDefinition: envelopeDefinition
     });
-    
+
     // Create recipient view for embedded signing
     const recipientView = new docusign.RecipientViewRequest();
     recipientView.authenticationMethod = 'none';
@@ -186,15 +186,15 @@ async function createDocuSignEnvelope(params: {
     recipientView.recipientId = '1';
     recipientView.returnUrl = returnUrl;
     recipientView.userName = signerName;
-    
+
     const viewResults = await envelopesApi.createRecipientView(
       DOCUSIGN_ACCOUNT_ID,
       results.envelopeId,
       { recipientViewRequest: recipientView }
     );
-    
+
     return viewResults.url;
-    
+
   } catch (error) {
     console.error('DocuSign envelope creation error:', error);
     // Fallback to development simulator
@@ -209,7 +209,7 @@ async function createDocuSignEnvelope(params: {
         `signerEmail=${encodeURIComponent(signerEmail)}&` +
         `signerName=${encodeURIComponent(signerName)}`;
     }
-    
+
     // Fallback to base URL if return URL is not available
     return `${baseUrl}/simulate-docusign-signature?` +
       `envelopeId=${envelopeId}&` +
@@ -240,10 +240,10 @@ declare global {
 const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
   console.log('🔐 Auth middleware - URL:', req.path);
   console.log('🔐 Auth middleware - All cookies:', req.cookies);
-  
+
   // Try cookies first, then Authorization header as fallback
   let token = req.cookies?.token;
-  
+
   if (!token) {
     const authHeader = req.headers.authorization;
     console.log('🔐 Auth middleware - Authorization header:', authHeader);
@@ -254,7 +254,7 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
   } else {
     console.log('🔐 Auth middleware - Using cookie token');
   }
-  
+
   console.log('🔐 Auth middleware - Token exists:', !!token);
 
   if (!token) {
@@ -268,7 +268,7 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: number };
     console.log('🔐 Auth middleware - Token decoded, userId:', decoded.userId);
-    
+
     const user = await storage.getUser(decoded.userId);
     if (!user) {
       console.log('❌ Auth middleware - User not found for ID:', decoded.userId);
@@ -276,7 +276,7 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
       res.clearCookie('refresh_token');
       return res.status(403).json({ message: 'Token inválido' });
     }
-    
+
     console.log('✅ Auth middleware - User authenticated:', user.email);
     req.user = user;
     next();
@@ -284,7 +284,7 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
     if (error instanceof jwt.TokenExpiredError) {
       // Try to refresh token from refresh_token cookie
       const refreshToken = req.cookies?.refresh_token;
-      
+
       if (!refreshToken) {
         res.clearCookie('token');
         res.clearCookie('refresh_token');
@@ -294,7 +294,7 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
       try {
         const decoded = jwt.verify(refreshToken, JWT_SECRET + '_refresh') as { userId: number };
         const user = await storage.getUser(decoded.userId);
-        
+
         if (!user) {
           res.clearCookie('token');
           res.clearCookie('refresh_token');
@@ -313,7 +313,7 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
           path: '/',
           domain: undefined // Let browser handle domain
         };
-        
+
         res.cookie('token', newToken, {
           ...cookieOptions,
           maxAge: 15 * 60 * 1000
@@ -384,26 +384,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Store checkout data temporarily to avoid URL length issues
   const checkoutDataStore = new Map();
-  
+
   app.post("/api/store-checkout-data", authenticateToken, async (req, res) => {
     try {
       const checkoutData = req.body;
       const checkoutId = `checkout_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
+
       // Store data for 30 minutes
       checkoutDataStore.set(checkoutId, {
         data: checkoutData,
         timestamp: Date.now(),
         userId: req.user!.id
       });
-      
+
       // Clean up old entries (older than 30 minutes)
       for (const [key, value] of Array.from(checkoutDataStore.entries())) {
         if (Date.now() - value.timestamp > 30 * 60 * 1000) {
           checkoutDataStore.delete(key);
         }
       }
-      
+
       res.json({ checkoutId });
     } catch (error) {
       console.error("Store checkout data error:", error);
@@ -415,22 +415,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { checkoutId } = req.params;
       const stored = checkoutDataStore.get(checkoutId);
-      
+
       if (!stored) {
         return res.status(404).json({ message: "Dados de checkout não encontrados ou expirados" });
       }
-      
+
       // Verify ownership
       if (stored.userId !== req.user!.id) {
         return res.status(403).json({ message: "Acesso negado" });
       }
-      
+
       // Check if expired (30 minutes)
       if (Date.now() - stored.timestamp > 30 * 60 * 1000) {
         checkoutDataStore.delete(checkoutId);
         return res.status(404).json({ message: "Dados de checkout expirados" });
       }
-      
+
       res.json(stored.data);
     } catch (error) {
       console.error("Get checkout data error:", error);
@@ -443,16 +443,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { vehicleId, startDate, endDate, totalPrice } = req.body;
       console.log('💳 Creating payment intent:', { vehicleId, startDate, endDate, totalPrice, userId: req.user!.id });
-      
+
       // Validate user verification status
       const user = await storage.getUser(req.user!.id);
       console.log('👤 User verification status:', user?.verificationStatus);
-      
+
       if (!user) {
         console.log('❌ User not found');
         return res.status(404).json({ message: "Usuário não encontrado" });
       }
-      
+
       if (user.verificationStatus !== 'verified') {
         return res.status(403).json({ 
           message: "Usuário não verificado. Complete a verificação de documentos antes de alugar um veículo." 
@@ -475,7 +475,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check availability
       const isAvailable = await storage.checkVehicleAvailability(vehicleId, new Date(startDate), new Date(endDate));
       console.log('📅 Vehicle availability:', isAvailable);
-      
+
       if (!isAvailable) {
         return res.status(400).json({ 
           message: "Veículo não disponível para as datas selecionadas" 
@@ -489,7 +489,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         serviceFeePercentage: parseFloat(dbSettings.serviceFeePercentage || "10"),
         insuranceFeePercentage: parseFloat(dbSettings.insuranceFeePercentage || "15"),
       } : currentAdminSettings;
-      
+
       // Force only card payments due to Stripe PIX configuration issues
       const paymentMethodTypes = ['card'];
 
@@ -501,7 +501,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('❌ Stripe not configured');
         return res.status(500).json({ message: "Stripe não configurado" });
       }
-      
+
       console.log('🎯 Creating Stripe payment intent...');
       const paymentIntent = await stripe.paymentIntents.create({
         amount: Math.round(parseFloat(totalPrice) * 100), // Convert to cents
@@ -535,13 +535,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/confirm-rental", authenticateToken, async (req, res) => {
     try {
       const { paymentIntentId, vehicleId, startDate, endDate, totalPrice } = req.body;
-      
+
       // Verify payment intent
       if (!stripe) {
         return res.status(500).json({ message: "Stripe não configurado" });
       }
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-      
+
       if (paymentIntent.status !== 'succeeded') {
         return res.status(400).json({ message: "Pagamento não confirmado" });
       }
@@ -570,7 +570,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       const booking = await storage.createBooking(bookingData);
-      
+
       // Create contract automatically
       try {
         await storage.createContract({
@@ -624,21 +624,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/payment-success/:paymentIntentId", async (req, res) => {
     try {
       const paymentIntentId = req.params.paymentIntentId;
-      
+
       if (!stripe) {
         return res.status(500).json({ message: "Stripe não configurado" });
       }
-      
+
       // Verify payment intent
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-      
+
       if (paymentIntent.status !== 'succeeded') {
         return res.status(400).json({ message: "Pagamento não confirmado" });
       }
 
       // Get metadata from payment intent
       const { vehicleId, userId, startDate, endDate } = paymentIntent.metadata;
-      
+
       if (!vehicleId || !userId || !startDate || !endDate) {
         return res.status(400).json({ message: "Dados de pagamento incompletos" });
       }
@@ -677,7 +677,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       const booking = await storage.createBooking(bookingData);
-      
+
       // Create contract for preview (not auto-signed anymore)
       try {
         const contract = await storage.createContract({
@@ -728,7 +728,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/register", validateUser, handleValidationErrors, async (req: Request, res: Response) => {
     try {
       const userData = insertUserSchema.parse(req.body);
-      
+
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(userData.email);
       if (existingUser) {
@@ -737,7 +737,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Hash password
       const hashedPassword = await bcrypt.hash(userData.password, 10);
-      
+
       const user = await storage.createUser({
         ...userData,
         password: hashedPassword,
@@ -752,7 +752,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           r.status === 'pending_completion' && 
           r.rewardStatus === 'pending'
         );
-        
+
         if (referralAsReferred) {
           console.log(`🎁 Processing referral reward for new user ${user.id} from referral ${referralAsReferred.id}`);
           await storage.processReferralReward(referralAsReferred.id);
@@ -792,7 +792,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/login", async (req, res) => {
     try {
       const { email, password } = req.body;
-      
+
       const user = await storage.getUserByEmail(email);
       if (!user) {
         return res.status(401).json({ message: "E-mail ou senha incorretos" });
@@ -812,7 +812,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const isReplit = !!process.env.REPL_ID;
       const isProduction = process.env.NODE_ENV === 'production';
       const isDevelopment = process.env.NODE_ENV === 'development';
-      
+
       console.log('🔧 Environment:', { 
         NODE_ENV: process.env.NODE_ENV, 
         REPL_ID: !!process.env.REPL_ID,
@@ -820,10 +820,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isProduction, 
         isReplit 
       });
-      
+
       // Force development-friendly cookies in Replit development
       const useSecureCookies = isProduction && !isDevelopment;
-      
+
       const cookieOptions = {
         httpOnly: true,
         secure: useSecureCookies, // Only secure in actual production
@@ -848,9 +848,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.header('Access-Control-Expose-Headers', 'Set-Cookie');
 
       console.log('🍪 Cookies set with options:', cookieOptions);
-      
+
       const { password: _, ...userWithoutPassword } = user;
-      
+
       // Return token in response for development compatibility
       res.json({ 
         user: userWithoutPassword,
@@ -886,7 +886,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       sameSite: 'lax',
       path: '/'
     });
-    
+
     // Definir cookies com valor vazio e expiração no passado como fallback
     res.cookie('token', '', {
       httpOnly: true,
@@ -900,24 +900,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       sameSite: 'lax',
       expires: new Date(0)
     });
-    
+
     res.json({ message: 'Logout realizado com sucesso' });
   });
 
   app.post("/api/auth/refresh", async (req, res) => {
     try {
       console.log('🔄 Refresh token attempt');
-      
+
       // Try refresh token from cookies first, then from Authorization header
       let refreshToken = req.cookies?.refresh_token;
-      
+
       // Fallback: check Authorization header for refresh token
       const authHeader = req.headers.authorization;
       if (!refreshToken && authHeader && authHeader.startsWith('Bearer ')) {
         refreshToken = authHeader.substring(7);
         console.log('🔄 Using Authorization header as refresh token');
       }
-      
+
       if (!refreshToken) {
         console.log('❌ No refresh token found');
         return res.status(401).json({ message: 'Refresh token não encontrado' });
@@ -925,25 +925,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const decoded = jwt.verify(refreshToken, JWT_SECRET + '_refresh') as { userId: number };
       const user = await storage.getUser(decoded.userId);
-      
+
       if (!user) {
         console.log('❌ User not found for refresh token');
         return res.status(403).json({ message: 'Refresh token inválido' });
       }
-      
+
       const newToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
-      
+
       console.log('✅ Token refreshed for user:', user.email);
-      
+
       res.cookie('token', newToken, {
         httpOnly: true,
         secure: false, // Permite HTTPS e HTTP em desenvolvimento
         sameSite: 'lax', // Menos restritivo para desenvolvimento
         maxAge: 15 * 60 * 1000 // 15 minutes
       });
-      
+
       const { password: _, ...userWithoutPassword } = user;
-      
+
       res.json({
         user: userWithoutPassword,
         token: newToken
@@ -1031,7 +1031,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Find or create user
       let user = await storage.getUserByEmail(userInfo.email);
-      
+
       if (!user) {
         // Create new user
         user = await storage.createUser({
@@ -1078,12 +1078,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Determine redirect URL
       const returnUrl = decodedState.returnUrl || '/';
       let finalRedirectUrl = returnUrl.startsWith('/') ? returnUrl : '/';
-      
+
       // Don't redirect back to auth pages after successful OAuth
       if (finalRedirectUrl === '/auth' || finalRedirectUrl === '/login' || finalRedirectUrl.startsWith('/register')) {
         finalRedirectUrl = '/';
       }
-      
+
       console.log('✅ OAuth success, redirecting to:', finalRedirectUrl);
       res.redirect(`${finalRedirectUrl}?oauth_success=1`);
 
@@ -1110,7 +1110,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const tokenData = await tokenResponse.json();
-      
+
       if (!tokenData.access_token) {
         throw new Error('No access token received');
       }
@@ -1133,7 +1133,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   async function handleAppleCallback(code: string) {
     try {
       console.log('🍎 Apple OAuth callback received:', code);
-      
+
       if (!APPLE_CLIENT_ID || !APPLE_PRIVATE_KEY || !APPLE_TEAM_ID || !APPLE_KEY_ID) {
         console.error('❌ Apple OAuth: Missing required environment variables');
         throw new Error('Apple OAuth not properly configured');
@@ -1171,7 +1171,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const tokenData = await tokenResponse.json();
-      
+
       if (!tokenData.access_token && !tokenData.id_token) {
         console.error('❌ Apple OAuth: No tokens received', tokenData);
         throw new Error('No access token received from Apple');
@@ -1213,19 +1213,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/profile", authenticateToken, async (req, res) => {
     try {
       const { name, phone, email, pix, pixKey } = req.body;
-      
+
       const updateData: any = {};
       if (name !== undefined) updateData.name = name;
       if (phone !== undefined) updateData.phone = phone;
       if (email !== undefined) updateData.email = email;
       if (pix !== undefined) updateData.pix = pix;
       if (pixKey !== undefined) updateData.pix = pixKey; // Support both field names
-      
+
       const updatedUser = await storage.updateUser(req.user!.id, updateData);
       if (!updatedUser) {
         return res.status(404).json({ message: "Usuário não encontrado" });
       }
-      
+
       const { password: _, ...userWithoutPassword } = updatedUser;
       res.json(userWithoutPassword);
     } catch (error) {
@@ -1276,7 +1276,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'SELECT * FROM user_documents WHERE user_id = $1 ORDER BY uploaded_at DESC',
         [userId]
       );
-      
+
       const documents = result.rows.map((row: any) => ({
         id: row.id,
         userId: row.user_id,
@@ -1289,7 +1289,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         reviewedAt: row.reviewed_at,
         reviewedBy: row.reviewed_by,
       }));
-      
+
       res.json(documents);
     } catch (error) {
       console.error("Get documents error:", error);
@@ -1300,48 +1300,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/user/documents/upload", authenticateToken, upload.single('document'), async (req, res) => {
     try {
       const userId = req.user!.id;
-      
+
       console.log("Upload request received for user:", userId);
       console.log("Request body:", req.body);
       console.log("File:", req.file);
-      
+
       const { documentType, documentNumber } = req.body;
-      
+
       if (!documentType) {
         return res.status(400).json({ message: "Tipo de documento é obrigatório" });
       }
-      
+
       if (!req.file) {
         return res.status(400).json({ message: "Arquivo é obrigatório" });
       }
-      
+
       // Salvar arquivo em base64 para visualização no admin
       const fileBase64 = req.file.buffer.toString('base64');
       const mockDocumentUrl = `data:${req.file.mimetype};base64,${fileBase64}`;
-      
+
       const result = await pool.query(`
         INSERT INTO user_documents (user_id, document_type, document_url, document_number, status)
         VALUES ($1, $2, $3, $4, 'pending')
         RETURNING *
       `, [userId, documentType, mockDocumentUrl, documentNumber]);
-      
+
       // Atualizar status do usuário
       await pool.query(`
         UPDATE users 
         SET documents_submitted = true, documents_submitted_at = NOW()
         WHERE id = $1
       `, [userId]);
-      
+
       // Verificar se todos os documentos obrigatórios foram enviados
       const docsResult = await pool.query(`
         SELECT document_type FROM user_documents 
         WHERE user_id = $1 AND status != 'rejected'
       `, [userId]);
-      
+
       const submittedTypes = docsResult.rows.map((row: any) => row.document_type);
       const requiredTypes = ['cnh', 'comprovante_residencia'];
       const allSubmitted = requiredTypes.every(type => submittedTypes.includes(type));
-      
+
       if (allSubmitted) {
         await pool.query(`
           UPDATE users 
@@ -1349,7 +1349,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           WHERE id = $1
         `, [userId]);
       }
-      
+
       const document = {
         id: result.rows[0].id,
         userId: result.rows[0].user_id,
@@ -1359,7 +1359,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: result.rows[0].status,
         uploadedAt: result.rows[0].uploaded_at,
       };
-      
+
       res.status(201).json(document);
     } catch (error) {
       console.error("Upload document error:", error);
@@ -1388,7 +1388,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from(userDocuments)
         .innerJoin(users, eq(userDocuments.userId, users.id))
         .orderBy(desc(userDocuments.uploadedAt));
-      
+
       res.json(documents);
     } catch (error) {
       console.error("Get admin documents error:", error);
@@ -1400,32 +1400,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const documentId = parseInt(req.params.documentId);
       const adminId = req.user!.id;
-      
+
       // Update document status
       await pool.query(`
         UPDATE user_documents 
         SET status = 'approved', reviewed_at = NOW(), reviewed_by = $1
         WHERE id = $2
       `, [adminId, documentId]);
-      
+
       // Get document to check user and update user verification status
       const docResult = await pool.query(`
         SELECT user_id FROM user_documents WHERE id = $1
       `, [documentId]);
-      
+
       if (docResult.rows.length > 0) {
         const userId = docResult.rows[0].user_id;
-        
+
         // Check if user has all required documents approved
         const approvedDocsResult = await pool.query(`
           SELECT document_type FROM user_documents 
           WHERE user_id = $1 AND status = 'approved'
         `, [userId]);
-        
+
         const approvedTypes = approvedDocsResult.rows.map((row: any) => row.document_type);
         const requiredTypes = ['cnh', 'comprovante_residencia'];
         const allApproved = requiredTypes.every(type => approvedTypes.includes(type));
-        
+
         if (allApproved) {
           await pool.query(`
             UPDATE users 
@@ -1434,7 +1434,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           `, [userId]);
         }
       }
-      
+
       res.json({ message: "Documento aprovado com sucesso" });
     } catch (error) {
       console.error("Approve document error:", error);
@@ -1447,33 +1447,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const documentId = parseInt(req.params.documentId);
       const adminId = req.user!.id;
       const { reason } = req.body;
-      
+
       if (!reason || !reason.trim()) {
         return res.status(400).json({ message: "Motivo da rejeição é obrigatório" });
       }
-      
+
       // Update document status
       await pool.query(`
         UPDATE user_documents 
         SET status = 'rejected', rejection_reason = $1, reviewed_at = NOW(), reviewed_by = $2
         WHERE id = $3
       `, [reason, adminId, documentId]);
-      
+
       // Update user verification status to pending if any required document is rejected
       const docResult = await pool.query(`
         SELECT user_id FROM user_documents WHERE id = $1
       `, [documentId]);
-      
+
       if (docResult.rows.length > 0) {
         const userId = docResult.rows[0].user_id;
-        
+
         await pool.query(`
           UPDATE users 
           SET verification_status = 'pending'
           WHERE id = $1
         `, [userId]);
       }
-      
+
       res.json({ message: "Documento rejeitado" });
     } catch (error) {
       console.error("Reject document error:", error);
@@ -1489,7 +1489,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
+
       // Get current counts
       const [
         totalUsers,
@@ -1504,57 +1504,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ] = await Promise.all([
         // Total users
         db.select({ count: sql<number>`count(*)` }).from(users),
-        
+
         // Active vehicles (available)
         db.select({ count: sql<number>`count(*)` })
           .from(vehicles)
           .where(eq(vehicles.isAvailable, true)),
-        
+
         // Bookings today
         db.select({ count: sql<number>`count(*)` })
           .from(bookings)
           .where(sql`DATE(${bookings.createdAt}) = CURRENT_DATE`),
-        
+
         // Monthly revenue from paid bookings (current month)
         db.select({ 
           total: sql<number>`COALESCE(SUM(${bookings.totalPrice}), 0)` 
         }).from(bookings)
           .where(eq(bookings.paymentStatus, 'paid')),
-        
+
         // Total bookings
         db.select({ count: sql<number>`count(*)` }).from(bookings),
-        
+
         // Average rating
         db.select({ 
           avg: sql<number>`COALESCE(AVG(${reviews.rating}), 0)` 
         }).from(reviews),
-        
+
         // Completed bookings
         db.select({ count: sql<number>`count(*)` })
           .from(bookings)
           .where(eq(bookings.status, 'completed')),
-        
+
         // Pending bookings
         db.select({ count: sql<number>`count(*)` })
           .from(bookings)
           .where(eq(bookings.status, 'pending')),
-        
+
         // Verified users
         db.select({ count: sql<number>`count(*)` })
           .from(users)
           .where(eq(users.verificationStatus, 'verified'))
       ]);
-      
+
       // Calculate growth metrics (30 days comparison)
       const [oldUserCount, oldBookingCount, lastMonthRevenue] = await Promise.all([
         db.select({ count: sql<number>`count(*)` })
           .from(users)
           .where(lte(users.createdAt, thirtyDaysAgo)),
-        
+
         db.select({ count: sql<number>`count(*)` })
           .from(bookings)
           .where(lte(bookings.createdAt, thirtyDaysAgo)),
-          
+
         db.select({ 
           total: sql<number>`COALESCE(SUM(${bookings.totalPrice}), 0)` 
         }).from(bookings)
@@ -1564,19 +1564,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             lt(bookings.createdAt, startOfMonth)
           ))
       ]);
-      
+
       const userGrowth = oldUserCount[0]?.count > 0 
         ? ((totalUsers[0].count - oldUserCount[0].count) / oldUserCount[0].count) * 100 
         : totalUsers[0].count > 0 ? 100 : 0;
-      
+
       const bookingGrowth = oldBookingCount[0]?.count > 0 
         ? ((totalBookings[0].count - oldBookingCount[0].count) / oldBookingCount[0].count) * 100 
         : totalBookings[0].count > 0 ? 100 : 0;
-        
+
       const revenueGrowth = lastMonthRevenue[0]?.total > 0
         ? ((monthlyRevenue[0].total - lastMonthRevenue[0].total) / lastMonthRevenue[0].total) * 100
         : monthlyRevenue[0].total > 0 ? 100 : 0;
-      
+
       const metrics = {
         totalUsers: totalUsers[0].count,
         activeVehicles: activeVehicles[0].count,
@@ -1591,7 +1591,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bookingGrowth: parseFloat(bookingGrowth.toFixed(1)),
         revenueGrowth: parseFloat(revenueGrowth.toFixed(1))
       };
-      
+
       console.log('📊 Dashboard metrics calculated:', metrics);
       res.json(metrics);
     } catch (error) {
@@ -1603,7 +1603,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/reports", authenticateToken, requireAdmin, async (req, res) => {
     try {
       console.log("📊 Fetching admin reports data...");
-      
+
       const [
         totalUsers,
         totalVehicles,
@@ -1617,43 +1617,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ] = await Promise.all([
         // Total users
         db.select({ count: sql<number>`count(*)` }).from(users),
-        
+
         // Total vehicles
         db.select({ count: sql<number>`count(*)` }).from(vehicles),
-        
+
         // Total revenue
         db.select({ 
           sum: sql<number>`COALESCE(SUM(${bookings.totalPrice}), 0)` 
         }).from(bookings).where(eq(bookings.status, 'completed')),
-        
+
         // Active bookings
         db.select({ count: sql<number>`count(*)` })
           .from(bookings)
           .where(eq(bookings.status, 'active')),
-        
+
         // Conversion rate (approved bookings / total bookings)
         db.select({ 
           approved: sql<number>`count(case when status in ('approved', 'active', 'completed') then 1 end)`,
           total: sql<number>`count(*)`
         }).from(bookings),
-        
+
         // Average rating
         db.select({ 
           avg: sql<number>`COALESCE(AVG(${reviews.rating}), 0)` 
         }).from(reviews),
-        
+
         // Bookings by status
         db.select({ 
           status: bookings.status,
           count: sql<number>`count(*)`
         }).from(bookings).groupBy(bookings.status),
-        
+
         // Vehicles by category
         db.select({ 
           category: vehicles.category,
           count: sql<number>`count(*)`
         }).from(vehicles).groupBy(vehicles.category),
-        
+
         // Users by verification status
         db.select({ 
           verified: sql<number>`count(case when verification_status = 'verified' then 1 end)`,
@@ -1661,11 +1661,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           total: sql<number>`count(*)`
         }).from(users)
       ]);
-      
+
       const conversionPercentage = conversionRate[0]?.total > 0 
         ? (conversionRate[0].approved / conversionRate[0].total) * 100 
         : 0;
-      
+
       const reportData = {
         totalUsers: totalUsers[0].count,
         totalVehicles: totalVehicles[0].count,
@@ -1694,7 +1694,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           { name: 'Total', value: usersByType[0]?.total || 0 }
         ]
       };
-      
+
       console.log('📊 Reports data calculated:', reportData);
       res.json(reportData);
     } catch (error) {
@@ -1712,7 +1712,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bookingRate: { current: 78, target: 85 },
         satisfaction: { current: 4.3, target: 4.5 }
       };
-      
+
       res.json(goals);
     } catch (error) {
       console.error("Dashboard goals error:", error);
@@ -1724,7 +1724,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/vehicles", async (req, res) => {
     try {
       const { category, location, minPrice, maxPrice } = req.query;
-      
+
       // Use storage layer instead of direct Drizzle queries
       const filters = {
         category: category as string || undefined,
@@ -1732,7 +1732,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         minPrice: minPrice ? parseFloat(minPrice as string) : undefined,
         maxPrice: maxPrice ? parseFloat(maxPrice as string) : undefined
       };
-      
+
       const vehiclesData = await storage.searchVehicles(filters);
       res.json(vehiclesData);
     } catch (error) {
@@ -1744,10 +1744,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/vehicles/:id", async (req, res) => {
     try {
       const vehicleId = parseInt(req.params.id);
-      
+
       // Use storage layer method instead
       const vehicle = await storage.getVehicleWithOwner(vehicleId);
-      
+
       if (!vehicle) {
         return res.status(404).json({ message: "Veículo não encontrado" });
       }
@@ -1762,10 +1762,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/vehicles", authenticateToken, validateVehicle, handleValidationErrors, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
-      
+
       // Check subscription limits FIRST
       const limits = await storage.checkUserSubscriptionLimits(userId);
-      
+
       if (!limits.canCreateVehicle) {
         return res.status(403).json({ 
           message: `Limite de veículos atingido. Você pode criar até ${limits.maxVehicles} veículos com seu plano atual. Considere fazer upgrade da sua assinatura.`,
@@ -1773,7 +1773,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           maxVehicles: limits.maxVehicles
         });
       }
-      
+
       const vehicleData = insertVehicleSchema.parse({
         ...req.body,
         ownerId: userId,
@@ -1787,22 +1787,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(vehicle);
     } catch (error: any) {
       console.error("Create vehicle error:", error);
-      
+
       // Retorna erros de validação específicos
       if (error instanceof ZodError) {
         const validationErrors = error.errors.map(err => ({
           field: err.path.join('.'),
           message: err.message
         }));
-        
+
         console.log(`❌ Dados inválidos rejeitados:`, validationErrors);
-        
+
         return res.status(400).json({ 
           message: "Dados do veículo inválidos",
           errors: validationErrors
         });
       }
-      
+
       // Trata erros de constraint de banco de dados
       if (error.code === '23505') {
         if (error.constraint === 'vehicles_renavam_key') {
@@ -1816,7 +1816,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
       }
-      
+
       res.status(400).json({ message: "Falha ao criar veículo" });
     }
   });
@@ -1825,7 +1825,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const vehicleId = parseInt(req.params.id);
       const vehicle = await storage.getVehicle(vehicleId);
-      
+
       if (!vehicle || vehicle.ownerId !== req.user!.id) {
         return res.status(403).json({ message: "Acesso negado. Você não é o proprietário deste veículo" });
       }
@@ -1845,7 +1845,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const vehicleId = parseInt(req.params.id);
       const vehicle = await storage.getVehicle(vehicleId);
-      
+
       if (!vehicle || vehicle.ownerId !== req.user!.id) {
         return res.status(403).json({ message: "Acesso negado" });
       }
@@ -1874,12 +1874,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/users/my/vehicles", authenticateToken, async (req, res) => {
     try {
       console.log("🚗 [API] Route accessed - my vehicles for user:", req.user?.id);
-      
+
       const vehicles = await storage.getVehiclesByOwner(req.user!.id);
-      
+
       console.log("🚗 [API] Query result:", vehicles.length, "vehicles found");
       console.log("🚗 [API] First vehicle fields:", vehicles.length > 0 ? Object.keys(vehicles[0]) : 'none');
-      
+
       res.json(vehicles);
     } catch (error) {
       console.error("❌ [API] Error in my vehicles:", error);
@@ -1920,21 +1920,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get specific booking by ID
   app.get("/api/bookings/:id", authenticateToken, async (req, res) => {
     try {
-      const booking = await storage.getBooking(parseInt(req.params.id));
+      const bookingId = parseInt(req.params.id);
+      const booking = await storage.getBookingWithDetails(bookingId);
+
       if (!booking) {
         return res.status(404).json({ message: "Reserva não encontrada" });
       }
 
-      // Check if user is involved in this booking
+      // Verificar se o usuário tem acesso a esta reserva (é o locatário ou proprietário)
       if (booking.renterId !== req.user!.id && booking.ownerId !== req.user!.id) {
-        return res.status(403).json({ message: "Acesso negado. Você não está envolvido nesta reserva" });
+        return res.status(403).json({ message: "Acesso negado" });
       }
 
       res.json(booking);
     } catch (error) {
-      res.status(500).json({ message: "Falha ao buscar dados da reserva" });
+      console.error("Get booking by ID error:", error);
+      res.status(500).json({ message: "Falha ao buscar reserva" });
     }
   });
 
@@ -1991,7 +1995,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const bookingId = parseInt(req.params.id);
       const booking = await storage.getBooking(bookingId);
-      
+
       if (!booking) {
         return res.status(404).json({ message: "Reserva não encontrada" });
       }
@@ -2022,7 +2026,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const bookingId = parseInt(req.params.id);
       const booking = await storage.getBooking(bookingId);
-      
+
       if (!booking) {
         return res.status(404).json({ message: "Reserva não encontrada" });
       }
@@ -2053,19 +2057,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           const contractService = await import("./services/contractService.js");
           const service = new contractService.ContractService();
-          
+
           // Check if contract already exists for this booking
           const existingContracts = await storage.getContractsByBooking(bookingId);
-          
+
           if (existingContracts.length === 0) {
             // Create new contract
             const contract = await service.createContractFromBooking(bookingId, undefined, req.user!.id);
-            
+
             console.log(`✅ Contrato criado automaticamente para reserva ${bookingId}: ${contract.contractNumber}`);
-            
+
             // Generate PDF preview
             await service.generateContractPreview(contract.id);
-            
+
             // Return booking with contract information
             return res.json({
               ...updatedBooking,
@@ -2091,13 +2095,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/admin/bookings/:id", authenticateToken, requireAdmin, async (req, res) => {
     try {
       const bookingId = parseInt(req.params.id);
-      
+
       const deleted = await storage.deleteBooking(bookingId);
-      
+
       if (!deleted) {
         return res.status(404).json({ message: "Reserva não encontrada" });
       }
-      
+
       res.status(204).send();
     } catch (error) {
       console.error("Delete booking error:", error);
@@ -2177,7 +2181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validar apenas os dados do formulário
       const validatedData = insertVehicleInspectionFormSchema.parse(req.body);
-      
+
       // Combinar dados validados com campos automáticos
       const finalInspectionData = {
         ...validatedData,
@@ -2210,7 +2214,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const updateData = insertVehicleInspectionSchema.partial().parse(req.body);
       const updatedInspection = await storage.updateVehicleInspection(parseInt(req.params.id), updateData);
-      
+
       if (!updatedInspection) {
         return res.status(404).json({ message: "Vistoria não encontrada" });
       }
@@ -2238,7 +2242,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const approvedInspection = await storage.approveInspection(parseInt(req.params.id));
-      
+
       if (!approvedInspection) {
         return res.status(404).json({ message: "Vistoria não encontrada" });
       }
@@ -2247,16 +2251,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const { autoPayoutService } = await import("./services/autoPayoutService.js");
         console.log("🚀 Vistoria aprovada, disparando repasse automático para booking:", approvedInspection.bookingId);
-        
+
         // Trigger imediato (sem delay de segurança para teste)
         setTimeout(() => {
           autoPayoutService.triggerPayoutAfterPayment(approvedInspection.bookingId);
         }, 5000); // 5 segundos de delay apenas para garantir que a aprovação foi salva
-        
+
       } catch (error) {
         console.error("❌ Erro ao disparar repasse automático:", error);
       }
-      
+
       res.json(approvedInspection);
     } catch (error) {
       console.error("Approve inspection error:", error);
@@ -2282,13 +2286,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const rejectedInspection = await storage.rejectInspection(parseInt(req.params.id), reason, refundAmount);
-      
+
       if (!rejectedInspection) {
         return res.status(404).json({ message: "Vistoria não encontrada" });
       }
 
       // TODO: Aqui seria o trigger para processar o estorno ao locatário
-      
+
       res.json(rejectedInspection);
     } catch (error) {
       console.error("Reject inspection error:", error);
@@ -2386,7 +2390,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { vehicleId, category, notes } = req.body;
       console.log(`🚀 [API] Saving vehicle ${vehicleId} for user ${req.user!.id}`, { vehicleId, category, notes });
-      
+
       // Check if vehicle exists
       const vehicle = await storage.getVehicle(vehicleId);
       if (!vehicle) {
@@ -2445,12 +2449,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const vehicleId = parseInt(req.params.vehicleId);
       console.log(`🗑️ [API] Removing saved vehicle ${vehicleId} for user ${req.user!.id}`);
       const deleted = await storage.removeSavedVehicle(req.user!.id, vehicleId);
-      
+
       if (!deleted) {
         console.log(`❌ [API] Saved vehicle ${vehicleId} not found for user ${req.user!.id}`);
         return res.status(404).json({ message: "Veículo salvo não encontrado" });
       }
-      
+
       console.log(`✅ [API] Vehicle ${vehicleId} removed successfully`);
       res.status(204).send();
     } catch (error) {
@@ -2474,7 +2478,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/vehicles/:vehicleId/availability", authenticateToken, async (req, res) => {
     try {
       const vehicleId = parseInt(req.params.vehicleId);
-      
+
       // Check if user owns the vehicle
       const vehicle = await storage.getVehicle(vehicleId);
       if (!vehicle || vehicle.ownerId !== req.user!.id) {
@@ -2509,7 +2513,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const vehicleId = parseInt(req.params.vehicleId);
       const availabilityId = parseInt(req.params.id);
-      
+
       // Check if user owns the vehicle
       const vehicle = await storage.getVehicle(vehicleId);
       if (!vehicle || vehicle.ownerId !== req.user!.id) {
@@ -2531,18 +2535,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/bookings/:id/contracts", authenticateToken, async (req, res) => {
     try {
       const bookingId = parseInt(req.params.id);
-      
+
       // Verify user has access to this booking
       const booking = await storage.getBooking(bookingId);
       if (!booking) {
         return res.status(404).json({ message: "Reserva não encontrada" });
       }
-      
+
       // Check if user is the renter, owner, or admin
       if (booking.renterId !== req.user!.id && booking.ownerId !== req.user!.id && req.user!.role !== 'admin') {
         return res.status(403).json({ message: "Acesso negado" });
       }
-      
+
       const contracts = await storage.getContractsByBookingId(bookingId);
       res.json(contracts);
     } catch (error) {
@@ -2556,7 +2560,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const contractId = parseInt(req.params.id);
       const contract = await storage.getContractWithDetails(contractId);
-      
+
       if (!contract) {
         return res.status(404).json({ message: "Contrato não encontrado" });
       }
@@ -2572,18 +2576,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const contractId = parseInt(req.params.id);
       const contract = await storage.getContract(contractId);
-      
+
       if (!contract) {
         return res.status(404).json({ message: "Contrato não encontrado" });
       }
 
       const updatedContract = await storage.updateContract(contractId, req.body);
-      
+
       // Auto-block vehicle dates when contract is signed and booking is completed
       if (req.body.status === "signed" && contract.bookingId) {
         await storage.checkAndBlockCompletedBooking(contract.bookingId);
       }
-      
+
       res.json(updatedContract);
     } catch (error) {
       console.error("Update contract error:", error);
@@ -2606,9 +2610,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         notifiedUsers: 0,
         notifications: []
       };
-      
+
       console.log("🔧 Manual vehicle release triggered by admin");
-      
+
       res.json(result);
     } catch (error) {
       console.error("Release expired blocks error:", error);
@@ -2621,7 +2625,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Simple implementation for now - just return success
       console.log(`🚗 Auto-release endpoint called at ${new Date().toISOString()}`);
-      
+
       // For now, simulate a successful release
       const result = {
         success: true,
@@ -2629,7 +2633,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         notifiedCount: 0,
         message: "Auto-release system is active and monitoring expired vehicles"
       };
-      
+
       res.json(result);
     } catch (error) {
       console.error("Auto-release error:", error);
@@ -2641,7 +2645,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/vehicles/:vehicleId/waiting-queue", authenticateToken, async (req, res) => {
     try {
       const vehicleId = parseInt(req.params.vehicleId);
-      
+
       const queueData = insertWaitingQueueSchema.parse({
         ...req.body,
         vehicleId,
@@ -2659,7 +2663,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/users/:userId/waiting-queue", authenticateToken, async (req, res) => {
     try {
       const userId = parseInt(req.params.userId);
-      
+
       // Users can only see their own queue or admin can see any
       if (userId !== req.user!.id && req.user!.role !== 'admin') {
         return res.status(403).json({ message: "Access denied" });
@@ -2676,11 +2680,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/waiting-queue/:id", authenticateToken, async (req, res) => {
     try {
       const queueId = parseInt(req.params.id);
-      
+
       // Get queue entry to verify ownership
       const userQueue = await storage.getUserWaitingQueue(req.user!.id);
       const queueEntry = userQueue.find(q => q.id === queueId);
-      
+
       if (!queueEntry && req.user!.role !== 'admin') {
         return res.status(403).json({ message: "Access denied" });
       }
@@ -2734,16 +2738,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/messages", authenticateToken, async (req, res) => {
     try {
       const { userId, bookingId } = req.query;
-      
+
       if (!userId) {
         return res.status(400).json({ message: "userId is required" });
       }
-      
+
       const otherUserId = parseInt(userId as string);
       console.log(`Fetching messages between user ${req.user!.id} and user ${otherUserId}`);
-      
+
       const messages = await storage.getMessagesBetweenUsers(req.user!.id, otherUserId, bookingId ? parseInt(bookingId as string) : undefined);
-      
+
       console.log(`Found ${messages.length} messages:`, messages);
       res.json(messages);
     } catch (error) {
@@ -2755,13 +2759,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/messages", authenticateToken, validateMessage, handleValidationErrors, async (req: Request, res: Response) => {
     try {
       const { content, receiverId, bookingId } = req.body;
-      
+
       if (!content || !receiverId) {
         return res.status(400).json({ message: "Content and receiverId are required" });
       }
 
       const receiverIdNumber = parseInt(receiverId);
-      
+
       // Prevent users from sending messages to themselves
       if (req.user!.id === receiverIdNumber) {
         return res.status(400).json({ message: "Você não pode enviar mensagens para si mesmo" });
@@ -2787,11 +2791,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/messages/read", authenticateToken, async (req, res) => {
     try {
       const { senderId } = req.body;
-      
+
       if (!senderId) {
         return res.status(400).json({ message: "senderId is required" });
       }
-      
+
       await storage.markMessagesAsRead(req.user!.id, parseInt(senderId));
       res.json({ success: true });
     } catch (error) {
@@ -2810,7 +2814,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/contracts", authenticateToken, requireAdmin, async (req, res) => {
     try {
       const { status, dateFrom, dateTo, limit = 50, offset = 0 } = req.query;
-      
+
       const contracts = await storage.getContractsWithFilters({
         status: status as string,
         dateFrom: dateFrom ? new Date(dateFrom as string) : undefined,
@@ -2818,7 +2822,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         limit: parseInt(limit as string),
         offset: parseInt(offset as string),
       });
-      
+
       res.json(contracts);
     } catch (error) {
       console.error("Admin contracts error:", error);
@@ -2834,7 +2838,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const search = req.query.search as string || '';
       const role = req.query.role as string || '';
       const verified = req.query.verified as string || '';
-      
+
       const result = await storage.getAllUsers(page, limit, search, role, verified);
       res.json(result);
     } catch (error) {
@@ -2861,17 +2865,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = parseInt(req.params.id);
       const { password, ...userData } = req.body;
-      
+
       // If password is provided, hash it
       if (password) {
         userData.password = await bcrypt.hash(password, 10);
       }
-      
+
       const user = await storage.updateUserAdmin(userId, userData);
       if (!user) {
         return res.status(404).json({ message: "Usuário não encontrado" });
       }
-      
+
       // Remove password from response
       const { password: _, ...userResponse } = user;
       res.json(userResponse);
@@ -2884,12 +2888,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/admin/users/:id", authenticateToken, requireAdmin, async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
-      
+
       // Prevent admin from deleting themselves
       if (userId === req.user!.id) {
         return res.status(400).json({ message: "Cannot delete your own account" });
       }
-      
+
       const success = await storage.deleteUser(userId);
       if (!success) {
         return res.status(404).json({ message: "Usuário não encontrado" });
@@ -2916,13 +2920,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const vehicleId = parseInt(req.params.id);
       const { reason } = req.body;
-      
+
       const vehicle = await storage.approveVehicle(vehicleId, req.user!.id, reason);
-      
+
       if (!vehicle) {
         return res.status(404).json({ message: "Veículo não encontrado" });
       }
-      
+
       res.json({ message: "Veículo aprovado com sucesso", vehicle });
     } catch (error) {
       console.error("Approve vehicle error:", error);
@@ -2934,17 +2938,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const vehicleId = parseInt(req.params.id);
       const { reason } = req.body;
-      
+
       if (!reason) {
         return res.status(400).json({ message: "Motivo da rejeição é obrigatório" });
       }
-      
+
       const vehicle = await storage.rejectVehicle(vehicleId, req.user!.id, reason);
-      
+
       if (!vehicle) {
         return res.status(404).json({ message: "Veículo não encontrado" });
       }
-      
+
       res.json({ message: "Veículo rejeitado", vehicle });
     } catch (error) {
       console.error("Reject vehicle error:", error);
@@ -2960,7 +2964,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const search = req.query.search as string || '';
       const status = req.query.status as string || '';
       const paymentStatus = req.query.paymentStatus as string || '';
-      
+
       const result = await storage.getAllBookings(page, limit, search, status, paymentStatus);
       res.json(result);
     } catch (error) {
@@ -2987,11 +2991,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const bookingId = parseInt(req.params.id);
       const { status } = req.body;
-      
+
       if (!status || !['pending', 'approved', 'rejected', 'active', 'completed', 'cancelled'].includes(status)) {
         return res.status(400).json({ message: "Invalid status" });
       }
-      
+
       const booking = await storage.updateBookingStatus(bookingId, status);
       if (!booking) {
         return res.status(404).json({ message: "Reserva não encontrada" });
@@ -3154,30 +3158,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/referrals/my-code", authenticateToken, async (req, res) => {
     try {
       console.log("🎯 Generating referral code for user:", req.user!.id);
-      
+
       // Check if user already has an active referral code
       const existingReferrals = await storage.getUserReferrals(req.user!.id);
       console.log("🎯 Existing referrals found:", existingReferrals.length);
-      
+
       const activeReferral = existingReferrals.find(r => r.status === 'active');
-      
+
       if (activeReferral) {
         console.log("🎯 Returning existing active referral:", activeReferral.referralCode);
-        
+
         // Generate referral link for existing code
         const baseUrl = process.env.FRONTEND_URL || `${req.protocol}://${req.get('host')}`;
         const referralLink = `${baseUrl}/register?ref=${activeReferral.referralCode}`;
-        
+
         return res.json({ 
           referralCode: activeReferral.referralCode,
           referralLink: referralLink
         });
       }
-      
+
       // Generate new referral code
       const referralCode = storage.generateReferralCode();
       console.log("🎯 Generated new referral code:", referralCode);
-      
+
       // Create referral record (without referred user yet)
       const referral = await storage.createReferral({
         referrerId: req.user!.id,
@@ -3187,13 +3191,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         rewardPoints: 100,
         rewardStatus: 'pending',
       });
-      
+
       console.log("🎯 Created referral record:", referral.id);
-      
+
       // Generate referral link
       const baseUrl = process.env.FRONTEND_URL || `${req.protocol}://${req.get('host')}`;
       const referralLink = `${baseUrl}/register?ref=${referral.referralCode}`;
-      
+
       res.json({ 
         referralCode: referral.referralCode,
         referralLink: referralLink
@@ -3208,23 +3212,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { referralCode } = req.body;
       const userId = req.user!.id;
-      
+
       if (!referralCode) {
         return res.status(400).json({ message: "Código de convite obrigatório" });
       }
-      
+
       // Validate referral code format (8 characters, alphanumeric)
       if (!/^[A-Z0-9]{8}$/.test(referralCode)) {
         return res.status(400).json({ message: "Formato do código de convite inválido" });
       }
-      
+
       // Find referral by code
       const referral = await storage.getReferralByCode(referralCode);
-      
+
       if (!referral) {
         return res.status(404).json({ message: "Código de convite não encontrado" });
       }
-      
+
       // Check if user is trying to use their own referral code
       if (referral.referrerId === userId) {
         console.log(`🚫 User ${userId} attempted to use their own referral code: ${referralCode}`);
@@ -3233,18 +3237,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           error: "SELF_REFERRAL_NOT_ALLOWED"
         });
       }
-      
+
       // Check if user has already used any referral code
       const existingUserReferrals = await storage.getUserReferrals(userId);
       const userAsReferred = existingUserReferrals.find(r => r.referredId === userId);
-      
+
       if (userAsReferred) {
         return res.status(400).json({ 
           message: "Você já utilizou um código de convite anteriormente",
           error: "REFERRAL_ALREADY_USED"
         });
       }
-      
+
       // Check if referral is already completed or has a referred user
       if (referral.status === 'completed') {
         return res.status(400).json({ 
@@ -3252,33 +3256,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
           error: "REFERRAL_CODE_EXPIRED"
         });
       }
-      
+
       if (referral.referredId && referral.referredId !== userId) {
         return res.status(400).json({ 
           message: "Este código de convite já está sendo usado por outro usuário",
           error: "REFERRAL_CODE_IN_USE"
         });
       }
-      
+
       // Additional validation: Check if user has created any referrals (prevent circular referrals)
       const userCreatedReferrals = await storage.getUserReferrals(referral.referrerId);
       const circularCheck = userCreatedReferrals.find(r => r.referredId === userId);
-      
+
       if (circularCheck) {
         return res.status(400).json({ 
           message: "Não é possível usar código de alguém que já usou o seu",
           error: "CIRCULAR_REFERRAL_NOT_ALLOWED"
         });
       }
-      
+
       // Update referral with referred user
       await storage.updateReferral(referral.id, {
         referredId: userId,
         status: 'pending_completion',
       });
-      
+
       console.log(`✅ User ${userId} successfully applied referral code: ${referralCode} from user ${referral.referrerId}`);
-      
+
       res.json({ 
         message: "Código de convite aplicado com sucesso!",
         referralCode: referralCode,
@@ -3298,26 +3302,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/referrals/validate/:code", async (req, res) => {
     try {
       const { code } = req.params;
-      
+
       // Validate referral code format (8 characters, alphanumeric)
       if (!/^[A-Z0-9]{8}$/.test(code)) {
         return res.status(400).json({ message: "Formato do código de convite inválido" });
       }
-      
+
       // Find referral by code
       const referral = await storage.getReferralByCode(code);
-      
+
       if (!referral) {
         return res.status(404).json({ message: "Código de convite não encontrado" });
       }
-      
+
       // Get referrer user info
       const referrerUser = await storage.getUserById(referral.referrerId);
-      
+
       if (!referrerUser) {
         return res.status(404).json({ message: "Usuário que fez o convite não encontrado" });
       }
-      
+
       res.json({ 
         valid: true,
         referralCode: code,
@@ -3347,7 +3351,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/referrals/process-pending", authenticateToken, async (req, res) => {
     try {
       const userId = req.user!.id;
-      
+
       // Find all referrals where this user is the referred user with pending rewards
       const allReferrals = await storage.getAllReferrals();
       const pendingReferrals = allReferrals.filter(r => 
@@ -3355,7 +3359,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         r.status === 'pending_completion' && 
         r.rewardStatus === 'pending'
       );
-      
+
       let processedCount = 0;
       for (const referral of pendingReferrals) {
         try {
@@ -3366,7 +3370,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error(`❌ Failed to process referral ${referral.id}:`, error);
         }
       }
-      
+
       res.json({ 
         message: `Processados ${processedCount} códigos de convite pendentes`,
         processedCount,
@@ -3382,7 +3386,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/rewards/balance", authenticateToken, async (req, res) => {
     try {
       let rewards = await storage.getUserRewards(req.user!.id);
-      
+
       if (!rewards) {
         // Create initial rewards record
         rewards = await storage.createUserRewards({
@@ -3394,7 +3398,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           successfulReferrals: 0,
         });
       }
-      
+
       res.json(rewards);
     } catch (error) {
       console.error("Error fetching rewards:", error);
@@ -3416,20 +3420,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/rewards/use-points", authenticateToken, async (req, res) => {
     try {
       const { points, bookingId, description } = req.body;
-      
+
       if (!points || points <= 0) {
         return res.status(400).json({ message: "Quantidade de pontos inválida" });
       }
-      
+
       const userRewards = await storage.getUserRewards(req.user!.id);
-      
+
       if (!userRewards || (userRewards.availablePoints || 0) < points) {
         return res.status(400).json({ message: "Pontos insuficientes" });
       }
-      
+
       // Calculate discount (1 point = R$ 0.01)
       const discountAmount = points * 0.01;
-      
+
       const transaction = await storage.addRewardTransaction({
         userId: req.user!.id,
         type: 'used',
@@ -3440,7 +3444,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bookingId: bookingId || null,
         discountAmount: discountAmount.toString(),
       });
-      
+
       res.json({ 
         message: "Pontos utilizados com sucesso!",
         discountAmount,
@@ -3456,7 +3460,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/activity/track", authenticateToken, async (req, res) => {
     try {
       const { activityType, searchQuery, vehicleId, filters, sessionId } = req.body;
-      
+
       const activity = await storage.trackUserActivity({
         userId: req.user!.id,
         activityType,
@@ -3467,7 +3471,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ipAddress: req.ip || null,
         userAgent: req.get('User-Agent') || null,
       });
-      
+
       res.json(activity);
     } catch (error) {
       console.error("Error tracking activity:", error);
@@ -3562,7 +3566,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate DocuSign envelope ID
       const envelopeId = `DOCUSIGN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       const returnUrl = `${req.protocol}://${req.get('host')}/contract-signature-callback?bookingId=${bookingId}&envelopeId=${envelopeId}`;
-      
+
       // Create DocuSign envelope for contract signing
       const docusignUrl = await createDocuSignEnvelope({
         bookingId: parseInt(bookingId),
@@ -3625,7 +3629,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // DocuSign signature simulator for development
   app.get("/simulate-docusign-signature", (req, res) => {
     const { envelopeId, returnUrl, signerEmail, signerName } = req.query;
-    
+
     // Log simulator access for debugging
     console.log('📄 Simulador DocuSign acessado:', {
       envelopeId,
@@ -3634,12 +3638,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       signerName,
       timestamp: new Date().toISOString()
     });
-    
+
     // Set proper headers for better compatibility
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-    
+
     res.send(`
       <!DOCTYPE html>
       <html lang="pt-BR">
@@ -3760,7 +3764,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               <h1>Assinatura Digital Profissional</h1>
               <p>Plataforma Líder Mundial em Assinatura Eletrônica</p>
             </div>
-            
+
             <div class="document">
               <h3>📄 Contrato de Locação de Veículo</h3>
               <p><strong>🆔 Envelope ID:</strong> ${envelopeId}</p>
@@ -3769,7 +3773,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               <p><strong>📊 Status:</strong> Aguardando assinatura digital</p>
               <p><strong>🕒 Válido até:</strong> ${new Date(Date.now() + 24*60*60*1000).toLocaleDateString('pt-BR')}</p>
             </div>
-            
+
             <div class="actions">
               <button class="btn-success" onclick="signDocument('success')">
                 ✅ Assinar Documento
@@ -3781,13 +3785,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 ⏰ Simular Timeout
               </button>
             </div>
-            
+
             <div class="footer">
               <p><strong>🔧 Simulador de Desenvolvimento</strong></p>
               <p>Em produção, este seria o ambiente oficial DocuSign</p>
             </div>
           </div>
-          
+
           <div id="processing" class="processing">
             <div class="spinner"></div>
             <h2 style="color: #0070f3; margin-bottom: 15px;">Processando assinatura...</h2>
@@ -3799,19 +3803,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log('📄 Simulador DocuSign carregado');
           console.log('📄 Envelope:', '${envelopeId}');
           console.log('🔗 Return URL:', '${returnUrl}');
-          
+
           function signDocument(status) {
             console.log('🔄 Processando assinatura:', status);
-            
+
             // Show processing state
             document.getElementById('main-content').style.display = 'none';
             document.getElementById('processing').style.display = 'block';
-            
+
             const returnUrl = "${returnUrl}";
             const finalUrl = returnUrl + "&status=" + status;
-            
+
             console.log('🔗 URL final:', finalUrl);
-            
+
             // Redirect after delay
             setTimeout(() => {
               console.log('🚀 Redirecionando...');
@@ -3825,12 +3829,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             }, 2500);
           }
-          
+
           // Log when page is ready
           document.addEventListener('DOMContentLoaded', function() {
             console.log('✅ Simulador pronto para uso');
           });
-          
+
           // Prevent accidental navigation
           window.addEventListener('beforeunload', function(e) {
             if (document.getElementById('processing').style.display === 'block') {
@@ -3850,7 +3854,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!req.file) {
         return res.status(400).json({ message: 'Nenhum arquivo enviado' });
       }
-      
+
       res.json({ 
         message: 'Upload realizado com sucesso',
         filename: req.file.originalname,
@@ -3896,7 +3900,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .leftJoin(users, eq(userSubscriptions.userId, users.id))
         .leftJoin(subscriptionPlans, eq(userSubscriptions.planId, subscriptionPlans.id))
         .orderBy(desc(userSubscriptions.createdAt));
-        
+
       res.json(subscriptions);
     } catch (error) {
       console.error("Error fetching admin subscriptions:", error);
@@ -3907,11 +3911,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/subscription-stats", authenticateToken, requireAdmin, async (req, res) => {
     try {
       console.log("📊 Fetching subscription stats...");
-      
+
       const today = new Date();
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
+
       const [
         totalSubscriptions,
         activeSubscriptions,
@@ -3921,12 +3925,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Total subscriptions
         db.select({ count: sql<number>`count(*)` })
           .from(userSubscriptions),
-        
+
         // Active subscriptions
         db.select({ count: sql<number>`count(*)` })
           .from(userSubscriptions)
           .where(eq(userSubscriptions.status, 'active')),
-        
+
         // Current monthly revenue from paid amounts
         db.select({ 
           sum: sql<number>`COALESCE(SUM(
@@ -3942,7 +3946,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           eq(userSubscriptions.status, 'active'),
           gte(userSubscriptions.createdAt, new Date(today.getFullYear(), today.getMonth(), 1))
         )),
-        
+
         // Last month revenue for growth calculation
         db.select({ 
           sum: sql<number>`COALESCE(SUM(
@@ -3960,21 +3964,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           lt(userSubscriptions.createdAt, new Date(today.getFullYear(), today.getMonth(), 1))
         ))
       ]);
-      
+
       // Calculate growth rate
       const currentRevenue = monthlyRevenue[0]?.sum || 0;
       const lastRevenue = lastMonthRevenue[0]?.sum || 0;
       const growthRate = lastRevenue > 0 
         ? ((currentRevenue - lastRevenue) / lastRevenue) * 100 
         : currentRevenue > 0 ? 100 : 0;
-      
+
       const stats = {
         totalSubscriptions: totalSubscriptions[0]?.count || 0,
         activeSubscriptions: activeSubscriptions[0]?.count || 0,
         monthlyRevenue: parseFloat(currentRevenue.toString()),
         growthRate: parseFloat(growthRate.toFixed(1))
       };
-      
+
       console.log('📊 Subscription stats calculated:', stats);
       res.json(stats);
     } catch (error) {
@@ -3987,14 +3991,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const subscriptionId = parseInt(req.params.id);
       console.log("❌ Cancelling subscription:", subscriptionId);
-      
+
       await db
         .update(userSubscriptions)
         .set({ 
           status: 'cancelled'
         })
         .where(eq(userSubscriptions.id, subscriptionId));
-        
+
       res.json({ message: "Assinatura cancelada com sucesso" });
     } catch (error) {
       console.error("Error cancelling subscription:", error);
@@ -4007,7 +4011,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("📋 Fetching admin settings from database...");
       const dbSettings = await storage.getAdminSettings();
-      
+
       if (dbSettings) {
         // Convert string numbers to actual numbers for the response
         const settings = {
@@ -4031,12 +4035,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const settings = req.body;
       console.log("💾 Updating admin settings in database:", settings);
-      
+
       // Validate settings
       if (settings.serviceFeePercentage < 0 || settings.serviceFeePercentage > 50) {
         return res.status(400).json({ message: 'Taxa de serviço deve estar entre 0% e 50%' });
       }
-      
+
       if (settings.insuranceFeePercentage < 0 || settings.insuranceFeePercentage > 30) {
         return res.status(400).json({ message: 'Taxa de seguro deve estar entre 0% e 30%' });
       }
@@ -4050,14 +4054,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Save to database
       const updatedSettings = await storage.updateAdminSettings(dbSettings);
-      
+
       // Convert back to numbers for response
       const responseSettings = {
         ...updatedSettings,
         serviceFeePercentage: parseFloat(updatedSettings.serviceFeePercentage || "10"),
         insuranceFeePercentage: parseFloat(updatedSettings.insuranceFeePercentage || "15"),
       };
-      
+
       console.log("✅ Settings saved to database:", responseSettings);
       res.json(responseSettings);
     } catch (error) {
@@ -4070,11 +4074,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/coupons", authenticateToken, requireAdmin, async (req, res) => {
     try {
       console.log("🎫 Admin coupons request from user:", req.user?.email, "role:", req.user?.role);
-      
+
       // Get coupons from database
       const coupons = await storage.getAllCoupons();
       console.log("🎫 Found coupons:", coupons.length);
-      
+
       res.json(coupons);
     } catch (error) {
       console.error("Error fetching coupons:", error);
@@ -4086,18 +4090,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("📝 Creating coupon with data:", req.body);
       console.log("👤 Created by user:", req.user!.id);
-      
+
       const couponData = {
         ...req.body,
         createdBy: req.user!.id,
         usedCount: 0,
         isActive: true,
       };
-      
+
       console.log("📝 Final coupon data:", couponData);
       const coupon = await storage.createCoupon(couponData);
       console.log("✅ Coupon created successfully:", coupon);
-      
+
       res.status(201).json(coupon);
     } catch (error) {
       console.error("❌ Error creating coupon:", error);
@@ -4109,11 +4113,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const couponId = parseInt(req.params.id);
       const updatedCoupon = await storage.updateCoupon(couponId, req.body);
-      
+
       if (!updatedCoupon) {
         return res.status(404).json({ message: "Cupom não encontrado" });
       }
-      
+
       res.json(updatedCoupon);
     } catch (error) {
       console.error("Error updating coupon:", error);
@@ -4125,11 +4129,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const couponId = parseInt(req.params.id);
       const deleted = await storage.deleteCoupon(couponId);
-      
+
       if (!deleted) {
         return res.status(404).json({ message: "Cupom não encontrado" });
       }
-      
+
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting coupon:", error);
@@ -4141,7 +4145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/validate-coupon", authenticateToken, async (req, res) => {
     try {
       const { code, orderValue } = req.body;
-      
+
       if (!code || !orderValue) {
         return res.status(400).json({ message: "Código do cupom e valor do pedido são obrigatórios" });
       }
@@ -4162,7 +4166,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ];
 
       const coupon = sampleCoupons.find(c => c.code === code.toUpperCase());
-      
+
       if (!coupon) {
         return res.status(404).json({ message: "Cupom não encontrado" });
       }
@@ -4234,7 +4238,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (period && period !== 'all') {
         const now = new Date();
         let startDate;
-        
+
         switch (period) {
           case '7d':
             startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -4248,7 +4252,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           default:
             startDate = new Date(0);
         }
-        
+
         query += ` AND p.created_at >= $${params.length + 1}`;
         params.push(startDate.toISOString() as any);
       }
@@ -4332,7 +4336,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         pixPaymentEnabled: featureFlags.pixPaymentEnabled,
         adminPixEnabled: adminSettings.enablePixPayment 
       });
-      
+
       // Only return client-safe flags
       res.json({
         pixPaymentEnabled: featureFlags.pixPaymentEnabled
@@ -4371,7 +4375,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const adminSettings = await storage.getAdminSettings();
       const serviceFeePercent = parseFloat(adminSettings?.serviceFeePercentage || "10");
       const insuranceFeePercent = parseFloat(adminSettings?.insuranceFeePercentage || "15");
-      
+
       const totalPrice = parseFloat(booking.totalPrice);
       const serviceFee = Math.round((totalPrice * serviceFeePercent) / 100 * 100) / 100;
       const insuranceFee = booking.hasInsurance ? Math.round((totalPrice * insuranceFeePercent) / 100 * 100) / 100 : 0;
@@ -4427,7 +4431,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Importar e executar aprovação
       const { PixPayoutService } = await import('./services/pixPayoutService.js');
       const pixService = new PixPayoutService();
-      
+
       // TODO: Implementar método de aprovação manual
       // const result = await pixService.processManualApproval(payoutId, approved, reason);
 
@@ -4468,7 +4472,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const bookingId = parseInt(req.params.bookingId);
-      
+
       const { autoPayoutService } = await import('./services/autoPayoutService.js');
       await autoPayoutService.triggerPayoutAfterPayment(bookingId);
 
@@ -4552,14 +4556,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user!.id;
       const subscription = await storage.getUserSubscriptionWithPlan(userId);
-      
+
       if (!subscription) {
         // Return free plan info from user
         const user = await storage.getUser(userId);
         if (!user) {
           return res.status(404).json({ message: "Usuário não encontrado" });
         }
-        
+
         return res.json({
           plan: {
             name: user.subscriptionPlan || 'free',
@@ -4572,7 +4576,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           paymentMethod: user.subscriptionPaymentMethod || 'monthly'
         });
       }
-      
+
       res.json(subscription);
     } catch (error) {
       console.error("Error fetching user subscription:", error);
@@ -4596,14 +4600,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user!.id;
       const user = await storage.getUser(userId);
-      
+
       if (!user) {
         return res.status(404).json({ message: "Usuário não encontrado" });
       }
 
       // Buscar assinatura mais recente do usuário
       const subscription = await storage.getUserSubscriptionWithPlan(userId);
-      
+
       if (!subscription) {
         // Usuário sem assinatura formal - usar dados do perfil
         return res.json({
@@ -4651,13 +4655,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const userId = req.user!.id;
       const { planName, paymentMethod = 'monthly', vehicleCount = 3 } = req.body;
-      
+
       console.log('🎯 Create subscription - userId:', userId, 'planName:', planName);
 
       // Get user and admin settings
       const user = await storage.getUser(userId);
       const adminSettings = await storage.getAdminSettings();
-      
+
       if (!user) {
         return res.status(404).json({ message: "Usuário não encontrado" });
       }
@@ -4667,7 +4671,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const calculatePriceWithVehicleCount = (basePlan: string, vehicleCount: number) => {
         const basePrice = basePlan === 'essencial' ? 29.90 : 59.90;
         const pricePerVehicle = basePlan === 'essencial' ? 5.99 : 9.99; // Per vehicle per month
-        
+
         // First 2 vehicles included in base price, additional vehicles add to cost
         const monthlyPrice = basePrice + (pricePerVehicle * Math.max(0, vehicleCount - 2));
         return monthlyPrice;
@@ -4737,7 +4741,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user!.id;
       const { paymentIntentId } = req.body;
-      
+
       console.log('🎯 Subscription confirm - userId:', userId, 'paymentIntentId:', paymentIntentId);
 
       if (!stripe) {
@@ -4746,7 +4750,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Retrieve payment intent
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-      
+
       if (paymentIntent.status !== 'succeeded') {
         return res.status(400).json({ message: "Pagamento não foi confirmado" });
       }
@@ -4765,7 +4769,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const monthlyPrice = planName === 'essencial' 
           ? (adminSettings?.essentialPlanPrice ? parseFloat(adminSettings.essentialPlanPrice.toString()) : 29.90)
           : (adminSettings?.plusPlanPrice ? parseFloat(adminSettings.plusPlanPrice.toString()) : 59.90);
-        
+
         const annualDiscount = adminSettings?.annualDiscountPercentage ? parseFloat(adminSettings.annualDiscountPercentage.toString()) : 20;
         const annualPrice = monthlyPrice * 12 * (1 - annualDiscount / 100);
 
@@ -4840,10 +4844,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/subscription/cancel", authenticateToken, async (req, res) => {
     try {
       const userId = req.user!.id;
-      
+
       // Cancel user subscription
       const cancelledSubscription = await storage.cancelUserSubscription(userId);
-      
+
       if (!cancelledSubscription) {
         return res.status(404).json({ message: "Assinatura não encontrada" });
       }
@@ -4883,14 +4887,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get subscription limits
       const limits = await storage.checkUserSubscriptionLimits(userId);
       const user = await storage.getUser(userId);
-      
+
       if (!user) {
         return res.status(404).json({ message: "Usuário não encontrado" });
       }
 
       // Determine available highlight types based on subscription
       const availableHighlights = [];
-      
+
       if (user.subscriptionPlan === 'essencial' || user.subscriptionPlan === 'plus') {
         availableHighlights.push({
           type: 'prata',
@@ -4900,7 +4904,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           available: limits.highlightsAvailable > 0
         });
       }
-      
+
       if (user.subscriptionPlan === 'plus') {
         availableHighlights.push({
           type: 'diamante',
@@ -4960,7 +4964,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Use highlight
       const success = await storage.useHighlight(userId, vehicleId, highlightType);
-      
+
       if (!success) {
         return res.status(400).json({ message: "Você não possui destaques disponíveis" });
       }
@@ -4996,10 +5000,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { exec } = await import('child_process');
       const { promisify } = await import('util');
       const execAsync = promisify(exec);
-      
+
       const { testType = 'all' } = req.query;
       let command;
-      
+
       switch (testType) {
         case 'functional':
           command = 'node tests/functional-validator.js';
@@ -5010,7 +5014,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         default:
           command = 'node tests/run-all-tests.js';
       }
-      
+
       const { stdout, stderr } = await execAsync(command);
       res.json({
         success: true,

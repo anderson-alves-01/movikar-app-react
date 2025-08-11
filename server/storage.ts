@@ -12,10 +12,11 @@ import {
   type SavedVehicle, type InsertSavedVehicle, type UpdateSavedVehicle,
   type Coupon, type InsertCoupon, type SubscriptionPlan, type InsertSubscriptionPlan,
   type UserSubscription, type InsertUserSubscription,
-  type VehicleInspection, type InsertVehicleInspection
+  type VehicleInspection, type InsertVehicleInspection, BookingFilters
 } from "@shared/schema";
 import { db, pool } from "./db";
-import { eq, and, gte, lte, desc, asc, or, like, ilike, sql, lt, ne, inArray, not } from "drizzle-orm";
+import { eq, and, gte, lte, desc, asc, or, like, ilike, sql, lt, ne, inArray, not, isNull } from "drizzle-orm";
+import { getTableColumns } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -26,12 +27,16 @@ export interface IStorage {
 
   // Vehicles
   getVehicle(id: number): Promise<VehicleWithOwner | undefined>;
+  getVehicleWithOwner(id: number): Promise<VehicleWithOwner | undefined>;
   getVehiclesByOwner(ownerId: number): Promise<Vehicle[]>;
+  getVehiclesForApproval(): Promise<VehicleWithOwner[]>;
+  approveVehicle(vehicleId: number, adminId: number, reason?: string): Promise<Vehicle | undefined>;
+  rejectVehicle(vehicleId: number, adminId: number, reason: string): Promise<Vehicle | undefined>;
   searchVehicles(filters: {
     location?: string;
     category?: string;
-    priceMin?: number;
-    priceMax?: number;
+    minPrice?: number;
+    maxPrice?: number;
     startDate?: Date;
     endDate?: Date;
     features?: string[];
@@ -46,6 +51,8 @@ export interface IStorage {
   createVehicle(vehicle: InsertVehicle): Promise<Vehicle>;
   updateVehicle(id: number, vehicle: Partial<InsertVehicle>): Promise<Vehicle | undefined>;
   deleteVehicle(id: number): Promise<boolean>;
+  hasActiveBookings(vehicleId: number): Promise<boolean>;
+  hasAnyBookings(vehicleId: number): Promise<boolean>;
   getVehicleUnavailableDates(vehicleId: number): Promise<string[]>;
 
   // Bookings
@@ -62,6 +69,10 @@ export interface IStorage {
   releaseExpiredVehicleBlocks(): Promise<{ releasedBlocks: VehicleAvailability[], notifiedUsers: any[] }>;
   releaseVehicleDatesForBooking(bookingId: number, vehicleId: number): Promise<boolean>;
   notifyWaitingQueueUsers(vehicleId: number, availableStartDate: string, availableEndDate: string): Promise<any[]>;
+  getBookingById(id: number): Promise<BookingWithDetails | undefined>;
+  updateBookingStatus(id: number, status: string): Promise<Booking | undefined>;
+  getBookingWithDetails(id: number): Promise<BookingWithDetails | undefined>;
+  getBookingsWithDetails(filters: BookingFilters): Promise<BookingWithDetails[]>;
 
   // Reviews
   getReviewsByVehicle(vehicleId: number): Promise<Review[]>;
@@ -88,9 +99,15 @@ export interface IStorage {
   }): Promise<ContractWithDetails[]>;
   createContract(contract: InsertContract): Promise<Contract>;
   updateContract(id: number, contract: Partial<InsertContract>): Promise<Contract | undefined>;
+  deleteContract(id: number): Promise<boolean>;
+  getContractsByUser(userId: number): Promise<ContractWithDetails[]>;
+  getContractsByBookingId(bookingId: number): Promise<Contract[]>;
 
   // Contract Templates
   getContractTemplate(id: string): Promise<ContractTemplate | undefined>;
+  getDefaultContractTemplate(): Promise<ContractTemplate | undefined>;
+  createContractTemplate(template: InsertContractTemplate): Promise<ContractTemplate>;
+  updateContractTemplate(id: number, template: Partial<InsertContractTemplate>): Promise<ContractTemplate | undefined>;
 
   // Admin methods
   getAllUsers(page?: number, limit?: number, search?: string, role?: string, verified?: string): Promise<{ users: User[], total: number, totalPages: number, currentPage: number }>;
@@ -100,19 +117,12 @@ export interface IStorage {
   createVehicleBrand(brand: InsertVehicleBrand): Promise<VehicleBrand>;
   updateVehicleBrand(id: number, brand: Partial<InsertVehicleBrand>): Promise<VehicleBrand | undefined>;
   deleteVehicleBrand(id: number): Promise<boolean>;
-  getDefaultContractTemplate(): Promise<ContractTemplate | undefined>;
   createContractTemplate(template: InsertContractTemplate): Promise<ContractTemplate>;
   updateContractTemplate(id: number, template: Partial<InsertContractTemplate>): Promise<ContractTemplate | undefined>;
 
   // Contract Audit
   getContractAuditLogs(contractId: number): Promise<ContractAuditLog[]>;
   createContractAuditLog(log: InsertContractAuditLog): Promise<ContractAuditLog>;
-
-  // Vehicle Brands
-  getVehicleBrands(): Promise<VehicleBrand[]>;
-  createVehicleBrand(brand: InsertVehicleBrand): Promise<VehicleBrand>;
-  updateVehicleBrand(id: number, brand: Partial<InsertVehicleBrand>): Promise<VehicleBrand | undefined>;
-  deleteVehicleBrand(id: number): Promise<boolean>;
 
   // Vehicle availability management
   getVehicleAvailability(vehicleId: number): Promise<VehicleAvailability[]>;
@@ -129,12 +139,10 @@ export interface IStorage {
   removeFromWaitingQueue(id: number): Promise<boolean>;
   updateWaitingQueueStatus(id: number, data: Partial<InsertWaitingQueue>): Promise<WaitingQueue | undefined>;
 
-  // Extended methods
-  getBookingWithDetails(id: number): Promise<BookingWithDetails | undefined>;
-
   // Referral system methods
   getReferralByCode(code: string): Promise<Referral | undefined>;
   getUserReferrals(userId: number): Promise<Referral[]>;
+  getAllReferrals(): Promise<Referral[]>;
   createReferral(referral: InsertReferral): Promise<Referral>;
   updateReferral(id: number, referral: Partial<InsertReferral>): Promise<Referral | undefined>;
   generateReferralCode(): string;
@@ -151,9 +159,6 @@ export interface IStorage {
   trackUserActivity(activity: InsertUserActivity): Promise<UserActivity>;
   getUserActivity(userId: number, type?: string): Promise<UserActivity[]>;
   getPersonalizedSuggestions(userId: number): Promise<VehicleWithOwner[]>;
-
-  // Contract methods for user
-  getContractsByUser(userId: number): Promise<ContractWithDetails[]>;
 
   // Vehicle approval methods
   getVehiclesForApproval(): Promise<Vehicle[]>;
@@ -176,24 +181,6 @@ export interface IStorage {
   // Save for Later methods
   getSavedVehicles(userId: number, category?: string): Promise<(SavedVehicle & { vehicle: Vehicle })[]>;
   getSavedVehicle(userId: number, vehicleId: number): Promise<SavedVehicle | undefined>;
-
-  // Subscription Plans methods
-  getAllSubscriptionPlans(): Promise<SubscriptionPlan[]>;
-  getSubscriptionPlan(id: number): Promise<SubscriptionPlan | undefined>;
-  getSubscriptionPlanByName(name: string): Promise<SubscriptionPlan | undefined>;
-  createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan>;
-  updateSubscriptionPlan(id: number, plan: Partial<InsertSubscriptionPlan>): Promise<SubscriptionPlan | undefined>;
-  deleteSubscriptionPlan(id: number): Promise<boolean>;
-
-  // User Subscriptions methods
-  getUserSubscription(userId: number): Promise<UserSubscription | undefined>;
-  getUserSubscriptionWithPlan(userId: number): Promise<(UserSubscription & { plan: SubscriptionPlan }) | undefined>;
-  createUserSubscription(subscription: InsertUserSubscription): Promise<UserSubscription>;
-  updateUserSubscription(id: number, subscription: Partial<InsertUserSubscription>): Promise<UserSubscription | undefined>;
-  cancelUserSubscription(userId: number): Promise<UserSubscription | undefined>;
-  upgradeUserSubscription(userId: number, newPlanId: number): Promise<UserSubscription | undefined>;
-  checkUserSubscriptionLimits(userId: number): Promise<{ canCreateVehicle: boolean; currentVehicles: number; maxVehicles: number; highlightsAvailable: number }>;
-  useHighlight(userId: number, vehicleId: number, highlightType: string): Promise<boolean>;
   saveVehicle(data: InsertSavedVehicle): Promise<SavedVehicle>;
   updateSavedVehicle(id: number, data: UpdateSavedVehicle): Promise<SavedVehicle | undefined>;
   removeSavedVehicle(userId: number, vehicleId: number): Promise<boolean>;
@@ -239,7 +226,14 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-
+  async updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ ...user, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser || undefined;
+  }
 
 
   // Vehicles
@@ -429,9 +423,9 @@ export class DatabaseStorage implements IStorage {
           v.created_at DESC
         LIMIT 50
       `;
-      
+
       const result = await pool.query(query, params);
-      
+
       // @ts-ignore - VehicleWithOwner type compatibility
       return result.rows.map((row: any) => ({
         id: row.id,
@@ -497,15 +491,15 @@ export class DatabaseStorage implements IStorage {
       ...updateVehicle, 
       updatedAt: new Date()
     };
-    
+
     if (updateVehicle.features !== undefined) {
       updateData.features = updateVehicle.features as string[];
     }
-    
+
     if (updateVehicle.images !== undefined) {
       updateData.images = updateVehicle.images as string[];
     }
-    
+
     const [vehicle] = await db
       .update(vehicles)
       .set(updateData)
@@ -563,11 +557,11 @@ export class DatabaseStorage implements IStorage {
       );
 
     const unavailableDates: string[] = [];
-    
+
     confirmedBookings.forEach(booking => {
       const start = new Date(booking.startDate);
       const end = new Date(booking.endDate);
-      
+
       // Add all dates in the range (inclusive)
       for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
         unavailableDates.push(date.toISOString().split('T')[0]);
@@ -606,7 +600,7 @@ export class DatabaseStorage implements IStorage {
 
   async getBookingsByUser(userId: number, type: 'renter' | 'owner', includeInspections: boolean = false): Promise<BookingWithDetails[]> {
     const field = type === 'renter' ? bookings.renterId : bookings.ownerId;
-    
+
     const query = db
       .select()
       .from(bookings)
@@ -625,7 +619,7 @@ export class DatabaseStorage implements IStorage {
     const bookingDetails = await Promise.all(
       results.map(async (result) => {
         const [renter] = await db.select().from(users).where(eq(users.id, result.bookings.renterId));
-        
+
         const bookingData: any = {
           ...result.bookings,
           vehicle: {
@@ -724,7 +718,7 @@ export class DatabaseStorage implements IStorage {
     // Check if there's a signed contract for this booking
     const contracts = await this.getContractsByBooking(bookingId);
     const signedContract = contracts.find(contract => contract.status === "signed");
-    
+
     if (signedContract) {
       // Block the vehicle dates automatically
       await this.blockVehicleDatesForBooking(
@@ -735,13 +729,13 @@ export class DatabaseStorage implements IStorage {
       );
       return true;
     }
-    
+
     return false;
   }
 
   async releaseExpiredVehicleBlocks(): Promise<{ releasedBlocks: VehicleAvailability[], notifiedUsers: any[] }> {
     const today = new Date().toISOString().split('T')[0];
-    
+
     // Find all blocks that have expired (end date is before today)
     const expiredBlocks = await db
       .select()
@@ -771,7 +765,7 @@ export class DatabaseStorage implements IStorage {
         block.startDate,
         block.endDate
       );
-      
+
       notifiedUsers.push(...queueNotifications);
     }
 
@@ -800,10 +794,10 @@ export class DatabaseStorage implements IStorage {
       // Check if the available dates overlap with the user's desired dates
       const userStartDate = queue.desiredStartDate;
       const userEndDate = queue.desiredEndDate;
-      
+
       // Simple date overlap check
       const hasOverlap = userStartDate <= availableEndDate && userEndDate >= availableStartDate;
-      
+
       if (hasOverlap) {
         // Create a notification record (you can extend this to send emails, SMS, etc.)
         const notification = {
@@ -820,7 +814,7 @@ export class DatabaseStorage implements IStorage {
         };
 
         notifiedUsers.push(notification);
-        
+
         // Here you could implement actual notification sending:
         // - Email notification
         // - SMS notification  
@@ -858,7 +852,7 @@ export class DatabaseStorage implements IStorage {
     // Convert Date objects to ISO strings for database comparison
     const startDateStr = startDate.toISOString();
     const endDateStr = endDate.toISOString();
-    
+
     const conflictingBookings = await db
       .select()
       .from(bookings)
@@ -918,7 +912,7 @@ export class DatabaseStorage implements IStorage {
   // Messages
   async getMessagesBetweenUsers(userId1: number, userId2: number, bookingId?: number): Promise<Message[]> {
     console.log(`Storage: Getting messages between ${userId1} and ${userId2}, bookingId: ${bookingId}`);
-    
+
     const baseCondition = or(
       and(eq(messages.senderId, userId1), eq(messages.receiverId, userId2)),
       and(eq(messages.senderId, userId2), eq(messages.receiverId, userId1))
@@ -934,7 +928,7 @@ export class DatabaseStorage implements IStorage {
       .from(messages)
       .where(whereCondition)
       .orderBy(asc(messages.createdAt));
-      
+
     console.log(`Storage: Found ${result.length} messages`);
     return result;
   }
@@ -969,7 +963,7 @@ export class DatabaseStorage implements IStorage {
           eq(messages.isRead, false)
         )
       );
-    
+
     return result[0]?.count || 0;
   }
 
@@ -1116,7 +1110,7 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(contractTemplates.isActive, true), eq(contractTemplates.category, "standard")))
       .orderBy(desc(contractTemplates.createdAt))
       .limit(1);
-    
+
     // If no template exists, create a default one
     // @ts-ignore - Emergency deployment fix
     if (!template) {
@@ -1130,17 +1124,17 @@ export class DatabaseStorage implements IStorage {
               <h1 style="font-size: 18px; font-weight: bold; margin-bottom: 5px;">CONTRATO DE LOCAÇÃO DE AUTOMÓVEL POR PRAZO DETERMINADO</h1>
               <p style="font-size: 12px; margin: 0;">Contrato Nº: {{contract.number}} | Data: {{contract.date}}</p>
             </div>
-            
+
             <div style="margin-bottom: 25px;">
               <h2 style="font-size: 14px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">1. PARTES CONTRATANTES</h2>
-              
+
               <div style="margin-bottom: 15px;">
                 <h3 style="font-size: 12px; font-weight: bold; margin-bottom: 8px;">LOCADOR (Proprietário):</h3>
                 <p style="font-size: 11px; margin: 3px 0;"><strong>Nome:</strong> {{owner.name}}</p>
                 <p style="font-size: 11px; margin: 3px 0;"><strong>E-mail:</strong> {{owner.email}}</p>
                 <p style="font-size: 11px; margin: 3px 0;"><strong>Telefone:</strong> {{owner.phone}}</p>
               </div>
-              
+
               <div>
                 <h3 style="font-size: 12px; font-weight: bold; margin-bottom: 8px;">LOCATÁRIO:</h3>
                 <p style="font-size: 11px; margin: 3px 0;"><strong>Nome:</strong> {{renter.name}}</p>
@@ -1148,7 +1142,7 @@ export class DatabaseStorage implements IStorage {
                 <p style="font-size: 11px; margin: 3px 0;"><strong>Telefone:</strong> {{renter.phone}}</p>
               </div>
             </div>
-            
+
             <div style="margin-bottom: 25px;">
               <h2 style="font-size: 14px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">2. OBJETO DO CONTRATO</h2>
               <p style="font-size: 11px; margin: 8px 0;"><strong>Veículo:</strong> {{vehicle.brand}} {{vehicle.model}}</p>
@@ -1158,7 +1152,7 @@ export class DatabaseStorage implements IStorage {
               <p style="font-size: 11px; margin: 8px 0;"><strong>Cor:</strong> {{vehicle.color}}</p>
               <p style="font-size: 11px; margin: 8px 0;"><strong>Categoria:</strong> {{vehicle.category}}</p>
             </div>
-            
+
             <div style="margin-bottom: 25px;">
               <h2 style="font-size: 14px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">3. PERÍODO E VALOR DA LOCAÇÃO</h2>
               <p style="font-size: 11px; margin: 8px 0;"><strong>Data de Início:</strong> {{booking.startDate}}</p>
@@ -1166,7 +1160,7 @@ export class DatabaseStorage implements IStorage {
               <p style="font-size: 11px; margin: 8px 0;"><strong>Valor Total da Locação:</strong> R$ {{booking.totalPrice}}</p>
               <p style="font-size: 11px; margin: 8px 0;"><strong>Forma de Pagamento:</strong> Cartão de crédito via plataforma</p>
             </div>
-            
+
             <div style="margin-bottom: 25px;">
               <h2 style="font-size: 14px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">4. OBRIGAÇÕES DO LOCATÁRIO</h2>
               <ul style="font-size: 11px; padding-left: 20px; margin: 0;">
@@ -1179,7 +1173,7 @@ export class DatabaseStorage implements IStorage {
                 <li style="margin: 8px 0;">Devolver o veículo com o mesmo nível de combustível do recebimento.</li>
               </ul>
             </div>
-            
+
             <div style="margin-bottom: 25px;">
               <h2 style="font-size: 14px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">5. OBRIGAÇÕES DO LOCADOR</h2>
               <ul style="font-size: 11px; padding-left: 20px; margin: 0;">
@@ -1189,14 +1183,14 @@ export class DatabaseStorage implements IStorage {
                 <li style="margin: 8px 0;">Disponibilizar contato para emergências durante a locação.</li>
               </ul>
             </div>
-            
+
             <div style="margin-bottom: 25px;">
               <h2 style="font-size: 14px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">6. DISPOSIÇÕES GERAIS</h2>
               <p style="font-size: 11px; margin: 8px 0;">O presente contrato é celebrado em caráter irretratável e irrevogável, obrigando as partes e seus sucessores.</p>
               <p style="font-size: 11px; margin: 8px 0;">Qualquer alteração deste contrato deverá ser feita por escrito e acordada entre as partes.</p>
               <p style="font-size: 11px; margin: 8px 0;">Para dirimir quaisquer controvérsias oriundas deste contrato, fica eleito o foro da comarca de domicílio do locador.</p>
             </div>
-            
+
             <div style="margin-top: 50px;">
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
@@ -1215,7 +1209,7 @@ export class DatabaseStorage implements IStorage {
                 </tr>
               </table>
             </div>
-            
+
             <div style="text-align: center; margin-top: 30px; font-size: 10px; color: #666;">
               <p>Este contrato foi gerado eletronicamente pela plataforma alugae.mobi</p>
               <p>Data e hora da geração: {{contract.generatedAt}}</p>
@@ -1237,7 +1231,7 @@ export class DatabaseStorage implements IStorage {
           owner: { x: 400, y: 700, page: 1 }
         }
       };
-      
+
       // Create new template without problematic fields typing
       const templateData = {
         name: defaultTemplate.name,
@@ -1245,7 +1239,7 @@ export class DatabaseStorage implements IStorage {
         htmlTemplate: defaultTemplate.htmlTemplate,
         signaturePoints: defaultTemplate.signaturePoints
       };
-      
+
       // @ts-ignore - Final deployment template creation
       const [template] = await db
         .insert(contractTemplates)
@@ -1253,7 +1247,7 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return template;
     }
-    
+
     return template;
   }
 
@@ -1268,7 +1262,7 @@ export class DatabaseStorage implements IStorage {
 
   async updateContractTemplate(id: number, updateTemplate: Partial<InsertContractTemplate>): Promise<ContractTemplate | undefined> {
     const updateData: any = { ...updateTemplate, updatedAt: new Date() };
-    
+
     if (updateData.fields && Array.isArray(updateData.fields)) {
       updateData.fields = updateData.fields.map((field: any) => ({
         name: field.name,
@@ -1277,7 +1271,7 @@ export class DatabaseStorage implements IStorage {
         defaultValue: field.defaultValue as string | undefined
       }));
     }
-    
+
     const [template] = await db
       .update(contractTemplates)
       .set(updateData)
@@ -1297,7 +1291,7 @@ export class DatabaseStorage implements IStorage {
 
   async createContractAuditLog(insertLog: InsertContractAuditLog): Promise<ContractAuditLog> {
     const logData: any = { ...insertLog };
-    
+
     if (logData.details && typeof logData.details === 'object') {
       logData.details = {
         ip: logData.details.ip as string | undefined,
@@ -1307,7 +1301,7 @@ export class DatabaseStorage implements IStorage {
         metadata: logData.details.metadata
       };
     }
-    
+
     const [log] = await db
       .insert(contractAuditLog)
       .values([logData])
@@ -1317,31 +1311,123 @@ export class DatabaseStorage implements IStorage {
 
   // Extended method for booking with details
   async getBookingWithDetails(id: number): Promise<BookingWithDetails | undefined> {
-    const [result] = await db
-      .select()
+    const result = await db
+      .select({
+        ...getTableColumns(bookings),
+        vehicle: {
+          id: vehicles.id,
+          brand: vehicles.brand,
+          model: vehicles.model,
+          year: vehicles.year,
+          imageUrl: vehicles.images ? sql<string>`${vehicles.images} ->> 0` : sql<string>`''`, // Assuming first image is the main one
+          location: vehicles.location,
+          licensePlate: vehicles.licensePlate,
+        },
+        owner: {
+          id: users.id,
+          name: users.name,
+          email: users.email,
+          phone: users.phone,
+          profileImage: users.avatar,
+        },
+        renter: {
+          id: sql<number>`renters.id`.as('renter_id'),
+          name: sql<string>`renters.name`.as('renter_name'),
+          email: sql<string>`renters.email`.as('renter_email'),
+          phone: sql<string>`renters.phone`.as('renter_phone'),
+          profileImage: sql<string>`renters.avatar`.as('renter_profile_image'),
+        },
+        inspection: {
+          id: vehicleInspections.id,
+          status: vehicleInspections.status,
+          approvalDecision: vehicleInspections.approvalDecision,
+          inspectedAt: vehicleInspections.inspectedAt,
+          rejectionReason: vehicleInspections.rejectionReason
+        },
+      })
       .from(bookings)
       .leftJoin(vehicles, eq(bookings.vehicleId, vehicles.id))
       .leftJoin(users, eq(vehicles.ownerId, users.id))
+      .leftJoin(sql`users AS renters`, eq(bookings.renterId, sql`renters.id`))
+      .leftJoin(vehicleInspections, eq(bookings.id, vehicleInspections.bookingId))
       .where(eq(bookings.id, id));
 
-    if (!result) return undefined;
-
-    // Get renter details
-    const [renterResult] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, result.bookings.renterId));
-
-    return {
-      ...result.bookings,
-      vehicle: {
-        ...result.vehicles!,
-        owner: result.users!,
-      },
-      renter: renterResult,
-      owner: result.users!,
-    } as BookingWithDetails;
+    // @ts-ignore - Type assertion for result mapping
+    return result[0] || undefined;
   }
+
+  async getBookingsWithDetails(filters: BookingFilters): Promise<BookingWithDetails[]> {
+    const conditions = [];
+
+    if (filters.userId) {
+      conditions.push(or(
+        eq(bookings.renterId, filters.userId),
+        eq(bookings.ownerId, filters.userId)
+      ));
+    }
+
+    if (filters.vehicleId) {
+      conditions.push(eq(bookings.vehicleId, filters.vehicleId));
+    }
+
+    if (filters.status) {
+      conditions.push(eq(bookings.status, filters.status));
+    }
+
+    if (filters.startDate) {
+      conditions.push(gte(bookings.startDate, filters.startDate));
+    }
+
+    if (filters.endDate) {
+      conditions.push(lte(bookings.endDate, filters.endDate));
+    }
+
+    const results = await db
+      .select({
+        ...getTableColumns(bookings),
+        vehicle: {
+          id: vehicles.id,
+          brand: vehicles.brand,
+          model: vehicles.model,
+          year: vehicles.year,
+          imageUrl: vehicles.images ? sql<string>`${vehicles.images} ->> 0` : sql<string>`''`,
+          location: vehicles.location,
+          licensePlate: vehicles.licensePlate,
+        },
+        owner: {
+          id: users.id,
+          name: users.name,
+          email: users.email,
+          phone: users.phone,
+          profileImage: users.avatar,
+        },
+        renter: {
+          id: sql<number>`renters.id`.as('renter_id'),
+          name: sql<string>`renters.name`.as('renter_name'),
+          email: sql<string>`renters.email`.as('renter_email'),
+          phone: sql<string>`renters.phone`.as('renter_phone'),
+          profileImage: sql<string>`renters.avatar`.as('renter_profile_image'),
+        },
+        inspection: {
+          id: vehicleInspections.id,
+          status: vehicleInspections.status,
+          approvalDecision: vehicleInspections.approvalDecision,
+          inspectedAt: vehicleInspections.inspectedAt,
+          rejectionReason: vehicleInspections.rejectionReason
+        },
+      })
+      .from(bookings)
+      .leftJoin(vehicles, eq(bookings.vehicleId, vehicles.id))
+      .leftJoin(users, eq(vehicles.ownerId, users.id))
+      .leftJoin(sql`users AS renters`, eq(bookings.renterId, sql`renters.id`))
+      .leftJoin(vehicleInspections, eq(bookings.id, vehicleInspections.bookingId))
+      .where(and(...conditions))
+      .orderBy(desc(bookings.createdAt));
+
+    // @ts-ignore - Type assertion for result mapping
+    return results || [];
+  }
+
 
   // Vehicle Brands
   async getVehicleBrands(): Promise<VehicleBrand[]> {
@@ -1634,10 +1720,10 @@ export class DatabaseStorage implements IStorage {
       .insert(rewardTransactions)
       .values(transaction)
       .returning();
-    
+
     // Update user rewards
     const currentRewards = await this.getUserRewards(transaction.userId);
-    
+
     if (currentRewards) {
     // @ts-ignore - Emergency deployment fix
       const newTotal = currentRewards.totalPoints + transaction.points;
@@ -1739,7 +1825,7 @@ export class DatabaseStorage implements IStorage {
 
   async getUserActivity(userId: number, type?: string): Promise<UserActivity[]> {
     const conditions = [eq(userActivity.userId, userId)];
-    
+
     if (type) {
       conditions.push(eq(userActivity.activityType, type));
     }
@@ -1755,7 +1841,7 @@ export class DatabaseStorage implements IStorage {
   async getPersonalizedSuggestions(userId: number): Promise<VehicleWithOwner[]> {
     // Get user's search and browsing history
     const userActivities = await this.getUserActivity(userId);
-    
+
     // Analyze user preferences from activity
     const categoryPreferences: Record<string, number> = {};
     const locationPreferences: Record<string, number> = {};
@@ -1765,23 +1851,23 @@ export class DatabaseStorage implements IStorage {
     userActivities.forEach(activity => {
       if (activity.filters) {
         const filters = activity.filters as any;
-        
+
         // Track category preferences
         if (filters.category) {
           categoryPreferences[filters.category] = (categoryPreferences[filters.category] || 0) + 1;
         }
-        
+
         // Track location preferences
         if (filters.location) {
           locationPreferences[filters.location] = (locationPreferences[filters.location] || 0) + 1;
         }
-        
+
         // Track price preferences
         if (filters.priceMax) {
           priceRanges.push(filters.priceMax);
         }
       }
-      
+
       // Track viewed vehicles
       if (activity.vehicleId && activity.activityType === 'vehicle_view') {
         viewedVehicleIds.push(activity.vehicleId);
@@ -1792,7 +1878,7 @@ export class DatabaseStorage implements IStorage {
     const mostPreferredCategory = Object.keys(categoryPreferences).sort((a, b) => 
       categoryPreferences[b] - categoryPreferences[a]
     )[0];
-    
+
     const mostPreferredLocation = Object.keys(locationPreferences).sort((a, b) => 
       locationPreferences[b] - locationPreferences[a]
     )[0];
@@ -1803,19 +1889,19 @@ export class DatabaseStorage implements IStorage {
 
     // Build query conditions
     const conditions = [eq(vehicles.isAvailable, true)];
-    
+
     if (viewedVehicleIds.length > 0) {
       conditions.push(not(inArray(vehicles.id, viewedVehicleIds)));
     }
-    
+
     if (mostPreferredCategory) {
       conditions.push(eq(vehicles.category, mostPreferredCategory));
     }
-    
+
     if (mostPreferredLocation) {
       conditions.push(ilike(vehicles.location, `%${mostPreferredLocation}%`));
     }
-    
+
     if (avgPrice) {
       conditions.push(lte(vehicles.pricePerDay, (avgPrice * 1.2).toString()));
     }
@@ -1850,7 +1936,7 @@ export class DatabaseStorage implements IStorage {
 
     return results.map(result => {
       const ownerUser = result.users!;
-      
+
       return {
         ...result.contracts,
         booking: {
@@ -1868,13 +1954,13 @@ export class DatabaseStorage implements IStorage {
   // Admin methods with pagination
   async getAllUsers(page: number = 1, limit: number = 10, search: string = '', role: string = '', verified: string = ''): Promise<{ users: User[], total: number, totalPages: number, currentPage: number }> {
     const offset = (page - 1) * limit;
-    
+
     let query = db.select().from(users);
     let countQuery = db.select({ count: sql<number>`count(*)` }).from(users);
-    
+
     // Apply filters
     const conditions = [];
-    
+
     if (search) {
       const searchCondition = or(
         ilike(users.name, `%${search}%`),
@@ -1883,17 +1969,17 @@ export class DatabaseStorage implements IStorage {
       );
       conditions.push(searchCondition);
     }
-    
+
     if (role) {
       conditions.push(eq(users.role, role));
     }
-    
+
     if (verified === 'true') {
       conditions.push(eq(users.isVerified, true));
     } else if (verified === 'false') {
       conditions.push(eq(users.isVerified, false));
     }
-    
+
     if (conditions.length > 0) {
       const whereCondition = and(...conditions);
       // @ts-ignore - User query where compatibility
@@ -1901,15 +1987,15 @@ export class DatabaseStorage implements IStorage {
       // @ts-ignore - User count query where compatibility
       countQuery = countQuery.where(whereCondition);
     }
-    
+
     const [usersResult, countResult] = await Promise.all([
       query.orderBy(desc(users.createdAt)).limit(limit).offset(offset),
       countQuery
     ]);
-    
+
     const total = countResult[0]?.count || 0;
     const totalPages = Math.ceil(total / limit);
-    
+
     return {
       users: usersResult,
       total,
@@ -1925,15 +2011,6 @@ export class DatabaseStorage implements IStorage {
   async getUserById(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;
-  }
-
-  async updateUser(id: number, data: Partial<InsertUser>): Promise<User | undefined> {
-    const [result] = await db
-      .update(users)
-      .set({ ...data, updatedAt: new Date() })
-      .where(eq(users.id, id))
-      .returning();
-    return result || undefined;
   }
 
   async updateUserAdmin(id: number, data: Partial<InsertUser>): Promise<User | undefined> {
@@ -1954,18 +2031,18 @@ export class DatabaseStorage implements IStorage {
 
   async getAllBookings(page: number = 1, limit: number = 10, search: string = '', status: string = '', paymentStatus: string = ''): Promise<{ bookings: BookingWithDetails[], total: number, totalPages: number, currentPage: number }> {
     const offset = (page - 1) * limit;
-    
+
     let query = db
       .select()
       .from(bookings)
       .leftJoin(vehicles, eq(bookings.vehicleId, vehicles.id))
       .leftJoin(users, eq(vehicles.ownerId, users.id));
-      
+
     let countQuery = db.select({ count: sql<number>`count(*)` }).from(bookings);
-    
+
     // Apply filters
     const conditions = [];
-    
+
     if (search) {
       const searchCondition = or(
         ilike(vehicles.brand, `%${search}%`),
@@ -1974,22 +2051,22 @@ export class DatabaseStorage implements IStorage {
         ilike(users.email, `%${search}%`)
       );
       conditions.push(searchCondition);
-      
+
       // Add join to count query for search
       // @ts-ignore - Join operations compatibility
       countQuery = countQuery
         .leftJoin(vehicles, eq(bookings.vehicleId, vehicles.id))
         .leftJoin(users, eq(vehicles.ownerId, users.id));
     }
-    
+
     if (status) {
       conditions.push(eq(bookings.status, status));
     }
-    
+
     if (paymentStatus) {
       conditions.push(eq(bookings.paymentStatus, paymentStatus));
     }
-    
+
     if (conditions.length > 0) {
       const whereCondition = and(...conditions);
       // @ts-ignore - Query where compatibility
@@ -1997,12 +2074,12 @@ export class DatabaseStorage implements IStorage {
       // @ts-ignore - Count query where compatibility  
       countQuery = countQuery.where(whereCondition);
     }
-    
+
     const [results, countResult] = await Promise.all([
       query.orderBy(desc(bookings.createdAt)).limit(limit).offset(offset),
       countQuery
     ]);
-    
+
     // @ts-ignore - Booking details mapping
     const bookingsWithDetails = results.map(result => ({
       ...result.bookings,
@@ -2013,10 +2090,10 @@ export class DatabaseStorage implements IStorage {
       renter: result.users!,
       owner: result.users!
     })) as BookingWithDetails[];
-    
+
     const total = countResult[0]?.count || 0;
     const totalPages = Math.ceil(total / limit);
-    
+
     return {
       bookings: bookingsWithDetails,
       total,
@@ -2074,7 +2151,7 @@ export class DatabaseStorage implements IStorage {
   async createContract(contractData: InsertContract): Promise<Contract> {
     // Generate unique contract number
     const contractNumber = `CNT-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-    
+
     // Create basic contract data
     const defaultContractData = {
       vehicle: {},
@@ -2086,7 +2163,7 @@ export class DatabaseStorage implements IStorage {
         signedAt: new Date().toISOString()
       }
     };
-    
+
     const [contract] = await db
       .insert(contracts)
       // @ts-ignore - Contract values insert
@@ -2142,13 +2219,13 @@ export class DatabaseStorage implements IStorage {
     try {
       // Get existing settings first
       const existingSettings = await this.getAdminSettings();
-      
+
       // Clean the settings data - remove id, timestamps, and convert dates
       const cleanSettings = { ...settings };
       delete cleanSettings.id;
       delete cleanSettings.createdAt;
       delete cleanSettings.updatedAt;
-      
+
       if (existingSettings) {
         // Update existing record
         const [updated] = await db
@@ -2284,9 +2361,9 @@ export class DatabaseStorage implements IStorage {
       validFrom: data.validFrom ? new Date(data.validFrom) : new Date(),
       validUntil: new Date(data.validUntil),
     };
-    
+
     console.log("💾 Creating coupon with normalized data:", normalizedData);
-    
+
     const [coupon] = await db.insert(coupons).values(normalizedData).returning();
     return coupon;
   }
@@ -2299,7 +2376,7 @@ export class DatabaseStorage implements IStorage {
       ...(data.validUntil && { validUntil: new Date(data.validUntil) }),
       updatedAt: new Date()
     };
-    
+
     const [coupon] = await db
       .update(coupons)
       .set(normalizedData)
@@ -2316,7 +2393,7 @@ export class DatabaseStorage implements IStorage {
   async validateCoupon(code: string, orderValue: number): Promise<{ isValid: boolean; coupon?: Coupon; discountAmount?: number; error?: string }> {
     try {
       const coupon = await this.getCouponByCode(code);
-      
+
       if (!coupon) {
         return { isValid: false, error: "Cupom não encontrado" };
       }

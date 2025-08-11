@@ -13,21 +13,81 @@ export default function InspectionPage() {
   const [, setLocation] = useLocation();
   const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
   const [showInspectionForm, setShowInspectionForm] = useState(false);
-  const urlParams = new URLSearchParams(window.location.search);
-  const bookingIdParam = urlParams.get('bookingId');
-
+  
+  // Capturar bookingId da URL path (ex: /inspection/123)
+  const pathBookingId = window.location.pathname.split('/').pop();
+  
   useEffect(() => {
-    if (bookingIdParam) {
-      setSelectedBookingId(parseInt(bookingIdParam));
+    if (pathBookingId && !isNaN(parseInt(pathBookingId))) {
+      setSelectedBookingId(parseInt(pathBookingId));
       setShowInspectionForm(true);
     }
-  }, [bookingIdParam]);
+  }, [pathBookingId]);
 
   // Buscar reservas do usuário que precisam de vistoria
   const { data: bookings, isLoading: loadingBookings } = useQuery<BookingWithDetails[]>({
     queryKey: ["/api/bookings"],
     queryFn: () => fetch("/api/bookings?type=renter", { credentials: 'include' }).then(res => res.json()),
   });
+
+  // Buscar reserva específica quando temos um bookingId
+  const { data: specificBooking, isLoading: loadingSpecific } = useQuery<BookingWithDetails>({
+    queryKey: ["/api/bookings", selectedBookingId],
+    queryFn: async () => {
+      const response = await fetch(`/api/bookings/${selectedBookingId}`, { credentials: 'include' });
+      if (!response.ok) throw new Error('Reserva não encontrada');
+      return response.json();
+    },
+    enabled: !!selectedBookingId,
+  });
+
+  // Se temos um bookingId específico e a reserva foi carregada, mostrar o formulário
+  if (selectedBookingId && specificBooking && showInspectionForm) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="py-8">
+          <div className="max-w-6xl mx-auto px-4">
+            <div className="mb-6">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSelectedBookingId(null);
+                  setShowInspectionForm(false);
+                  setLocation('/reservations');
+                }}
+                className="mb-4"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Voltar para Reservas
+              </Button>
+            </div>
+
+            <VehicleInspectionForm
+              booking={specificBooking}
+              onInspectionComplete={(inspection) => {
+                console.log("Vistoria concluída:", inspection);
+                setLocation('/reservations');
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadingSpecific || (selectedBookingId && !specificBooking)) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="py-8">
+          <div className="max-w-6xl mx-auto px-4 text-center">
+            <div className="text-lg text-gray-600">Carregando vistoria...</div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // Buscar vistorias existentes
   const { data: inspections, isLoading: loadingInspections } = useQuery<VehicleInspection[]>({
