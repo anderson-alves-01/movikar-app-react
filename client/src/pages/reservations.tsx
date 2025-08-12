@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CalendarDays, MapPin, Car, User, Clock, X, FileText, Eye, PenTool, Search, CheckCircle2, AlertTriangle } from "lucide-react";
+import { CalendarDays, MapPin, Car, User, Clock, X, FileText, Eye, PenTool, Search, CheckCircle2, AlertTriangle, CameraIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency } from "@/lib/currency";
@@ -474,7 +474,7 @@ export default function Reservations() {
                                 onClick={() => handleInspection(booking.id)}
                                 data-testid={`button-inspection-${booking.id}`}
                               >
-                                <Camera className="w-4 h-4 mr-1" />
+                                <CameraIcon className="w-4 h-4 mr-1" />
                                 Realizar Vistoria
                               </Button>
                             )}
@@ -606,7 +606,7 @@ export default function Reservations() {
                                 onClick={() => handleInspection(booking.id)}
                                 data-testid={`button-inspection-${booking.id}`}
                               >
-                                <Camera className="w-4 h-4 mr-1" />
+                                <CameraIcon className="w-4 h-4 mr-1" />
                                 Realizar Vistoria
                               </Button>
                             )}

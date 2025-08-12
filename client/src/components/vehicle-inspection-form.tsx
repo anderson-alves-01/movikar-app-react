@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Camera, Plus, X, Car, Fuel, Gauge, AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
+import { CameraIcon, Plus, X, Car, Fuel, Gauge, AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 import { insertVehicleInspectionFormSchema, type InsertVehicleInspectionForm, type BookingWithDetails } from "@shared/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -339,7 +339,7 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Camera className="h-5 w-5" />
+                <CameraIcon className="h-5 w-5" />
                 Fotos do Veículo
               </CardTitle>
             </CardHeader>
@@ -393,7 +393,7 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
 
                 {photos.length === 0 && (
                   <div className="text-center text-gray-500 py-8 border-2 border-dashed border-red-300 rounded-lg bg-red-50">
-                    <Camera className="h-12 w-12 mx-auto mb-2 text-red-400" />
+                    <CameraIcon className="h-12 w-12 mx-auto mb-2 text-red-400" />
                     <p className="font-medium text-red-700">Nenhuma foto adicionada ainda</p>
                     <p className="text-sm text-red-600">⚠️ Pelo menos uma foto é obrigatória para finalizar a vistoria</p>
                   </div>

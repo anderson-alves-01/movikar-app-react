@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, apiRequestJson } from '@/lib/queryClient';
-import { ArrowLeft, Camera, CheckCircle, AlertTriangle, Car, Upload, X } from 'lucide-react';
+import { ArrowLeft, CameraIcon, CheckCircle, AlertTriangle, Car, Upload, X } from "lucide-react";
 import { Loading } from '@/components/ui/loading';
 
 interface InspectionData {
@@ -513,7 +513,7 @@ export default function VehicleInspection() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Camera className="h-5 w-5" />
+              <CameraIcon className="h-5 w-5" />
               Fotos da Vistoria
             </CardTitle>
           </CardHeader>
@@ -531,7 +531,7 @@ export default function VehicleInspection() {
                 />
                 
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                  <Camera className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                  <CameraIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                   <p className="text-gray-600 mb-2">Adicione fotos do veículo</p>
                   <p className="text-sm text-gray-500 mb-4">
                     Recomendamos fotos do exterior, interior, painel e possíveis danos.<br/>
