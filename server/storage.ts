@@ -1,5 +1,5 @@
 import { 
-  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity, adminSettings, savedVehicles, coupons, subscriptionPlans, userSubscriptions, vehicleInspections,
+  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity, adminSettings, savedVehicles, coupons, subscriptionPlans, userSubscriptions, vehicleInspections, payouts,
   type User, type InsertUser, type Vehicle, type InsertVehicle, 
   type Booking, type InsertBooking, type Review, type InsertReview,
   type Message, type InsertMessage, type VehicleWithOwner, type BookingWithDetails,
@@ -12,7 +12,7 @@ import {
   type SavedVehicle, type InsertSavedVehicle, type UpdateSavedVehicle,
   type Coupon, type InsertCoupon, type SubscriptionPlan, type InsertSubscriptionPlan,
   type UserSubscription, type InsertUserSubscription,
-  type VehicleInspection, type InsertVehicleInspection, BookingFilters
+  type VehicleInspection, type InsertVehicleInspection, type Payout
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, and, gte, lte, desc, asc, or, like, ilike, sql, lt, ne, inArray, not, isNull } from "drizzle-orm";
@@ -631,8 +631,8 @@ export class DatabaseStorage implements IStorage {
         };
 
         // Add inspection data if included
-        if (includeInspections && result.vehicle_inspections) {
-          bookingData.inspection = result.vehicle_inspections;
+        if (includeInspections && result.vehicleInspections) {
+          bookingData.inspection = result.vehicleInspections;
         }
 
         return bookingData;
@@ -2640,10 +2640,8 @@ export class DatabaseStorage implements IStorage {
           id: bookings.id,
           totalPrice: bookings.totalPrice,
           paymentStatus: bookings.paymentStatus,
-          paymentConfirmedAt: bookings.paymentConfirmedAt,
           vehicleOwnerId: vehicles.ownerId,
-          renterId: bookings.renterId,
-          hasInsurance: bookings.hasInsurance
+          renterId: bookings.renterId
         })
         .from(bookings)
         .leftJoin(vehicles, eq(bookings.vehicleId, vehicles.id))

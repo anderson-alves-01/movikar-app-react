@@ -65,16 +65,12 @@ export const getQueryFn: QueryFunction = async ({ queryKey }) => {
   const token = sessionStorage.getItem('auth_token');
   console.log(`📡 getQueryFn - Token found:`, token ? 'Yes' : 'No');
   
-  const headers: Record<string, string> = {
-    'Cache-Control': 'no-cache, no-store, must-revalidate',
-    'Pragma': 'no-cache',
-    'Expires': '0',
-  };
+  const headers: Record<string, string> = {};
   
-  // Add Authorization header if token exists
+  // Add Authorization header if token exists as fallback
   if (token) {
     headers.Authorization = `Bearer ${token}`;
-    console.log(`📡 getQueryFn - Adding Authorization header`);
+    console.log(`📡 getQueryFn - Adding Authorization header fallback`);
   }
   
   // Add timestamp to prevent browser caching and force fresh data
