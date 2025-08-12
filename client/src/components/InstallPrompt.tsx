@@ -8,11 +8,6 @@ export function InstallPrompt() {
   const { isInstallable, isAppStandalone, installApp } = usePWA();
   const [isDismissed, setIsDismissed] = useState(false);
 
-  // Don't show if app is already running in standalone mode, not installable, or dismissed
-  if (!isInstallable || isAppStandalone || isDismissed) {
-    return null;
-  }
-
   const handleInstall = async () => {
     const installed = await installApp();
     if (!installed) {
@@ -24,6 +19,11 @@ export function InstallPrompt() {
   const handleDismiss = () => {
     setIsDismissed(true);
   };
+
+  // Don't show if app is already running in standalone mode, not installable, or dismissed
+  if (!isInstallable || isAppStandalone || isDismissed) {
+    return null;
+  }
 
   return (
     <Card className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-sm border-secondary/20 bg-white/95 backdrop-blur-sm shadow-lg">
