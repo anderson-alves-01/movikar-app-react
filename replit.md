@@ -7,6 +7,11 @@ alugae.mobi is a full-stack car rental platform connecting car owners with rente
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (August 12, 2025)
+- **Inspection Button Logic Fixed**: Corrected "Realizar Vistoria" button to appear for approved reservations with paid status, not just "aguardando_vistoria"
+- **Real-Time Card Updates**: Implemented complete cache invalidation and focus listener to automatically update reservation cards after inspection completion
+- **Improved Inspection Workflow**: Enhanced cache management with queryClient.clear() and immediate redirection for better user experience
+- **Security Deposit Display**: Added security deposit value below daily rate in vehicle details page with proper percentage/nominal formatting
+- **Checkout Display Fix**: Corrected caução display in payment summary to show percentage only when deposit type is percentage-based
 - **Owner Inspection System Complete**: Full implementation of owner inspection workflow with comprehensive API endpoints and frontend integration
 - **Database Schema Updates**: Added security_deposit column to bookings table and security_deposit_percentage to vehicles table for proper deposit management
 - **Owner Inspection CRUD**: Complete CRUD operations for owner inspections with database storage methods and form validation
