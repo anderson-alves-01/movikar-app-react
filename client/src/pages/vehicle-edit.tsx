@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Upload, X, Camera, Save } from "lucide-react";
+import { ArrowLeft, Upload, X, CameraIcon, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import Header from "@/components/header";
@@ -217,7 +217,7 @@ export default function VehicleEdit() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Camera className="h-5 w-5 mr-2" />
+              <CameraIcon className="h-5 w-5 mr-2" />
               Editar Veículo
             </CardTitle>
           </CardHeader>
@@ -226,7 +226,7 @@ export default function VehicleEdit() {
               {/* Images Section - Highlighted */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
                 <Label className="block text-lg font-semibold text-blue-800 mb-4">
-                  <Camera className="h-5 w-5 inline mr-2" />
+                  <CameraIcon className="h-5 w-5 inline mr-2" />
                   Imagens do Veículo *
                 </Label>
                 
@@ -279,7 +279,7 @@ export default function VehicleEdit() {
 
                   {vehicleData.images.length < 3 && (
                     <p className="text-amber-600 text-sm flex items-center">
-                      <Camera className="h-4 w-4 mr-1" />
+                      <CameraIcon className="h-4 w-4 mr-1" />
                       Adicione pelo menos 3 fotos para continuar ({vehicleData.images.length}/3)
                     </p>
                   )}

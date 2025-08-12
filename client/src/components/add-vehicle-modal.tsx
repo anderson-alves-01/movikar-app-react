@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
-import { Camera, Loader2, X, Upload } from "lucide-react";
+import { CameraIcon, Loader2, X, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import TermsOfUseModal from "./terms-of-use-modal";
@@ -381,7 +381,7 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
 
             {vehicleData.images.length < 3 && (
               <p className="text-amber-600 text-sm mt-2 flex items-center">
-                <Camera className="h-4 w-4 mr-1" />
+                <CameraIcon className="h-4 w-4 mr-1" />
                 Adicione pelo menos 3 fotos para continuar
               </p>
             )}

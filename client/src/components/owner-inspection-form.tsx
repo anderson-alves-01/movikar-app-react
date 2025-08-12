@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Camera, Plus, X, Car, Fuel, Gauge, AlertTriangle, CheckCircle2, XCircle, DollarSign, Eye, Shield } from "lucide-react";
+import { CameraIcon, Plus, X, Car, Fuel, Gauge, AlertTriangle, CheckCircle2, XCircle, DollarSign, Eye, Shield } from "lucide-react";
 import { ownerInspectionFormSchema, type InsertOwnerInspectionForm, type BookingWithDetails } from "@shared/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";

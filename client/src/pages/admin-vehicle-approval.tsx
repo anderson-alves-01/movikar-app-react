@@ -17,7 +17,7 @@ import {
   MapPin, 
   DollarSign,
   User,
-  Camera,
+  CameraIcon,
   ArrowLeft
 } from "lucide-react";
 import { Link } from "wouter";
@@ -162,7 +162,7 @@ function VehicleDetailsDialog({ vehicle, onApprove, onReject, isApproving, isRej
         <Card>
           <CardHeader>
             <CardTitle className="text-sm flex items-center gap-2">
-              <Camera className="h-4 w-4" />
+              <CameraIcon className="h-4 w-4" />
               Fotos do Veículo ({vehicle.images.length})
             </CardTitle>
           </CardHeader>
