@@ -77,26 +77,16 @@ export default function VehicleInspection() {
         ? `/api/inspections/${(existingInspection as any)?.id}`
         : '/api/inspections';
       
-      // Use fetch directly with cookies for authentication
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Include cookies
-        body: JSON.stringify({
-          ...data,
-          reservationId: reservationId,
-          bookingId: reservationId, // Backend expects bookingId
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Erro ao salvar vistoria');
-      }
-
-      return response.json();
+      // Ensure fuelLevel is sent as string for backend validation
+      const inspectionData = {
+        ...data,
+        fuelLevel: data.fuelLevel?.toString(),
+        reservationId: reservationId,
+        bookingId: reservationId, // Backend expects bookingId
+      };
+      
+      // Use apiRequest which handles authentication properly
+      return apiRequest(method, url, inspectionData);
     },
     onSuccess: () => {
       toast({

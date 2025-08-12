@@ -11,32 +11,46 @@ interface AuthRequest extends Request {
 // Enhanced authentication middleware
 export const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    console.log('Auth Check - Cookies:', req.cookies);
-    const token = req.cookies?.token;
+    console.log(`🔐 Auth middleware - URL: ${req.url}`);
+    console.log(`🔐 Auth middleware - All cookies:`, req.cookies);
+    
+    // Try to get token from cookies first, then from Authorization header
+    let token = req.cookies?.token;
+    const authHeader = req.headers.authorization;
+    
+    console.log(`🔐 Auth middleware - Authorization header:`, authHeader);
+    
+    // If no cookie token, try Authorization header
+    if (!token && authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+      console.log(`🔐 Auth middleware - Using header token`);
+    } else if (token) {
+      console.log(`🔐 Auth middleware - Using cookie token`);
+    }
 
-    console.log('Auth Check - Token exists:', !!token);
+    console.log(`🔐 Auth middleware - Token exists:`, !!token);
 
     if (!token) {
-      console.log('Auth Check - No token provided');
-      return res.status(401).json({ message: 'Access denied. No token provided.' });
+      console.log(`❌ Auth middleware - No token found in cookies or headers`);
+      return res.status(401).json({ message: 'Token de acesso obrigatório' });
     }
 
     const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
-    console.log('Auth Check - Decoded token:', { userId: decoded.userId });
+    console.log(`🔐 Auth middleware - Token decoded, userId:`, decoded.userId);
 
     const user = await storage.getUser(decoded.userId);
 
     if (!user) {
-      console.log('Auth Check - User not found for ID:', decoded.userId);
-      return res.status(401).json({ message: 'User not found' });
+      console.log(`❌ Auth middleware - User not found for ID:`, decoded.userId);
+      return res.status(401).json({ message: 'Usuário não encontrado' });
     }
 
-    console.log('Auth Check - User authenticated:', { id: user.id, email: user.email });
+    console.log(`✅ Auth middleware - User authenticated:`, user.email);
     req.user = user;
     next();
   } catch (error) {
-    console.error('Token verification failed:', error);
-    return res.status(401).json({ message: 'Invalid token' });
+    console.error('❌ Auth middleware - Token verification failed:', error);
+    return res.status(401).json({ message: 'Token inválido' });
   }
 };
 
