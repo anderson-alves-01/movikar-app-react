@@ -1297,6 +1297,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Photo upload endpoint for inspections
+  app.post("/api/upload/photo", authenticateToken, upload.single('photo'), async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const { type } = req.body; // inspection, vehicle, etc.
+
+      console.log("Photo upload request received for user:", userId);
+      console.log("Upload type:", type);
+      console.log("File:", req.file);
+
+      if (!req.file) {
+        return res.status(400).json({ message: "Arquivo é obrigatório" });
+      }
+
+      // Validar tipo de arquivo (apenas imagens)
+      if (!req.file.mimetype.startsWith('image/')) {
+        return res.status(400).json({ message: "Apenas imagens são aceitas" });
+      }
+
+      // Validar tamanho (máximo 5MB)
+      if (req.file.size > 5 * 1024 * 1024) {
+        return res.status(400).json({ message: "Imagem muito grande. Máximo 5MB" });
+      }
+
+      // Salvar arquivo em base64 para uso imediato
+      const fileBase64 = req.file.buffer.toString('base64');
+      const photoUrl = `data:${req.file.mimetype};base64,${fileBase64}`;
+
+      console.log("Photo uploaded successfully, size:", req.file.size);
+
+      res.json({
+        success: true,
+        url: photoUrl,
+        message: "Foto enviada com sucesso"
+      });
+
+    } catch (error) {
+      console.error("Error uploading photo:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
   app.post("/api/user/documents/upload", authenticateToken, upload.single('document'), async (req, res) => {
     try {
       const userId = req.user!.id;

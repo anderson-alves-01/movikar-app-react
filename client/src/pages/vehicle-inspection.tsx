@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRoute } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { ArrowLeft, Camera, CheckCircle, AlertTriangle, Car } from 'lucide-react';
+import { ArrowLeft, Camera, CheckCircle, AlertTriangle, Car, Upload, X } from 'lucide-react';
 import { Loading } from '@/components/ui/loading';
 
 interface InspectionData {
@@ -34,6 +34,8 @@ export default function VehicleInspection() {
   const reservationId = params?.reservationId ? parseInt(params.reservationId) : null;
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
 
   const [formData, setFormData] = useState<Partial<InspectionData>>({
     vehicleCondition: 'bom',
@@ -75,10 +77,26 @@ export default function VehicleInspection() {
         ? `/api/inspections/${(existingInspection as any)?.id}`
         : '/api/inspections';
       
-      return apiRequest(method, url, {
-        ...data,
-        reservationId: reservationId,
+      // Use fetch directly with cookies for authentication
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Include cookies
+        body: JSON.stringify({
+          ...data,
+          reservationId: reservationId,
+          bookingId: reservationId, // Backend expects bookingId
+        }),
       });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Erro ao salvar vistoria');
+      }
+
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -103,6 +121,93 @@ export default function VehicleInspection() {
     setFormData(prev => ({
       ...prev,
       [field]: value
+    }));
+  };
+
+  // Upload de fotos
+  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingPhotos(true);
+    const uploadedPhotos: string[] = [];
+
+    try {
+      for (let i = 0; i < Math.min(files.length, 6); i++) {
+        const file = files[i];
+        
+        // Validar tipo de arquivo
+        if (!file.type.startsWith('image/')) {
+          toast({
+            title: "Erro",
+            description: `${file.name} não é uma imagem válida`,
+            variant: "destructive",
+          });
+          continue;
+        }
+
+        // Validar tamanho (máximo 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          toast({
+            title: "Erro", 
+            description: `${file.name} é muito grande. Máximo 5MB por foto`,
+            variant: "destructive",
+          });
+          continue;
+        }
+
+        // Criar FormData para upload
+        const formData = new FormData();
+        formData.append('photo', file);
+        formData.append('type', 'inspection');
+
+        try {
+          // Upload via API
+          const response = await fetch('/api/upload/photo', {
+            method: 'POST',
+            credentials: 'include', // Para autenticação via cookies
+            body: formData,
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            uploadedPhotos.push(result.url);
+          } else {
+            throw new Error(`Erro no upload de ${file.name}`);
+          }
+        } catch (error) {
+          console.error('Error uploading photo:', error);
+          toast({
+            title: "Erro no upload",
+            description: `Falha ao enviar ${file.name}`,
+            variant: "destructive",
+          });
+        }
+      }
+
+      if (uploadedPhotos.length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          photos: [...(prev.photos || []), ...uploadedPhotos]
+        }));
+        
+        toast({
+          title: "Fotos enviadas",
+          description: `${uploadedPhotos.length} foto(s) adicionada(s) com sucesso`,
+        });
+      }
+    } finally {
+      setUploadingPhotos(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const removePhoto = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      photos: prev.photos?.filter((_, i) => i !== index) || []
     }));
   };
 
@@ -195,13 +300,13 @@ export default function VehicleInspection() {
         {reservation && (
           <div className="bg-blue-50 p-4 rounded-lg">
             <h3 className="font-semibold text-blue-900">
-              {(reservation as any)?.vehicle?.brand} {(reservation as any)?.vehicle?.model} ({(reservation as any)?.vehicle?.year})
+              {String((reservation as any)?.vehicle?.brand || '')} {String((reservation as any)?.vehicle?.model || '')} ({String((reservation as any)?.vehicle?.year || '')})
             </h3>
             <p className="text-blue-700">
-              Reserva #{(reservation as any)?.id} - {(reservation as any)?.renterName}
+              Reserva #{String((reservation as any)?.id || '')} - {String((reservation as any)?.renterName || '')}
             </p>
             <p className="text-sm text-blue-600">
-              {new Date((reservation as any)?.startDate).toLocaleDateString()} até {new Date((reservation as any)?.endDate).toLocaleDateString()}
+              {(reservation as any)?.startDate ? new Date((reservation as any).startDate).toLocaleDateString() : ''} até {(reservation as any)?.endDate ? new Date((reservation as any).endDate).toLocaleDateString() : ''}
             </p>
           </div>
         )}
@@ -393,22 +498,97 @@ export default function VehicleInspection() {
           </CardHeader>
           <CardContent>
             {!isReadOnly ? (
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                <Camera className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                <p className="text-gray-600 mb-2">Adicione fotos do veículo</p>
-                <p className="text-sm text-gray-500">
-                  Recomendamos fotos do exterior, interior, painel e possíveis danos
-                </p>
-                <Button type="button" variant="outline" className="mt-4">
-                  Adicionar Fotos
-                </Button>
-              </div>
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                  data-testid="file-input-photos"
+                />
+                
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                  <Camera className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                  <p className="text-gray-600 mb-2">Adicione fotos do veículo</p>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Recomendamos fotos do exterior, interior, painel e possíveis danos.<br/>
+                    Máximo 6 fotos, até 5MB cada.
+                  </p>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingPhotos}
+                    data-testid="button-add-photos"
+                  >
+                    {uploadingPhotos ? (
+                      <>
+                        <Upload className="mr-2 h-4 w-4 animate-spin" />
+                        Enviando...
+                      </>
+                    ) : (
+                      <>
+                        <Camera className="mr-2 h-4 w-4" />
+                        Adicionar Fotos
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Exibir fotos adicionadas */}
+                {formData.photos && formData.photos.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-sm text-gray-600 mb-2">
+                      Fotos adicionadas ({formData.photos.length}/6):
+                    </p>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {formData.photos.map((photo, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={photo}
+                            alt={`Foto ${index + 1}`}
+                            className="w-full h-24 object-cover rounded-lg border"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removePhoto(index)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            data-testid={`button-remove-photo-${index}`}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
-              <div className="text-center text-gray-500">
-                {formData.photos && formData.photos.length > 0 
-                  ? `${formData.photos.length} foto(s) anexada(s)`
-                  : 'Nenhuma foto foi anexada'
-                }
+              <div>
+                {formData.photos && formData.photos.length > 0 ? (
+                  <div>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Fotos da vistoria ({formData.photos.length}):
+                    </p>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {formData.photos.map((photo, index) => (
+                        <img
+                          key={index}
+                          src={photo}
+                          alt={`Foto ${index + 1}`}
+                          className="w-full h-24 object-cover rounded-lg border cursor-pointer hover:opacity-80"
+                          onClick={() => window.open(photo, '_blank')}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center text-gray-500">
+                    Nenhuma foto foi anexada
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
