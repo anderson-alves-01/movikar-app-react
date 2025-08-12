@@ -2884,7 +2884,7 @@ export class DatabaseStorage implements IStorage {
   async getInspectionByReservation(reservationId: number): Promise<any | null> {
     try {
       const result = await pool.query(
-        'SELECT * FROM vehicle_inspections WHERE reservation_id = $1',
+        'SELECT * FROM vehicle_inspections WHERE booking_id = $1',
         [reservationId]
       );
       return result.rows[0] || null;
@@ -2909,7 +2909,7 @@ export class DatabaseStorage implements IStorage {
           v.license_plate
         FROM bookings b
         JOIN vehicles v ON b.vehicle_id = v.id
-        LEFT JOIN vehicle_inspections vi ON b.id = vi.reservation_id
+        LEFT JOIN vehicle_inspections vi ON b.id = vi.booking_id
         WHERE b.status = 'aguardando_vistoria' 
         AND vi.id IS NULL
         ORDER BY b.start_date ASC
@@ -2938,7 +2938,7 @@ export class DatabaseStorage implements IStorage {
     try {
       const result = await pool.query(`
         INSERT INTO vehicle_inspections 
-        (reservation_id, inspector_id, vehicle_condition, exterior_condition, 
+        (booking_id, inspector_id, vehicle_condition, exterior_condition, 
          interior_condition, engine_condition, tires_condition, fuel_level, 
          mileage, observations, approved, completed_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
