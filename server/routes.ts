@@ -388,6 +388,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/store-checkout-data", authenticateToken, async (req, res) => {
     try {
       const checkoutData = req.body;
+      
+      // Calculate security deposit if not provided
+      if (!checkoutData.securityDeposit && checkoutData.vehicle?.securityDepositPercentage) {
+        const dailyPrice = parseFloat(checkoutData.vehicle.pricePerDay);
+        const securityDepositPercentage = checkoutData.vehicle.securityDepositPercentage;
+        const securityDeposit = (dailyPrice * securityDepositPercentage / 100).toFixed(2);
+        checkoutData.securityDeposit = securityDeposit;
+      }
+      
       const checkoutId = `checkout_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
       // Store data for 30 minutes
@@ -554,6 +563,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const serviceFee = (parseFloat(totalPrice) * 0.1).toFixed(2);
       const insuranceFee = (parseFloat(totalPrice) * 0.05).toFixed(2);
+      
+      // Calculate security deposit based on vehicle's security deposit percentage
+      const securityDeposit = vehicle.securityDepositPercentage ? 
+        (parseFloat(vehicle.pricePerDay) * vehicle.securityDepositPercentage / 100).toFixed(2) : 
+        (parseFloat(vehicle.pricePerDay) * 0.2).toFixed(2); // Default 20% if not set
 
       const bookingData = {
         vehicleId,
@@ -564,6 +578,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalPrice: totalPrice,
         serviceFee: serviceFee,
         insuranceFee: insuranceFee,
+        securityDeposit: securityDeposit,
         status: "approved" as const,
         paymentStatus: "paid" as const,
         paymentIntentId,

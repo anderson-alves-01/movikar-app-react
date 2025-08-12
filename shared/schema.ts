@@ -52,6 +52,9 @@ export const users = pgTable("users", {
   maxVehicleListings: integer("max_vehicle_listings").default(2).notNull(),
   highlightsUsed: integer("highlights_used").default(0).notNull(),
   highlightsAvailable: integer("highlights_available").default(0).notNull(),
+  // Aceite de Termos de Uso
+  acceptedTermsAt: timestamp("accepted_terms_at"),
+  acceptedTermsVersion: varchar("accepted_terms_version", { length: 10 }).default("1.0"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -107,6 +110,8 @@ export const vehicles = pgTable("vehicles", {
   highlightType: varchar("highlight_type", { length: 20 }), // prata, diamante
   highlightExpiresAt: timestamp("highlight_expires_at"),
   highlightUsageCount: integer("highlight_usage_count").default(0).notNull(),
+  // Caução (security deposit) - percentual sobre o valor da diária
+  securityDepositPercentage: decimal("security_deposit_percentage", { precision: 5, scale: 2 }).default('20.00'),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -121,7 +126,7 @@ export const bookings = pgTable("bookings", {
   endDate: timestamp("end_date").notNull(),
   totalPrice: decimal("total_price", { precision: 8, scale: 2 }).notNull(),
   serviceFee: decimal("service_fee", { precision: 8, scale: 2 }),
-  insuranceFee: decimal("insurance_fee", { precision: 8, scale: 2 }),
+  securityDeposit: decimal("security_deposit", { precision: 8, scale: 2 }),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
   paymentStatus: varchar("payment_status", { length: 20 }).default("pending"),
   paymentIntentId: varchar("payment_intent_id", { length: 255 }),
@@ -834,8 +839,56 @@ export const vehicleInspections = pgTable("vehicle_inspections", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Vistorias do Proprietário (após devolução do veículo)
+export const ownerInspections = pgTable("owner_inspections", {
+  id: serial("id").primaryKey(),
+  bookingId: integer("booking_id").references(() => bookings.id).notNull(),
+  ownerId: integer("owner_id").references(() => users.id).notNull(), // Proprietário que faz a vistoria
+  renterId: integer("renter_id").references(() => users.id).notNull(), // Locatário
+  vehicleId: integer("vehicle_id").references(() => vehicles.id).notNull(),
+  
+  // Dados da vistoria do proprietário
+  mileage: integer("mileage").notNull(), // Quilometragem na devolução
+  fuelLevel: varchar("fuel_level", { length: 20 }).notNull(), // empty, quarter, half, three_quarters, full
+  vehicleCondition: varchar("vehicle_condition", { length: 20 }).notNull(), // excellent, good, fair, poor
+  exteriorCondition: varchar("exterior_condition", { length: 20 }).notNull(),
+  interiorCondition: varchar("interior_condition", { length: 20 }).notNull(),
+  engineCondition: varchar("engine_condition", { length: 20 }).notNull(),
+  tiresCondition: varchar("tires_condition", { length: 20 }).notNull(),
+  
+  // Fotos da vistoria
+  photos: jsonb("photos").$type<string[]>().default([]), // URLs das fotos
+  
+  // Observações e problemas encontrados
+  observations: text("observations"), // Observações do proprietário
+  damages: jsonb("damages").$type<{
+    type: string; // scratch, dent, broken_glass, interior_damage, etc
+    location: string; // front, rear, left_side, right_side, interior
+    severity: string; // minor, moderate, severe
+    description: string;
+    photo?: string; // URL da foto específica do dano
+  }[]>().default([]),
+  
+  // Decisão sobre a caução
+  status: varchar("status", { length: 20 }).default("pending").notNull(), // pending, approved, rejected
+  depositDecision: varchar("deposit_decision", { length: 20 }), // full_return, partial_return, no_return
+  depositReturnAmount: decimal("deposit_return_amount", { precision: 10, scale: 2 }), // Valor a ser devolvido da caução
+  depositRetainedAmount: decimal("deposit_retained_amount", { precision: 10, scale: 2 }), // Valor retido da caução
+  depositRetentionReason: text("deposit_retention_reason"), // Motivo da retenção
+  
+  // Timestamps
+  inspectedAt: timestamp("inspected_at").defaultNow(),
+  decidedAt: timestamp("decided_at"), // Quando a decisão foi tomada
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export type VehicleInspection = typeof vehicleInspections.$inferSelect;
 export type InsertVehicleInspection = typeof vehicleInspections.$inferInsert;
+
+export type OwnerInspection = typeof ownerInspections.$inferSelect;
+export type InsertOwnerInspection = typeof ownerInspections.$inferInsert;
 
 // Schema para validação do formulário (sem campos automáticos)
 export const insertVehicleInspectionFormSchema = z.object({
@@ -872,7 +925,46 @@ export const insertVehicleInspectionSchema = createInsertSchema(vehicleInspectio
   decidedAt: true,
 });
 
+// Schema para validação do formulário de vistoria do proprietário
+export const insertOwnerInspectionFormSchema = z.object({
+  bookingId: z.union([z.number(), z.string()]).transform(val => Number(val)),
+  vehicleId: z.union([z.number(), z.string()]).transform(val => Number(val)),
+  mileage: z.number().min(0, "Quilometragem deve ser um número positivo"),
+  fuelLevel: z.string().refine((val) => ["empty", "quarter", "half", "three_quarters", "full"].includes(val), {
+    message: "Nível de combustível inválido"
+  }),
+  vehicleCondition: z.string().refine((val) => ["excellent", "good", "fair", "poor"].includes(val), {
+    message: "Condição do veículo inválida"
+  }),
+  exteriorCondition: z.string().refine((val) => ["excellent", "good", "fair", "poor"].includes(val), {
+    message: "Condição externa inválida"
+  }),
+  interiorCondition: z.string().refine((val) => ["excellent", "good", "fair", "poor"].includes(val), {
+    message: "Condição interna inválida"
+  }),
+  engineCondition: z.string().refine((val) => ["excellent", "good", "fair", "poor"].includes(val), {
+    message: "Condição do motor inválida"
+  }),
+  tiresCondition: z.string().refine((val) => ["excellent", "good", "fair", "poor"].includes(val), {
+    message: "Condição dos pneus inválida"
+  }),
+  observations: z.string().optional(),
+  photos: z.array(z.string()).default([]),
+  damages: z.array(z.object({
+    type: z.string().min(1, "Tipo de dano é obrigatório"),
+    location: z.string().min(1, "Localização do dano é obrigatória"),
+    severity: z.enum(["minor", "moderate", "severe"]),
+    description: z.string().min(1, "Descrição do dano é obrigatória"),
+    photo: z.string().optional(),
+  })).default([]),
+  depositDecision: z.enum(["full_return", "partial_return", "no_return"]),
+  depositReturnAmount: z.union([z.string(), z.number()]).optional().transform(val => val ? String(val) : undefined),
+  depositRetainedAmount: z.union([z.string(), z.number()]).optional().transform(val => val ? String(val) : undefined),
+  depositRetentionReason: z.string().optional(),
+});
+
 export type InsertVehicleInspectionForm = z.infer<typeof insertVehicleInspectionFormSchema>;
+export type InsertOwnerInspectionForm = z.infer<typeof insertOwnerInspectionFormSchema>;
 
 // Subscription Plans table
 export const subscriptionPlans = pgTable("subscription_plans", {

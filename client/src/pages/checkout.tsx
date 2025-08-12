@@ -31,6 +31,7 @@ interface CheckoutData {
   totalPrice: string;
   serviceFee: string;
   insuranceFee: string;
+  securityDeposit: string;
   includeInsurance?: boolean;
   paymentIntentId?: string;
   vehicle: {
@@ -39,6 +40,7 @@ interface CheckoutData {
     model: string;
     year: number;
     pricePerDay: string;
+    securityDepositPercentage: number;
     images: string[];
   };
 }
@@ -365,6 +367,12 @@ const CheckoutForm = ({ checkoutData }: { checkoutData: CheckoutData }) => {
                   </div>
                 )}
 
+                {/* Security Deposit */}
+                <div className="flex justify-between text-sm text-blue-600">
+                  <span>Caução ({checkoutData.vehicle.securityDepositPercentage}%)</span>
+                  <span>{formatCurrency(parseFloat(checkoutData.securityDeposit))}</span>
+                </div>
+
                 {appliedDiscount > 0 && (
                   <div className="flex justify-between text-sm text-green-600">
                     <span>Desconto por pontos</span>
@@ -385,7 +393,20 @@ const CheckoutForm = ({ checkoutData }: { checkoutData: CheckoutData }) => {
                   )}
                 </div>
 
-                <div className="bg-blue-50 p-4 rounded-lg mt-6">
+                <div className="bg-yellow-50 p-4 rounded-lg mt-4 border border-yellow-200">
+                  <div className="flex items-start">
+                    <Shield className="h-5 w-5 text-yellow-600 mt-0.5 mr-2" />
+                    <div className="text-sm text-yellow-800">
+                      <strong>Sobre a Caução</strong>
+                      <p className="mt-1">
+                        A caução de {formatCurrency(parseFloat(checkoutData.securityDeposit))} será retida como garantia e 
+                        devolvida integralmente após a devolução do veículo, se não houver danos.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 p-4 rounded-lg mt-4">
                   <div className="flex items-start">
                     <Shield className="h-5 w-5 text-blue-600 mt-0.5 mr-2" />
                     <div className="text-sm text-blue-800">

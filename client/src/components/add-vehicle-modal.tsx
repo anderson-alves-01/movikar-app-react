@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Camera, Loader2, X, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import TermsOfUseModal from "./terms-of-use-modal";
 
 interface AddVehicleModalProps {
   open: boolean;
@@ -37,6 +38,7 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
     pricePerDay: '',
     pricePerWeek: '',
     pricePerMonth: '',
+    securityDepositPercentage: '20.00', // Padrão de 20%
     description: '',
     licensePlate: '',
     renavam: '',
@@ -48,6 +50,8 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
   const fileInputRef = useRef<HTMLInputElement>(null);
   const crlvInputRef = useRef<HTMLInputElement>(null);
   const [uploadingCRLV, setUploadingCRLV] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -105,6 +109,7 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
       pricePerDay: '',
       pricePerWeek: '',
       pricePerMonth: '',
+      securityDepositPercentage: '20.00',
       description: '',
       licensePlate: '',
       renavam: '',
@@ -282,6 +287,7 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
       pricePerDay: parseFloat(vehicleData.pricePerDay),
       pricePerWeek: vehicleData.pricePerWeek ? parseFloat(vehicleData.pricePerWeek) : null,
       pricePerMonth: vehicleData.pricePerMonth ? parseFloat(vehicleData.pricePerMonth) : null,
+      securityDepositPercentage: parseFloat(vehicleData.securityDepositPercentage),
     };
 
     vehicleMutation.mutate(dataToSubmit);
@@ -650,6 +656,27 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
             </div>
           </div>
 
+          {/* Security Deposit */}
+          <div>
+            <Label className="block text-sm font-medium text-gray-700 mb-2">Percentual de Caução *</Label>
+            <div className="relative">
+              <Input 
+                type="number" 
+                min="1" 
+                max="100"
+                step="0.01"
+                placeholder="20.00"
+                className="pr-8"
+                value={vehicleData.securityDepositPercentage}
+                onChange={(e) => setVehicleData(prev => ({ ...prev, securityDepositPercentage: e.target.value }))}
+              />
+              <span className="absolute right-3 top-3 text-gray-500">%</span>
+            </div>
+            <p className="text-sm text-gray-500 mt-1">
+              Percentual da diária que será retido como caução. Recomendado: 20%
+            </p>
+          </div>
+
           {/* Description */}
           <div>
             <Label className="block text-sm font-medium text-gray-700 mb-2">Descrição</Label>
@@ -665,12 +692,20 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
           <Card className="bg-gray-50">
             <CardContent className="p-4">
               <div className="flex items-start space-x-3">
-                <Checkbox required />
+                <Checkbox 
+                  checked={termsAccepted}
+                  onCheckedChange={setTermsAccepted}
+                  required 
+                />
                 <span className="text-sm text-gray-700">
                   Aceito os{" "}
-                  <a href="#" className="text-primary hover:text-red-600">
+                  <button 
+                    type="button"
+                    onClick={() => setShowTermsModal(true)}
+                    className="text-primary hover:text-red-600 underline"
+                  >
                     termos de uso
-                  </a>{" "}
+                  </button>{" "}
                   e confirmo que possuo todos os documentos necessários para o aluguel do veículo.
                 </span>
               </div>
@@ -690,7 +725,7 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
             <Button 
               type="submit" 
               className="flex-1 bg-primary text-white hover:bg-red-600 transition-colors"
-              disabled={vehicleMutation.isPending}
+              disabled={vehicleMutation.isPending || !termsAccepted}
             >
               {vehicleMutation.isPending ? (
                 <>
@@ -704,6 +739,12 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
           </div>
         </form>
       </DialogContent>
+      
+      <TermsOfUseModal
+        open={showTermsModal}
+        onOpenChange={setShowTermsModal}
+        onAccept={() => setTermsAccepted(true)}
+      />
     </Dialog>
   );
 }
