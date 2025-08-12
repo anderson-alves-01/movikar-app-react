@@ -98,8 +98,8 @@ export default function VehicleInspection() {
         fuelLevel: fuelLevelMapping[Number(data.fuelLevel)] || data.fuelLevel?.toString() || "full",
         vehicleCondition: conditionMapping[String(data.vehicleCondition)] || data.vehicleCondition || "good",
         reservationId: reservationId,
-        bookingId: reservationId, // Backend expects bookingId
-        vehicleId: (reservation as any)?.vehicleId || (reservation as any)?.vehicle?.id,
+        bookingId: Number(reservationId), // Backend expects bookingId as number
+        vehicleId: Number((reservation as any)?.vehicleId || (reservation as any)?.vehicle?.id),
         approvalDecision: Boolean(data.approved)
       };
       

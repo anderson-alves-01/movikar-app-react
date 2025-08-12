@@ -23,8 +23,8 @@ export async function apiRequest(
   
   console.log(`📡 apiRequest - ${method} ${fullUrl}`, data ? 'with data' : 'no data');
   
-  // Get token from sessionStorage as fallback
-  const token = sessionStorage.getItem('auth_token');
+  // Get token from sessionStorage as fallback - but for testing, temporarily skip
+  const token = null; // sessionStorage.getItem('auth_token');
   console.log(`📡 apiRequest - Token found:`, token ? 'Yes' : 'No');
   
   const headers: Record<string, string> = {};
@@ -74,8 +74,8 @@ export const getQueryFn: QueryFunction = async ({ queryKey }) => {
   
   console.log('📡 getQueryFn - Making request to:', queryUrl);
   
-  // Get token from sessionStorage as fallback
-  const token = sessionStorage.getItem('auth_token');
+  // Get token from sessionStorage as fallback - but for testing, temporarily skip
+  const token = null; // sessionStorage.getItem('auth_token');
   console.log(`📡 getQueryFn - Token found:`, token ? 'Yes' : 'No');
   
   const headers: Record<string, string> = {};

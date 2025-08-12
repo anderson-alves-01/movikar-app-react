@@ -839,8 +839,8 @@ export type InsertVehicleInspection = typeof vehicleInspections.$inferInsert;
 
 // Schema para validação do formulário (sem campos automáticos)
 export const insertVehicleInspectionFormSchema = z.object({
-  bookingId: z.number().min(1, "ID da reserva é obrigatório"),
-  vehicleId: z.number().min(1, "ID do veículo é obrigatório"),
+  bookingId: z.union([z.number(), z.string()]).transform(val => Number(val)),
+  vehicleId: z.union([z.number(), z.string()]).transform(val => Number(val)),
   mileage: z.number().min(0, "Quilometragem deve ser um número positivo"),
   fuelLevel: z.string().refine((val) => ["empty", "quarter", "half", "three_quarters", "full", "0", "25", "50", "75", "100"].includes(val), {
     message: "Nível de combustível inválido"
