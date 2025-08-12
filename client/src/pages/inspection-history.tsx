@@ -17,6 +17,7 @@ import {
   Plus
 } from 'lucide-react';
 import { Loading } from '@/components/ui/loading';
+import Header from '@/components/header';
 
 interface Inspection {
   id: number;
@@ -131,7 +132,9 @@ export default function InspectionHistory() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div>
+      <Header />
+      <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -329,6 +332,7 @@ export default function InspectionHistory() {
           </div>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }
