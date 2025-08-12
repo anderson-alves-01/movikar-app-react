@@ -32,6 +32,7 @@ function AdminSettingsPage() {
     enablePixPayment: false,
     enablePixTransfer: true,
     pixTransferDescription: "Repasse alugae",
+    enableInsuranceOption: true,
     essentialPlanPrice: 29.90,
     plusPlanPrice: 59.90,
     annualDiscountPercentage: 20.00,
@@ -88,6 +89,7 @@ function AdminSettingsPage() {
         enablePixPayment: currentSettings.enablePixPayment || false,
         enablePixTransfer: currentSettings.enablePixTransfer || true,
         pixTransferDescription: currentSettings.pixTransferDescription || "Repasse alugae",
+        enableInsuranceOption: currentSettings.enableInsuranceOption !== undefined ? currentSettings.enableInsuranceOption : true,
         essentialPlanPrice: parseFloat(currentSettings.essentialPlanPrice?.toString() || "29.90"),
         plusPlanPrice: parseFloat(currentSettings.plusPlanPrice?.toString() || "59.90"),
         annualDiscountPercentage: parseFloat(currentSettings.annualDiscountPercentage?.toString() || "20.00"),
@@ -125,6 +127,7 @@ function AdminSettingsPage() {
           enablePixPayment: updatedData.enablePixPayment || false,
           enablePixTransfer: updatedData.enablePixTransfer || true,
           pixTransferDescription: updatedData.pixTransferDescription || "Repasse alugae",
+          enableInsuranceOption: updatedData.enableInsuranceOption !== undefined ? updatedData.enableInsuranceOption : true,
           essentialPlanPrice: parseFloat(updatedData.essentialPlanPrice?.toString() || "29.90"),
           plusPlanPrice: parseFloat(updatedData.plusPlanPrice?.toString() || "59.90"),
           annualDiscountPercentage: parseFloat(updatedData.annualDiscountPercentage?.toString() || "20.00"),
@@ -496,6 +499,25 @@ function AdminSettingsPage() {
                     id="enablePixPayment"
                     checked={settings.enablePixPayment}
                     onCheckedChange={(checked) => handleInputChange('enablePixPayment', checked)}
+                    disabled={!isEditing}
+                  />
+                </div>
+
+                <Separator />
+
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label htmlFor="enableInsuranceOption" className="text-sm font-medium">
+                      Opção de Seguro no Aluguel
+                    </Label>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Exibe a opção de seguro no formulário de reserva de veículos
+                    </p>
+                  </div>
+                  <Switch
+                    id="enableInsuranceOption"
+                    checked={settings.enableInsuranceOption}
+                    onCheckedChange={(checked) => handleInputChange('enableInsuranceOption', checked)}
                     disabled={!isEditing}
                   />
                 </div>

@@ -36,6 +36,7 @@ export default function VehicleEdit() {
     pricePerDay: '',
     pricePerWeek: '',
     pricePerMonth: '',
+    securityDepositPercentage: '20.00', // Padrão de 20%
     description: '',
     images: [] as string[],
     features: [] as string[]
@@ -70,6 +71,7 @@ export default function VehicleEdit() {
         pricePerDay: vehicle.pricePerDay?.toString() || '',
         pricePerWeek: vehicle.pricePerWeek?.toString() || '',
         pricePerMonth: vehicle.pricePerMonth?.toString() || '',
+        securityDepositPercentage: vehicle.securityDepositPercentage?.toString() || '20.00',
         description: vehicle.description || '',
         images: vehicle.images || [],
         features: vehicle.features || []
@@ -162,6 +164,7 @@ export default function VehicleEdit() {
       pricePerDay: parseFloat(vehicleData.pricePerDay),
       pricePerWeek: parseFloat(vehicleData.pricePerWeek),
       pricePerMonth: parseFloat(vehicleData.pricePerMonth),
+      securityDepositPercentage: parseFloat(vehicleData.securityDepositPercentage),
     };
 
     updateVehicleMutation.mutate(formData);
@@ -432,6 +435,39 @@ export default function VehicleEdit() {
                     value={vehicleData.pricePerMonth}
                     onChange={(e) => setVehicleData(prev => ({ ...prev, pricePerMonth: e.target.value }))}
                   />
+                </div>
+              </div>
+
+              {/* Security Deposit Percentage */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Percentual da caução (%) *</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    value={vehicleData.securityDepositPercentage}
+                    onChange={(e) => setVehicleData(prev => ({ ...prev, securityDepositPercentage: e.target.value }))}
+                    placeholder="Ex: 20.00"
+                    required
+                  />
+                  <p className="text-sm text-gray-600 mt-1">
+                    A caução será calculada sobre o valor da diária (ex: 20% de uma diária de R$ 100,00 = R$ 20,00)
+                  </p>
+                </div>
+                <div className="flex items-center">
+                  {vehicleData.pricePerDay && vehicleData.securityDepositPercentage && (
+                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                      <p className="text-sm font-medium text-blue-800">Valor da caução:</p>
+                      <p className="text-lg font-bold text-blue-900">
+                        R$ {(parseFloat(vehicleData.pricePerDay) * parseFloat(vehicleData.securityDepositPercentage) / 100).toFixed(2)}
+                      </p>
+                      <p className="text-xs text-blue-600">
+                        {vehicleData.securityDepositPercentage}% de R$ {parseFloat(vehicleData.pricePerDay).toFixed(2)}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 

@@ -105,16 +105,23 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
     
     const serviceFee = subtotal * serviceRate;
     const insuranceFee = bookingData.includeInsurance ? subtotal * insuranceRate : 0;
+    
+    // Calculate security deposit (caução)
+    const securityDepositPercentage = parseFloat(vehicle.securityDepositPercentage || '20');
+    const securityDeposit = dailyRate * (securityDepositPercentage / 100);
+    
     const total = subtotal + serviceFee + insuranceFee;
 
     console.log('💰 Calculating pricing with admin settings:', {
       serviceFeePercentage: adminSettings?.serviceFeePercentage,
       insuranceFeePercentage: adminSettings?.insuranceFeePercentage,
+      securityDepositPercentage,
       serviceRate,
       insuranceRate,
       subtotal,
       serviceFee,
       insuranceFee,
+      securityDeposit,
       total
     });
 
@@ -124,6 +131,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
       subtotal,
       serviceFee,
       insuranceFee,
+      securityDeposit,
       total,
     };
   };
@@ -184,6 +192,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
       totalPrice: pricing.total.toFixed(2),
       serviceFee: pricing.serviceFee.toFixed(2),
       insuranceFee: pricing.insuranceFee.toFixed(2),
+      securityDeposit: pricing.securityDeposit.toFixed(2),
       includeInsurance: bookingData.includeInsurance,
       vehicle: {
         id: vehicle.id,
@@ -191,6 +200,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
         model: vehicle.model,
         year: vehicle.year,
         pricePerDay: vehicle.pricePerDay,
+        securityDepositPercentage: vehicle.securityDepositPercentage || 20,
         images: vehicle.images || []
       }
     };
@@ -360,33 +370,35 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
               </div>
             )}
 
-            {/* Insurance Option */}
-            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-              <div className="flex items-start space-x-3">
-                <input
-                  type="checkbox"
-                  id="insurance-option"
-                  checked={bookingData.includeInsurance}
-                  onChange={(e) => setBookingData(prev => ({ ...prev, includeInsurance: e.target.checked }))}
-                  className="mt-1"
-                  data-testid="checkbox-insurance"
-                />
-                <div className="flex-1">
-                  <label htmlFor="insurance-option" className="font-medium text-gray-900 cursor-pointer">
-                    Seguro de Cobertura Básica
-                  </label>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Protege contra danos, furto e roubo. Recomendamos contratar para sua segurança.
-                  </p>
-                  <p className="text-sm text-green-600 font-medium mt-1">
-                    {pricing.days > 0 
-                      ? `+ ${formatCurrency(pricing.insuranceFee)}`
-                      : `+ Calculado automaticamente (${adminSettings?.insuranceFeePercentage || 15}% do valor do aluguel)`
-                    }
-                  </p>
+            {/* Insurance Option - Only show if enabled in admin settings */}
+            {adminSettings?.enableInsuranceOption && (
+              <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <div className="flex items-start space-x-3">
+                  <input
+                    type="checkbox"
+                    id="insurance-option"
+                    checked={bookingData.includeInsurance}
+                    onChange={(e) => setBookingData(prev => ({ ...prev, includeInsurance: e.target.checked }))}
+                    className="mt-1"
+                    data-testid="checkbox-insurance"
+                  />
+                  <div className="flex-1">
+                    <label htmlFor="insurance-option" className="font-medium text-gray-900 cursor-pointer">
+                      Seguro de Cobertura Básica
+                    </label>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Protege contra danos, furto e roubo. Recomendamos contratar para sua segurança.
+                    </p>
+                    <p className="text-sm text-green-600 font-medium mt-1">
+                      {pricing.days > 0 
+                        ? `+ ${formatCurrency(pricing.insuranceFee)}`
+                        : `+ Calculado automaticamente (${adminSettings?.insuranceFeePercentage || 15}% do valor do aluguel)`
+                      }
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Price Breakdown */}
             {pricing.days > 0 && (
@@ -401,12 +413,16 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
                   <span className="text-gray-600">Taxa de serviço</span>
                   <span className="text-gray-800">{formatCurrency(pricing.serviceFee)}</span>
                 </div>
-                {bookingData.includeInsurance && (
+                {bookingData.includeInsurance && adminSettings?.enableInsuranceOption && (
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Seguro</span>
                     <span className="text-gray-800">{formatCurrency(pricing.insuranceFee)}</span>
                   </div>
                 )}
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Caução ({vehicle.securityDepositPercentage || 20}%)</span>
+                  <span className="text-gray-800">{formatCurrency(pricing.securityDeposit)}</span>
+                </div>
                 <Separator />
                 <div className="flex justify-between font-semibold">
                   <span>Total</span>

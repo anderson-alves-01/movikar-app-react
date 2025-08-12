@@ -11,6 +11,7 @@ export interface AdminSettings {
   enablePixPayment: boolean;
   enablePixTransfer: boolean;
   pixTransferDescription: string;
+  enableInsuranceOption: boolean; // Feature toggle para opção de seguro
   // Subscription plan pricing
   essentialPlanPrice: number;
   plusPlanPrice: number;

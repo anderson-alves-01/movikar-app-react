@@ -59,6 +59,7 @@ let currentAdminSettings: AdminSettings = {
   enablePixPayment: false,
   enablePixTransfer: true,
   pixTransferDescription: "Repasse alugae",
+  enableInsuranceOption: true, // Feature toggle para opção de seguro
   essentialPlanPrice: 29.90,
   plusPlanPrice: 59.90,
   annualDiscountPercentage: 15,

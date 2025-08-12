@@ -727,6 +727,7 @@ export const adminSettings = pgTable("admin_settings", {
   enablePixPayment: boolean("enable_pix_payment").default(false).notNull(),
   enablePixTransfer: boolean("enable_pix_transfer").default(true).notNull(),
   pixTransferDescription: varchar("pix_transfer_description", { length: 255 }).default("Repasse alugae").notNull(),
+  enableInsuranceOption: boolean("enable_insurance_option").default(true).notNull(),
   // Subscription plan pricing
   essentialPlanPrice: decimal("essential_plan_price", { precision: 8, scale: 2 }).default("29.90").notNull(),
   plusPlanPrice: decimal("plus_plan_price", { precision: 8, scale: 2 }).default("59.90").notNull(),
