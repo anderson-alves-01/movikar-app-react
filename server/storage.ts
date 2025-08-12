@@ -2810,6 +2810,190 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return inspection || undefined;
   }
+
+  // ===========================================
+  // INSPECTION METHODS - SISTEMA DE VISTORIAS
+  // ===========================================
+
+  async getAllInspections(): Promise<any[]> {
+    try {
+      const result = await pool.query(`
+        SELECT 
+          vi.*,
+          b.id as reservation_id,
+          b.renter_name,
+          b.start_date,
+          b.end_date,
+          b.status as reservation_status,
+          v.brand,
+          v.model,
+          v.year,
+          v.license_plate
+        FROM vehicle_inspections vi
+        JOIN bookings b ON vi.reservation_id = b.id
+        JOIN vehicles v ON b.vehicle_id = v.id
+        ORDER BY vi.completed_at DESC
+      `);
+      
+      return result.rows.map(row => ({
+        id: row.id,
+        reservationId: row.reservation_id,
+        vehicleCondition: row.vehicle_condition,
+        exteriorCondition: row.exterior_condition,
+        interiorCondition: row.interior_condition,
+        engineCondition: row.engine_condition,
+        tiresCondition: row.tires_condition,
+        fuelLevel: row.fuel_level,
+        mileage: row.mileage,
+        observations: row.observations,
+        approved: row.approved,
+        completedAt: row.completed_at,
+        reservation: {
+          id: row.reservation_id,
+          renterName: row.renter_name,
+          startDate: row.start_date,
+          endDate: row.end_date,
+          status: row.reservation_status,
+          vehicle: {
+            brand: row.brand,
+            model: row.model,
+            year: row.year,
+            licensePlate: row.license_plate
+          }
+        }
+      }));
+    } catch (error) {
+      console.error('Error fetching inspections:', error);
+      throw error;
+    }
+  }
+
+  async getInspectionById(id: number): Promise<any | null> {
+    try {
+      const result = await pool.query(
+        'SELECT * FROM vehicle_inspections WHERE id = $1',
+        [id]
+      );
+      return result.rows[0] || null;
+    } catch (error) {
+      console.error('Error fetching inspection by id:', error);
+      throw error;
+    }
+  }
+
+  async getInspectionByReservation(reservationId: number): Promise<any | null> {
+    try {
+      const result = await pool.query(
+        'SELECT * FROM vehicle_inspections WHERE reservation_id = $1',
+        [reservationId]
+      );
+      return result.rows[0] || null;
+    } catch (error) {
+      console.error('Error fetching inspection by reservation:', error);
+      throw error;
+    }
+  }
+
+  async getReservationsPendingInspection(): Promise<any[]> {
+    try {
+      const result = await pool.query(`
+        SELECT 
+          b.id,
+          b.renter_name,
+          b.start_date,
+          b.end_date,
+          b.status,
+          v.brand,
+          v.model,
+          v.year,
+          v.license_plate
+        FROM bookings b
+        JOIN vehicles v ON b.vehicle_id = v.id
+        LEFT JOIN vehicle_inspections vi ON b.id = vi.reservation_id
+        WHERE b.status = 'aguardando_vistoria' 
+        AND vi.id IS NULL
+        ORDER BY b.start_date ASC
+      `);
+      
+      return result.rows.map(row => ({
+        id: row.id,
+        renterName: row.renter_name,
+        startDate: row.start_date,
+        endDate: row.end_date,
+        status: row.status,
+        vehicle: {
+          brand: row.brand,
+          model: row.model,
+          year: row.year,
+          licensePlate: row.license_plate
+        }
+      }));
+    } catch (error) {
+      console.error('Error fetching pending inspections:', error);
+      throw error;
+    }
+  }
+
+  async createInspection(data: any): Promise<any> {
+    try {
+      const result = await pool.query(`
+        INSERT INTO vehicle_inspections 
+        (reservation_id, inspector_id, vehicle_condition, exterior_condition, 
+         interior_condition, engine_condition, tires_condition, fuel_level, 
+         mileage, observations, approved, completed_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        RETURNING *
+      `, [
+        data.reservationId,
+        data.inspectorId,
+        data.vehicleCondition,
+        data.exteriorCondition,
+        data.interiorCondition,
+        data.engineCondition,
+        data.tiresCondition,
+        data.fuelLevel,
+        data.mileage,
+        data.observations,
+        data.approved,
+        data.completedAt
+      ]);
+      
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error creating inspection:', error);
+      throw error;
+    }
+  }
+
+  async updateInspection(id: number, data: any): Promise<any> {
+    try {
+      const result = await pool.query(`
+        UPDATE vehicle_inspections 
+        SET vehicle_condition = $2, exterior_condition = $3, interior_condition = $4,
+            engine_condition = $5, tires_condition = $6, fuel_level = $7,
+            mileage = $8, observations = $9, approved = $10, completed_at = $11
+        WHERE id = $1
+        RETURNING *
+      `, [
+        id,
+        data.vehicleCondition,
+        data.exteriorCondition,
+        data.interiorCondition,
+        data.engineCondition,
+        data.tiresCondition,
+        data.fuelLevel,
+        data.mileage,
+        data.observations,
+        data.approved,
+        data.completedAt
+      ]);
+      
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error updating inspection:', error);
+      throw error;
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();

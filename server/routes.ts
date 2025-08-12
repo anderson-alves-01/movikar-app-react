@@ -5030,6 +5030,183 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================
+  // INSPECTION ROUTES - SISTEMA DE VISTORIAS
+  // ============================
+
+  // Buscar todas as vistorias (com filtros opcionais)
+  app.get('/api/inspections', authenticateToken, async (req, res) => {
+    try {
+      console.log('🔍 GET /api/inspections - Fetching inspections');
+      
+      const inspectionsData = await storage.getAllInspections();
+      console.log(`✅ Found ${inspectionsData.length} inspections`);
+      res.json(inspectionsData);
+    } catch (error) {
+      console.error('❌ Error fetching inspections:', error);
+      res.status(500).json({ 
+        message: 'Erro ao buscar vistorias',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+
+  // Buscar vistoria por reserva
+  app.get('/api/inspections/reservation/:reservationId', authenticateToken, async (req, res) => {
+    try {
+      const { reservationId } = req.params;
+      console.log(`🔍 GET /api/inspections/reservation/${reservationId} - Fetching inspection for reservation`);
+      
+      const inspection = await storage.getInspectionByReservation(parseInt(reservationId));
+      
+      if (!inspection) {
+        return res.status(404).json({ message: 'Vistoria não encontrada' });
+      }
+
+      console.log(`✅ Found inspection for reservation ${reservationId}`);
+      res.json(inspection);
+    } catch (error) {
+      console.error('❌ Error fetching inspection:', error);
+      res.status(500).json({ 
+        message: 'Erro ao buscar vistoria',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+
+  // Buscar reservas pendentes de vistoria
+  app.get('/api/reservations/pending-inspection', authenticateToken, async (req, res) => {
+    try {
+      console.log('🔍 GET /api/reservations/pending-inspection - Fetching pending inspections');
+      
+      const pendingReservations = await storage.getReservationsPendingInspection();
+      console.log(`✅ Found ${pendingReservations.length} pending inspections`);
+      res.json(pendingReservations);
+    } catch (error) {
+      console.error('❌ Error fetching pending inspections:', error);
+      res.status(500).json({ 
+        message: 'Erro ao buscar reservas pendentes',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+
+  // Criar nova vistoria
+  app.post('/api/inspections', authenticateToken, async (req, res) => {
+    try {
+      const {
+        reservationId,
+        vehicleCondition,
+        exteriorCondition,
+        interiorCondition,
+        engineCondition,
+        tiresCondition,
+        fuelLevel,
+        mileage,
+        observations,
+        approved
+      } = req.body;
+
+      console.log(`📝 POST /api/inspections - Creating inspection for reservation ${reservationId}`);
+
+      // Verificar se a reserva existe
+      const reservation = await storage.getBookingById(reservationId);
+      if (!reservation) {
+        return res.status(404).json({ message: 'Reserva não encontrada' });
+      }
+
+      // Verificar se já existe vistoria para esta reserva
+      const existingInspection = await storage.getInspectionByReservation(reservationId);
+      if (existingInspection) {
+        return res.status(400).json({ message: 'Vistoria já existe para esta reserva' });
+      }
+
+      // Criar nova vistoria
+      const newInspection = await storage.createInspection({
+        reservationId,
+        inspectorId: req.user!.id,
+        vehicleCondition,
+        exteriorCondition,
+        interiorCondition,
+        engineCondition,
+        tiresCondition,
+        fuelLevel,
+        mileage,
+        observations,
+        approved,
+        completedAt: new Date().toISOString()
+      });
+
+      // Atualizar status da reserva
+      const newStatus = approved ? 'vistoriado' : 'reprovado_vistoria';
+      await storage.updateBookingStatus(reservationId, newStatus);
+
+      console.log(`✅ Inspection created successfully for reservation ${reservationId}`);
+      res.status(201).json(newInspection);
+    } catch (error) {
+      console.error('❌ Error creating inspection:', error);
+      res.status(500).json({ 
+        message: 'Erro ao criar vistoria',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+
+  // Atualizar vistoria existente
+  app.put('/api/inspections/:id', authenticateToken, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const {
+        vehicleCondition,
+        exteriorCondition,
+        interiorCondition,
+        engineCondition,
+        tiresCondition,
+        fuelLevel,
+        mileage,
+        observations,
+        approved
+      } = req.body;
+
+      console.log(`📝 PUT /api/inspections/${id} - Updating inspection`);
+
+      // Verificar se a vistoria existe
+      const existingInspection = await storage.getInspectionById(parseInt(id));
+      if (!existingInspection) {
+        return res.status(404).json({ message: 'Vistoria não encontrada' });
+      }
+
+      // Atualizar vistoria
+      const updatedInspection = await storage.updateInspection(parseInt(id), {
+        vehicleCondition,
+        exteriorCondition,
+        interiorCondition,
+        engineCondition,
+        tiresCondition,
+        fuelLevel,
+        mileage,
+        observations,
+        approved,
+        completedAt: new Date().toISOString()
+      });
+
+      // Atualizar status da reserva correspondente se o approved mudou
+      if (approved !== undefined) {
+        const newStatus = approved ? 'vistoriado' : 'reprovado_vistoria';
+        await storage.updateBookingStatus(existingInspection.reservationId, newStatus);
+      }
+
+      console.log(`✅ Inspection ${id} updated successfully`);
+      res.json(updatedInspection);
+    } catch (error) {
+      console.error('❌ Error updating inspection:', error);
+      res.status(500).json({ 
+        message: 'Erro ao atualizar vistoria',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
