@@ -23,10 +23,6 @@ export async function apiRequest(
   
   console.log(`📡 apiRequest - ${method} ${fullUrl}`, data ? 'with data' : 'no data');
   
-  // Get token from sessionStorage as fallback - but for testing, temporarily skip
-  const token = null; // sessionStorage.getItem('auth_token');
-  console.log(`📡 apiRequest - Token found:`, token ? 'Yes' : 'No');
-  
   const headers: Record<string, string> = {};
   
   // Only set Content-Type for JSON data, not FormData
@@ -34,11 +30,8 @@ export async function apiRequest(
     headers['Content-Type'] = 'application/json';
   }
   
-  // Add Authorization header if token exists
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-    console.log(`📡 apiRequest - Adding Authorization header`);
-  }
+  // We rely on cookies for authentication - no Authorization header needed
+  console.log(`📡 apiRequest - Using cookie authentication`);
   
   const res = await fetch(fullUrl, {
     method,
@@ -74,17 +67,12 @@ export const getQueryFn: QueryFunction = async ({ queryKey }) => {
   
   console.log('📡 getQueryFn - Making request to:', queryUrl);
   
-  // Get token from sessionStorage as fallback - but for testing, temporarily skip
-  const token = null; // sessionStorage.getItem('auth_token');
-  console.log(`📡 getQueryFn - Token found:`, token ? 'Yes' : 'No');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
   
-  const headers: Record<string, string> = {};
-  
-  // Add Authorization header if token exists as fallback
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-    console.log(`📡 getQueryFn - Adding Authorization header fallback`);
-  }
+  // Using cookie authentication only - no Authorization header needed
+  console.log(`📡 getQueryFn - Using cookie authentication`);
   
   // Add timestamp to prevent browser caching and force fresh data
   const separator = queryUrl.includes('?') ? '&' : '?';

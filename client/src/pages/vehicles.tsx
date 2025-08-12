@@ -31,20 +31,12 @@ export default function Vehicles() {
     queryFn: async () => {
       console.log("📡 useQuery - Fetching vehicles...");
       
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-      
-      // Add Authorization header if token exists
-      const token = sessionStorage.getItem('auth_token');
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-        console.log("📡 useQuery - Using Authorization header");
-      }
-      
       const response = await fetch('/api/users/my/vehicles', {
+        method: 'GET',
         credentials: 'include',
-        headers,
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
       console.log("📡 useQuery - Response status:", response.status);
       
