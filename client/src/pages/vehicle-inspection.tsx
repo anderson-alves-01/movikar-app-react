@@ -112,15 +112,16 @@ export default function VehicleInspection() {
         title: "Vistoria salva",
         description: "Vistoria realizada com sucesso!",
       });
-      // Invalidar múltiplas queries para garantir atualização completa
+      
+      // Invalidar TODAS as queries relacionadas para forçar refetch completo
+      queryClient.clear();
       queryClient.invalidateQueries({ queryKey: ['/api/inspections'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/reservations'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/reservations'] });  
       queryClient.invalidateQueries({ queryKey: ['/api/bookings'] });
       queryClient.invalidateQueries({ queryKey: ['inspection'] });
-      // Redirecionar para as reservas para ver o status atualizado
-      setTimeout(() => {
-        window.location.href = '/reservations';
-      }, 1000);
+      
+      // Redirecionar imediatamente para ver as mudanças
+      window.location.href = '/reservations';
     },
     onError: (error: any) => {
       toast({

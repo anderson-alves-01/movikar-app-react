@@ -72,6 +72,22 @@ export default function Reservations() {
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [forceRefresh, setForceRefresh] = useState(0);
 
+  // Listener para atualizar dados quando a página ganha foco (retorna de vistoria)
+  useEffect(() => {
+    const handleFocus = () => {
+      // Invalidar queries e forçar refresh quando usuário retorna à página
+      queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
+      setForceRefresh(prev => prev + 1);
+    };
+
+    window.addEventListener('focus', handleFocus);
+    
+    // Também forçar refresh quando componente é montado
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [queryClient]);
+
   const { data: renterBookings, isLoading: loadingRenter } = useQuery<Booking[]>({
     queryKey: ["/api/bookings", "renter", forceRefresh],
     queryFn: async () => {
@@ -259,10 +275,25 @@ export default function Reservations() {
   const handleInspection = (bookingId: number) => {
     window.location.href = `/inspection/${bookingId}`;
   };
+  
+  // Função para invalidar cache após vistoria
+  const invalidateBookingsCache = () => {
+    queryClient.invalidateQueries({
+      queryKey: ["/api/bookings"]
+    });
+    setForceRefresh(prev => prev + 1);
+  };
 
   const shouldShowInspectionButton = (booking: Booking) => {
-    // Mostrar botão de vistoria para locatários quando o status é "aguardando_vistoria" ou "approved" (aprovado)
-    return (booking.status === "aguardando_vistoria" || booking.status === "approved") && booking.paymentStatus === "paid";
+    // Mostrar botão de vistoria para locatários quando:
+    // 1. Status é "approved" (aprovado) e paymentStatus é "paid" 
+    // 2. Ou status é "aguardando_vistoria" e paymentStatus é "paid"
+    // 3. E ainda não foi feita vistoria ou vistoria não foi aprovada
+    const hasValidStatus = (booking.status === "approved" || booking.status === "aguardando_vistoria");
+    const isPaid = booking.paymentStatus === "paid";
+    const needsInspection = !booking.inspection || booking.inspection.approvalDecision !== true;
+    
+    return hasValidStatus && isPaid && needsInspection;
   };
 
   const getInspectionBadge = (booking: Booking) => {

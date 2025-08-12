@@ -370,8 +370,8 @@ const CheckoutForm = ({ checkoutData }: { checkoutData: CheckoutData }) => {
                 {/* Security Deposit */}
                 <div className="flex justify-between text-sm text-blue-600">
                   <span>
-                    Caução {checkoutData.vehicle.securityDepositType === 'percentage' 
-                      ? `(${checkoutData.vehicle.securityDepositValue || checkoutData.vehicle.securityDepositPercentage}%)`
+                    Caução {(checkoutData.vehicle as any).securityDepositType === 'percentage' 
+                      ? `(${(checkoutData.vehicle as any).securityDepositValue || checkoutData.vehicle.securityDepositPercentage}%)`
                       : ''
                     }
                   </span>
