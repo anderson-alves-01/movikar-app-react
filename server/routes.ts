@@ -523,10 +523,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Create payment intent error:", error);
       console.error("Error details:", {
-        message: error.message,
-        type: error.type,
-        code: error.code,
-        stack: error.stack
+        message: error instanceof Error ? error.message : String(error),
+        type: error && typeof error === 'object' && 'type' in error ? error.type : 'unknown',
+        code: error && typeof error === 'object' && 'code' in error ? error.code : 'unknown',
+        stack: error instanceof Error ? error.stack : undefined
       });
       res.status(500).json({ message: "Falha ao criar intent de pagamento" });
     }
@@ -2255,6 +2255,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const updateData = insertVehicleInspectionSchema.partial().parse(req.body);
+      // Ensure photos field is properly typed as string array
+      if (updateData.photos && !Array.isArray(updateData.photos)) {
+        updateData.photos = updateData.photos ? [String(updateData.photos)] : [];
+      }
       const updatedInspection = await storage.updateVehicleInspection(parseInt(req.params.id), updateData);
 
       if (!updatedInspection) {
@@ -4420,7 +4424,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const totalPrice = parseFloat(booking.totalPrice);
       const serviceFee = Math.round((totalPrice * serviceFeePercent) / 100 * 100) / 100;
-      const insuranceFee = booking.hasInsurance ? Math.round((totalPrice * insuranceFeePercent) / 100 * 100) / 100 : 0;
+      // Check if booking has insurance fee (assuming it's included in the total if insuranceFee > 0)
+      const hasInsurance = booking.insuranceFee && parseFloat(booking.insuranceFee) > 0;
+      const insuranceFee = hasInsurance ? Math.round((totalPrice * insuranceFeePercent) / 100 * 100) / 100 : 0;
       const netAmount = Math.round((totalPrice - serviceFee - insuranceFee) * 100) / 100;
 
       // Importar serviço PIX
