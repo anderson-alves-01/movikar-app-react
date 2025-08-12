@@ -77,12 +77,30 @@ export default function VehicleInspection() {
         ? `/api/inspections/${(existingInspection as any)?.id}`
         : '/api/inspections';
       
-      // Ensure fuelLevel is sent as string for backend validation
+      // Convert form data to match backend expectations
+      const fuelLevelMapping: Record<number, string> = {
+        0: "empty",
+        25: "quarter", 
+        50: "half",
+        75: "three_quarters",
+        100: "full"
+      };
+      
+      const conditionMapping: Record<string, string> = {
+        "excelente": "excellent",
+        "bom": "good", 
+        "regular": "fair",
+        "ruim": "poor"
+      };
+
       const inspectionData = {
         ...data,
-        fuelLevel: data.fuelLevel?.toString(),
+        fuelLevel: fuelLevelMapping[Number(data.fuelLevel)] || data.fuelLevel?.toString() || "full",
+        vehicleCondition: conditionMapping[String(data.vehicleCondition)] || data.vehicleCondition || "good",
         reservationId: reservationId,
         bookingId: reservationId, // Backend expects bookingId
+        vehicleId: (reservation as any)?.vehicleId || (reservation as any)?.vehicle?.id,
+        approvalDecision: Boolean(data.approved)
       };
       
       // Use apiRequest which handles authentication properly
@@ -290,10 +308,10 @@ export default function VehicleInspection() {
         {reservation && (
           <div className="bg-blue-50 p-4 rounded-lg">
             <h3 className="font-semibold text-blue-900">
-              {String((reservation as any)?.vehicle?.brand || '')} {String((reservation as any)?.vehicle?.model || '')} ({String((reservation as any)?.vehicle?.year || '')})
+              {(reservation as any)?.vehicle?.brand || ''} {(reservation as any)?.vehicle?.model || ''} ({(reservation as any)?.vehicle?.year || ''})
             </h3>
             <p className="text-blue-700">
-              Reserva #{String((reservation as any)?.id || '')} - {String((reservation as any)?.renterName || '')}
+              Reserva #{(reservation as any)?.id || ''} - {(reservation as any)?.renterName || ''}
             </p>
             <p className="text-sm text-blue-600">
               {(reservation as any)?.startDate ? new Date((reservation as any).startDate).toLocaleDateString() : ''} até {(reservation as any)?.endDate ? new Date((reservation as any).endDate).toLocaleDateString() : ''}

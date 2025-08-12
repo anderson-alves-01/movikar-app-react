@@ -842,11 +842,11 @@ export const insertVehicleInspectionFormSchema = z.object({
   bookingId: z.number().min(1, "ID da reserva é obrigatório"),
   vehicleId: z.number().min(1, "ID do veículo é obrigatório"),
   mileage: z.number().min(0, "Quilometragem deve ser um número positivo"),
-  fuelLevel: z.enum(["empty", "quarter", "half", "three_quarters", "full"], {
-    required_error: "Nível de combustível é obrigatório",
+  fuelLevel: z.string().refine((val) => ["empty", "quarter", "half", "three_quarters", "full", "0", "25", "50", "75", "100"].includes(val), {
+    message: "Nível de combustível inválido"
   }),
-  vehicleCondition: z.enum(["excellent", "good", "fair", "poor"], {
-    required_error: "Condição do veículo é obrigatória",
+  vehicleCondition: z.string().refine((val) => ["excellent", "good", "fair", "poor", "bom", "excelente", "regular", "ruim"].includes(val), {
+    message: "Condição do veículo inválida"
   }),
   observations: z.string().optional(),
   photos: z.array(z.string()).default([]),
@@ -857,9 +857,7 @@ export const insertVehicleInspectionFormSchema = z.object({
     description: z.string().min(1, "Descrição do dano é obrigatória"),
     photo: z.string().optional(),
   })).default([]),
-  approvalDecision: z.boolean({
-    required_error: "Decisão de aprovação é obrigatória",
-  }),
+  approvalDecision: z.boolean().optional(),
   rejectionReason: z.string().optional(),
   refundAmount: z.union([z.string(), z.number()]).optional().transform(val => val ? String(val) : undefined),
   refundReason: z.string().optional(),
