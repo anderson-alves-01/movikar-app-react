@@ -5232,10 +5232,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         completedAt: new Date().toISOString()
       });
 
-      // Atualizar status da reserva correspondente se o approved mudou
+      // Atualizar status da reserva e processar pagamento se aprovado
       if (approved !== undefined) {
         const newStatus = approved ? 'vistoriado' : 'reprovado_vistoria';
-        await storage.updateBookingStatus(existingInspection.reservationId, newStatus);
+        await storage.updateBookingStatus(existingInspection.bookingId, newStatus);
+        
+        // Se aprovado, usar serviço de payout automático
+        if (approved && existingInspection.bookingId) {
+          try {
+            console.log(`💰 Triggering automatic payout for booking ${existingInspection.bookingId}`);
+            const { autoPayoutService } = await import('./services/autoPayoutService');
+            await autoPayoutService.triggerPayoutAfterPayment(existingInspection.bookingId);
+          } catch (payoutError) {
+            console.error('❌ Error triggering automatic payout:', payoutError);
+            // Não falhar a atualização da vistoria se o payout falhar
+          }
+        }
       }
 
       console.log(`✅ Inspection ${id} updated successfully`);

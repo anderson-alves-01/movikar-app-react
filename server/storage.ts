@@ -2819,7 +2819,7 @@ export class DatabaseStorage implements IStorage {
         SELECT 
           vi.*,
           b.id as reservation_id,
-          b.renter_name,
+          u.name as renter_name,
           b.start_date,
           b.end_date,
           b.status as reservation_status,
@@ -2828,9 +2828,10 @@ export class DatabaseStorage implements IStorage {
           v.year,
           v.license_plate
         FROM vehicle_inspections vi
-        JOIN bookings b ON vi.reservation_id = b.id
+        JOIN bookings b ON vi.booking_id = b.id
         JOIN vehicles v ON b.vehicle_id = v.id
-        ORDER BY vi.completed_at DESC
+        JOIN users u ON b.renter_id = u.id
+        ORDER BY vi.created_at DESC
       `);
       
       return result.rows.map(row => ({
@@ -2897,7 +2898,7 @@ export class DatabaseStorage implements IStorage {
       const result = await pool.query(`
         SELECT 
           b.id,
-          b.renter_name,
+          u.name as renter_name,
           b.start_date,
           b.end_date,
           b.status,
@@ -2907,6 +2908,7 @@ export class DatabaseStorage implements IStorage {
           v.license_plate
         FROM bookings b
         JOIN vehicles v ON b.vehicle_id = v.id
+        JOIN users u ON b.renter_id = u.id
         LEFT JOIN vehicle_inspections vi ON b.id = vi.booking_id
         WHERE b.status = 'aguardando_vistoria' 
         AND vi.id IS NULL
