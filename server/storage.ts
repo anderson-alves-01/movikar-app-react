@@ -1,5 +1,5 @@
 import { 
-  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity, adminSettings, savedVehicles, coupons, subscriptionPlans, userSubscriptions, vehicleInspections, payouts,
+  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity, adminSettings, savedVehicles, coupons, subscriptionPlans, userSubscriptions, vehicleInspections, payouts, ownerInspections,
   type User, type InsertUser, type Vehicle, type InsertVehicle, 
   type Booking, type InsertBooking, type Review, type InsertReview,
   type Message, type InsertMessage, type VehicleWithOwner, type BookingWithDetails,
@@ -12,7 +12,8 @@ import {
   type SavedVehicle, type InsertSavedVehicle, type UpdateSavedVehicle,
   type Coupon, type InsertCoupon, type SubscriptionPlan, type InsertSubscriptionPlan,
   type UserSubscription, type InsertUserSubscription,
-  type VehicleInspection, type InsertVehicleInspection, type Payout
+  type VehicleInspection, type InsertVehicleInspection, type Payout,
+  type OwnerInspection, type InsertOwnerInspection
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, and, gte, lte, desc, asc, or, like, ilike, sql, lt, ne, inArray, not, isNull } from "drizzle-orm";
@@ -2991,6 +2992,125 @@ export class DatabaseStorage implements IStorage {
       return result.rows[0];
     } catch (error) {
       console.error('Error updating inspection:', error);
+      throw error;
+    }
+  }
+
+  // Owner Inspection Methods
+  async createOwnerInspection(data: any): Promise<any> {
+    try {
+      const [result] = await db
+        .insert(ownerInspections)
+        .values({
+          bookingId: data.bookingId,
+          ownerId: data.ownerId,
+          renterId: data.renterId,
+          vehicleId: data.vehicleId,
+          mileage: data.mileage,
+          fuelLevel: data.fuelLevel,
+          vehicleCondition: data.vehicleCondition,
+          exteriorCondition: data.exteriorCondition,
+          interiorCondition: data.interiorCondition,
+          engineCondition: data.engineCondition,
+          tiresCondition: data.tiresCondition,
+          observations: data.observations,
+          photos: data.photos,
+          damages: data.damages,
+          status: data.status,
+          depositDecision: data.depositDecision,
+          depositReturnAmount: data.depositReturnAmount,
+          depositRetainedAmount: data.depositRetainedAmount,
+          depositRetentionReason: data.depositRetentionReason,
+          decidedAt: data.decidedAt,
+        })
+        .returning();
+
+      return result;
+    } catch (error) {
+      console.error('Error creating owner inspection:', error);
+      throw error;
+    }
+  }
+
+  async getOwnerInspectionByBookingId(bookingId: number): Promise<any> {
+    try {
+      const [result] = await db
+        .select()
+        .from(ownerInspections)
+        .where(eq(ownerInspections.bookingId, bookingId));
+
+      return result || null;
+    } catch (error) {
+      console.error('Error getting owner inspection by booking ID:', error);
+      throw error;
+    }
+  }
+
+  async getBookingsNeedingOwnerInspection(ownerId: number): Promise<any[]> {
+    try {
+      // Get bookings where user is owner and status is 'active' or 'completed'
+      // and no owner inspection exists yet
+      const result = await db
+        .select({
+          id: bookings.id,
+          vehicleId: bookings.vehicleId,
+          renterId: bookings.renterId,
+          ownerId: bookings.ownerId,
+          startDate: bookings.startDate,
+          endDate: bookings.endDate,
+          totalPrice: bookings.totalPrice,
+          securityDeposit: bookings.securityDeposit,
+          status: bookings.status,
+          createdAt: bookings.createdAt,
+          // Vehicle info
+          vehicleBrand: vehicles.brand,
+          vehicleModel: vehicles.model,
+          vehicleYear: vehicles.year,
+          vehicleLicensePlate: vehicles.licensePlate,
+          // Renter info
+          renterName: users.name,
+          renterEmail: users.email,
+        })
+        .from(bookings)
+        .leftJoin(vehicles, eq(bookings.vehicleId, vehicles.id))
+        .leftJoin(users, eq(bookings.renterId, users.id))
+        .leftJoin(ownerInspections, eq(bookings.id, ownerInspections.bookingId))
+        .where(
+          and(
+            eq(bookings.ownerId, ownerId),
+            or(
+              eq(bookings.status, 'active'),
+              eq(bookings.status, 'completed')
+            ),
+            isNull(ownerInspections.id) // No owner inspection exists yet
+          )
+        )
+        .orderBy(desc(bookings.createdAt));
+
+      return result.map(row => ({
+        id: row.id,
+        vehicleId: row.vehicleId,
+        renterId: row.renterId,
+        ownerId: row.ownerId,
+        startDate: row.startDate,
+        endDate: row.endDate,
+        totalPrice: row.totalPrice,
+        securityDeposit: row.securityDeposit,
+        status: row.status,
+        createdAt: row.createdAt,
+        vehicle: {
+          brand: row.vehicleBrand,
+          model: row.vehicleModel,
+          year: row.vehicleYear,
+          licensePlate: row.vehicleLicensePlate,
+        },
+        renter: {
+          name: row.renterName,
+          email: row.renterEmail,
+        },
+      }));
+    } catch (error) {
+      console.error('Error getting bookings needing owner inspection:', error);
       throw error;
     }
   }

@@ -890,6 +890,48 @@ export type InsertVehicleInspection = typeof vehicleInspections.$inferInsert;
 export type OwnerInspection = typeof ownerInspections.$inferSelect;
 export type InsertOwnerInspection = typeof ownerInspections.$inferInsert;
 
+// Schema para validação do formulário da vistoria do proprietário
+export const insertOwnerInspectionFormSchema = z.object({
+  bookingId: z.union([z.number(), z.string()]).transform(val => Number(val)),
+  vehicleId: z.union([z.number(), z.string()]).transform(val => Number(val)),
+  mileage: z.number().min(0, "Quilometragem deve ser um número positivo"),
+  fuelLevel: z.string().refine((val) => ["empty", "quarter", "half", "three_quarters", "full"].includes(val), {
+    message: "Nível de combustível inválido"
+  }),
+  vehicleCondition: z.string().refine((val) => ["excellent", "good", "fair", "poor"].includes(val), {
+    message: "Condição do veículo inválida"
+  }),
+  exteriorCondition: z.string().refine((val) => ["excellent", "good", "fair", "poor"].includes(val), {
+    message: "Condição exterior inválida"
+  }),
+  interiorCondition: z.string().refine((val) => ["excellent", "good", "fair", "poor"].includes(val), {
+    message: "Condição interior inválida"
+  }),
+  engineCondition: z.string().refine((val) => ["excellent", "good", "fair", "poor"].includes(val), {
+    message: "Condição do motor inválida"
+  }),
+  tiresCondition: z.string().refine((val) => ["excellent", "good", "fair", "poor"].includes(val), {
+    message: "Condição dos pneus inválida"
+  }),
+  observations: z.string().optional(),
+  photos: z.array(z.string()).default([]),
+  damages: z.array(z.object({
+    type: z.string(),
+    location: z.string(),
+    severity: z.string(),
+    description: z.string(),
+    photo: z.string().optional(),
+  })).default([]),
+  depositDecision: z.string().refine((val) => ["full_return", "partial_return", "no_return"].includes(val), {
+    message: "Decisão de caução inválida"
+  }),
+  depositReturnAmount: z.string().optional(),
+  depositRetainedAmount: z.string().optional(),
+  depositRetentionReason: z.string().optional(),
+});
+
+export type InsertOwnerInspectionForm = z.infer<typeof ownerInspectionFormSchema>;
+
 // Schema para validação do formulário (sem campos automáticos)
 export const insertVehicleInspectionFormSchema = z.object({
   bookingId: z.union([z.number(), z.string()]).transform(val => Number(val)),
@@ -926,7 +968,7 @@ export const insertVehicleInspectionSchema = createInsertSchema(vehicleInspectio
 });
 
 // Schema para validação do formulário de vistoria do proprietário
-export const insertOwnerInspectionFormSchema = z.object({
+export const ownerInspectionFormSchema = z.object({
   bookingId: z.union([z.number(), z.string()]).transform(val => Number(val)),
   vehicleId: z.union([z.number(), z.string()]).transform(val => Number(val)),
   mileage: z.number().min(0, "Quilometragem deve ser um número positivo"),
@@ -957,14 +999,9 @@ export const insertOwnerInspectionFormSchema = z.object({
     description: z.string().min(1, "Descrição do dano é obrigatória"),
     photo: z.string().optional(),
   })).default([]),
-  depositDecision: z.enum(["full_return", "partial_return", "no_return"]),
-  depositReturnAmount: z.union([z.string(), z.number()]).optional().transform(val => val ? String(val) : undefined),
-  depositRetainedAmount: z.union([z.string(), z.number()]).optional().transform(val => val ? String(val) : undefined),
-  depositRetentionReason: z.string().optional(),
 });
 
 export type InsertVehicleInspectionForm = z.infer<typeof insertVehicleInspectionFormSchema>;
-export type InsertOwnerInspectionForm = z.infer<typeof insertOwnerInspectionFormSchema>;
 
 // Subscription Plans table
 export const subscriptionPlans = pgTable("subscription_plans", {

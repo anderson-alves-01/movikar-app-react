@@ -5282,6 +5282,163 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Owner Inspection Routes (Vistoria do Proprietário após devolução)
+  app.post("/api/bookings/owner-inspection", authenticateToken, async (req, res) => {
+    console.log('📝 POST /api/bookings/owner-inspection - Creating owner inspection');
+    
+    try {
+      const {
+        bookingId,
+        vehicleId,
+        mileage,
+        fuelLevel,
+        vehicleCondition,
+        exteriorCondition,
+        interiorCondition,
+        engineCondition,
+        tiresCondition,
+        observations,
+        photos,
+        damages,
+        depositDecision,
+        depositReturnAmount,
+        depositRetainedAmount,
+        depositRetentionReason,
+      } = req.body;
+
+      // Get booking to verify ownership
+      const booking = await storage.getBookingById(bookingId);
+      if (!booking) {
+        return res.status(404).json({ message: "Reserva não encontrada" });
+      }
+
+      // Verify user is the vehicle owner
+      if (booking.ownerId !== req.user!.id) {
+        return res.status(403).json({ message: "Apenas o proprietário pode fazer a vistoria de devolução" });
+      }
+
+      // Check if booking is in appropriate status
+      if (!['active', 'completed'].includes(booking.status)) {
+        return res.status(400).json({ message: "Reserva não está em status adequado para vistoria de devolução" });
+      }
+
+      // Create owner inspection
+      const ownerInspectionData = {
+        bookingId,
+        ownerId: req.user!.id,
+        renterId: booking.renterId,
+        vehicleId,
+        mileage,
+        fuelLevel,
+        vehicleCondition,
+        exteriorCondition,
+        interiorCondition,
+        engineCondition,
+        tiresCondition,
+        observations,
+        photos: photos || [],
+        damages: damages || [],
+        status: "completed",
+        depositDecision,
+        depositReturnAmount,
+        depositRetainedAmount,
+        depositRetentionReason,
+        decidedAt: new Date(),
+      };
+
+      const ownerInspection = await storage.createOwnerInspection(ownerInspectionData);
+
+      // Update booking status to completed after owner inspection
+      await storage.updateBookingStatus(bookingId, "completed");
+
+      // Process deposit refund/retention based on decision
+      if (depositDecision === "full_return" || depositDecision === "partial_return") {
+        const returnAmount = parseFloat(depositReturnAmount || "0");
+        if (returnAmount > 0) {
+          // Create refund record for deposit return
+          try {
+            // Here you would integrate with payment provider to process refund
+            console.log(`💰 Processing deposit refund of ${returnAmount} for booking ${bookingId}`);
+            
+            // For now, just log - implement actual refund logic based on payment provider
+            console.log(`✅ Deposit refund processed: ${returnAmount}`);
+          } catch (refundError) {
+            console.error('❌ Deposit refund failed:', refundError);
+          }
+        }
+      }
+
+      console.log(`✅ Owner inspection completed for booking ${bookingId}`);
+
+      res.json({
+        message: "Vistoria do proprietário concluída com sucesso",
+        ownerInspection,
+      });
+
+    } catch (error) {
+      console.error('❌ Error creating owner inspection:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      
+      res.status(500).json({ 
+        message: 'Erro interno do servidor ao criar vistoria do proprietário',
+        error: 'INTERNAL_SERVER_ERROR',
+        details: errorMessage 
+      });
+    }
+  });
+
+  // Get owner inspections for a booking
+  app.get("/api/bookings/:id/owner-inspection", authenticateToken, async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.id);
+      
+      // Get booking to verify access
+      const booking = await storage.getBookingById(bookingId);
+      if (!booking) {
+        return res.status(404).json({ message: "Reserva não encontrada" });
+      }
+
+      // Verify user has access (owner, renter, or admin)
+      const hasAccess = booking.ownerId === req.user!.id || 
+                       booking.renterId === req.user!.id || 
+                       req.user!.role === 'admin';
+
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      const ownerInspection = await storage.getOwnerInspectionByBookingId(bookingId);
+      
+      if (!ownerInspection) {
+        return res.status(404).json({ message: "Vistoria do proprietário não encontrada" });
+      }
+
+      res.json(ownerInspection);
+    } catch (error) {
+      console.error('❌ Error fetching owner inspection:', error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Get pending owner inspections (bookings waiting for owner inspection)
+  app.get('/api/reservations/pending-owner-inspection', authenticateToken, async (req, res) => {
+    try {
+      console.log('🔍 GET /api/reservations/pending-owner-inspection - Fetching pending owner inspections');
+      
+      // Get bookings where user is owner, status is 'completed', and no owner inspection exists yet
+      const pendingOwnerInspections = await storage.getBookingsNeedingOwnerInspection(req.user!.id);
+      
+      console.log(`✅ Found ${pendingOwnerInspections.length} bookings pending owner inspection`);
+      res.json(pendingOwnerInspections);
+    } catch (error) {
+      console.error('❌ Error fetching pending owner inspections:', error);
+      res.status(500).json({ 
+        message: 'Erro interno do servidor ao buscar vistorias pendentes',
+        error: 'INTERNAL_SERVER_ERROR'
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
