@@ -52,14 +52,15 @@ export default function VehicleInspection() {
 
   // Buscar dados da reserva
   const { data: reservation, isLoading: loadingReservation } = useQuery({
-    queryKey: ['/api/reservations', reservationId],
+    queryKey: ['/api/bookings', reservationId],
     enabled: !!reservationId,
   });
 
-  // Buscar vistoria existente (se houver)
+  // Buscar vistoria existente (se houver) - 404 é normal se não existe ainda
   const { data: existingInspection, isLoading: loadingInspection } = useQuery({
     queryKey: ['/api/inspections/reservation', reservationId],
     enabled: !!reservationId,
+    retry: false, // Não retentar no 404
   });
 
   // Carregar dados da vistoria existente
