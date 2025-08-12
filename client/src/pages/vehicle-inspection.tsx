@@ -112,10 +112,15 @@ export default function VehicleInspection() {
         title: "Vistoria salva",
         description: "Vistoria realizada com sucesso!",
       });
+      // Invalidar múltiplas queries para garantir atualização completa
       queryClient.invalidateQueries({ queryKey: ['/api/inspections'] });
       queryClient.invalidateQueries({ queryKey: ['/api/reservations'] });
-      // Redirecionar para o histórico
-      window.location.href = '/inspection-history';
+      queryClient.invalidateQueries({ queryKey: ['/api/bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['inspection'] });
+      // Redirecionar para as reservas para ver o status atualizado
+      setTimeout(() => {
+        window.location.href = '/reservations';
+      }, 1000);
     },
     onError: (error: any) => {
       toast({
@@ -478,9 +483,10 @@ export default function VehicleInspection() {
                   <Select 
                     value={formData.approved ? 'approved' : 'rejected'} 
                     onValueChange={(value) => handleInputChange('approved', value === 'approved')}
+                    defaultValue="approved"
                   >
                     <SelectTrigger data-testid="select-approval-status">
-                      <SelectValue />
+                      <SelectValue placeholder="Selecionar resultado" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="approved">Aprovado - Veículo em condições adequadas</SelectItem>
