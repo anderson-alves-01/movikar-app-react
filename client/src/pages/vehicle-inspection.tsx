@@ -107,11 +107,20 @@ export default function VehicleInspection() {
       // Use apiRequest which handles authentication properly
       return apiRequest(method, url, inspectionData);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: "Vistoria salva",
         description: "Vistoria realizada com sucesso!",
       });
+      
+      // Atualizar status da reserva para "completed" após vistoria
+      try {
+        await apiRequest('PUT', `/api/bookings/${reservationId}`, {
+          inspectionStatus: 'completed'
+        });
+      } catch (error) {
+        console.error('Erro ao atualizar status da vistoria:', error);
+      }
       
       // Invalidar TODAS as queries relacionadas para forçar refetch completo
       queryClient.clear();

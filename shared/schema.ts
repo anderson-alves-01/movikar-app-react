@@ -111,6 +111,7 @@ export const vehicles = pgTable("vehicles", {
   highlightExpiresAt: timestamp("highlight_expires_at"),
   highlightUsageCount: integer("highlight_usage_count").default(0).notNull(),
   // Caução (security deposit) - valor ou percentual
+  securityDepositPercentage: decimal("security_deposit_percentage", { precision: 5, scale: 2 }).default('20.00'),
   securityDepositValue: decimal("security_deposit_value", { precision: 8, scale: 2 }).default('20.00'),
   securityDepositType: varchar("security_deposit_type", { length: 10 }).default('percentage').notNull(), // percentage, fixed
   createdAt: timestamp("created_at").defaultNow(),
@@ -127,10 +128,12 @@ export const bookings = pgTable("bookings", {
   endDate: timestamp("end_date").notNull(),
   totalPrice: decimal("total_price", { precision: 8, scale: 2 }).notNull(),
   serviceFee: decimal("service_fee", { precision: 8, scale: 2 }),
+  insuranceFee: decimal("insurance_fee", { precision: 8, scale: 2 }),
   securityDeposit: decimal("security_deposit", { precision: 8, scale: 2 }),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
   paymentStatus: varchar("payment_status", { length: 20 }).default("pending"),
   paymentIntentId: varchar("payment_intent_id", { length: 255 }),
+  inspectionStatus: varchar("inspection_status", { length: 20 }).default("not_required"), // not_required, pending, completed
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

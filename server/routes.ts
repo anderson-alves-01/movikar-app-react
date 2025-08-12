@@ -585,9 +585,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         serviceFee: serviceFee,
         insuranceFee: insuranceFee,
         securityDeposit: securityDeposit,
-        status: "approved" as const,
+        status: "paid" as const, // Status é "paid" após pagamento
         paymentStatus: "paid" as const,
         paymentIntentId,
+        inspectionStatus: "pending" as const, // Vistoria pendente após pagamento
       };
 
       const booking = await storage.createBooking(bookingData);
@@ -2061,6 +2062,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!booking) {
         return res.status(404).json({ message: "Reserva não encontrada" });
+      }
+
+      // Allow update for inspection status by renter or owner
+      const updates = req.body;
+      if (updates.inspectionStatus) {
+        // Renter or owner can update inspection status
+        if (booking.ownerId !== req.user!.id && booking.renterId !== req.user!.id) {
+          return res.status(403).json({ message: "Acesso negado. Você não tem permissão para alterar esta reserva" });
+        }
+        
+        const updatedBooking = await storage.updateBooking(bookingId, updates);
+        return res.json({ message: "Status da vistoria atualizado", booking: updatedBooking });
       }
 
       // Only owner can approve/reject, only renter can cancel

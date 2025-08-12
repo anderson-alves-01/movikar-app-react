@@ -285,58 +285,83 @@ export default function Reservations() {
   };
 
   const shouldShowInspectionButton = (booking: Booking) => {
-    // Mostrar botão de vistoria para locatários quando:
-    // 1. Status é "approved" (aprovado) e paymentStatus é "paid" 
-    // 2. Ou status é "aguardando_vistoria" e paymentStatus é "paid"
-    // 3. E ainda não foi feita vistoria ou vistoria não foi aprovada
-    const hasValidStatus = (booking.status === "approved" || booking.status === "aguardando_vistoria");
+    // Mostrar botão de vistoria APENAS para:
+    // 1. Reservas PAGAS (paymentStatus === "paid")
+    // 2. Com vistoria PENDENTE (inspectionStatus === "pending")
+    // 3. E ainda não foi feita vistoria
+    // 4. Usuário é o LOCATÁRIO
     const isPaid = booking.paymentStatus === "paid";
-    const needsInspection = !booking.inspection || booking.inspection.approvalDecision !== true;
+    const isInspectionPending = (booking as any).inspectionStatus === "pending";
+    const noInspectionDone = !booking.inspection || booking.inspection.approvalDecision === null;
+    const isRenter = user?.id === booking.renterId;
     
-    return hasValidStatus && isPaid && needsInspection;
+    return isPaid && isInspectionPending && noInspectionDone && isRenter;
+  };
+
+  const shouldShowOwnerInspectionButton = (booking: Booking) => {
+    // Proprietário pode fazer vistoria na data de devolução se:
+    // 1. É o proprietário do veículo
+    // 2. A data atual é igual ou posterior à data de devolução
+    // 3. A vistoria do locatário foi aprovada OU reserva está paga
+    const isOwner = user?.id === booking.ownerId;
+    const isReturnDate = new Date() >= new Date(booking.endDate);
+    const isPaidOrInspected = booking.paymentStatus === 'paid' || 
+                              (booking.inspection && booking.inspection.approvalDecision === true);
+    
+    return isOwner && isReturnDate && isPaidOrInspected;
   };
 
   const getInspectionBadge = (booking: Booking) => {
-    if (!booking.inspection) {
-      if (booking.paymentStatus === 'paid' && (booking.status === 'confirmed' || booking.status === 'approved')) {
-        return (
-          <Badge className="bg-orange-100 text-orange-800">
-            <AlertTriangle className="w-3 h-3 mr-1" />
-            Aguardando Vistoria
-          </Badge>
-        );
-      }
-      return null;
-    }
-
-    if (booking.inspection.approvalDecision === true) {
+    const inspectionStatus = (booking as any).inspectionStatus;
+    
+    // Se vistoria está pendente
+    if (inspectionStatus === 'pending' && !booking.inspection) {
       return (
-        <Badge className="bg-green-100 text-green-800">
-          <CheckCircle2 className="w-3 h-3 mr-1" />
-          Vistoriado ✓
-        </Badge>
-      );
-    } else if (booking.inspection.approvalDecision === false) {
-      return (
-        <Badge className="bg-red-100 text-red-800">
-          <X className="w-3 h-3 mr-1" />
-          Vistoria Reprovada
-        </Badge>
-      );
-    } else {
-      return (
-        <Badge className="bg-yellow-100 text-yellow-800">
-          <Clock className="w-3 h-3 mr-1" />
+        <Badge className="bg-orange-100 text-orange-800">
+          <AlertTriangle className="w-3 h-3 mr-1" />
           Vistoria Pendente
         </Badge>
       );
     }
+
+    // Se vistoria foi feita
+    if (booking.inspection) {
+      if (booking.inspection.approvalDecision === true) {
+        return (
+          <Badge className="bg-green-100 text-green-800">
+            <CheckCircle2 className="w-3 h-3 mr-1" />
+            Vistoriado ✓
+          </Badge>
+        );
+      } else if (booking.inspection.approvalDecision === false) {
+        return (
+          <Badge className="bg-red-100 text-red-800">
+            <X className="w-3 h-3 mr-1" />
+            Vistoria Rejeitada
+          </Badge>
+        );
+      }
+    }
+
+    // Se vistoria foi completada
+    if (inspectionStatus === 'completed') {
+      return (
+        <Badge className="bg-blue-100 text-blue-800">
+          <CheckCircle2 className="w-3 h-3 mr-1" />
+          Vistoria Concluída
+        </Badge>
+      );
+    }
+    
+    return null;
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "approved":
         return "bg-green-100 text-green-800";
+      case "paid":
+        return "bg-emerald-100 text-emerald-800";
       case "pending":
         return "bg-yellow-100 text-yellow-800";
       case "rejected":
@@ -445,14 +470,27 @@ export default function Reservations() {
                             {shouldShowInspectionButton(booking) && (
                               <Button 
                                 size="sm" 
-                                className="bg-orange-600 hover:bg-orange-700 text-white"
+                                className="bg-blue-600 hover:bg-blue-700 text-white"
                                 onClick={() => handleInspection(booking.id)}
                                 data-testid={`button-inspection-${booking.id}`}
                               >
-                                <PenTool className="w-4 h-4 mr-1" />
-                                Fazer Vistoria
+                                <Camera className="w-4 h-4 mr-1" />
+                                Realizar Vistoria
                               </Button>
                             )}
+                            
+                            {shouldShowOwnerInspectionButton(booking) && (
+                              <Button 
+                                size="sm" 
+                                className="bg-purple-600 hover:bg-purple-700 text-white"
+                                onClick={() => window.location.href = `/owner-inspection/${booking.id}`}
+                                data-testid={`button-owner-inspection-${booking.id}`}
+                              >
+                                <CheckCircle2 className="w-4 h-4 mr-1" />
+                                Vistoria Proprietário
+                              </Button>
+                            )}
+                            
                             <Button 
                               size="sm" 
                               variant="outline"
@@ -561,17 +599,30 @@ export default function Reservations() {
                                 </Button>
                               </>
                             )}
-                            {booking.status === "aguardando_vistoria" && (
+                            {shouldShowInspectionButton(booking) && (
                               <Button 
                                 size="sm" 
                                 className="bg-blue-600 hover:bg-blue-700 text-white"
                                 onClick={() => handleInspection(booking.id)}
                                 data-testid={`button-inspection-${booking.id}`}
                               >
-                                <PenTool className="w-4 h-4 mr-1" />
-                                Fazer Vistoria
+                                <Camera className="w-4 h-4 mr-1" />
+                                Realizar Vistoria
                               </Button>
                             )}
+                            
+                            {shouldShowOwnerInspectionButton(booking) && (
+                              <Button 
+                                size="sm" 
+                                className="bg-purple-600 hover:bg-purple-700 text-white"
+                                onClick={() => window.location.href = `/owner-inspection/${booking.id}`}
+                                data-testid={`button-owner-inspection-${booking.id}`}
+                              >
+                                <CheckCircle2 className="w-4 h-4 mr-1" />
+                                Vistoria Proprietário
+                              </Button>
+                            )}
+                            
                             <Button 
                               size="sm" 
                               variant="outline"
