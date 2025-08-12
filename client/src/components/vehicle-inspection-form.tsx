@@ -49,8 +49,7 @@ const DAMAGE_TYPES = [
   "Pneu furado", "Problema mecânico", "Interior danificado", "Outros"
 ];
 
-// CACHE CLEAR v3.0 - FINAL
-export function VehicleInspectionFormV3({ booking, onInspectionComplete }: VehicleInspectionFormProps) {
+export function VehicleInspectionForm({ booking, onInspectionComplete }: VehicleInspectionFormProps) {
   const [photos, setPhotos] = useState<string[]>([]);
   const [damages, setDamages] = useState<DamageItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -75,7 +74,7 @@ export function VehicleInspectionFormV3({ booking, onInspectionComplete }: Vehic
 
   const createInspectionMutation = useMutation({
     mutationFn: async (data: InsertVehicleInspectionForm) => {
-      console.log("🚀 Enviando requisição para API...");
+      console.log("Enviando requisição para API...");
       
       const response = await apiRequest("POST", "/api/inspections", data);
       
@@ -87,14 +86,13 @@ export function VehicleInspectionFormV3({ booking, onInspectionComplete }: Vehic
       return response.json();
     },
     onSuccess: (inspection) => {
-      console.log("✅ Vistoria criada com sucesso");
+      console.log("Vistoria criada com sucesso");
       setIsSubmitting(false);
       toast({
         title: "Vistoria criada com sucesso!",
         description: "A vistoria foi registrada e será processada.",
       });
       
-      // Invalidar queries de forma segura
       try {
         queryClient.invalidateQueries({ queryKey: ["/api/inspections"] });
         queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
@@ -107,7 +105,7 @@ export function VehicleInspectionFormV3({ booking, onInspectionComplete }: Vehic
       }
     },
     onError: (error: any) => {
-      console.error("❌ Erro na mutação:", error);
+      console.error("Erro na mutação:", error);
       setIsSubmitting(false);
       toast({
         title: "Erro ao criar vistoria",
@@ -150,7 +148,7 @@ export function VehicleInspectionFormV3({ booking, onInspectionComplete }: Vehic
   };
 
   const onSubmit = async (data: InsertVehicleInspectionForm) => {
-    console.log("🚀 Iniciando envio da vistoria...");
+    console.log("Iniciando envio da vistoria...");
     
     // Validação de quilometragem
     if (!data.mileage || data.mileage <= 0) {
@@ -232,25 +230,11 @@ export function VehicleInspectionFormV3({ booking, onInspectionComplete }: Vehic
         <form 
           onSubmit={form.handleSubmit(
             (data) => {
-              console.clear();
-              console.log("🟢🟢🟢 NEW CODE - FORM VALIDATION PASSED! 🟢🟢🟢");
-              console.log("=".repeat(60));
-              console.log("✅ Form data válido:", data);
-              console.log("✅ Validation successful - calling onSubmit");
+              console.log("✅ Form validation passed, submitting data:", data);
               onSubmit(data);
             },
             (errors) => {
-              console.clear();
-              console.log("🔴🔴🔴 NEW CODE - FORM VALIDATION FAILED! 🔴🔴🔴");
-              console.log("=".repeat(60));
-              console.log("❌ Form data:", form.getValues());
-              console.log("❌ Validation errors:", errors);
-              console.log("❌ Form state:", {
-                isValid: form.formState.isValid,
-                isValidating: form.formState.isValidating,
-                isDirty: form.formState.isDirty,
-                isSubmitting: form.formState.isSubmitting
-              });
+              console.log("❌ Form validation failed:", errors);
             }
           )}
           className="space-y-6"
