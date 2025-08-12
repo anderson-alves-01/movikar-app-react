@@ -241,6 +241,19 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
               {formatCurrency(parseFloat(vehicle.pricePerDay))}
             </span>
             <span className="text-gray-600">/dia</span>
+            
+            {/* Security Deposit Information */}
+            <div className="text-sm text-gray-600 mt-2 border-t border-gray-200 pt-2">
+              <div className="flex justify-between items-center">
+                <span>Caução:</span>
+                <span className="font-medium text-gray-800">
+                  {(vehicle.securityDepositType || 'percentage') === 'percentage' 
+                    ? `${formatCurrency(parseFloat(vehicle.pricePerDay) * parseFloat(vehicle.securityDepositValue || '20') / 100)} (${vehicle.securityDepositValue || 20}%)`
+                    : `${formatCurrency(parseFloat(vehicle.securityDepositValue || '20'))} (valor fixo)`
+                  }
+                </span>
+              </div>
+            </div>
           </div>
           
           <div className="flex items-center justify-center text-sm text-gray-600 mb-4">
@@ -430,7 +443,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
                   <span className="text-gray-600">
                     Caução {(vehicle.securityDepositType || 'percentage') === 'percentage' 
                       ? `(${vehicle.securityDepositValue || 20}%)`
-                      : '(valor fixo)'
+                      : ''
                     }
                   </span>
                   <span className="text-gray-800">{formatCurrency(pricing.securityDeposit)}</span>

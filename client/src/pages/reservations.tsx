@@ -261,8 +261,8 @@ export default function Reservations() {
   };
 
   const shouldShowInspectionButton = (booking: Booking) => {
-    // Mostrar botão de vistoria apenas para locatários quando o status é "aguardando_vistoria"
-    return booking.status === "aguardando_vistoria" && booking.paymentStatus === "paid";
+    // Mostrar botão de vistoria para locatários quando o status é "aguardando_vistoria" ou "approved" (aprovado)
+    return (booking.status === "aguardando_vistoria" || booking.status === "approved") && booking.paymentStatus === "paid";
   };
 
   const getInspectionBadge = (booking: Booking) => {
