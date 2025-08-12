@@ -391,10 +391,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const checkoutData = req.body;
       
       // Calculate security deposit if not provided
-      if (!checkoutData.securityDeposit && checkoutData.vehicle?.securityDepositPercentage) {
+      if (!checkoutData.securityDeposit && checkoutData.vehicle?.securityDepositValue) {
         const dailyPrice = parseFloat(checkoutData.vehicle.pricePerDay);
-        const securityDepositPercentage = checkoutData.vehicle.securityDepositPercentage;
-        const securityDeposit = (dailyPrice * securityDepositPercentage / 100).toFixed(2);
+        const securityDepositValue = parseFloat(checkoutData.vehicle.securityDepositValue);
+        const securityDepositType = checkoutData.vehicle.securityDepositType || 'percentage';
+        const securityDeposit = securityDepositType === 'percentage' 
+          ? (dailyPrice * securityDepositValue / 100).toFixed(2)
+          : securityDepositValue.toFixed(2);
         checkoutData.securityDeposit = securityDeposit;
       }
       
@@ -565,10 +568,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const serviceFee = (parseFloat(totalPrice) * 0.1).toFixed(2);
       const insuranceFee = (parseFloat(totalPrice) * 0.05).toFixed(2);
       
-      // Calculate security deposit based on vehicle's security deposit percentage
-      const securityDeposit = vehicle.securityDepositPercentage ? 
-        (parseFloat(vehicle.pricePerDay) * vehicle.securityDepositPercentage / 100).toFixed(2) : 
-        (parseFloat(vehicle.pricePerDay) * 0.2).toFixed(2); // Default 20% if not set
+      // Calculate security deposit based on vehicle's security deposit settings
+      const securityDepositValue = parseFloat(vehicle.securityDepositValue || '20');
+      const securityDepositType = vehicle.securityDepositType || 'percentage';
+      const securityDeposit = securityDepositType === 'percentage' 
+        ? (parseFloat(vehicle.pricePerDay) * securityDepositValue / 100).toFixed(2) 
+        : securityDepositValue.toFixed(2);
 
       const bookingData = {
         vehicleId,
@@ -4440,8 +4445,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const totalPrice = parseFloat(booking.totalPrice);
       const serviceFee = Math.round((totalPrice * serviceFeePercent) / 100 * 100) / 100;
-      // Check if booking has insurance fee (assuming it's included in the total if insuranceFee > 0)
-      const hasInsurance = booking.insuranceFee && parseFloat(booking.insuranceFee) > 0;
+      // Check if booking has insurance fee (insurance fee might be stored in a different format)
+      const hasInsurance = booking.insuranceFee !== undefined && parseFloat(booking.insuranceFee || '0') > 0;
       const insuranceFee = hasInsurance ? Math.round((totalPrice * insuranceFeePercent) / 100 * 100) / 100 : 0;
       const netAmount = Math.round((totalPrice - serviceFee - insuranceFee) * 100) / 100;
 

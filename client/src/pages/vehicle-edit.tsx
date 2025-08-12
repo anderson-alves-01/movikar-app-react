@@ -36,7 +36,8 @@ export default function VehicleEdit() {
     pricePerDay: '',
     pricePerWeek: '',
     pricePerMonth: '',
-    securityDepositPercentage: '20.00', // Padrão de 20%
+    securityDepositValue: '20.00',
+    securityDepositType: 'percentage' as 'percentage' | 'fixed',
     description: '',
     images: [] as string[],
     features: [] as string[]
@@ -71,7 +72,8 @@ export default function VehicleEdit() {
         pricePerDay: vehicle.pricePerDay?.toString() || '',
         pricePerWeek: vehicle.pricePerWeek?.toString() || '',
         pricePerMonth: vehicle.pricePerMonth?.toString() || '',
-        securityDepositPercentage: vehicle.securityDepositPercentage?.toString() || '20.00',
+        securityDepositValue: vehicle.securityDepositValue?.toString() || '20.00',
+        securityDepositType: vehicle.securityDepositType || 'percentage',
         description: vehicle.description || '',
         images: vehicle.images || [],
         features: vehicle.features || []
@@ -164,7 +166,8 @@ export default function VehicleEdit() {
       pricePerDay: parseFloat(vehicleData.pricePerDay),
       pricePerWeek: parseFloat(vehicleData.pricePerWeek),
       pricePerMonth: parseFloat(vehicleData.pricePerMonth),
-      securityDepositPercentage: parseFloat(vehicleData.securityDepositPercentage),
+      securityDepositValue: parseFloat(vehicleData.securityDepositValue),
+      securityDepositType: vehicleData.securityDepositType,
     };
 
     updateVehicleMutation.mutate(formData);
@@ -438,37 +441,68 @@ export default function VehicleEdit() {
                 </div>
               </div>
 
-              {/* Security Deposit Percentage */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Security Deposit */}
+              <div className="space-y-4">
                 <div>
-                  <Label>Percentual da caução (%) *</Label>
+                  <Label>Tipo de Caução</Label>
+                  <Select
+                    value={vehicleData.securityDepositType}
+                    onValueChange={(value: 'percentage' | 'fixed') => 
+                      setVehicleData(prev => ({ ...prev, securityDepositType: value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percentage">Percentual (%)</SelectItem>
+                      <SelectItem value="fixed">Valor Fixo (R$)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label>
+                    {vehicleData.securityDepositType === 'percentage' 
+                      ? 'Percentual da caução (%)' 
+                      : 'Valor da caução (R$)'
+                    }
+                  </Label>
                   <Input
                     type="number"
                     step="0.01"
                     min="0"
-                    max="100"
-                    value={vehicleData.securityDepositPercentage}
-                    onChange={(e) => setVehicleData(prev => ({ ...prev, securityDepositPercentage: e.target.value }))}
-                    placeholder="Ex: 20.00"
+                    max={vehicleData.securityDepositType === 'percentage' ? "100" : undefined}
+                    value={vehicleData.securityDepositValue}
+                    onChange={(e) => setVehicleData(prev => ({ ...prev, securityDepositValue: e.target.value }))}
+                    placeholder={vehicleData.securityDepositType === 'percentage' ? "Ex: 20.00" : "Ex: 200.00"}
                     required
                   />
                   <p className="text-sm text-gray-600 mt-1">
-                    A caução será calculada sobre o valor da diária (ex: 20% de uma diária de R$ 100,00 = R$ 20,00)
+                    {vehicleData.securityDepositType === 'percentage' 
+                      ? 'A caução será calculada sobre o valor da diária (ex: 20% de uma diária de R$ 100,00 = R$ 20,00)'
+                      : 'Valor fixo que será somado ao total do aluguel como caução'
+                    }
                   </p>
                 </div>
-                <div className="flex items-center">
-                  {vehicleData.pricePerDay && vehicleData.securityDepositPercentage && (
-                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                      <p className="text-sm font-medium text-blue-800">Valor da caução:</p>
-                      <p className="text-lg font-bold text-blue-900">
-                        R$ {(parseFloat(vehicleData.pricePerDay) * parseFloat(vehicleData.securityDepositPercentage) / 100).toFixed(2)}
-                      </p>
-                      <p className="text-xs text-blue-600">
-                        {vehicleData.securityDepositPercentage}% de R$ {parseFloat(vehicleData.pricePerDay).toFixed(2)}
-                      </p>
-                    </div>
-                  )}
-                </div>
+
+                {vehicleData.pricePerDay && vehicleData.securityDepositValue && (
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <p className="text-sm font-medium text-blue-800">Valor da caução:</p>
+                    <p className="text-lg font-bold text-blue-900">
+                      R$ {vehicleData.securityDepositType === 'percentage' 
+                        ? (parseFloat(vehicleData.pricePerDay) * parseFloat(vehicleData.securityDepositValue) / 100).toFixed(2)
+                        : parseFloat(vehicleData.securityDepositValue).toFixed(2)
+                      }
+                    </p>
+                    <p className="text-xs text-blue-600">
+                      {vehicleData.securityDepositType === 'percentage' 
+                        ? `${vehicleData.securityDepositValue}% de R$ ${parseFloat(vehicleData.pricePerDay).toFixed(2)}`
+                        : 'Valor fixo'
+                      }
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Description */}

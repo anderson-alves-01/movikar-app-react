@@ -110,8 +110,9 @@ export const vehicles = pgTable("vehicles", {
   highlightType: varchar("highlight_type", { length: 20 }), // prata, diamante
   highlightExpiresAt: timestamp("highlight_expires_at"),
   highlightUsageCount: integer("highlight_usage_count").default(0).notNull(),
-  // Caução (security deposit) - percentual sobre o valor da diária
-  securityDepositPercentage: decimal("security_deposit_percentage", { precision: 5, scale: 2 }).default('20.00'),
+  // Caução (security deposit) - valor ou percentual
+  securityDepositValue: decimal("security_deposit_value", { precision: 8, scale: 2 }).default('20.00'),
+  securityDepositType: varchar("security_deposit_type", { length: 10 }).default('percentage').notNull(), // percentage, fixed
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

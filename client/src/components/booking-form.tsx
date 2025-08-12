@@ -22,6 +22,8 @@ interface BookingFormProps {
     pricePerDay: string;
     rating: string;
     images?: string[];
+    securityDepositValue?: string | number;
+    securityDepositType?: string;
     owner: {
       id: number;
       name: string;
@@ -107,15 +109,19 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
     const insuranceFee = bookingData.includeInsurance ? subtotal * insuranceRate : 0;
     
     // Calculate security deposit (caução)
-    const securityDepositPercentage = parseFloat(vehicle.securityDepositPercentage || '20');
-    const securityDeposit = dailyRate * (securityDepositPercentage / 100);
+    const securityDepositValue = parseFloat(vehicle.securityDepositValue || '20');
+    const securityDepositType = vehicle.securityDepositType || 'percentage';
+    const securityDeposit = securityDepositType === 'percentage' 
+      ? dailyRate * (securityDepositValue / 100)
+      : securityDepositValue;
     
     const total = subtotal + serviceFee + insuranceFee;
 
     console.log('💰 Calculating pricing with admin settings:', {
       serviceFeePercentage: adminSettings?.serviceFeePercentage,
       insuranceFeePercentage: adminSettings?.insuranceFeePercentage,
-      securityDepositPercentage,
+      securityDepositValue,
+      securityDepositType,
       serviceRate,
       insuranceRate,
       subtotal,
@@ -200,7 +206,8 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
         model: vehicle.model,
         year: vehicle.year,
         pricePerDay: vehicle.pricePerDay,
-        securityDepositPercentage: vehicle.securityDepositPercentage || 20,
+        securityDepositValue: vehicle.securityDepositValue || 20,
+        securityDepositType: vehicle.securityDepositType || 'percentage',
         images: vehicle.images || []
       }
     };
@@ -420,7 +427,12 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
                   </div>
                 )}
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Caução ({vehicle.securityDepositPercentage || 20}%)</span>
+                  <span className="text-gray-600">
+                    Caução {(vehicle.securityDepositType || 'percentage') === 'percentage' 
+                      ? `(${vehicle.securityDepositValue || 20}%)`
+                      : '(valor fixo)'
+                    }
+                  </span>
                   <span className="text-gray-800">{formatCurrency(pricing.securityDeposit)}</span>
                 </div>
                 <Separator />
