@@ -14,12 +14,12 @@ async function checkServer(maxAttempts = 30) {
   for (let i = 0; i < maxAttempts; i++) {
     try {
       const response = await fetch('http://0.0.0.0:5000/api/vehicles');
-      if (response.status === 200) {
-        console.log('✅ Servidor está rodando');
+      if (response.status === 200 || response.status === 304) {
+        console.log('✅ Servidor está rodando e respondendo');
         return true;
       }
     } catch (error) {
-      // Servidor ainda não está pronto
+      console.log(`⏳ Tentativa ${i + 1}/${maxAttempts} - Servidor ainda não respondeu:`, error.message);
     }
     
     if (i < maxAttempts - 1) {

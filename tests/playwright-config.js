@@ -1,16 +1,21 @@
 
 import { defineConfig } from '@playwright/test';
 
+// Polyfill para fetch no Node.js se necessário
+if (typeof fetch === 'undefined') {
+  global.fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+}
+
 export default defineConfig({
   // Diretório dos testes
   testDir: './tests/e2e',
   
-  // Timeout padrão para cada teste
-  timeout: 30000,
+  // Timeout padrão para cada teste (aumentado para Replit)
+  timeout: 60000,
   
-  // Expect timeout
+  // Expect timeout (aumentado para Replit)
   expect: {
-    timeout: 5000
+    timeout: 10000
   },
 
   // Configuração para CI/CD no Replit
@@ -75,8 +80,11 @@ export default defineConfig({
   // Servidor de desenvolvimento
   webServer: {
     command: 'npm run dev',
+    url: 'http://0.0.0.0:5000',
     port: 5000,
     timeout: 120000,
     reuseExistingServer: !process.env.CI,
+    stdout: 'pipe',
+    stderr: 'pipe',
   },
 });
