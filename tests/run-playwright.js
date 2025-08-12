@@ -1,9 +1,6 @@
 
-#!/usr/bin/env node
-
 import { spawn } from 'child_process';
 import { existsSync, mkdirSync } from 'fs';
-import fetch from 'node-fetch';
 
 console.log('🎭 Executando Testes Playwright para alugae.mobi\n');
 
@@ -47,7 +44,6 @@ async function runPlaywrightTests() {
 
     // Argumentos para o Playwright
     const args = [
-      'npx',
       'playwright',
       'test',
       '--config=tests/playwright-config.js'
@@ -78,11 +74,11 @@ async function runPlaywrightTests() {
       args.push(testFile);
     }
 
-    console.log('🚀 Executando:', args.join(' '));
+    console.log('🚀 Executando:', ['npx', ...args].join(' '));
     console.log('='.repeat(60));
 
     // Executar Playwright
-    const playwright = spawn('npx', args.slice(1), {
+    const playwright = spawn('npx', args, {
       stdio: 'inherit',
       env: {
         ...process.env,
@@ -114,7 +110,7 @@ async function runPlaywrightTests() {
 }
 
 // Executar se chamado diretamente
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] === new URL(import.meta.url).pathname) {
   runPlaywrightTests();
 }
 
