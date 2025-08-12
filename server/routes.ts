@@ -2257,7 +2257,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updateData = insertVehicleInspectionSchema.partial().parse(req.body);
       // Ensure photos field is properly typed as string array
       if (updateData.photos && !Array.isArray(updateData.photos)) {
-        updateData.photos = [];
+        updateData.photos = updateData.photos ? [updateData.photos as string] : [];
       }
       const updatedInspection = await storage.updateVehicleInspection(parseInt(req.params.id), updateData);
 

@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, apiRequestJson } from '@/lib/queryClient';
 import { ArrowLeft, Camera, CheckCircle, AlertTriangle, Car, Upload, X } from 'lucide-react';
 import { Loading } from '@/components/ui/loading';
 
@@ -170,15 +170,11 @@ export default function VehicleInspection() {
         formData.append('type', 'inspection');
 
         try {
-          // Upload via API
-          const response = await fetch('/api/upload/photo', {
-            method: 'POST',
-            credentials: 'include', // Para autenticação via cookies
-            body: formData,
-          });
+          // Upload via apiRequest que já inclui autenticação
+          const response = await apiRequest('POST', '/api/upload/photo', formData);
+          const result = await response.json();
 
-          if (response.ok) {
-            const result = await response.json();
+          if (result && result.url) {
             uploadedPhotos.push(result.url);
           } else {
             throw new Error(`Erro no upload de ${file.name}`);
@@ -305,13 +301,13 @@ export default function VehicleInspection() {
           </h1>
         </div>
         
-        {reservation && (
+{reservation && (
           <div className="bg-blue-50 p-4 rounded-lg">
             <h3 className="font-semibold text-blue-900">
-              {(reservation as any)?.vehicle?.brand || ''} {(reservation as any)?.vehicle?.model || ''} ({(reservation as any)?.vehicle?.year || ''})
+              {String((reservation as any)?.vehicle?.brand || '')} {String((reservation as any)?.vehicle?.model || '')} ({String((reservation as any)?.vehicle?.year || '')})
             </h3>
             <p className="text-blue-700">
-              Reserva #{(reservation as any)?.id || ''} - {(reservation as any)?.renterName || ''}
+              Reserva #{String((reservation as any)?.id || '')} - {String((reservation as any)?.renterName || '')}
             </p>
             <p className="text-sm text-blue-600">
               {(reservation as any)?.startDate ? new Date((reservation as any).startDate).toLocaleDateString() : ''} até {(reservation as any)?.endDate ? new Date((reservation as any).endDate).toLocaleDateString() : ''}

@@ -27,9 +27,12 @@ export async function apiRequest(
   const token = sessionStorage.getItem('auth_token');
   console.log(`📡 apiRequest - Token found:`, token ? 'Yes' : 'No');
   
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
+  const headers: Record<string, string> = {};
+  
+  // Only set Content-Type for JSON data, not FormData
+  if (!(data instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
   
   // Add Authorization header if token exists
   if (token) {
@@ -40,7 +43,7 @@ export async function apiRequest(
   const res = await fetch(fullUrl, {
     method,
     headers,
-    body: data ? JSON.stringify(data) : undefined,
+    body: data instanceof FormData ? data : (data ? JSON.stringify(data) : undefined),
     credentials: "include", // Use cookies for authentication
   });
 
@@ -54,6 +57,16 @@ export async function apiRequest(
 
   await throwIfResNotOk(res);
   return res;
+}
+
+// Wrapper para requisições que retornam JSON
+export async function apiRequestJson(
+  method: string,
+  url: string,
+  data?: unknown | undefined,
+): Promise<any> {
+  const response = await apiRequest(method, url, data);
+  return await response.json();
 }
 
 export const getQueryFn: QueryFunction = async ({ queryKey }) => {
