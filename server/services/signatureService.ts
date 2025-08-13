@@ -164,7 +164,12 @@ class DocuSignService {
     this.apiClient.setBasePath(this.baseUrl);
 
     if (!this.integrationKey || !this.userId || !this.privateKey) {
-      console.warn("DocuSign credentials not configured - using mock mode");
+      console.warn("🟡 DocuSign credentials not configured - using mock mode");
+    } else {
+      console.log("✅ DocuSign credentials configured - using real API");
+      console.log(`🔑 Integration Key: ${this.integrationKey.substring(0, 10)}...`);
+      console.log(`👤 User ID: ${this.userId.substring(0, 10)}...`);
+      console.log(`🏢 Account ID: ${this.accountId.substring(0, 10)}...`);
     }
   }
 
@@ -196,7 +201,11 @@ class DocuSignService {
   }
 
   async createDocument(contract: Contract, pdfUrl: string): Promise<SignaturePlatformResponse> {
+    console.log("📄 DocuSignService.createDocument called");
+    console.log(`🔑 Credentials check: Integration=${!!this.integrationKey} User=${!!this.userId} Private=${!!this.privateKey}`);
+    
     if (!this.integrationKey || !this.userId || !this.privateKey) {
+      console.log("🟡 Using DocuSign MOCK mode - credentials missing");
       // Mock response for testing
       return {
         documentId: `docusign-mock-${Date.now()}`,
@@ -204,6 +213,8 @@ class DocuSignService {
         status: "created"
       };
     }
+
+    console.log("✅ Using DocuSign REAL API - credentials present");
 
     try {
       // Get access token
@@ -346,6 +357,15 @@ class ClickSignService {
   }
 }
 
+// Force DocuSign service initialization on module load to test credentials
+console.log("🧪 Testing DocuSign service initialization...");
+try {
+  const testDocuSignService = new DocuSignService();
+  console.log("🧪 DocuSign service test completed");
+} catch (error) {
+  console.error("🧪 DocuSign service test failed:", error instanceof Error ? error.message : String(error));
+}
+
 // Factory function to get the appropriate service
 function getSignatureService(platform: string) {
   switch (platform) {
@@ -358,7 +378,7 @@ function getSignatureService(platform: string) {
     case 'docusign':
       return new DocuSignService();
     default:
-      return new AutentiqueService(); // Default to Autentique
+      return new DocuSignService(); // Default to DocuSign if configured, otherwise mock mode
   }
 }
 

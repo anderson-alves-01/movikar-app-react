@@ -107,7 +107,7 @@ export class ContractService {
       contractNumber,
       templateId: template.id.toString(),
       contractData: contractData as any,
-      signaturePlatform: "autentique", // Default platform
+      signaturePlatform: "docusign", // Default platform - DocuSign with real API
       createdBy: userId,
       status: "draft"
     };
