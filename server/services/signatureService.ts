@@ -207,36 +207,92 @@ class DocuSignService {
         throw new Error('Chave pública fornecida ao invés da chave privada - DocuSign requer chave privada');
       }
       
-      // Ensure proper PKCS#8 format (required for RS256 with DocuSign)
-      if (!formattedPrivateKey.includes('-----BEGIN PRIVATE KEY-----')) {
-        if (formattedPrivateKey.includes('-----BEGIN RSA PRIVATE KEY-----')) {
-          // Convert PKCS#1 to PKCS#8
-          formattedPrivateKey = formattedPrivateKey
-            .replace('-----BEGIN RSA PRIVATE KEY-----', '-----BEGIN PRIVATE KEY-----')
-            .replace('-----END RSA PRIVATE KEY-----', '-----END PRIVATE KEY-----');
-          console.log("🔄 Converted from PKCS#1 to PKCS#8");
-        } else {
-          console.error("❌ ERRO: Formato de chave privada não reconhecido");
-          throw new Error('Formato de chave privada inválido - deve começar com -----BEGIN PRIVATE KEY----- ou -----BEGIN RSA PRIVATE KEY-----');
-        }
-      }
+      console.log("🔑 Detected key format:", {
+        isPKCS1: formattedPrivateKey.includes('-----BEGIN RSA PRIVATE KEY-----'),
+        isPKCS8: formattedPrivateKey.includes('-----BEGIN PRIVATE KEY-----'),
+        hasNewlines: formattedPrivateKey.includes('\n')
+      });
       
-      // Clean up formatting
+      // Clean up formatting and ensure proper line breaks for PEM
       formattedPrivateKey = formattedPrivateKey
         .replace(/\r\n/g, '\n')
         .replace(/\n+/g, '\n')
         .trim();
       
-      console.log("✅ Private key formatted for RS256/PKCS#8");
+      // Add proper line breaks for PEM format if missing
+      if (!formattedPrivateKey.includes('\n')) {
+        try {
+          const header = formattedPrivateKey.match(/^-----BEGIN[^-]+-----/)[0];
+          const footer = formattedPrivateKey.match(/-----END[^-]+-----$/)[0];
+          const keyData = formattedPrivateKey.replace(header, '').replace(footer, '').trim();
+          
+          // Split into 64-character lines
+          const lines = [];
+          for (let i = 0; i < keyData.length; i += 64) {
+            lines.push(keyData.substring(i, i + 64));
+          }
+          
+          formattedPrivateKey = header + '\n' + lines.join('\n') + '\n' + footer;
+          console.log("🔧 Added PEM line breaks");
+        } catch (e) {
+          console.warn("⚠️ Could not format PEM properly, using as-is");
+        }
+      }
+      
+      console.log("✅ Private key ready for JWT signing");
+      console.log("📏 Final key length:", formattedPrivateKey.length);
+      console.log("📐 Line count:", (formattedPrivateKey.match(/\n/g) || []).length);
 
-      // Request JWT token with proper scopes
-      const response = await this.apiClient.requestJWTUserToken(
-        this.integrationKey,
-        this.userId,
-        ['signature', 'impersonation'],
-        formattedPrivateKey,
-        3600 // 1 hour expiration
-      );
+      // Try different key formats for JWT authentication
+      let jwtResponse = null;
+      const keyFormats = [
+        { name: "Original format", key: formattedPrivateKey },
+      ];
+      
+      // If it's PKCS#1, also try PKCS#8 conversion
+      if (formattedPrivateKey.includes('-----BEGIN RSA PRIVATE KEY-----')) {
+        const pkcs8Key = formattedPrivateKey
+          .replace('-----BEGIN RSA PRIVATE KEY-----', '-----BEGIN PRIVATE KEY-----')
+          .replace('-----END RSA PRIVATE KEY-----', '-----END PRIVATE KEY-----');
+        keyFormats.push({ name: "PKCS#8 converted", key: pkcs8Key });
+      }
+      
+      for (const format of keyFormats) {
+        try {
+          console.log(`🔑 Attempting JWT with ${format.name}...`);
+          
+          const response = await this.apiClient.requestJWTUserToken(
+            this.integrationKey,
+            this.userId,
+            ['signature', 'impersonation'],
+            format.key,
+            3600 // 1 hour expiration
+          );
+          
+          jwtResponse = response;
+          console.log(`✅ JWT authentication successful with ${format.name}`);
+          break;
+          
+        } catch (formatError) {
+          console.log(`❌ JWT failed with ${format.name}:`, formatError.message);
+          
+          // Log detailed error for 400 status codes
+          if (formatError.message.includes('status code 400')) {
+            console.log('🔍 Error 400 details:', {
+              message: formatError.message,
+              response: formatError.response?.data || 'No response data',
+              status: formatError.response?.status || 'No status'
+            });
+          }
+          
+          if (format === keyFormats[keyFormats.length - 1]) {
+            // Last format, re-throw error
+            throw formatError;
+          }
+        }
+      }
+      
+      const response = jwtResponse;
 
       return response.body.access_token;
     } catch (error) {
