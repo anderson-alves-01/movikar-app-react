@@ -293,7 +293,7 @@ export default function Reservations() {
     const isPaid = booking.paymentStatus === "paid";
     const isInspectionPending = (booking as any).inspectionStatus === "pending";
     const noInspectionDone = !booking.inspection || booking.inspection.approvalDecision === null;
-    const isRenter = user?.id === booking.renterId;
+    const isRenter = user?.id === booking.renter?.id;
     
     return isPaid && isInspectionPending && noInspectionDone && isRenter;
   };
@@ -303,7 +303,7 @@ export default function Reservations() {
     // 1. É o proprietário do veículo
     // 2. A data atual é igual ou posterior à data de devolução
     // 3. A vistoria do locatário foi aprovada OU reserva está paga
-    const isOwner = user?.id === booking.ownerId;
+    const isOwner = user?.id === booking.owner?.id;
     const isReturnDate = new Date() >= new Date(booking.endDate);
     const isPaidOrInspected = booking.paymentStatus === 'paid' || 
                               (booking.inspection && booking.inspection.approvalDecision === true);
