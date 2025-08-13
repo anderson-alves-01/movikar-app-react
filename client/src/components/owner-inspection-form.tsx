@@ -13,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { CameraIcon, Plus, X, Car, Fuel, Gauge, AlertTriangle, CheckCircle2, XCircle, DollarSign, Eye, Shield } from "lucide-react";
-import { ownerInspectionFormSchema, type InsertOwnerInspectionForm, type BookingWithDetails } from "@shared/schema";
+import { insertOwnerInspectionFormSchema, type InsertOwnerInspectionForm, type BookingWithDetails } from "@shared/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -33,13 +33,7 @@ interface DamageItem {
   photo?: string;
 }
 
-const FUEL_LEVELS = [
-  { value: "empty", label: "Vazio", icon: "🔴" },
-  { value: "quarter", label: "1/4 Tanque", icon: "🟡" },
-  { value: "half", label: "1/2 Tanque", icon: "🟠" },
-  { value: "three_quarters", label: "3/4 Tanque", icon: "🟢" },
-  { value: "full", label: "Tanque Cheio", icon: "🟢" }
-];
+// Removed FUEL_LEVELS - now using numeric input only
 
 const VEHICLE_CONDITIONS = [
   { value: "excellent", label: "Excelente", color: "text-green-600" },
@@ -70,12 +64,12 @@ export function OwnerInspectionForm({ booking, renterInspection, onInspectionCom
   const securityDeposit = parseFloat(booking.securityDeposit || "0");
 
   const form = useForm<InsertOwnerInspectionForm>({
-    resolver: zodResolver(ownerInspectionFormSchema),
+    resolver: zodResolver(insertOwnerInspectionFormSchema),
     defaultValues: {
       bookingId: booking.id,
       vehicleId: booking.vehicleId,
       mileage: renterInspection?.mileage || 0,
-      fuelLevel: renterInspection?.fuelLevel || "full",
+      fuelLevel: renterInspection?.fuelLevel || "100",
       vehicleCondition: "excellent",
       exteriorCondition: "excellent",
       interiorCondition: "excellent",
@@ -84,10 +78,7 @@ export function OwnerInspectionForm({ booking, renterInspection, onInspectionCom
       observations: "",
       photos: [],
       damages: [],
-      depositDecision: "full_return",
-      depositReturnAmount: booking.securityDeposit || "0",
-      depositRetainedAmount: "0",
-      depositRetentionReason: "",
+
     },
   });
 
@@ -242,7 +233,7 @@ export function OwnerInspectionForm({ booking, renterInspection, onInspectionCom
                 <strong>Quilometragem na retirada:</strong> {renterInspection.mileage?.toLocaleString()} km
               </div>
               <div>
-                <strong>Combustível na retirada:</strong> {FUEL_LEVELS.find(f => f.value === renterInspection.fuelLevel)?.label || renterInspection.fuelLevel}
+                <strong>Combustível na retirada:</strong> {renterInspection.fuelLevel}%
               </div>
               <div>
                 <strong>Condição na retirada:</strong> {VEHICLE_CONDITIONS.find(c => c.value === renterInspection.vehicleCondition)?.label || renterInspection.vehicleCondition}
@@ -303,20 +294,15 @@ export function OwnerInspectionForm({ booking, renterInspection, onInspectionCom
                       <Fuel className="h-4 w-4 mr-2" />
                       Nível de Combustível *
                     </FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o nível" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {FUEL_LEVELS.map((level) => (
-                          <SelectItem key={level.value} value={level.value}>
-                            {level.icon} {level.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="100"
+                        placeholder="Ex: 30, 50, 75"
+                        {...field}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

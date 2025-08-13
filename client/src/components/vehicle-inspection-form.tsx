@@ -29,13 +29,7 @@ interface DamageItem {
   photo?: string;
 }
 
-const FUEL_LEVELS = [
-  { value: "empty", label: "Vazio", icon: "🔴" },
-  { value: "quarter", label: "1/4 Tanque", icon: "🟡" },
-  { value: "half", label: "1/2 Tanque", icon: "🟠" },
-  { value: "three_quarters", label: "3/4 Tanque", icon: "🟢" },
-  { value: "full", label: "Tanque Cheio", icon: "🟢" }
-];
+// Removed FUEL_LEVELS - now using numeric input only
 
 const VEHICLE_CONDITIONS = [
   { value: "excellent", label: "Excelente", color: "text-green-600" },
@@ -62,7 +56,7 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
       bookingId: booking.id,
       vehicleId: booking.vehicleId,
       mileage: 0,
-      fuelLevel: "full",
+      fuelLevel: "100",
       vehicleCondition: "excellent",
       observations: "",
       photos: [],
@@ -280,28 +274,14 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
                         Nível de Combustível
                       </FormLabel>
                       <FormControl>
-                        <div className="space-y-2">
-                          <Input
-                            type="text"
-                            placeholder="Ex: 30, 50%, full, half"
-                            {...field}
-                            data-testid="input-fuel-level"
-                          />
-                          <div className="flex flex-wrap gap-2">
-                            {FUEL_LEVELS.map((level) => (
-                              <Button
-                                key={level.value}
-                                type="button"
-                                variant={field.value === level.value ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => field.onChange(level.value)}
-                                data-testid={`button-fuel-${level.value}`}
-                              >
-                                {level.icon} {level.label}
-                              </Button>
-                            ))}
-                          </div>
-                        </div>
+                        <Input
+                          type="number"
+                          min="0"
+                          max="100"
+                          placeholder="Ex: 30, 50, 75"
+                          {...field}
+                          data-testid="input-fuel-level"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
