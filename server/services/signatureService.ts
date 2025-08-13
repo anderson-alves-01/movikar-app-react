@@ -179,12 +179,57 @@ class DocuSignService {
     }
 
     try {
-      // Format private key (ensure proper PEM format)
-      const formattedPrivateKey = this.privateKey.includes('-----BEGIN')
-        ? this.privateKey
-        : `-----BEGIN RSA PRIVATE KEY-----\n${this.privateKey}\n-----END RSA PRIVATE KEY-----`;
+      console.log("🔐 DocuSign JWT authentication starting...");
+      
+      // Format private key properly for RS256 
+      let formattedPrivateKey = this.privateKey;
+      
+      // Replace \\n with actual line breaks if needed
+      if (formattedPrivateKey.includes('\\n')) {
+        formattedPrivateKey = formattedPrivateKey.replace(/\\n/g, '\n');
+      }
+      
+      // Debug key format
+      console.log("🔍 Key analysis:", {
+        length: formattedPrivateKey.length,
+        hasBegin: formattedPrivateKey.includes('-----BEGIN'),
+        isPublicKey: formattedPrivateKey.includes('PUBLIC KEY'),
+        isPrivateKey: formattedPrivateKey.includes('PRIVATE KEY'),
+        hasRSA: formattedPrivateKey.includes('RSA PRIVATE'),
+        lineBreaks: (formattedPrivateKey.match(/\n/g) || []).length
+      });
+      
+      // Check if we accidentally got a public key instead of private key
+      if (formattedPrivateKey.includes('-----BEGIN PUBLIC KEY-----')) {
+        console.error("❌ ERRO: Chave PÚBLICA detectada quando deveria ser PRIVADA!");
+        console.error("🚨 DocuSign precisa da chave PRIVADA para autenticação JWT");
+        console.error("💡 Verifique se DOCUSIGN_PRIVATE_KEY contém a chave privada correta");
+        throw new Error('Chave pública fornecida ao invés da chave privada - DocuSign requer chave privada');
+      }
+      
+      // Ensure proper PKCS#8 format (required for RS256 with DocuSign)
+      if (!formattedPrivateKey.includes('-----BEGIN PRIVATE KEY-----')) {
+        if (formattedPrivateKey.includes('-----BEGIN RSA PRIVATE KEY-----')) {
+          // Convert PKCS#1 to PKCS#8
+          formattedPrivateKey = formattedPrivateKey
+            .replace('-----BEGIN RSA PRIVATE KEY-----', '-----BEGIN PRIVATE KEY-----')
+            .replace('-----END RSA PRIVATE KEY-----', '-----END PRIVATE KEY-----');
+          console.log("🔄 Converted from PKCS#1 to PKCS#8");
+        } else {
+          console.error("❌ ERRO: Formato de chave privada não reconhecido");
+          throw new Error('Formato de chave privada inválido - deve começar com -----BEGIN PRIVATE KEY----- ou -----BEGIN RSA PRIVATE KEY-----');
+        }
+      }
+      
+      // Clean up formatting
+      formattedPrivateKey = formattedPrivateKey
+        .replace(/\r\n/g, '\n')
+        .replace(/\n+/g, '\n')
+        .trim();
+      
+      console.log("✅ Private key formatted for RS256/PKCS#8");
 
-      // Request JWT token
+      // Request JWT token with proper scopes
       const response = await this.apiClient.requestJWTUserToken(
         this.integrationKey,
         this.userId,

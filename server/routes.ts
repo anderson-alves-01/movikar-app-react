@@ -32,6 +32,7 @@ import {
 import { ZodError } from "zod";
 // import { contractService } from "./services/contractService.js";
 // import { processSignatureWebhook } from "./services/signatureService.js";
+import './services/signatureService.js'; // Force module load
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import path from "path";
@@ -2662,6 +2663,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Contract routes
+  // Create contract route
+  app.post("/api/contracts", authenticateToken, async (req, res) => {
+    console.log("📄 POST /api/contracts called");
+    console.log("🧪 Testing DocuSign service initialization...");
+    
+    try {
+      const { bookingId, signaturePlatform = 'docusign' } = req.body;
+      
+      if (!bookingId) {
+        return res.status(400).json({ message: "bookingId é obrigatório" });
+      }
+
+      // Load signature service to trigger initialization logs
+      const { sendToSignaturePlatform } = await import('./services/signatureService.js');
+      
+      console.log(`📋 Creating contract for booking ${bookingId} with platform: ${signaturePlatform}`);
+      
+      // Get booking details
+      const booking = await storage.getBookingWithDetails(bookingId);
+      if (!booking) {
+        return res.status(404).json({ message: "Reserva não encontrada" });
+      }
+
+      // Check if user has permission
+      if (booking.renterId !== req.user!.id && booking.ownerId !== req.user!.id) {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      // Generate contract number
+      const contractNumber = `CONT-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+      
+      // Create contract record
+      const contractData = {
+        bookingId: bookingId,
+        contractNumber: contractNumber,
+        contractData: { signaturePlatform: signaturePlatform },
+        status: 'pending',
+        createdAt: new Date(),
+        renterSigned: false,
+        ownerSigned: false
+      };
+
+      const contract = await storage.createContract(contractData);
+      
+      // Test DocuSign service - generate PDF and send to platform
+      try {
+        console.log("🔄 Sending contract to signature platform...");
+        const pdfUrl = `${req.protocol}://${req.get('host')}/api/contracts/${contract.id}/pdf`;
+        const documentId = await sendToSignaturePlatform(contract, pdfUrl);
+        
+        // Update contract with external document ID
+        await storage.updateContract(contract.id, {
+          externalDocumentId: documentId
+        });
+
+        console.log("✅ Contract sent to DocuSign successfully");
+        
+        res.status(201).json({
+          ...contract,
+          externalDocumentId: documentId,
+          signUrl: `https://demo.docusign.net/signing/${contractNumber}`,
+          message: "Contrato criado e enviado para DocuSign"
+        });
+        
+      } catch (signatureError) {
+        console.error("❌ Error sending to signature platform:", signatureError);
+        res.status(201).json({
+          ...contract,
+          message: "Contrato criado, mas erro ao enviar para plataforma de assinatura"
+        });
+      }
+      
+    } catch (error) {
+      console.error("❌ Create contract error:", error);
+      res.status(500).json({ message: "Erro ao criar contrato" });
+    }
+  });
+
   app.get("/api/contracts/:id", authenticateToken, async (req, res) => {
     try {
       const contractId = parseInt(req.params.id);
