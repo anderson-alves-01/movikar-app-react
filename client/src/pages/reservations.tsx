@@ -234,11 +234,27 @@ export default function Reservations() {
     enabled: !!selectedBooking?.id,
   });
 
-  const handleViewDetails = (bookingId: number) => {
-    const booking = [...(renterBookings || []), ...(ownerBookings || [])].find(b => b.id === bookingId);
-    if (booking) {
+  const handleViewDetails = async (bookingId: number) => {
+    try {
+      // Fetch booking details with inspections included
+      const response = await apiRequest('GET', `/api/bookings/${bookingId}?includeInspections=true`);
+      const booking = await response.json();
       setSelectedBooking(booking);
       setDetailsDialogOpen(true);
+    } catch (error) {
+      console.error('Error fetching booking details:', error);
+      // Fallback to existing data if API call fails
+      const booking = [...(renterBookings || []), ...(ownerBookings || [])].find(b => b.id === bookingId);
+      if (booking) {
+        setSelectedBooking(booking);
+        setDetailsDialogOpen(true);
+      } else {
+        toast({
+          title: "Erro",
+          description: "Falha ao carregar detalhes da reserva",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -888,6 +904,191 @@ export default function Reservations() {
                   </div>
                 )}
               </div>
+
+              {/* Detalhes da Vistoria */}
+              {(() => {
+                const renterInspection = (selectedBooking as any).renterInspection;
+                const ownerInspection = (selectedBooking as any).ownerInspection;
+                
+                if (renterInspection || ownerInspection) {
+                  return (
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
+                        <CameraIcon className="w-4 h-4 mr-2" />
+                        Detalhes da Vistoria
+                      </h3>
+                      
+                      <div className="space-y-4">
+                        {/* Vistoria do Locatário */}
+                        {renterInspection && (
+                          <Card className="border border-blue-200">
+                            <CardContent className="p-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <h4 className="font-medium text-blue-800">Vistoria do Locatário</h4>
+                                <Badge className="bg-blue-100 text-blue-800">
+                                  <CheckCircle2 className="w-3 h-3 mr-1" />
+                                  {renterInspection.status === 'approved' ? 'Aprovada' : 
+                                   renterInspection.status === 'rejected' ? 'Reprovada' : 'Concluída'}
+                                </Badge>
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                  <span className="font-medium">Quilometragem:</span> {renterInspection.mileage} km
+                                </div>
+                                <div>
+                                  <span className="font-medium">Nível de combustível:</span> {renterInspection.fuelLevel}%
+                                </div>
+                                <div>
+                                  <span className="font-medium">Estado geral:</span> {renterInspection.vehicleCondition}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Exterior:</span> {renterInspection.exteriorCondition}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Interior:</span> {renterInspection.interiorCondition}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Motor:</span> {renterInspection.engineCondition}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Pneus:</span> {renterInspection.tiresCondition}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Data:</span> {new Date(renterInspection.inspectedAt).toLocaleDateString('pt-BR')}
+                                </div>
+                              </div>
+                              
+                              {renterInspection.observations && (
+                                <div className="mt-3 p-3 bg-gray-50 rounded">
+                                  <span className="font-medium text-sm">Observações:</span>
+                                  <p className="text-sm text-gray-700 mt-1">{renterInspection.observations}</p>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        )}
+
+                        {/* Vistoria do Proprietário */}
+                        {ownerInspection && (
+                          <Card className="border border-purple-200">
+                            <CardContent className="p-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <h4 className="font-medium text-purple-800">Vistoria do Proprietário</h4>
+                                <div className="flex items-center space-x-2">
+                                  <Badge className={
+                                    ownerInspection.status === 'approved' || ownerInspection.depositDecision === 'full_return' ? 
+                                    'bg-green-100 text-green-800' :
+                                    ownerInspection.status === 'rejected' || ownerInspection.depositDecision === 'no_return' ?
+                                    'bg-red-100 text-red-800' :
+                                    ownerInspection.depositDecision === 'partial_return' ?
+                                    'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
+                                  }>
+                                    {ownerInspection.status === 'approved' || ownerInspection.depositDecision === 'full_return' ? (
+                                      <>
+                                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                                        Aprovada
+                                      </>
+                                    ) : ownerInspection.status === 'rejected' || ownerInspection.depositDecision === 'no_return' ? (
+                                      <>
+                                        <X className="w-3 h-3 mr-1" />
+                                        Reprovada
+                                      </>
+                                    ) : ownerInspection.depositDecision === 'partial_return' ? (
+                                      <>
+                                        <AlertTriangle className="w-3 h-3 mr-1" />
+                                        Parcial
+                                      </>
+                                    ) : (
+                                      'Concluída'
+                                    )}
+                                  </Badge>
+                                </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                  <span className="font-medium">Quilometragem:</span> {ownerInspection.mileage} km
+                                </div>
+                                <div>
+                                  <span className="font-medium">Nível de combustível:</span> {ownerInspection.fuelLevel}%
+                                </div>
+                                <div>
+                                  <span className="font-medium">Estado geral:</span> {ownerInspection.vehicleCondition}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Exterior:</span> {ownerInspection.exteriorCondition}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Interior:</span> {ownerInspection.interiorCondition}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Motor:</span> {ownerInspection.engineCondition}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Pneus:</span> {ownerInspection.tiresCondition}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Data:</span> {new Date(ownerInspection.inspectedAt).toLocaleDateString('pt-BR')}
+                                </div>
+                              </div>
+                              
+                              {/* Decisão sobre depósito */}
+                              <div className="mt-3 p-3 bg-purple-50 rounded">
+                                <div className="flex items-center justify-between">
+                                  <span className="font-medium text-sm">Decisão sobre depósito:</span>
+                                  <span className={`text-sm font-medium ${
+                                    ownerInspection.depositDecision === 'full_return' ? 'text-green-600' :
+                                    ownerInspection.depositDecision === 'no_return' ? 'text-red-600' :
+                                    ownerInspection.depositDecision === 'partial_return' ? 'text-yellow-600' : 'text-gray-600'
+                                  }`}>
+                                    {ownerInspection.depositDecision === 'full_return' ? 'Devolução total' :
+                                     ownerInspection.depositDecision === 'no_return' ? 'Retenção total' :
+                                     ownerInspection.depositDecision === 'partial_return' ? 'Devolução parcial' : 'Não definido'}
+                                  </span>
+                                </div>
+                                
+                                {ownerInspection.depositReturnAmount && (
+                                  <div className="mt-2">
+                                    <span className="text-sm">Valor a devolver: </span>
+                                    <span className="font-medium text-green-600">
+                                      {formatCurrency(ownerInspection.depositReturnAmount)}
+                                    </span>
+                                  </div>
+                                )}
+                                
+                                {ownerInspection.depositRetainedAmount && (
+                                  <div className="mt-2">
+                                    <span className="text-sm">Valor retido: </span>
+                                    <span className="font-medium text-red-600">
+                                      {formatCurrency(ownerInspection.depositRetainedAmount)}
+                                    </span>
+                                  </div>
+                                )}
+                                
+                                {ownerInspection.depositRetentionReason && (
+                                  <div className="mt-2">
+                                    <span className="text-sm font-medium">Motivo da retenção:</span>
+                                    <p className="text-sm text-gray-700 mt-1">{ownerInspection.depositRetentionReason}</p>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {ownerInspection.observations && (
+                                <div className="mt-3 p-3 bg-gray-50 rounded">
+                                  <span className="font-medium text-sm">Observações:</span>
+                                  <p className="text-sm text-gray-700 mt-1">{ownerInspection.observations}</p>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        )}
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
             </div>
           )}
         </DialogContent>

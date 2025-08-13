@@ -2004,7 +2004,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/bookings/:id", authenticateToken, async (req, res) => {
     try {
       const bookingId = parseInt(req.params.id);
-      const booking = await storage.getBookingWithDetails(bookingId);
+      const includeInspections = req.query.includeInspections === 'true';
+      console.log('📋 GET /api/bookings/:id - Booking:', bookingId, 'Include inspections:', includeInspections);
+      
+      const booking = await storage.getBookingWithDetails(bookingId, includeInspections);
 
       if (!booking) {
         return res.status(404).json({ message: "Reserva não encontrada" });
@@ -2013,6 +2016,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verificar se o usuário tem acesso a esta reserva (é o locatário ou proprietário)
       if (booking.renterId !== req.user!.id && booking.ownerId !== req.user!.id) {
         return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      if (includeInspections && booking.ownerInspection) {
+        console.log(`📋 Owner inspection for booking ${booking.id}:`, {
+          status: booking.ownerInspection.status,
+          depositDecision: booking.ownerInspection.depositDecision
+        });
       }
 
       res.json(booking);

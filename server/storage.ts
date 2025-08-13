@@ -72,7 +72,7 @@ export interface IStorage {
   notifyWaitingQueueUsers(vehicleId: number, availableStartDate: string, availableEndDate: string): Promise<any[]>;
   getBookingById(id: number): Promise<BookingWithDetails | undefined>;
   updateBookingStatus(id: number, status: string): Promise<Booking | undefined>;
-  getBookingWithDetails(id: number): Promise<BookingWithDetails | undefined>;
+  getBookingWithDetails(id: number, includeInspections?: boolean): Promise<BookingWithDetails | undefined>;
   getBookingsWithDetails(filters: BookingFilters): Promise<BookingWithDetails[]>;
 
   // Reviews
@@ -1328,8 +1328,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Extended method for booking with details
-  async getBookingWithDetails(id: number): Promise<BookingWithDetails | undefined> {
-    const result = await db
+  async getBookingWithDetails(id: number, includeInspections?: boolean): Promise<BookingWithDetails | undefined> {
+    // First get the basic booking data
+    const baseQuery = db
       .select({
         ...getTableColumns(bookings),
         vehicle: {
@@ -1370,8 +1371,36 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(vehicleInspections, eq(bookings.id, vehicleInspections.bookingId))
       .where(eq(bookings.id, id));
 
+    const result = await baseQuery;
+    let booking = result[0];
+    
+    if (!booking) {
+      return undefined;
+    }
+
+    // If inspections are requested, fetch them separately
+    if (includeInspections) {
+      // Fetch renter inspection
+      const renterInspection = await this.getRenterInspectionByBookingId(id);
+      // Fetch owner inspection
+      const ownerInspection = await this.getOwnerInspectionByBookingId(id);
+      
+      console.log('🔍 Storage getBookingWithDetails - Found inspections:', {
+        renterInspection: !!renterInspection,
+        ownerInspection: !!ownerInspection,
+        ownerInspectionDetails: ownerInspection ? {
+          status: ownerInspection.status,
+          depositDecision: ownerInspection.depositDecision
+        } : null
+      });
+      
+      // Add inspections to the booking object
+      (booking as any).renterInspection = renterInspection;
+      (booking as any).ownerInspection = ownerInspection;
+    }
+
     // @ts-ignore - Type assertion for result mapping
-    return result[0] || undefined;
+    return booking;
   }
 
   async getBookingsWithDetails(filters: BookingFilters): Promise<BookingWithDetails[]> {
