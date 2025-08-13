@@ -40,7 +40,7 @@ Preferred communication style: Simple, everyday language.
 - **Booking System**: Real-time availability, status workflow, payment tracking, booking history, automatic date blocking upon contract signing, enhanced calendar system with intelligent date blocking and visual conflict warnings, dual inspection system for renters and owners with status management.
 - **Search & Filtering**: Location, category, price, features, transmission, date-based availability.
 - **Messaging**: Real-time, booking-specific threads, read/unread status.
-- **Digital Contracts**: DocuSign integration for digital signatures, automatic contract creation, PDF generation, professional Brazilian contract template.
+- **Digital Contracts**: DocuSign integration for digital signatures with real API implementation and mock fallback, automatic contract creation, PDF generation, professional Brazilian contract template, multi-platform support (Autentique, D4Sign, ClickSign).
 - **Payments**: Stripe integration ("Alugar Agora" workflow), secure checkout, payment intent creation, post-payment redirection to contract, including management of security deposits.
 - **Subscription System**: Complete subscription management with tiered plans, secure Stripe checkout, and robust redirect protection.
 - **Vehicle Highlight System**: Subscription-based vehicle highlighting with visual differentiation (Diamante/Prata badges), intelligent ordering, and usage tracking.
