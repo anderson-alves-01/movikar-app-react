@@ -3078,6 +3078,20 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async getRenterInspectionByBookingId(bookingId: number): Promise<any> {
+    try {
+      const [result] = await db
+        .select()
+        .from(vehicleInspections)
+        .where(eq(vehicleInspections.bookingId, bookingId));
+
+      return result || null;
+    } catch (error) {
+      console.error('Error getting renter inspection by booking ID:', error);
+      throw error;
+    }
+  }
+
   async getOwnerInspectionByBookingId(bookingId: number): Promise<any> {
     try {
       const [result] = await db
