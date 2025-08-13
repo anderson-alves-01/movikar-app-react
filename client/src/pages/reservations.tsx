@@ -345,14 +345,6 @@ export default function Reservations() {
 
     // Se vistoria foi completada, verificar se há informações de aprovação
     if (inspectionStatus === 'completed') {
-      // Debug log to understand the data structure
-      console.log('DEBUG - Booking data:', {
-        bookingId: booking.id,
-        inspectionStatus,
-        ownerInspection: (booking as any).ownerInspection,
-        hasOwnerInspection: !!((booking as any).ownerInspection)
-      });
-
       // Verificar se há vistoria do proprietário com decisão
       const ownerInspection = (booking as any).ownerInspection;
       if (ownerInspection) {

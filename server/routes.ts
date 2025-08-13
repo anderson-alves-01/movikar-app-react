@@ -1978,9 +1978,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const type = req.query.type as 'renter' | 'owner' || 'renter';
       const includeInspections = req.query.includeInspections === 'true';
+      console.log('📋 GET /api/bookings - User:', req.user!.id, 'Type:', type, 'Include inspections:', includeInspections);
+      
       const bookings = await storage.getBookingsByUser(req.user!.id, type, includeInspections);
+      
+      console.log('📋 Bookings fetched:', bookings.length);
+      bookings.forEach(booking => {
+        console.log(`📋 Booking ${booking.id}: ownerInspection=${!!booking.ownerInspection}, status=${booking.status}`);
+        if (booking.ownerInspection) {
+          console.log(`📋 Owner inspection for booking ${booking.id}:`, {
+            status: booking.ownerInspection.status,
+            depositDecision: booking.ownerInspection.depositDecision
+          });
+        }
+      });
+      
       res.json(bookings);
     } catch (error) {
+      console.error('❌ GET /api/bookings error:', error);
       res.status(500).json({ message: "Falha ao buscar reservas" });
     }
   });
