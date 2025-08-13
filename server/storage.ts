@@ -608,11 +608,6 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(vehicles, eq(bookings.vehicleId, vehicles.id))
       .leftJoin(users, eq(vehicles.ownerId, users.id));
 
-    // Include inspections if requested
-    if (includeInspections) {
-      query.leftJoin(vehicleInspections, eq(vehicleInspections.bookingId, bookings.id));
-    }
-
     const results = await query
       .where(eq(field, userId))
       .orderBy(desc(bookings.createdAt));
@@ -632,8 +627,15 @@ export class DatabaseStorage implements IStorage {
         };
 
         // Add inspection data if included
-        if (includeInspections && result.vehicleInspections) {
-          bookingData.inspection = result.vehicleInspections;
+        if (includeInspections) {
+          const [inspectionResult] = await db
+            .select()
+            .from(vehicleInspections)
+            .where(eq(vehicleInspections.bookingId, result.bookings.id));
+          
+          if (inspectionResult) {
+            bookingData.inspection = inspectionResult;
+          }
         }
 
         // Add owner inspection data if included
@@ -645,6 +647,9 @@ export class DatabaseStorage implements IStorage {
           
           if (ownerInspectionResult) {
             bookingData.ownerInspection = ownerInspectionResult;
+            console.log('🔍 Owner inspection found for booking:', result.bookings.id, ownerInspectionResult);
+          } else {
+            console.log('❌ No owner inspection found for booking:', result.bookings.id);
           }
         }
 
