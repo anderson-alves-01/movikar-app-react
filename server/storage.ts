@@ -636,6 +636,18 @@ export class DatabaseStorage implements IStorage {
           bookingData.inspection = result.vehicleInspections;
         }
 
+        // Add owner inspection data if included
+        if (includeInspections) {
+          const [ownerInspectionResult] = await db
+            .select()
+            .from(ownerInspections)
+            .where(eq(ownerInspections.bookingId, result.bookings.id));
+          
+          if (ownerInspectionResult) {
+            bookingData.ownerInspection = ownerInspectionResult;
+          }
+        }
+
         return bookingData;
       })
     );

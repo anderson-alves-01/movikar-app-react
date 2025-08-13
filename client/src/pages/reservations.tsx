@@ -343,8 +343,29 @@ export default function Reservations() {
       }
     }
 
-    // Se vistoria foi completada
+    // Se vistoria foi completada, verificar se há informações de aprovação
     if (inspectionStatus === 'completed') {
+      // Verificar se há vistoria do proprietário com decisão
+      const ownerInspection = (booking as any).ownerInspection;
+      if (ownerInspection && ownerInspection.status) {
+        if (ownerInspection.status === 'approved') {
+          return (
+            <Badge className="bg-green-100 text-green-800">
+              <CheckCircle2 className="w-3 h-3 mr-1" />
+              Vistoria Concluída - Aprovada
+            </Badge>
+          );
+        } else if (ownerInspection.status === 'rejected') {
+          return (
+            <Badge className="bg-red-100 text-red-800">
+              <X className="w-3 h-3 mr-1" />
+              Vistoria Concluída - Reprovada
+            </Badge>
+          );
+        }
+      }
+
+      // Se não há informação específica de aprovação, mostrar apenas "concluída"
       return (
         <Badge className="bg-blue-100 text-blue-800">
           <CheckCircle2 className="w-3 h-3 mr-1" />
