@@ -900,11 +900,12 @@ export const insertOwnerInspectionFormSchema = z.object({
   bookingId: z.union([z.number(), z.string()]).transform(val => Number(val)),
   vehicleId: z.union([z.number(), z.string()]).transform(val => Number(val)),
   mileage: z.number().min(0, "Quilometragem deve ser um número positivo"),
-  fuelLevel: z.string().refine((val) => {
-    const numericVal = parseInt(val);
-    return !isNaN(numericVal) && numericVal >= 0 && numericVal <= 100;
-  }, {
-    message: "Informe um valor numérico entre 0 e 100"
+  fuelLevel: z.union([z.string(), z.number()]).transform((val) => {
+    const numericVal = typeof val === 'string' ? parseInt(val) : val;
+    if (isNaN(numericVal) || numericVal < 0 || numericVal > 100) {
+      throw new Error("Informe um valor numérico entre 0 e 100");
+    }
+    return String(numericVal);
   }),
   vehicleCondition: z.string().refine((val) => ["excellent", "good", "fair", "poor"].includes(val), {
     message: "Condição do veículo inválida"
@@ -930,26 +931,21 @@ export const insertOwnerInspectionFormSchema = z.object({
     description: z.string(),
     photo: z.string().optional(),
   })).default([]),
-  depositDecision: z.string().refine((val) => ["full_return", "partial_return", "no_return"].includes(val), {
-    message: "Decisão de caução inválida"
-  }),
-  depositReturnAmount: z.string().optional(),
-  depositRetainedAmount: z.string().optional(),
-  depositRetentionReason: z.string().optional(),
 });
 
-export type InsertOwnerInspectionForm = z.infer<typeof ownerInspectionFormSchema>;
+export type InsertOwnerInspectionForm = z.infer<typeof insertOwnerInspectionFormSchema>;
 
 // Schema para validação do formulário (sem campos automáticos)
 export const insertVehicleInspectionFormSchema = z.object({
   bookingId: z.union([z.number(), z.string()]).transform(val => Number(val)),
   vehicleId: z.union([z.number(), z.string()]).transform(val => Number(val)),
   mileage: z.number().min(0, "Quilometragem deve ser um número positivo"),
-  fuelLevel: z.string().refine((val) => {
-    const numericVal = parseInt(val);
-    return !isNaN(numericVal) && numericVal >= 0 && numericVal <= 100;
-  }, {
-    message: "Informe um valor numérico entre 0 e 100"
+  fuelLevel: z.union([z.string(), z.number()]).transform((val) => {
+    const numericVal = typeof val === 'string' ? parseInt(val) : val;
+    if (isNaN(numericVal) || numericVal < 0 || numericVal > 100) {
+      throw new Error("Informe um valor numérico entre 0 e 100");
+    }
+    return String(numericVal);
   }),
   vehicleCondition: z.string().refine((val) => ["excellent", "good", "fair", "poor", "bom", "excelente", "regular", "ruim"].includes(val), {
     message: "Condição do veículo inválida"
@@ -978,42 +974,7 @@ export const insertVehicleInspectionSchema = createInsertSchema(vehicleInspectio
   decidedAt: true,
 });
 
-// Schema para validação do formulário de vistoria do proprietário
-export const ownerInspectionFormSchema = z.object({
-  bookingId: z.union([z.number(), z.string()]).transform(val => Number(val)),
-  vehicleId: z.union([z.number(), z.string()]).transform(val => Number(val)),
-  mileage: z.number().min(0, "Quilometragem deve ser um número positivo"),
-  fuelLevel: z.string().refine((val) => {
-    const numericVal = parseInt(val);
-    return !isNaN(numericVal) && numericVal >= 0 && numericVal <= 100;
-  }, {
-    message: "Informe um valor numérico entre 0 e 100"
-  }),
-  vehicleCondition: z.string().refine((val) => ["excellent", "good", "fair", "poor"].includes(val), {
-    message: "Condição do veículo inválida"
-  }),
-  exteriorCondition: z.string().refine((val) => ["excellent", "good", "fair", "poor"].includes(val), {
-    message: "Condição externa inválida"
-  }),
-  interiorCondition: z.string().refine((val) => ["excellent", "good", "fair", "poor"].includes(val), {
-    message: "Condição interna inválida"
-  }),
-  engineCondition: z.string().refine((val) => ["excellent", "good", "fair", "poor"].includes(val), {
-    message: "Condição do motor inválida"
-  }),
-  tiresCondition: z.string().refine((val) => ["excellent", "good", "fair", "poor"].includes(val), {
-    message: "Condição dos pneus inválida"
-  }),
-  observations: z.string().optional(),
-  photos: z.array(z.string()).default([]),
-  damages: z.array(z.object({
-    type: z.string().min(1, "Tipo de dano é obrigatório"),
-    location: z.string().min(1, "Localização do dano é obrigatória"),
-    severity: z.enum(["minor", "moderate", "severe"]),
-    description: z.string().min(1, "Descrição do dano é obrigatória"),
-    photo: z.string().optional(),
-  })).default([]),
-});
+// Schema para validação do formulário de vistoria do proprietário (duplicado removido)
 
 export type InsertVehicleInspectionForm = z.infer<typeof insertVehicleInspectionFormSchema>;
 

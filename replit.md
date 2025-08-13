@@ -6,7 +6,14 @@ alugae.mobi is a full-stack car rental platform connecting car owners with rente
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
-## Recent Changes (August 12, 2025)
+## Recent Changes (August 13, 2025)
+- **Fuel Level Validation Update**: Converted fuel level inputs from predefined text options to numeric-only validation (0-100)
+- **Inspection Forms Simplified**: Removed dropdown fuel level buttons (empty, quarter, half, etc.) for streamlined numeric input
+- **Schema Validation Fixes**: Corrected duplicate validation schemas causing fuel level errors in inspection completion
+- **Enhanced Input Validation**: Updated both renter and owner inspection forms to accept only numeric fuel values with proper range validation
+- **Form Field Optimization**: Fuel level field now uses numeric input type with placeholder "Ex: 30, 50, 75" for better UX
+
+## Previous Changes (August 12, 2025)
 - **Dual Inspection Workflow Complete**: Successfully implemented and tested comprehensive dual inspection system for both renter and owner inspections
 - **Inspection Status Management**: Added inspectionStatus field to bookings schema with values: not_required, pending, completed
 - **Conditional Button Display**: "Realizar Vistoria" button appears only for paid reservations with pending inspection status
