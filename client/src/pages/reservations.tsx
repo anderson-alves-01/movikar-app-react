@@ -345,21 +345,37 @@ export default function Reservations() {
 
     // Se vistoria foi completada, verificar se há informações de aprovação
     if (inspectionStatus === 'completed') {
+      // Debug log to understand the data structure
+      console.log('DEBUG - Booking data:', {
+        bookingId: booking.id,
+        inspectionStatus,
+        ownerInspection: (booking as any).ownerInspection,
+        hasOwnerInspection: !!((booking as any).ownerInspection)
+      });
+
       // Verificar se há vistoria do proprietário com decisão
       const ownerInspection = (booking as any).ownerInspection;
-      if (ownerInspection && ownerInspection.status) {
-        if (ownerInspection.status === 'approved') {
+      if (ownerInspection) {
+        // Check both 'status' and 'depositDecision' fields
+        if (ownerInspection.status === 'approved' || ownerInspection.depositDecision === 'full_return') {
           return (
             <Badge className="bg-green-100 text-green-800">
               <CheckCircle2 className="w-3 h-3 mr-1" />
               Vistoria Concluída - Aprovada
             </Badge>
           );
-        } else if (ownerInspection.status === 'rejected') {
+        } else if (ownerInspection.status === 'rejected' || ownerInspection.depositDecision === 'no_return') {
           return (
             <Badge className="bg-red-100 text-red-800">
               <X className="w-3 h-3 mr-1" />
               Vistoria Concluída - Reprovada
+            </Badge>
+          );
+        } else if (ownerInspection.depositDecision === 'partial_return') {
+          return (
+            <Badge className="bg-yellow-100 text-yellow-800">
+              <AlertTriangle className="w-3 h-3 mr-1" />
+              Vistoria Concluída - Parcial
             </Badge>
           );
         }

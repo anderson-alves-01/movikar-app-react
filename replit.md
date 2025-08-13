@@ -12,6 +12,9 @@ Preferred communication style: Simple, everyday language.
 - **Schema Validation Fixes**: Corrected duplicate validation schemas causing fuel level errors in inspection completion
 - **Enhanced Input Validation**: Updated both renter and owner inspection forms to accept only numeric fuel values with proper range validation
 - **Form Field Optimization**: Fuel level field now uses numeric input type with placeholder "Ex: 30, 50, 75" for better UX
+- **Inspection Status Enhancement**: Updated reservation cards to show inspection approval/rejection status alongside "Vistoria Concluída"
+- **Owner Inspection Integration**: Added backend support to include owner inspection data with booking details
+- **Status Display Logic**: Implemented logic to show "Aprovada", "Reprovada", or "Parcial" based on deposit decision or status field
 
 ## Previous Changes (August 12, 2025)
 - **Dual Inspection Workflow Complete**: Successfully implemented and tested comprehensive dual inspection system for both renter and owner inspections
