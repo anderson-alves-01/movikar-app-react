@@ -279,20 +279,30 @@ export function VehicleInspectionForm({ booking, onInspectionComplete }: Vehicle
                         <Fuel className="h-4 w-4" />
                         Nível de Combustível
                       </FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger data-testid="select-fuel-level">
-                            <SelectValue placeholder="Selecione o nível" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {FUEL_LEVELS.map((level) => (
-                            <SelectItem key={level.value} value={level.value}>
-                              {level.icon} {level.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <div className="space-y-2">
+                          <Input
+                            type="text"
+                            placeholder="Ex: 30, 50%, full, half"
+                            {...field}
+                            data-testid="input-fuel-level"
+                          />
+                          <div className="flex flex-wrap gap-2">
+                            {FUEL_LEVELS.map((level) => (
+                              <Button
+                                key={level.value}
+                                type="button"
+                                variant={field.value === level.value ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => field.onChange(level.value)}
+                                data-testid={`button-fuel-${level.value}`}
+                              >
+                                {level.icon} {level.label}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

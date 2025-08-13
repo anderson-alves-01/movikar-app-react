@@ -811,7 +811,7 @@ export const vehicleInspections = pgTable("vehicle_inspections", {
   
   // Dados da vistoria
   mileage: integer("mileage").notNull(), // Quilometragem atual
-  fuelLevel: varchar("fuel_level", { length: 20 }).notNull(), // empty, quarter, half, three_quarters, full
+  fuelLevel: varchar("fuel_level", { length: 20 }).notNull(), // empty, quarter, half, three_quarters, full, or numeric (0-100)
   vehicleCondition: varchar("vehicle_condition", { length: 20 }).notNull(), // excellent, good, fair, poor
   
   // Fotos da vistoria
@@ -854,7 +854,7 @@ export const ownerInspections = pgTable("owner_inspections", {
   
   // Dados da vistoria do proprietário
   mileage: integer("mileage").notNull(), // Quilometragem na devolução
-  fuelLevel: varchar("fuel_level", { length: 20 }).notNull(), // empty, quarter, half, three_quarters, full
+  fuelLevel: varchar("fuel_level", { length: 20 }).notNull(), // empty, quarter, half, three_quarters, full, or numeric (0-100)
   vehicleCondition: varchar("vehicle_condition", { length: 20 }).notNull(), // excellent, good, fair, poor
   exteriorCondition: varchar("exterior_condition", { length: 20 }).notNull(),
   interiorCondition: varchar("interior_condition", { length: 20 }).notNull(),
@@ -900,7 +900,11 @@ export const insertOwnerInspectionFormSchema = z.object({
   bookingId: z.union([z.number(), z.string()]).transform(val => Number(val)),
   vehicleId: z.union([z.number(), z.string()]).transform(val => Number(val)),
   mileage: z.number().min(0, "Quilometragem deve ser um número positivo"),
-  fuelLevel: z.string().refine((val) => ["empty", "quarter", "half", "three_quarters", "full"].includes(val), {
+  fuelLevel: z.string().refine((val) => {
+    const validStrings = ["empty", "quarter", "half", "three_quarters", "full"];
+    const numericVal = parseInt(val);
+    return validStrings.includes(val) || (!isNaN(numericVal) && numericVal >= 0 && numericVal <= 100);
+  }, {
     message: "Nível de combustível inválido"
   }),
   vehicleCondition: z.string().refine((val) => ["excellent", "good", "fair", "poor"].includes(val), {
@@ -942,7 +946,11 @@ export const insertVehicleInspectionFormSchema = z.object({
   bookingId: z.union([z.number(), z.string()]).transform(val => Number(val)),
   vehicleId: z.union([z.number(), z.string()]).transform(val => Number(val)),
   mileage: z.number().min(0, "Quilometragem deve ser um número positivo"),
-  fuelLevel: z.string().refine((val) => ["empty", "quarter", "half", "three_quarters", "full", "0", "25", "50", "75", "100"].includes(val), {
+  fuelLevel: z.string().refine((val) => {
+    const validStrings = ["empty", "quarter", "half", "three_quarters", "full"];
+    const numericVal = parseInt(val);
+    return validStrings.includes(val) || (!isNaN(numericVal) && numericVal >= 0 && numericVal <= 100);
+  }, {
     message: "Nível de combustível inválido"
   }),
   vehicleCondition: z.string().refine((val) => ["excellent", "good", "fair", "poor", "bom", "excelente", "regular", "ruim"].includes(val), {
@@ -977,7 +985,11 @@ export const ownerInspectionFormSchema = z.object({
   bookingId: z.union([z.number(), z.string()]).transform(val => Number(val)),
   vehicleId: z.union([z.number(), z.string()]).transform(val => Number(val)),
   mileage: z.number().min(0, "Quilometragem deve ser um número positivo"),
-  fuelLevel: z.string().refine((val) => ["empty", "quarter", "half", "three_quarters", "full"].includes(val), {
+  fuelLevel: z.string().refine((val) => {
+    const validStrings = ["empty", "quarter", "half", "three_quarters", "full"];
+    const numericVal = parseInt(val);
+    return validStrings.includes(val) || (!isNaN(numericVal) && numericVal >= 0 && numericVal <= 100);
+  }, {
     message: "Nível de combustível inválido"
   }),
   vehicleCondition: z.string().refine((val) => ["excellent", "good", "fair", "poor"].includes(val), {
