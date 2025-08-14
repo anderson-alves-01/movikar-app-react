@@ -7,20 +7,39 @@ if (!INTEGRATION_KEY) {
   process.exit(1);
 }
 
-// Gerar URL de consentimento
-const consentURL = `https://account-d.docusign.com/oauth/auth?response_type=code&scope=signature%20impersonation&client_id=${INTEGRATION_KEY}&redirect_uri=https://www.docusign.com`;
+// Gerar URL de consentimento seguindo documentação oficial DocuSign
+// Formato: SERVER/oauth/auth?response_type=code&scope=signature%20impersonation&client_id=CLIENT_ID&redirect_uri=REDIRECT_URI
 
-console.log('🔑 DOCUSIGN CONSENT URL GERADA');
+// Para demo environment (development)
+const SERVER = 'https://account-d.docusign.com';
+const SCOPE = 'signature%20impersonation'; // encoded scopes
+const REDIRECT_URI = encodeURIComponent('https://www.docusign.com'); // must match integration key settings
+
+const consentURL = `${SERVER}/oauth/auth?response_type=code&scope=${SCOPE}&client_id=${INTEGRATION_KEY}&redirect_uri=${REDIRECT_URI}`;
+
+console.log('🔑 DOCUSIGN INDIVIDUAL CONSENT - SOLUÇÃO OFICIAL');
 console.log('');
-console.log('📋 Para resolver o erro "consent_required", você precisa:');
+console.log('📋 Seguindo a documentação oficial DocuSign:');
+console.log('   https://developers.docusign.com/platform/auth/oauth/jwt/consent/');
 console.log('');
-console.log('1. Abra esta URL no seu navegador:');
+console.log('🎯 PASSO 1: Configurar Integration Key');
+console.log('   1. Acesse: https://apps-d.docusign.com/');
+console.log('   2. Encontre sua aplicação:', INTEGRATION_KEY);
+console.log('   3. Configure:');
+console.log('      - Authentication: Authorization Code Grant');
+console.log('      - Redirect URI: https://www.docusign.com');
+console.log('');
+console.log('🎯 PASSO 2: Autorizar Individual Consent');
+console.log('   Abra esta URL no seu navegador:');
 console.log('');
 console.log(consentURL);
 console.log('');
-console.log('2. Faça login com sua conta DocuSign');
-console.log('3. Autorize a aplicação');
-console.log('4. Após autorização, teste novamente a integração');
+console.log('   - Faça login com sua conta DocuSign');
+console.log('   - Autorize a aplicação para scopes: signature e impersonation');
+console.log('   - Será redirecionado para docusign.com (normal)');
 console.log('');
-console.log('⚠️ IMPORTANTE: Este passo é obrigatório apenas UMA vez por aplicação');
-console.log('✅ Depois da autorização, a integração funcionará automaticamente');
+console.log('🎯 PASSO 3: Testar Integração');
+console.log('   Após autorização, execute: node test-docusign-direct.js');
+console.log('');
+console.log('⚠️ IMPORTANTE: Este consent é obrigatório UMA vez por usuário');
+console.log('✅ Depois da autorização, JWT funcionará automaticamente');

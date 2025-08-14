@@ -1,0 +1,271 @@
+
+Você deseja mudar para o nosso site Brasil?
+
+Mudar para Brasil
+Ignorar
+Skip to main content
+What's new & what's next: New features to create, collaborate, and negotiate faster
+Sales 1-877-720-2040
+Search
+Support
+Access Documents
+Log In
+Products
+Solutions
+
+Resources
+
+Enterprise
+Plans & Pricing
+Contact Sales
+Buy Now
+Try for Free
+Blog
+Topics
+Solutions
+Developers
+Home
+/
+Code Examples
+OAuth JWT: Granting Consent
+Author Larry Kluger
+Larry Kluger
+Lead Product Manager for Partner Platforms
+•
+Updated Feb 11, 2025
+Summary
+•
+8 min read
+Are you using JWT authentication? Then you’ll need consent. Read all about it!
+
+Table of contents
+Background: Consent is needed
+Granting consent: your choice
+Granting consent administratively
+Granting consent individually
+Granting administrative consent to ISV applications
+Want to learn more?
+Additional resources
+
+By Larry Kluger and Josh Wise
+
+You’re developing a new Docusign application for your company. You’ve chosen to use the OAuth JWT grant authentication flow for your application because it's a service integration, or because there is no practical way for your app to redirect the user’s browser (a requirement for the preferred OAuth Authorization Code grant flow). 
+
+You’ve started testing and your application is receiving the consent_required error. What are your options to solve the problem?
+
+Background: Consent is needed
+Before your client ID (integration key) can be used to obtain an access token for a user, the user must grant the client ID consent to do so. Consent is granted to a client ID to obtain one or more permission scopes for a particular user. 
+
+To use the JWT grant flow with the Docusign eSignature REST API, your client ID must be granted the signature and impersonation scopes for the user. Other scopes may also be required, depending on the Docusign APIs and API methods your application will use. For example, the Docusign Click API’s management methods require the click.manage scope.
+
+Granting consent: your choice
+Docusign offers three different software patterns for granting consent to an integration key:
+
+Administrative consent. This is the best option for customer developers, because it requires nothing from your users. But this consent pattern generally can’t be used by ISVs, requires more work by the Docusign administrator, and requires a product feature that is only included with some pricing plans.
+
+Individual consent. This option has no prerequisites and can be used by customer developers and ISVs’ customers. But it requires specific steps by each user who will be impersonated via a JWT grant (discussed below). Because it has no prerequisites, this consent pattern is also often used by developers while they’re developing or testing their applications.
+
+Administrative consent for third-party (ISV) applications. The administrative consent pattern can only be used by third-party applications if the ISV implements an additional API protocol. (And the other prerequisites for administrative consent still apply.) Because of the prerequisites, this consent pattern does not have much usage.
+
+Granting consent administratively
+To minimize the administrative burden on your users, Docusign recommends that you grant the needed consent to your application administratively on behalf of your users. This technique is also called blanket consent. It enables an authorized organization administrator to grant consent to the client ID (and the application that uses it) on behalf of individual users.
+
+To use administrative consent:
+
+Your account must include the Access Management with SSO feature. Note that administrative consent does not require that you install SSO. But you do need the product feature which includes SSO. For testing, if your developer demo account (demo.docusign.net) does not include the feature, then send an email to go-live@docusign.com and request that the feature be added to your account. Remember to include your developer demo account ID.
+
+You must claim your email DNS domain via the Docusign administration tool. See the documentation section Prove ownership of a domain. A domain can be claimed both by the Docusign developer demo system (for testing and development), and by your production Docusign account. 
+
+Your users’ email domains must match the claimed email domain.
+
+Your integration key’s management account must be one of the accounts in the Docusign organization.
+
+An organization administrator can then use Docusign Admin (not eSignature Admin) to grant consent to your application’s client ID administratively. Remember to grant consent for both the signature and impersonation scopes. See the documentation on Connected Apps.
+
+Granting consent individually
+You may not be able to use administrative consent if your account does not include the prerequisites listed above, or if you’re using a developer demo account and you haven’t claimed your email domain. In these cases, your users must grant consent individually.
+
+To obtain consent, ask the users who will be impersonated by the JWT grant application to open a particular URL in their browser. You will supply them with the URL to be used during this one-time task. 
+
+When the user opens the URL, they will be asked to authenticate with Docusign. After authenticating, they’ll then be asked to grant consent to your application via a form:
+
+Consent Dialog
+Figure 1. Consent form for a user to individually grant consent to the JWT Example Application. The user will be granting consent for two different scopes (signature and impersonation), each shown as a bullet item on the form.
+
+Preparing the integration key for individual consent
+Two settings must be set to enable individual consent to be used with an integration key:
+
+Set the integration key to use Authorization Code grant, not Implicit grant. 
+
+Set a Redirect URI for the integration key. See below for more information.
+
+The individual consent URL
+The consent URL is actually the same as the URL that would be used to initiate the OAuth Authentication Code grant flow for your application. But in this case, only the first part of the Authentication Code grant flow will be used. Your application will either not receive the authorization code itself or will ignore it. 
+
+The same consent URL is used by all of your application’s users. It includes the application’s client ID and is not specific to a user. Your app should provide the URL to your users. Its format is:
+
+SERVER/oauth/auth?response_type=code&scope=signature%20impersonation&client_id=CLIENT_ID&redirect_uri=REDIRECT_URI
+
+Where
+
+SERVER is https://account.docusign.com (production) or https://account-d.docusign.com (developer demo).
+
+CLIENT_ID is your app’s integration key.
+
+The REDIRECT_URI is a URI. It must exactly match one of the redirect URIs you defined for the app’s integration key in the Docusign eSignature Administration tool. The URI value must be encoded.
+
+The URL will request individual consent for the two scopes: signature and impersonation. %20 is the encoded value for a space character.
+
+In response, Docusign will authenticate the user, and then ask her to consent to granting your application’s client ID the two requested scopes. Docusign will then redirect the user to the redirect_uri. 
+
+The redirect_uri page could simply show “Thank you for granting consent to the XYZ application.” Remember that the redirect page should not use the authorization code (which is included as a query parameter), since your application is not actually implementing the OAuth Authorization Code grant flow.
+
+After the user grants consent, your application will be able to use the OAuth JWT flow to impersonate the user. The user’s consent is recorded within the Docusign database. It is not stored on the client as a cookie or similar.
+
+Distributing the consent URL
+Since most applications that use the JWT grant flow are service integrations and don’t have a web interface, it can be difficult to easily distribute the consent URL to your users. One common method for distributing the consent URL is for the application to email the consent URL to its users. Another technique is for the information page about your application to include the consent URL as a link that users are instructed to open (click).
+
+Granting administrative consent to ISV applications
+If you’re an independent software vendor (ISV) using the JWT grant flow, then your application’s integration key’s management account should be a Docusign account that your company controls. In this case, to enable your customers to use administrative consent, your application must implement a special consent API flow (since the integration key is managed by your account). This process is discussed on the OAuth Consent page. 
+
+Because administrative consent requires the Access Management with SSO feature and the settings listed above, not all of your end customers will be able to use administrative consent. To support these customers, ISVs should also support individual consent as a backup. 
+
+Note: To avoid issues around impersonation, and consent, we recommend that ISVs use the Authorization Code grant flow whenever possible.
+
+Want to learn more?
+Do you have more questions about granting consent? Join us at an upcoming API Office hours webinar to have all your API questions answered.
+
+Additional resources
+Docusign Developer Center
+
+Docusign Developers YouTube channel
+
+@DocuSignAPI on Twitter
+
+Docusign for Developers on LinkedIn
+
+Docusign Developer Newsletter
+
+-----------------------------------------------------------------------------------------------------
+
+Larry Kluger is the Lead Developer Advocate for Docusign. He has many years of tech industry experience as a software developer, product manager, and evangelist. An award-winning speaker, he enjoys giving talks and meeting members of the developer community.
+
+Josh Wise is a Lead Software Engineer working on Authentication and Identity at Docusign. The team works across all of the authentication solutions for Docusign, including auth protocols, SSO, recipient authentication, and Docusign Identify. Josh helped design the Identify framework for pluggable user challenges, as well as the Docusign ID Verification integration. Josh previously worked on Docusign’s Standards-Based Signatures product and helped build the APIs for the TSP partner program.
+
+Author Larry Kluger
+Larry Kluger
+Lead Product Manager for Partner Platforms
+Larry Kluger has over 40 years of tech industry experience as a software developer, developer advocate, entrepreneur, and product manager. An award-winning speaker prominent StackOverflow contributor, he enjoys giving talks and helping the ISV and developer communities.
+
+Twitter: @larrykluger
+
+LinkedIn: https://www.linkedin.com/in/larrykluger/
+
+More posts from this author
+Share to LinkedIn
+Copy to clipboard
+Share to LinkedIn
+Share to X
+Share to LinkedIn
+Copy to clipboard
+Share to LinkedIn
+Share to X
+Related posts
+
+DevelopersPublished Jul 31, 2025
+Reducing manual agreement work, part 1: Automating file export to cloud storage
+Author Julie Gordon
+Julie Gordon
+Reducing manual agreement work, part 1: Automating file export to cloud storage
+DevelopersPublished Jul 17, 2025
+Integrate seamless workflow automation to Salesforce with Docusign Maestro API
+Author Achille Jean Axel Nisengwe
+Achille Jean Axel Nisengwe
+Integrate seamless workflow automation to Salesforce with Docusign Maestro API 
+DevelopersPublished May 22, 2025
+How to call the Navigator API from Agentforce for smarter agreements
+Author Paige Rossi
+Paige Rossi
+How to call the Navigator API from Agentforce for smarter agreements
+Discover what's new with Docusign IAM or start with eSignature for free
+Explore Docusign IAM
+Try eSignature for Free
+Person smiling while presenting
+Applications
+Intelligent Agreement Management
+IAM Core
+IAM for Customer Experience
+IAM for Sales
+All IAM Applications
+Products
+eSignature
+Contract Lifecycle Management
+Identify
+Agreement Preparation
+Web Forms
+All Products
+Pricing
+IAM Plans
+eSignature Plans
+Real Estate Plans
+API Plans
+Special Offers & Promos
+Industries
+Financial Services
+Insurance
+Real Estate
+Government
+Business Size
+Enterprise
+Small & Medium-Sized Business
+Individuals
+Support
+Support Center
+Customer Success
+Community
+Trust Portal
+Developers
+Developer Center
+Free Developer Account
+API Overview
+Partners
+Partner Portal
+Partner Login
+ISV Embedded eSignature
+Resources
+Resource Center
+eSign Resources
+Blog
+Customer Stories
+Events
+Webinars
+Docusign University
+Legality Guide
+Trust Center & System Status
+Company
+About Us
+Product Releases
+Docusign Momentum
+Careers
+Leadership
+News Center
+Investor Relations
+Contact Us
+Accessibility
+
+United States
+Facebook
+Twitter
+YouTube
+LinkedIn
+Download the DocuSign Mobile App on Google Play
+Download the DocuSign Mobile App on the Apple App Store
+Terms of Use
+Privacy Notice
+Notice to California Residents
+Definições de cookies
+Intellectual Property
+Modern Slavery Act Statement
+© Docusign, Inc. 2025
+
+Explicar
