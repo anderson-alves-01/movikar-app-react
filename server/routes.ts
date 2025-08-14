@@ -61,6 +61,7 @@ let currentAdminSettings: AdminSettings = {
   enablePixTransfer: true,
   pixTransferDescription: "Repasse alugae",
   enableInsuranceOption: true, // Feature toggle para opção de seguro
+  enableContractSignature: false, // Feature toggle para assinatura de contratos
   essentialPlanPrice: 29.90,
   plusPlanPrice: 59.90,
   annualDiscountPercentage: 15,
@@ -2891,9 +2892,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create contract route
   app.post("/api/contracts", authenticateToken, async (req, res) => {
     console.log("📄 POST /api/contracts called");
-    console.log("🧪 Testing DocuSign service initialization...");
     
     try {
+      // Check if contract signature feature is enabled
+      const adminSettings = await storage.getAdminSettings();
+      const featureFlags = getFeatureFlags(adminSettings);
+      
+      if (!featureFlags.contractSignatureEnabled) {
+        console.log("❌ Contract signature feature is disabled");
+        return res.status(403).json({ 
+          message: "Funcionalidade de assinatura de contratos está desabilitada.",
+          featureDisabled: true
+        });
+      }
+      
+      console.log("✅ Contract signature feature is enabled");
+      console.log("🧪 Testing DocuSign service initialization...");
+      
       const { bookingId, signaturePlatform = 'docusign' } = req.body;
       
       if (!bookingId) {
@@ -3926,6 +3941,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // DocuSign signature initiation
   app.post("/api/contracts/sign-docusign/:bookingId", authenticateToken, async (req, res) => {
     try {
+      // Check if contract signature feature is enabled
+      const adminSettings = await storage.getAdminSettings();
+      const featureFlags = getFeatureFlags(adminSettings);
+      
+      if (!featureFlags.contractSignatureEnabled) {
+        console.log("❌ Contract signature feature is disabled");
+        return res.status(403).json({ 
+          message: "Funcionalidade de assinatura de contratos está desabilitada.",
+          featureDisabled: true
+        });
+      }
+      
       const { bookingId } = req.params;
       const userId = (req.user as any)?.id;
 

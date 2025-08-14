@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { FileText, CheckCircle, Clock, ExternalLink, Download, AlertTriangle } from 'lucide-react';
+import { getClientFeatureFlags } from '@shared/feature-flags';
 
 export default function ContractPreview() {
   const [, contractParams] = useRoute('/contracts/:id');
@@ -19,6 +20,14 @@ export default function ContractPreview() {
   // Support both /contracts/:id and /contract-preview/:bookingId routes
   const contractId = contractParams?.id;
   const bookingId = bookingParams?.bookingId;
+
+  // Fetch admin settings to check feature flags
+  const { data: adminSettings } = useQuery({
+    queryKey: ['/api/admin/settings'],
+  });
+
+  // Get feature flags
+  const featureFlags = getClientFeatureFlags(adminSettings);
 
   // Fetch contract details directly if contractId is provided
   const { data: contract, isLoading: isLoadingContract } = useQuery({
@@ -462,38 +471,62 @@ export default function ContractPreview() {
                     </div>
                   </div>
                 ) : (
-                  // Contract not signed - show signing option
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <ExternalLink className="h-5 w-5 text-blue-600" />
-                      <span className="font-medium text-blue-800">Assinatura Digital DocuSign</span>
+                  // Contract not signed - show signing option or disabled message
+                  featureFlags.contractSignatureEnabled ? (
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <ExternalLink className="h-5 w-5 text-blue-600" />
+                        <span className="font-medium text-blue-800">Assinatura Digital DocuSign</span>
+                      </div>
+                      <p className="text-sm text-blue-700">
+                        Você será redirecionado para a plataforma DocuSign para realizar a assinatura digital do contrato.
+                        A assinatura será válida juridicamente e reconhecida internacionalmente.
+                      </p>
                     </div>
-                    <p className="text-sm text-blue-700">
-                      Você será redirecionado para a plataforma DocuSign para realizar a assinatura digital do contrato.
-                      A assinatura será válida juridicamente e reconhecida internacionalmente.
-                    </p>
-                  </div>
+                  ) : (
+                    <div className="bg-orange-50 p-4 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <AlertTriangle className="h-5 w-5 text-orange-600" />
+                        <span className="font-medium text-orange-800">Assinatura Indisponível</span>
+                      </div>
+                      <p className="text-sm text-orange-700">
+                        A funcionalidade de assinatura digital está temporariamente desabilitada. 
+                        Entre em contato com o suporte para mais informações.
+                      </p>
+                    </div>
+                  )
                 )}
 
                 <div className="flex gap-4">
                   {!isContractSigned ? (
-                    <Button
-                      onClick={() => signContractMutation.mutate()}
-                      disabled={signContractMutation.isPending}
-                      className="flex-1 bg-green-600 hover:bg-green-700"
-                    >
-                      {signContractMutation.isPending ? (
-                        <>
-                          <Clock className="h-4 w-4 mr-2 animate-spin" />
-                          Preparando...
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle className="h-4 w-4 mr-2" />
-                          Assinar com DocuSign
-                        </>
-                      )}
-                    </Button>
+                    featureFlags.contractSignatureEnabled ? (
+                      <Button
+                        onClick={() => signContractMutation.mutate()}
+                        disabled={signContractMutation.isPending}
+                        className="flex-1 bg-green-600 hover:bg-green-700"
+                      >
+                        {signContractMutation.isPending ? (
+                          <>
+                            <Clock className="h-4 w-4 mr-2 animate-spin" />
+                            Preparando...
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Assinar com DocuSign
+                          </>
+                        )}
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        disabled
+                        className="flex-1"
+                      >
+                        <AlertTriangle className="h-4 w-4 mr-2" />
+                        Assinatura Indisponível
+                      </Button>
+                    )
                   ) : (
                     <Button
                       variant="outline"

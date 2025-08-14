@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Settings, DollarSign, Shield, Clock, Mail, Phone, Save, AlertCircle, Smartphone, CreditCard, Crown } from "lucide-react";
+import { Settings, DollarSign, Shield, Clock, Mail, Phone, Save, AlertCircle, Smartphone, CreditCard, Crown, FileText } from "lucide-react";
 import Header from "@/components/header";
 import { useAuthStore } from "@/lib/auth";
 import { Link } from "wouter";
@@ -33,6 +33,7 @@ function AdminSettingsPage() {
     enablePixTransfer: true,
     pixTransferDescription: "Repasse alugae",
     enableInsuranceOption: true,
+    enableContractSignature: false,
     essentialPlanPrice: 29.90,
     plusPlanPrice: 59.90,
     annualDiscountPercentage: 20.00,
@@ -90,6 +91,7 @@ function AdminSettingsPage() {
         enablePixTransfer: currentSettings.enablePixTransfer || true,
         pixTransferDescription: currentSettings.pixTransferDescription || "Repasse alugae",
         enableInsuranceOption: currentSettings.enableInsuranceOption !== undefined ? currentSettings.enableInsuranceOption : true,
+        enableContractSignature: currentSettings.enableContractSignature !== undefined ? currentSettings.enableContractSignature : false,
         essentialPlanPrice: parseFloat(currentSettings.essentialPlanPrice?.toString() || "29.90"),
         plusPlanPrice: parseFloat(currentSettings.plusPlanPrice?.toString() || "59.90"),
         annualDiscountPercentage: parseFloat(currentSettings.annualDiscountPercentage?.toString() || "20.00"),
@@ -128,6 +130,7 @@ function AdminSettingsPage() {
           enablePixTransfer: updatedData.enablePixTransfer || true,
           pixTransferDescription: updatedData.pixTransferDescription || "Repasse alugae",
           enableInsuranceOption: updatedData.enableInsuranceOption !== undefined ? updatedData.enableInsuranceOption : true,
+          enableContractSignature: updatedData.enableContractSignature !== undefined ? updatedData.enableContractSignature : false,
           essentialPlanPrice: parseFloat(updatedData.essentialPlanPrice?.toString() || "29.90"),
           plusPlanPrice: parseFloat(updatedData.plusPlanPrice?.toString() || "59.90"),
           annualDiscountPercentage: parseFloat(updatedData.annualDiscountPercentage?.toString() || "20.00"),
@@ -526,6 +529,25 @@ function AdminSettingsPage() {
 
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
+                    <Label htmlFor="enableContractSignature" className="text-sm font-medium">
+                      Assinatura Digital de Contratos
+                    </Label>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Permite assinatura eletrônica de contratos via DocuSign, Autentique e D4Sign
+                    </p>
+                  </div>
+                  <Switch
+                    id="enableContractSignature"
+                    checked={settings.enableContractSignature}
+                    onCheckedChange={(checked) => handleInputChange('enableContractSignature', checked)}
+                    disabled={!isEditing}
+                  />
+                </div>
+
+                <Separator />
+
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
                     <Label htmlFor="enablePixTransfer" className="text-sm font-medium">
                       Repasses PIX Automáticos
                     </Label>
@@ -556,8 +578,8 @@ function AdminSettingsPage() {
                   </p>
                 </div>
 
-                {/* PIX Status Cards */}
-                <div className="grid grid-cols-2 gap-4 mt-4">
+                {/* System Status Cards */}
+                <div className="grid grid-cols-3 gap-4 mt-4">
                   <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                     <div className="flex items-center gap-2 mb-1">
                       <CreditCard className="h-4 w-4 text-green-600" />
@@ -575,6 +597,20 @@ function AdminSettingsPage() {
                     </div>
                     <p className="text-xs text-blue-600">
                       {settings.enablePixTransfer ? 'Automático' : 'Manual'}
+                    </p>
+                  </div>
+
+                  <div className={`p-3 border rounded-lg ${settings.enableContractSignature 
+                    ? 'bg-purple-50 border-purple-200' 
+                    : 'bg-red-50 border-red-200'}`}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <FileText className={`h-4 w-4 ${settings.enableContractSignature ? 'text-purple-600' : 'text-red-600'}`} />
+                      <span className={`text-sm font-medium ${settings.enableContractSignature ? 'text-purple-800' : 'text-red-800'}`}>
+                        Contratos
+                      </span>
+                    </div>
+                    <p className={`text-xs ${settings.enableContractSignature ? 'text-purple-600' : 'text-red-600'}`}>
+                      {settings.enableContractSignature ? 'Assinatura Ativa' : 'Desabilitado'}
                     </p>
                   </div>
                 </div>

@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { FileText, Download, Send, Eye, Clock, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { getClientFeatureFlags } from '@shared/feature-flags';
 
 interface ContractData {
   id: number;
@@ -30,6 +31,14 @@ export default function ContractManager({ bookingId, open, onOpenChange }: Contr
   const [selectedContract, setSelectedContract] = useState<any>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Fetch admin settings to check feature flags
+  const { data: adminSettings } = useQuery({
+    queryKey: ['/api/admin/settings'],
+  });
+
+  // Get feature flags
+  const featureFlags = getClientFeatureFlags(adminSettings);
 
   // Get contracts for this booking
   const { data: contracts = [], isLoading } = useQuery<ContractData[]>({
@@ -185,14 +194,25 @@ export default function ContractManager({ bookingId, open, onOpenChange }: Contr
             </div>
             
             {contracts.length === 0 && (
-              <Button 
-                onClick={() => generateContractMutation.mutate()}
-                disabled={generateContractMutation.isPending}
-                className="bg-primary hover:bg-red-600"
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                {generateContractMutation.isPending ? 'Gerando...' : 'Gerar Contrato'}
-              </Button>
+              featureFlags.contractSignatureEnabled ? (
+                <Button 
+                  onClick={() => generateContractMutation.mutate()}
+                  disabled={generateContractMutation.isPending}
+                  className="bg-primary hover:bg-red-600"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  {generateContractMutation.isPending ? 'Gerando...' : 'Gerar Contrato'}
+                </Button>
+              ) : (
+                <Button 
+                  disabled
+                  variant="outline"
+                  className="opacity-50"
+                >
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  Contratos Indisponíveis
+                </Button>
+              )
             )}
           </div>
 
@@ -210,16 +230,29 @@ export default function ContractManager({ bookingId, open, onOpenChange }: Contr
                 <FileText className="h-12 w-12 mx-auto mb-4 text-gray-400" />
                 <h3 className="text-lg font-semibold mb-2">Nenhum contrato encontrado</h3>
                 <p className="text-gray-600 mb-4">
-                  Gere um contrato para esta reserva para começar o processo de assinatura eletrônica.
+                  {featureFlags.contractSignatureEnabled 
+                    ? "Gere um contrato para esta reserva para começar o processo de assinatura eletrônica."
+                    : "A funcionalidade de contratos está temporariamente desabilitada. Entre em contato com o suporte para mais informações."}
                 </p>
-                <Button 
-                  onClick={() => generateContractMutation.mutate()}
-                  disabled={generateContractMutation.isPending}
-                  className="bg-primary hover:bg-red-600"
-                >
-                  <FileText className="h-4 w-4 mr-2" />
-                  Gerar Primeiro Contrato
-                </Button>
+                {featureFlags.contractSignatureEnabled ? (
+                  <Button 
+                    onClick={() => generateContractMutation.mutate()}
+                    disabled={generateContractMutation.isPending}
+                    className="bg-primary hover:bg-red-600"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Gerar Primeiro Contrato
+                  </Button>
+                ) : (
+                  <Button 
+                    disabled
+                    variant="outline"
+                    className="opacity-50"
+                  >
+                    <AlertTriangle className="h-4 w-4 mr-2" />
+                    Contratos Indisponíveis
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ) : (
@@ -284,15 +317,27 @@ export default function ContractManager({ bookingId, open, onOpenChange }: Contr
                     {/* Action Buttons */}
                     <div className="flex gap-2 flex-wrap">
                       {contract.status === 'draft' && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => sendContractMutation.mutate(contract.id)}
-                          disabled={sendContractMutation.isPending}
-                        >
-                          <Send className="h-4 w-4 mr-2" />
-                          Enviar para Assinatura
-                        </Button>
+                        featureFlags.contractSignatureEnabled ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => sendContractMutation.mutate(contract.id)}
+                            disabled={sendContractMutation.isPending}
+                          >
+                            <Send className="h-4 w-4 mr-2" />
+                            Enviar para Assinatura
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled
+                            className="opacity-50"
+                          >
+                            <AlertTriangle className="h-4 w-4 mr-2" />
+                            Assinatura Indisponível
+                          </Button>
+                        )
                       )}
                       
                       {contract.pdfUrl && (

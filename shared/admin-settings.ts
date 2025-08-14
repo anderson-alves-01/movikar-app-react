@@ -12,6 +12,7 @@ export interface AdminSettings {
   enablePixTransfer: boolean;
   pixTransferDescription: string;
   enableInsuranceOption: boolean; // Feature toggle para opção de seguro
+  enableContractSignature: boolean; // Feature toggle para assinatura de contratos
   // Subscription plan pricing
   essentialPlanPrice: number;
   plusPlanPrice: number;

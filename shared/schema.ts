@@ -732,6 +732,7 @@ export const adminSettings = pgTable("admin_settings", {
   enablePixTransfer: boolean("enable_pix_transfer").default(true).notNull(),
   pixTransferDescription: varchar("pix_transfer_description", { length: 255 }).default("Repasse alugae").notNull(),
   enableInsuranceOption: boolean("enable_insurance_option").default(true).notNull(),
+  enableContractSignature: boolean("enable_contract_signature").default(false).notNull(), // Feature toggle para assinatura de contratos
   // Subscription plan pricing
   essentialPlanPrice: decimal("essential_plan_price", { precision: 8, scale: 2 }).default("29.90").notNull(),
   plusPlanPrice: decimal("plus_plan_price", { precision: 8, scale: 2 }).default("59.90").notNull(),
