@@ -476,42 +476,51 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
               </div>
             )}
 
-            {/* Submit Button */}
-            <Button 
-              type="submit" 
-              className={`w-full font-semibold transition-colors ${
-                !adminSettings?.enableRentNowCheckout
-                  ? 'bg-gray-400 cursor-not-allowed text-white'
-                  : hasDateConflict() 
-                    ? 'bg-red-500 hover:bg-red-600 cursor-not-allowed text-white' 
-                    : 'bg-primary text-white hover:bg-red-600'
-              }`}
-              disabled={!user || !bookingData.startDate || !bookingData.endDate || hasDateConflict() || !adminSettings?.enableRentNowCheckout}
-              data-testid="button-book-now"
-            >
-              {!adminSettings?.enableRentNowCheckout ? (
-                <span className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4" />
-                  Funcionalidade temporariamente desabilitada
-                </span>
-              ) : hasDateConflict() ? (
-                <span className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4" />
-                  Datas indisponíveis - Escolha outras datas
-                </span>
-              ) : (
-                pricing.days > 0 ? `Alugar Agora - ${formatCurrency(pricing.total)}` : 'Alugar Agora'
-              )}
-            </Button>
+            {/* Submit Button - Only show if checkout is enabled */}
+            {adminSettings?.enableRentNowCheckout && (
+              <>
+                <Button 
+                  type="submit" 
+                  className={`w-full font-semibold transition-colors ${
+                    hasDateConflict() 
+                      ? 'bg-red-500 hover:bg-red-600 cursor-not-allowed text-white' 
+                      : 'bg-primary text-white hover:bg-red-600'
+                  }`}
+                  disabled={!user || !bookingData.startDate || !bookingData.endDate || hasDateConflict()}
+                  data-testid="button-book-now"
+                >
+                  {hasDateConflict() ? (
+                    <span className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      Datas indisponíveis - Escolha outras datas
+                    </span>
+                  ) : (
+                    pricing.days > 0 ? `Alugar Agora - ${formatCurrency(pricing.total)}` : 'Alugar Agora'
+                  )}
+                </Button>
+                
+                <p className="text-xs text-gray-500 text-center">
+                  {user 
+                    ? "Você será redirecionado para finalizar o pagamento de forma segura."
+                    : "Você precisa estar logado para fazer uma reserva."
+                  }
+                </p>
+              </>
+            )}
             
-            <p className="text-xs text-gray-500 text-center">
-              {!adminSettings?.enableRentNowCheckout
-                ? "O sistema de checkout está temporariamente indisponível. Entre em contato com o suporte."
-                : user 
-                  ? "Você será redirecionado para finalizar o pagamento de forma segura."
-                  : "Você precisa estar logado para fazer uma reserva."
-              }
-            </p>
+            {/* Message when checkout is disabled */}
+            {!adminSettings?.enableRentNowCheckout && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+                <div className="flex items-center justify-center gap-2 text-yellow-800 mb-2">
+                  <AlertTriangle className="h-5 w-5" />
+                  <span className="font-medium">Checkout Temporariamente Indisponível</span>
+                </div>
+                <p className="text-sm text-yellow-700">
+                  O sistema de reserva instantânea está temporariamente desabilitado. 
+                  Entre em contato com o suporte para efetuar sua reserva.
+                </p>
+              </div>
+            )}
           </form>
         </CardContent>
       </Card>
