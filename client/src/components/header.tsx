@@ -92,7 +92,20 @@ export default function Header() {
             {/* Logo */}
             <Link href="/">
               <div className="flex items-center cursor-pointer">
-                <h1 className="text-2xl font-bold text-primary">alugae.mobi</h1>
+                <img 
+                  src="/logo.png" 
+                  alt="ALUGAE" 
+                  className="h-8 w-auto mr-2"
+                  onError={(e) => {
+                    // Fallback para texto se imagem não carregar
+                    e.currentTarget.style.display = 'none';
+                    const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                    if (nextElement) {
+                      nextElement.style.display = 'block';
+                    }
+                  }}
+                />
+                <h1 className="text-2xl font-bold text-primary hidden">alugae.mobi</h1>
               </div>
             </Link>
 
