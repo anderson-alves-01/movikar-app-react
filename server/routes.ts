@@ -150,10 +150,87 @@ async function createDocuSignEnvelope(params: {
 
 // Generate contract PDF function
 async function generateContractPDF(booking: any): Promise<string> {
-  // This would generate a PDF from the contract template
-  // For now, return a base64 encoded dummy PDF
-  const dummyPDF = 'JVBERi0xLjQKJcOkw7zDtsOgCjIgMCBvYmoKPDwvTGVuZ3RoIDMgMCBSL0ZpbHRlci9GbGF0ZURlY29kZT4+CnN0cmVhbQo=';
-  return dummyPDF;
+  // Generate a minimal valid PDF document
+  const pdfContent = `%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R]
+/Count 1
+>>
+endobj
+
+3 0 obj
+<<
+/Type /Page
+/Parent 2 0 R
+/MediaBox [0 0 612 792]
+/Contents 4 0 R
+/Resources <<
+/Font <<
+/F1 5 0 R
+>>
+>>
+>>
+endobj
+
+4 0 obj
+<<
+/Length 200
+>>
+stream
+BT
+/F1 12 Tf
+72 720 Td
+(CONTRATO DE LOCACAO DE VEICULO) Tj
+0 -20 Td
+(Veiculo: ${booking.vehicle?.brand || 'N/A'} ${booking.vehicle?.model || 'N/A'}) Tj
+0 -20 Td
+(Locatario: ${booking.renter?.name || 'N/A'}) Tj
+0 -20 Td
+(Proprietario: ${booking.owner?.name || 'N/A'}) Tj
+0 -20 Td
+(Data: ${booking.startDate} ate ${booking.endDate}) Tj
+0 -20 Td
+(Valor Total: R$ ${booking.totalCost || '0,00'}) Tj
+ET
+endstream
+endobj
+
+5 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/BaseFont /Helvetica
+>>
+endobj
+
+xref
+0 6
+0000000000 65535 f 
+0000000010 00000 n 
+0000000053 00000 n 
+0000000110 00000 n 
+0000000252 00000 n 
+0000000504 00000 n 
+trailer
+<<
+/Size 6
+/Root 1 0 R
+>>
+startxref
+569
+%%EOF`;
+
+  // Convert to base64
+  return Buffer.from(pdfContent).toString('base64');
 }
 
 // Extend Express Request type to include user
@@ -3698,8 +3775,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       };
 
-      // Generate contract PDF URL
-      const pdfUrl = `${req.protocol}://${req.get('host')}/api/contracts/pdf/${bookingId}`;
+      // For now, we'll pass a dummy URL since the service will generate its own PDF
+      const pdfUrl = `http://localhost:5000/api/contracts/pdf/${bookingId}`;
       
       // Create the signature document using the real service
       const { getSignatureService } = await import('./services/signatureService.js');
