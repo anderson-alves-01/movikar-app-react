@@ -344,39 +344,104 @@ class DocuSignService {
       const accessToken = await this.getAccessToken();
       this.apiClient.addDefaultHeader('Authorization', `Bearer ${accessToken}`);
 
-      // Create a simple text document that DocuSign definitely accepts
-      const simpleText = `CONTRATO DE LOCACAO DE VEICULO
-      
-Numero do Contrato: ${contract.contractNumber}
+      // Create comprehensive professional contract in Brazilian Portuguese
+      const professionalContract = `CONTRATO DE LOCAÇÃO DE VEÍCULO POR PRAZO DETERMINADO
 
-LOCATARIO:
-Nome: ${contract.contractData.renter?.name || 'N/A'}
-Email: ${contract.contractData.renter?.email || 'N/A'}
-
-PROPRIETARIO:
-Nome: ${contract.contractData.owner?.name || 'N/A'}
-Email: ${contract.contractData.owner?.email || 'N/A'}
-
-VEICULO: ${contract.contractData.vehicle?.brand || 'N/A'} ${contract.contractData.vehicle?.model || 'N/A'}
-ANO: ${contract.contractData.vehicle?.year || 'N/A'}
-COR: ${contract.contractData.vehicle?.color || 'N/A'}
-
-PERIODO DE LOCACAO:
-Inicio: ${contract.contractData.booking?.startDate ? new Date(contract.contractData.booking.startDate).toLocaleDateString('pt-BR') : 'N/A'}
-Fim: ${contract.contractData.booking?.endDate ? new Date(contract.contractData.booking.endDate).toLocaleDateString('pt-BR') : 'N/A'}
-
-VALOR TOTAL: R$ ${contract.contractData.booking?.totalPrice ? Number(contract.contractData.booking.totalPrice).toFixed(2) : '0,00'}
-
+Número do Contrato: ${contract.contractNumber}
 Data: ${new Date().toLocaleDateString('pt-BR')}
 
-Este contrato estabelece os termos e condicoes para a locacao do veiculo entre as partes mencionadas acima.
+LOCATÁRIO (LOCADOR):
+Nome: ${contract.contractData.renter?.name || 'N/A'}
+Email: ${contract.contractData.renter?.email || 'N/A'}
+Telefone: ${contract.contractData.renter?.phone || 'N/A'}
 
-Assinatura do Locatario: ______________________
+PROPRIETÁRIO (LOCADO):
+Nome: ${contract.contractData.owner?.name || 'N/A'}
+Email: ${contract.contractData.owner?.email || 'N/A'}
+Telefone: ${contract.contractData.owner?.phone || 'N/A'}
 
+DADOS DO VEÍCULO:
+Marca/Modelo: ${contract.contractData.vehicle?.brand || 'N/A'} ${contract.contractData.vehicle?.model || 'N/A'}
+Ano de Fabricação: ${contract.contractData.vehicle?.year || 'N/A'}
+Cor: ${contract.contractData.vehicle?.color || 'N/A'}
+Transmissão: ${contract.contractData.vehicle?.transmission || 'N/A'}
+Combustível: ${contract.contractData.vehicle?.fuel || 'N/A'}
+Número de Assentos: ${contract.contractData.vehicle?.seats || 'N/A'}
+Categoria: ${contract.contractData.vehicle?.category || 'N/A'}
+Localização: ${contract.contractData.vehicle?.location || 'N/A'}
 
-Assinatura do Proprietario: ______________________`;
+PERÍODO DE LOCAÇÃO:
+Data de Início: ${contract.contractData.booking?.startDate ? new Date(contract.contractData.booking.startDate).toLocaleDateString('pt-BR') : 'N/A'}
+Data de Fim: ${contract.contractData.booking?.endDate ? new Date(contract.contractData.booking.endDate).toLocaleDateString('pt-BR') : 'N/A'}
 
-      const textBase64 = Buffer.from(simpleText, 'utf8').toString('base64');
+VALORES:
+Valor Diário: R$ ${contract.contractData.vehicle?.pricePerDay ? Number(contract.contractData.vehicle.pricePerDay).toFixed(2) : '0,00'}
+Taxa de Serviço: R$ ${contract.contractData.booking?.servicefee ? Number(contract.contractData.booking.servicefee).toFixed(2) : '0,00'}
+VALOR TOTAL: R$ ${contract.contractData.booking?.totalPrice ? Number(contract.contractData.booking.totalPrice).toFixed(2) : '0,00'}
+
+CLÁUSULAS E CONDIÇÕES:
+
+1. OBJETO DO CONTRATO
+Este contrato tem por objeto a locação do veículo acima descrito, pelo LOCATÁRIO, nas condições aqui estabelecidas.
+
+2. PRAZO
+O prazo de locação será do período especificado acima, podendo ser prorrogado mediante acordo entre as partes.
+
+3. PAGAMENTO
+O pagamento do valor total da locação foi efetuado através da plataforma alugae.mobi no ato da reserva.
+
+4. OBRIGAÇÕES DO LOCATÁRIO
+a) Utilizar o veículo com cuidado e diligência;
+b) Devolver o veículo nas mesmas condições em que o recebeu;
+c) Arcar com multas de trânsito durante o período de locação;
+d) Comunicar imediatamente qualquer acidente ou dano ao veículo;
+e) Não utilizar o veículo para fins comerciais sem autorização;
+f) Não permitir que terceiros não autorizados conduzam o veículo.
+
+5. OBRIGAÇÕES DO PROPRIETÁRIO
+a) Entregar o veículo em perfeitas condições de uso;
+b) Garantir que toda documentação está em ordem;
+c) Fornecer assistência em caso de problemas mecânicos não causados pelo locatário;
+d) Manter seguro vigente do veículo.
+
+6. RESPONSABILIDADES
+O LOCATÁRIO será responsável por qualquer dano causado ao veículo durante o período de locação, exceto desgaste natural.
+
+7. DEVOLUÇÃO
+O veículo deverá ser devolvido na data e local acordados, com o mesmo nível de combustível.
+
+8. RESCISÃO
+Este contrato poderá ser rescindido por qualquer das partes mediante comunicação prévia de 24 horas.
+
+9. FORO
+Fica eleito o foro da comarca onde se encontra o veículo para dirimir quaisquer questões oriundas deste contrato.
+
+10. DISPOSIÇÕES GERAIS
+As partes declaram estar de acordo com todas as cláusulas deste contrato, que constitui título executivo extrajudicial.
+
+Ao assinar este documento, as partes confirmam ter lido, compreendido e concordado com todos os termos e condições estabelecidos.
+
+ASSINATURAS:
+
+_________________________________
+${contract.contractData.renter?.name || 'LOCATÁRIO'}
+CPF: ___________________________
+Data: ${new Date().toLocaleDateString('pt-BR')}
+
+_________________________________
+${contract.contractData.owner?.name || 'PROPRIETÁRIO'}
+CPF: ___________________________
+Data: ${new Date().toLocaleDateString('pt-BR')}
+
+TESTEMUNHAS:
+
+1. ________________________     2. ________________________
+   Nome:                           Nome:
+   CPF:                            CPF:
+
+Este contrato foi gerado automaticamente pela plataforma alugae.mobi e possui validade jurídica conforme legislação brasileira vigente.`;
+
+      const textBase64 = Buffer.from(professionalContract, 'utf8').toString('base64');
       
       // Create envelope definition using simple text document
       const envelopeDefinition = {
