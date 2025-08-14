@@ -2286,8 +2286,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Já existe uma vistoria para esta reserva" });
       }
 
-      // Validar apenas os dados do formulário
-      const validatedData = insertVehicleInspectionFormSchema.parse(req.body);
+      // Criar um schema simplificado para vistoria que não exige vehicleId (será obtido da reserva)
+      const inspectionFormData = {
+        bookingId: req.body.bookingId,
+        vehicleId: booking.vehicleId, // Obtido da reserva
+        mileage: req.body.kilometrage || req.body.mileage, // Aceita ambos os nomes
+        fuelLevel: req.body.fuelLevel,
+        vehicleCondition: req.body.vehicleCondition || 'good', // Default se não enviado
+        observations: req.body.observations || '',
+        photos: req.body.photos || [],
+        damages: req.body.damages || [],
+      };
+
+      // Validar dados formatados
+      const validatedData = insertVehicleInspectionFormSchema.parse(inspectionFormData);
 
       // Combinar dados validados com campos automáticos
       const finalInspectionData = {
