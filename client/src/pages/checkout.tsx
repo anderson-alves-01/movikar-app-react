@@ -448,16 +448,47 @@ export default function Checkout() {
         // Load data from server using checkout ID
         try {
           const response = await apiRequest("GET", `/api/checkout-data/${checkoutId}`);
+          
+          if (!response.ok) {
+            if (response.status === 404) {
+              console.warn('⚠️ Checkout data expired or not found (404)');
+              const vehicleId = params?.vehicleId;
+              toast({
+                title: "Sessão de checkout expirada",
+                description: "Seus dados de checkout expiraram. Redirecionando para selecionar o veículo novamente...",
+                variant: "destructive",
+              });
+              setTimeout(() => {
+                setLocation(vehicleId ? `/vehicles/${vehicleId}` : "/");
+              }, 2000);
+              return;
+            }
+            throw new Error(`${response.status}: Erro ao carregar dados de checkout`);
+          }
+          
           const serverData = await response.json();
           setCheckoutData(serverData);
-        } catch (error) {
+        } catch (error: any) {
           console.error("Error loading checkout data from server:", error);
-          toast({
-            title: "Erro",
-            description: "Dados de checkout não encontrados ou expirados",
-            variant: "destructive",
-          });
-          setLocation("/");
+          
+          if (error.message?.includes("404") || error.message?.includes("não encontrados") || error.message?.includes("expirados")) {
+            const vehicleId = params?.vehicleId;
+            toast({
+              title: "Sessão de checkout expirada", 
+              description: "Seus dados de checkout expiraram. Redirecionando para selecionar o veículo novamente...",
+              variant: "destructive",
+            });
+            setTimeout(() => {
+              setLocation(vehicleId ? `/vehicles/${vehicleId}` : "/");
+            }, 2000);
+          } else {
+            toast({
+              title: "Erro",
+              description: "Erro ao carregar dados de checkout",
+              variant: "destructive",
+            });
+            setLocation("/");
+          }
         }
       } else if (data) {
         // Fallback to URL data (for compatibility)
@@ -476,10 +507,10 @@ export default function Checkout() {
           const parsedData = JSON.parse(decodeURIComponent(data));
           setCheckoutData(parsedData);
         } catch (error: any) {
-          console.error("Error parsing checkout data:", error);
+          console.error("Error loading checkout data:", error);
           
           // Check if this is a 404 (expired checkout data)
-          if (error.message?.includes("404")) {
+          if (error.message?.includes("404") || error.message?.includes("não encontrados") || error.message?.includes("expirados")) {
             toast({
               title: "Sessão de checkout expirada",
               description: "Seus dados de checkout expiraram. Você será redirecionado para selecionar o veículo novamente.",
@@ -516,7 +547,13 @@ export default function Checkout() {
 
   // Create payment intent when component loads
   useEffect(() => {
-    if (!checkoutData || !user) return;
+    if (!checkoutData || !user) {
+      console.log('⏸️ Skipping payment intent creation - missing data:', {
+        hasCheckoutData: !!checkoutData,
+        hasUser: !!user
+      });
+      return;
+    }
 
     const createPaymentIntent = async () => {
       try {
