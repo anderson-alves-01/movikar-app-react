@@ -3759,18 +3759,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use the proper signature service instead of custom DocuSign code
       const { sendToSignaturePlatform } = await import('./services/signatureService.js');
       
-      // Create contract object for the signature service
+      // Create contract object for the signature service with full data
       const contract = {
         contractNumber: `CNT-${Date.now()}`,
         signaturePlatform: 'docusign',
         contractData: {
           renter: {
             name: booking.renter?.name || '',
-            email: booking.renter?.email || ''
+            email: booking.renter?.email || '',
+            phone: booking.renter?.phone || ''
           },
           owner: {
             name: booking.owner?.name || 'Owner',
-            email: booking.owner?.email || 'owner@example.com'
+            email: booking.owner?.email || 'owner@example.com',
+            phone: booking.owner?.phone || ''
+          },
+          vehicle: {
+            brand: booking.vehicle?.brand || 'N/A',
+            model: booking.vehicle?.model || 'N/A',
+            year: booking.vehicle?.year || 'N/A',
+            color: booking.vehicle?.color || 'N/A',
+            transmission: booking.vehicle?.transmission || 'N/A',
+            fuel: booking.vehicle?.fuel || 'N/A',
+            seats: booking.vehicle?.seats || 'N/A',
+            category: booking.vehicle?.category || 'N/A',
+            location: booking.vehicle?.location || 'N/A',
+            pricePerDay: booking.vehicle?.pricePerDay || 0
+          },
+          booking: {
+            startDate: booking.startDate,
+            endDate: booking.endDate,
+            totalPrice: booking.totalPrice,
+            servicefee: booking.serviceFee || 0
           }
         }
       };

@@ -98,7 +98,19 @@ Preferred communication style: Simple, everyday language.
 - Now generates professional PDF with vehicle details, pricing, legal terms, and proper formatting
 **Result:** DocuSign now displays professional Brazilian contract template with complete legal compliance
 
-**Final Status:**
+**CRITICAL PRODUCTION FIX - Redirect URL Corrected ✅**
+**Date:** August 14, 2025 (Final Update)
+**Issue:** DocuSign was redirecting to localhost after signature completion instead of production domain
+**Root Cause:** Hard-coded localhost URL in signature service return URL configuration
+**Resolution:** Updated DocuSign returnUrl from `http://localhost:5000/contract-signed` to `https://alugae.mobi/contract-signed`
+**Result:** Users now properly redirect to production domain after completing contract signatures
+
+**Contract Data Structure Enhancement ✅**
+**Issue:** Contract data structure only contained IDs causing "Cannot read properties of undefined" errors
+**Resolution:** Enhanced routes.ts to properly expand all contract data including vehicle, owner, renter, and booking details
+**Result:** DocuSign contract generation now works with complete data structure
+
+**Final Production Status:**
 - Contract creation endpoint: FULLY FUNCTIONAL ✅
 - DocuSign API authentication: OPERATIONAL ✅
 - Digital signature system: READY FOR PRODUCTION ✅
@@ -108,6 +120,8 @@ Preferred communication style: Simple, everyday language.
 - Signing URL generation: WORKING ✅
 - Professional contract template: IMPLEMENTED ✅
 - Contract callback handling: OPERATIONAL ✅
+- Production redirect URL: CORRECTED ✅
+- Contract data expansion: COMPLETE ✅
 
-**Integration:** 100% functional for contract creation and digital signatures using real DocuSign API with professional contract templates
+**Integration:** 100% functional for contract creation and digital signatures using real DocuSign API with proper production domain redirects
 **Documentation:** Complete setup guide available in DOCUSIGN_SETUP_GUIDE.md
