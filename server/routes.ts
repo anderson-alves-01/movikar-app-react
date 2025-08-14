@@ -471,7 +471,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Payment routes for Stripe integration
   app.post("/api/create-payment-intent", authenticateToken, async (req, res) => {
     try {
+      // Comprehensive input validation
       const { vehicleId, startDate, endDate, totalPrice } = req.body;
+      
+      // Validate required fields
+      if (!vehicleId || !startDate || !endDate || !totalPrice) {
+        console.log('❌ Missing required fields:', { vehicleId, startDate, endDate, totalPrice });
+        return res.status(400).json({ 
+          message: "Dados obrigatórios não fornecidos. Verifique o veículo, datas e preço." 
+        });
+      }
+
+      // Validate data types and formats
+      const vehicleIdNum = Number(vehicleId);
+      if (!vehicleId || !Number.isInteger(vehicleIdNum) || vehicleIdNum <= 0) {
+        console.log('❌ Invalid vehicle ID:', vehicleId);
+        return res.status(400).json({ message: "ID do veículo inválido" });
+      }
+
+      // Validate date formats
+      const startDateObj = new Date(startDate);
+      const endDateObj = new Date(endDate);
+      if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
+        console.log('❌ Invalid date format:', { startDate, endDate });
+        return res.status(400).json({ message: "Formato de data inválido" });
+      }
+
+      // Validate date logic
+      if (startDateObj >= endDateObj) {
+        console.log('❌ Invalid date range:', { startDate, endDate });
+        return res.status(400).json({ message: "Data de início deve ser anterior à data de fim" });
+      }
+
+      // Validate minimum rental period (at least 1 day)
+      const diffDays = Math.ceil((endDateObj.getTime() - startDateObj.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays < 1) {
+        console.log('❌ Rental period too short:', diffDays, 'days');
+        return res.status(400).json({ message: "Período mínimo de aluguel é de 1 dia" });
+      }
+
+      // Validate price format and range
+      const priceNum = parseFloat(totalPrice);
+      if (isNaN(priceNum) || priceNum <= 0) {
+        console.log('❌ Invalid price (zero or negative):', totalPrice);
+        return res.status(400).json({ message: "Preço deve ser maior que zero" });
+      }
+
+      if (priceNum > 999999) {
+        console.log('❌ Price too high:', totalPrice);
+        return res.status(400).json({ message: "Preço excede o limite máximo permitido" });
+      }
+
+      // Validate minimum amount for BRL (Stripe minimum is 50 centavos = R$ 0.50)
+      if (priceNum < 0.50) {
+        console.log('❌ Price below Stripe minimum:', totalPrice);
+        return res.status(400).json({ message: "Valor mínimo de cobrança é R$ 0,50" });
+      }
+
       console.log('💳 Creating payment intent:', { vehicleId, startDate, endDate, totalPrice, userId: req.user!.id });
 
       // Validate user verification status
@@ -484,16 +540,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (user.verificationStatus !== 'verified') {
+        console.log('❌ User not verified:', user.verificationStatus);
         return res.status(403).json({ 
           message: "Usuário não verificado. Complete a verificação de documentos antes de alugar um veículo." 
         });
       }
 
-      // Get vehicle details
-      const vehicle = await storage.getVehicle(vehicleId);
+      // Get vehicle details with enhanced validation
+      const vehicle = await storage.getVehicle(vehicleIdNum);
       if (!vehicle) {
-        console.log('❌ Vehicle not found:', vehicleId);
+        console.log('❌ Vehicle not found:', vehicleIdNum);
         return res.status(404).json({ message: "Veículo não encontrado" });
+      }
+
+      if (vehicle.status !== 'active') {
+        console.log('❌ Vehicle not active:', { vehicleId: vehicleIdNum, status: vehicle.status });
+        return res.status(400).json({ message: "Veículo não está disponível para aluguel" });
       }
 
       // Prevent owner from renting their own vehicle
@@ -502,10 +564,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Você não pode alugar seu próprio veículo" });
       }
 
-      // Check availability
-      const isAvailable = await storage.checkVehicleAvailability(vehicleId, new Date(startDate), new Date(endDate));
+      // Check availability with enhanced error reporting
+      const isAvailable = await storage.checkVehicleAvailability(vehicleIdNum, startDateObj, endDateObj);
       console.log('📅 Vehicle availability check:', {
-        vehicleId,
+        vehicleId: vehicleIdNum,
         startDate,
         endDate,
         isAvailable
@@ -513,20 +575,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!isAvailable) {
         // Log more details about why it's not available
-        const existingBookings = await storage.getBookingsByVehicle(vehicleId);
+        const existingBookings = await storage.getBookingsByVehicle(vehicleIdNum);
         const conflictingBookings = existingBookings.filter(booking => {
           const bookingStart = new Date(booking.startDate);
           const bookingEnd = new Date(booking.endDate);
-          const requestStart = new Date(startDate);
-          const requestEnd = new Date(endDate);
           
-          return (requestStart <= bookingEnd && requestEnd >= bookingStart);
+          return (startDateObj <= bookingEnd && endDateObj >= bookingStart);
         });
         
         console.log('❌ Vehicle not available - conflicting bookings:', conflictingBookings.length);
         
         return res.status(400).json({ 
-          message: "Veículo não disponível para as datas selecionadas" 
+          message: "Veículo não disponível para as datas selecionadas. Tente outras datas." 
         });
       }
 
@@ -542,27 +602,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const paymentMethodTypes = ['card'];
 
       console.log('🔧 Payment methods:', paymentMethodTypes);
-      console.log('💰 Amount in cents:', Math.round(parseFloat(totalPrice) * 100));
+      console.log('💰 Amount in cents:', Math.round(priceNum * 100));
 
-      // Create payment intent with appropriate payment methods
+      // Enhanced Stripe validation
       if (!stripe) {
         console.log('❌ Stripe not configured - STRIPE_SECRET_KEY missing');
-        return res.status(500).json({ message: "Serviço de pagamento não configurado" });
+        return res.status(500).json({ message: "Serviço de pagamento temporariamente indisponível. Tente novamente em alguns minutos." });
+      }
+
+      // Validate Stripe connection before creating payment intent
+      try {
+        await stripe.paymentMethods.list({ limit: 1 });
+        console.log('✅ Stripe connection validated');
+      } catch (stripeTestError) {
+        console.error('❌ Stripe connection test failed:', stripeTestError);
+        return res.status(500).json({ message: "Erro de conexão com o sistema de pagamento. Tente novamente." });
       }
 
       console.log('🎯 Creating Stripe payment intent...');
-      console.log('💰 Amount in BRL:', totalPrice, '-> cents:', Math.round(parseFloat(totalPrice) * 100));
+      console.log('💰 Amount in BRL:', totalPrice, '-> cents:', Math.round(priceNum * 100));
       
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(parseFloat(totalPrice) * 100), // Convert to cents
+        amount: Math.round(priceNum * 100), // Convert to cents
         currency: 'brl',
         payment_method_types: paymentMethodTypes,
         metadata: {
-          vehicleId: vehicleId.toString(),
+          vehicleId: vehicleIdNum.toString(),
           userId: req.user!.id.toString(),
-          startDate,
-          endDate,
+          startDate: startDate.toString(),
+          endDate: endDate.toString(),
+          userEmail: user.email || 'unknown',
+          vehicleBrand: vehicle.brand || 'unknown',
+          vehicleModel: vehicle.model || 'unknown',
         },
+        description: `Aluguel de ${vehicle.brand} ${vehicle.model} - ${startDate} a ${endDate}`,
       });
 
       console.log('✅ Payment intent created successfully:', paymentIntent.id);
@@ -578,9 +651,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         code: error && typeof error === 'object' && 'code' in error ? error.code : 'unknown',
         stack: error instanceof Error ? error.stack?.substring(0, 500) : undefined,
         stripeConfigured: !!stripe,
-        secretKeyExists: !!process.env.STRIPE_SECRET_KEY
+        secretKeyExists: !!process.env.STRIPE_SECRET_KEY,
+        requestBody: req.body,
+        userId: req.user?.id
       });
-      res.status(500).json({ message: "Falha ao criar intent de pagamento" });
+
+      // Enhanced error responses based on error type
+      if (error && typeof error === 'object' && 'type' in error) {
+        const stripeError = error as any;
+        
+        switch (stripeError.type) {
+          case 'StripeConnectionError':
+            return res.status(503).json({ message: "Erro de conexão com o sistema de pagamento. Verifique sua internet e tente novamente." });
+          case 'StripeAuthenticationError':
+            return res.status(500).json({ message: "Erro de autenticação do sistema de pagamento. Tente novamente em alguns minutos." });
+          case 'StripeRateLimitError':
+            return res.status(429).json({ message: "Muitas tentativas. Aguarde alguns segundos e tente novamente." });
+          case 'StripeInvalidRequestError':
+            return res.status(400).json({ message: "Dados de pagamento inválidos. Verifique as informações e tente novamente." });
+          default:
+            return res.status(500).json({ message: "Erro no sistema de pagamento. Tente novamente." });
+        }
+      }
+
+      // Database or other system errors
+      if (error instanceof Error && error.message.includes('database')) {
+        return res.status(503).json({ message: "Erro temporário no sistema. Tente novamente em alguns minutos." });
+      }
+
+      // Generic fallback
+      res.status(500).json({ message: "Falha ao criar intent de pagamento. Verifique os dados e tente novamente." });
     }
   });
 

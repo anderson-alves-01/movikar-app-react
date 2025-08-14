@@ -561,11 +561,23 @@ export default function Checkout() {
       try {
         console.log('🎯 Starting payment intent creation for checkout data:', checkoutData);
         
+        // Validate checkout data before sending
+        if (!checkoutData.vehicleId || !checkoutData.startDate || !checkoutData.endDate || !checkoutData.totalPrice) {
+          console.error('❌ Invalid checkout data:', checkoutData);
+          toast({
+            title: "Dados de checkout incompletos",
+            description: "Alguns dados necessários estão faltando. Redirecionando para seleção do veículo...",
+            variant: "destructive",
+          });
+          setTimeout(() => setLocation("/"), 2000);
+          return;
+        }
+        
         const requestData = {
-          vehicleId: checkoutData.vehicleId,
+          vehicleId: parseInt(checkoutData.vehicleId.toString()),
           startDate: checkoutData.startDate,
           endDate: checkoutData.endDate,
-          totalPrice: checkoutData.totalPrice,
+          totalPrice: checkoutData.totalPrice.toString(),
         };
         
         console.log('📤 Making API request with data:', requestData);
@@ -577,7 +589,7 @@ export default function Checkout() {
           console.error('❌ API response not OK:', response.status, response.statusText);
           const errorText = await response.text();
           console.error('❌ Error response body:', errorText);
-          throw new Error(`API Error ${response.status}: ${errorText}`);
+          throw new Error(`${response.status}: ${errorText}`);
         }
 
         const result = await response.json();
@@ -595,65 +607,142 @@ export default function Checkout() {
         console.error("❌ Error details:", {
           message: error.message,
           name: error.name,
-          stack: error.stack
+          stack: error.stack?.substring(0, 500)
         });
         
-        // Parse error message to provide better feedback
+        // Enhanced error parsing and handling
         const errorMessage = error.message || "Falha ao inicializar pagamento";
         
-        // Check if it's a specific business rule error (400)
-        if (errorMessage.includes("400:")) {
-          const actualMessage = errorMessage.replace("400: ", "").replace(/[\{\}]/g, "");
-          let parsedMessage = actualMessage;
-          
-          try {
-            const parsed = JSON.parse(actualMessage);
-            parsedMessage = parsed.message || actualMessage;
-          } catch {
-            // Keep the original message if JSON parsing fails
-          }
-          
-          toast({
-            title: "Não foi possível processar o pagamento",
-            description: parsedMessage,
-            variant: "destructive",
-          });
-        } else if (errorMessage.includes("500:")) {
-          // Handle 500 errors more specifically
-          const actualMessage = errorMessage.replace("500: ", "").replace(/[\{\}]/g, "");
-          let parsedMessage = actualMessage;
-          
-          try {
-            const parsed = JSON.parse(actualMessage);
-            parsedMessage = parsed.message || actualMessage;
-          } catch {
-            // Keep the original message if JSON parsing fails
-          }
-          
-          // Special handling for common server issues
-          if (parsedMessage.includes("Stripe não configurado") || parsedMessage.includes("Serviço de pagamento")) {
-            toast({
-              title: "Serviço temporariamente indisponível",
-              description: "Sistema de pagamento em manutenção. Tente novamente em alguns minutos.",
-              variant: "destructive",
-            });
-          } else {
-            toast({
-              title: "Erro interno do servidor",
-              description: `Problema temporário: ${parsedMessage}`,
-              variant: "destructive",
-            });
-          }
-        } else {
-          // For other errors, show generic message
-          toast({
-            title: "Erro",
-            description: "Falha ao inicializar pagamento. Tente novamente.",
-            variant: "destructive",
-          });
+        // Parse status code and response
+        let statusCode = 0;
+        let responseBody = '';
+        
+        const statusMatch = errorMessage.match(/^(\d{3}):\s*(.*)/);
+        if (statusMatch) {
+          statusCode = parseInt(statusMatch[1]);
+          responseBody = statusMatch[2];
         }
         
-        setLocation("/");
+        // Try to parse JSON response body
+        let parsedResponse: any = null;
+        try {
+          parsedResponse = JSON.parse(responseBody);
+        } catch {
+          // Response is not JSON, use as plain text
+        }
+        
+        const finalMessage = parsedResponse?.message || responseBody || errorMessage;
+        
+        // Handle different error types with appropriate user feedback and actions
+        switch (statusCode) {
+          case 400:
+            // Business logic errors - show specific message and suggest actions
+            toast({
+              title: "Não foi possível processar o pagamento",
+              description: finalMessage,
+              variant: "destructive",
+            });
+            
+            // For availability errors, redirect back to vehicle page
+            if (finalMessage.includes("não disponível") || finalMessage.includes("datas selecionadas")) {
+              setTimeout(() => {
+                setLocation(`/vehicle/${checkoutData.vehicleId}`);
+              }, 3000);
+            } else if (finalMessage.includes("próprio veículo")) {
+              setTimeout(() => setLocation("/"), 2000);
+            }
+            break;
+            
+          case 403:
+            // User not verified or unauthorized
+            toast({
+              title: "Acesso negado",
+              description: finalMessage,
+              variant: "destructive",
+            });
+            setTimeout(() => setLocation("/profile"), 3000);
+            break;
+            
+          case 404:
+            // Resource not found
+            toast({
+              title: "Recurso não encontrado", 
+              description: "O veículo ou usuário não foi encontrado. Redirecionando...",
+              variant: "destructive",
+            });
+            setTimeout(() => setLocation("/"), 2000);
+            break;
+            
+          case 429:
+            // Rate limiting
+            toast({
+              title: "Muitas tentativas",
+              description: "Aguarde alguns segundos e tente novamente.",
+              variant: "destructive",
+            });
+            // Don't redirect, let user try again
+            break;
+            
+          case 500:
+          case 503:
+            // Server errors
+            if (finalMessage.includes("Stripe") || finalMessage.includes("pagamento")) {
+              toast({
+                title: "Serviço temporariamente indisponível",
+                description: "Sistema de pagamento em manutenção. Tente novamente em alguns minutos.",
+                variant: "destructive",
+              });
+            } else {
+              toast({
+                title: "Erro interno do servidor",
+                description: `Problema temporário no sistema. Tente novamente em alguns minutos.`,
+                variant: "destructive",
+              });
+            }
+            
+            // Offer retry option for server errors
+            setTimeout(() => {
+              toast({
+                title: "Tentar novamente?",
+                description: "O sistema pode estar funcionando novamente. Clique para tentar novamente.",
+                action: (
+                  <Button
+                    variant="outline"
+                    onClick={() => window.location.reload()}
+                    className="ml-auto"
+                  >
+                    Tentar Novamente
+                  </Button>
+                ),
+              });
+            }, 5000);
+            break;
+            
+          default:
+            // Unknown or network errors
+            toast({
+              title: "Erro de conexão",
+              description: "Verifique sua conexão com a internet e tente novamente.",
+              variant: "destructive",
+            });
+            
+            // Offer reload option
+            setTimeout(() => {
+              toast({
+                title: "Recarregar página?",
+                description: "A conexão pode ter sido restaurada. Recarregar a página?",
+                action: (
+                  <Button
+                    variant="outline"
+                    onClick={() => window.location.reload()}
+                    className="ml-auto"
+                  >
+                    Recarregar
+                  </Button>
+                ),
+              });
+            }, 3000);
+        }
       }
     };
 
