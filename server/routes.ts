@@ -470,103 +470,146 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Payment routes for Stripe integration
   app.post("/api/create-payment-intent", authenticateToken, async (req, res) => {
+    console.log('🔍 VALIDAÇÃO - Iniciando processo de validação para payment intent...');
+    console.log('📝 DADOS RECEBIDOS:', JSON.stringify(req.body, null, 2));
+    
     try {
       // Comprehensive input validation
       const { vehicleId, startDate, endDate, totalPrice } = req.body;
       
       // Validate required fields
+      console.log('🔍 VALIDAÇÃO ETAPA 1 - Verificando campos obrigatórios...');
       if (!vehicleId || !startDate || !endDate || !totalPrice) {
-        console.log('❌ Missing required fields:', { vehicleId, startDate, endDate, totalPrice });
+        console.log('❌ FALHA NA VALIDAÇÃO - ETAPA 1: Campos obrigatórios ausentes');
+        console.log('📊 DETALHES:', { vehicleId, startDate, endDate, totalPrice });
+        console.log('🎯 RETORNO: HTTP 400 - Dados obrigatórios não fornecidos');
         return res.status(400).json({ 
           message: "Dados obrigatórios não fornecidos. Verifique o veículo, datas e preço." 
         });
       }
+      console.log('✅ VALIDAÇÃO ETAPA 1 - APROVADA: Todos os campos obrigatórios presentes');
 
       // Validate data types and formats
+      console.log('🔍 VALIDAÇÃO ETAPA 2 - Verificando tipos de dados...');
       const vehicleIdNum = Number(vehicleId);
       if (!vehicleId || !Number.isInteger(vehicleIdNum) || vehicleIdNum <= 0) {
-        console.log('❌ Invalid vehicle ID:', vehicleId);
+        console.log('❌ FALHA NA VALIDAÇÃO - ETAPA 2: ID do veículo inválido');
+        console.log('📊 DETALHES: vehicleId =', vehicleId, 'vehicleIdNum =', vehicleIdNum);
+        console.log('🎯 RETORNO: HTTP 400 - ID do veículo inválido');
         return res.status(400).json({ message: "ID do veículo inválido" });
       }
+      console.log('✅ VALIDAÇÃO ETAPA 2 - APROVADA: ID do veículo válido =', vehicleIdNum);
 
       // Validate date formats
+      console.log('🔍 VALIDAÇÃO ETAPA 3 - Verificando formato de datas...');
       const startDateObj = new Date(startDate);
       const endDateObj = new Date(endDate);
       if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
-        console.log('❌ Invalid date format:', { startDate, endDate });
+        console.log('❌ FALHA NA VALIDAÇÃO - ETAPA 3: Formato de data inválido');
+        console.log('📊 DETALHES:', { startDate, endDate, startDateObj, endDateObj });
+        console.log('🎯 RETORNO: HTTP 400 - Formato de data inválido');
         return res.status(400).json({ message: "Formato de data inválido" });
       }
+      console.log('✅ VALIDAÇÃO ETAPA 3 - APROVADA: Datas válidas');
 
       // Validate date logic
+      console.log('🔍 VALIDAÇÃO ETAPA 4 - Verificando lógica de datas...');
       if (startDateObj >= endDateObj) {
-        console.log('❌ Invalid date range:', { startDate, endDate });
+        console.log('❌ FALHA NA VALIDAÇÃO - ETAPA 4: Data de início não anterior à data de fim');
+        console.log('📊 DETALHES:', { startDate, endDate, startDateObj, endDateObj });
+        console.log('🎯 RETORNO: HTTP 400 - Data de início deve ser anterior à data de fim');
         return res.status(400).json({ message: "Data de início deve ser anterior à data de fim" });
       }
 
       // Validate minimum rental period (at least 1 day)
       const diffDays = Math.ceil((endDateObj.getTime() - startDateObj.getTime()) / (1000 * 60 * 60 * 24));
       if (diffDays < 1) {
-        console.log('❌ Rental period too short:', diffDays, 'days');
+        console.log('❌ FALHA NA VALIDAÇÃO - ETAPA 4B: Período de aluguel muito curto');
+        console.log('📊 DETALHES: Dias calculados =', diffDays);
+        console.log('🎯 RETORNO: HTTP 400 - Período mínimo de aluguel é de 1 dia');
         return res.status(400).json({ message: "Período mínimo de aluguel é de 1 dia" });
       }
+      console.log('✅ VALIDAÇÃO ETAPA 4 - APROVADA: Lógica de datas válida, período =', diffDays, 'dias');
 
       // Validate price format and range
+      console.log('🔍 VALIDAÇÃO ETAPA 5 - Verificando formato e faixas de preço...');
       const priceNum = parseFloat(totalPrice);
       if (isNaN(priceNum) || priceNum <= 0) {
-        console.log('❌ Invalid price (zero or negative):', totalPrice);
+        console.log('❌ FALHA NA VALIDAÇÃO - ETAPA 5A: Preço zero ou negativo');
+        console.log('📊 DETALHES: totalPrice =', totalPrice, 'priceNum =', priceNum);
+        console.log('🎯 RETORNO: HTTP 400 - Preço deve ser maior que zero');
         return res.status(400).json({ message: "Preço deve ser maior que zero" });
       }
 
       if (priceNum > 999999) {
-        console.log('❌ Price too high:', totalPrice);
+        console.log('❌ FALHA NA VALIDAÇÃO - ETAPA 5B: Preço acima do limite');
+        console.log('📊 DETALHES: totalPrice =', totalPrice, 'priceNum =', priceNum);
+        console.log('🎯 RETORNO: HTTP 400 - Preço excede o limite máximo permitido');
         return res.status(400).json({ message: "Preço excede o limite máximo permitido" });
       }
 
       // Validate minimum amount for BRL (Stripe minimum is 50 centavos = R$ 0.50)
       if (priceNum < 0.50) {
-        console.log('❌ Price below Stripe minimum:', totalPrice);
+        console.log('❌ FALHA NA VALIDAÇÃO - ETAPA 5C: Preço abaixo do mínimo Stripe');
+        console.log('📊 DETALHES: totalPrice =', totalPrice, 'priceNum =', priceNum, 'Mínimo Stripe = R$ 0,50');
+        console.log('🎯 RETORNO: HTTP 400 - Valor mínimo de cobrança é R$ 0,50');
         return res.status(400).json({ message: "Valor mínimo de cobrança é R$ 0,50" });
       }
+      console.log('✅ VALIDAÇÃO ETAPA 5 - APROVADA: Preço válido = R$', priceNum);
 
-      console.log('💳 Creating payment intent:', { vehicleId, startDate, endDate, totalPrice, userId: req.user!.id });
+      console.log('💳 Criando payment intent:', { vehicleId, startDate, endDate, totalPrice, userId: req.user!.id });
 
       // Validate user verification status
+      console.log('🔍 VALIDAÇÃO ETAPA 6 - Verificando status do usuário...');
       const user = await storage.getUser(req.user!.id);
-      console.log('👤 User verification status:', user?.verificationStatus);
+      console.log('👤 Status de verificação do usuário:', user?.verificationStatus);
 
       if (!user) {
-        console.log('❌ User not found');
+        console.log('❌ FALHA NA VALIDAÇÃO - ETAPA 6A: Usuário não encontrado');
+        console.log('🎯 RETORNO: HTTP 404 - Usuário não encontrado');
         return res.status(404).json({ message: "Usuário não encontrado" });
       }
 
       if (user.verificationStatus !== 'verified') {
-        console.log('❌ User not verified:', user.verificationStatus);
+        console.log('❌ FALHA NA VALIDAÇÃO - ETAPA 6B: Usuário não verificado');
+        console.log('📊 DETALHES: Status =', user.verificationStatus);
+        console.log('🎯 RETORNO: HTTP 403 - Usuário não verificado');
         return res.status(403).json({ 
           message: "Usuário não verificado. Complete a verificação de documentos antes de alugar um veículo." 
         });
       }
+      console.log('✅ VALIDAÇÃO ETAPA 6 - APROVADA: Usuário verificado');
 
       // Get vehicle details with enhanced validation
+      console.log('🔍 VALIDAÇÃO ETAPA 7 - Verificando dados do veículo...');
       const vehicle = await storage.getVehicle(vehicleIdNum);
       if (!vehicle) {
-        console.log('❌ Vehicle not found:', vehicleIdNum);
+        console.log('❌ FALHA NA VALIDAÇÃO - ETAPA 7A: Veículo não encontrado');
+        console.log('📊 DETALHES: vehicleId =', vehicleIdNum);
+        console.log('🎯 RETORNO: HTTP 404 - Veículo não encontrado');
         return res.status(404).json({ message: "Veículo não encontrado" });
       }
 
       if (vehicle.status !== 'active') {
-        console.log('❌ Vehicle not active:', { vehicleId: vehicleIdNum, status: vehicle.status });
+        console.log('❌ FALHA NA VALIDAÇÃO - ETAPA 7B: Veículo não ativo');
+        console.log('📊 DETALHES: vehicleId =', vehicleIdNum, 'status =', vehicle.status);
+        console.log('🎯 RETORNO: HTTP 400 - Veículo não está disponível para aluguel');
         return res.status(400).json({ message: "Veículo não está disponível para aluguel" });
       }
 
       // Prevent owner from renting their own vehicle
       if (vehicle.ownerId === req.user!.id) {
-        console.log('❌ User trying to rent own vehicle');
+        console.log('❌ FALHA NA VALIDAÇÃO - ETAPA 7C: Usuário tentando alugar próprio veículo');
+        console.log('📊 DETALHES: ownerId =', vehicle.ownerId, 'userId =', req.user!.id);
+        console.log('🎯 RETORNO: HTTP 400 - Você não pode alugar seu próprio veículo');
         return res.status(400).json({ message: "Você não pode alugar seu próprio veículo" });
       }
+      console.log('✅ VALIDAÇÃO ETAPA 7 - APROVADA: Veículo válido e disponível');
 
       // Check availability with enhanced error reporting
+      console.log('🔍 VALIDAÇÃO ETAPA 8 - Verificando disponibilidade do veículo...');
       const isAvailable = await storage.checkVehicleAvailability(vehicleIdNum, startDateObj, endDateObj);
-      console.log('📅 Vehicle availability check:', {
+      console.log('📅 Resultado da verificação de disponibilidade:', {
         vehicleId: vehicleIdNum,
         startDate,
         endDate,
@@ -574,6 +617,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       if (!isAvailable) {
+        console.log('❌ FALHA NA VALIDAÇÃO - ETAPA 8: Veículo não disponível nas datas solicitadas');
         // Log more details about why it's not available
         const existingBookings = await storage.getBookingsByVehicle(vehicleIdNum);
         const conflictingBookings = existingBookings.filter(booking => {
@@ -583,12 +627,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return (startDateObj <= bookingEnd && endDateObj >= bookingStart);
         });
         
-        console.log('❌ Vehicle not available - conflicting bookings:', conflictingBookings.length);
+        console.log('📊 DETALHES: Reservas conflitantes encontradas =', conflictingBookings.length);
+        console.log('🎯 RETORNO: HTTP 400 - Veículo não disponível para as datas selecionadas');
         
         return res.status(400).json({ 
           message: "Veículo não disponível para as datas selecionadas. Tente outras datas." 
         });
       }
+      console.log('✅ VALIDAÇÃO ETAPA 8 - APROVADA: Veículo disponível nas datas solicitadas');
 
       // Get admin settings from database for feature flags
       const dbSettings = await storage.getAdminSettings();
@@ -619,8 +665,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: "Erro de conexão com o sistema de pagamento. Tente novamente." });
       }
 
-      console.log('🎯 Creating Stripe payment intent...');
-      console.log('💰 Amount in BRL:', totalPrice, '-> cents:', Math.round(priceNum * 100));
+      console.log('🔍 VALIDAÇÃO ETAPA 9 - Criando Payment Intent no Stripe...');
+      console.log('💰 Dados do pagamento: BRL', totalPrice, '-> centavos:', Math.round(priceNum * 100));
       
       const paymentIntent = await stripe.paymentIntents.create({
         amount: Math.round(priceNum * 100), // Convert to cents
@@ -638,7 +684,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: `Aluguel de ${vehicle.brand} ${vehicle.model} - ${startDate} a ${endDate}`,
       });
 
-      console.log('✅ Payment intent created successfully:', paymentIntent.id);
+      console.log('✅ VALIDAÇÃO ETAPA 9 - CONCLUÍDA: Payment intent criado com sucesso!');
+      console.log('🎉 VALIDAÇÃO COMPLETA - TODAS AS 9 ETAPAS APROVADAS');
+      console.log('📝 PAYMENT INTENT ID:', paymentIntent.id);
+      console.log('🎯 RETORNO: HTTP 200 - Sucesso');
+      
       res.json({ 
         clientSecret: paymentIntent.client_secret,
         paymentIntentId: paymentIntent.id 
