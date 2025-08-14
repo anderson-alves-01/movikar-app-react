@@ -511,6 +511,7 @@ export default function Checkout() {
           
           // Check if this is a 404 (expired checkout data)
           if (error.message?.includes("404") || error.message?.includes("não encontrados") || error.message?.includes("expirados")) {
+            const vehicleId = params?.vehicleId;
             toast({
               title: "Sessão de checkout expirada",
               description: "Seus dados de checkout expiraram. Você será redirecionado para selecionar o veículo novamente.",
@@ -518,7 +519,7 @@ export default function Checkout() {
             });
             // Redirect to the vehicle detail page
             setTimeout(() => {
-              setLocation(`/vehicles/${vehicleId}`);
+              setLocation(vehicleId ? `/vehicles/${vehicleId}` : "/");
             }, 2000);
           } else {
             toast({
@@ -531,13 +532,14 @@ export default function Checkout() {
         }
       } else {
         // No data found - redirect to vehicle page for rebooking
+        const vehicleId = params?.vehicleId;
         toast({
           title: "Dados de checkout não encontrados",
           description: "Redirecionando para seleção do veículo...",
           variant: "destructive",
         });
         setTimeout(() => {
-          setLocation(`/vehicles/${vehicleId}`);
+          setLocation(vehicleId ? `/vehicles/${vehicleId}` : "/");
         }, 1500);
       }
     };
