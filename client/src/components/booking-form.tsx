@@ -507,20 +507,6 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
                 </p>
               </>
             )}
-            
-            {/* Message when checkout is disabled */}
-            {!adminSettings?.enableRentNowCheckout && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
-                <div className="flex items-center justify-center gap-2 text-yellow-800 mb-2">
-                  <AlertTriangle className="h-5 w-5" />
-                  <span className="font-medium">Checkout Temporariamente Indisponível</span>
-                </div>
-                <p className="text-sm text-yellow-700">
-                  O sistema de reserva instantânea está temporariamente desabilitado. 
-                  Entre em contato com o suporte para efetuar sua reserva.
-                </p>
-              </div>
-            )}
           </form>
         </CardContent>
       </Card>
