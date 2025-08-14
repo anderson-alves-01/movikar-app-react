@@ -522,11 +522,36 @@ export default function Checkout() {
         
       } catch (error: any) {
         console.error("Payment intent creation error:", error);
-        toast({
-          title: "Erro",
-          description: error.message || "Falha ao inicializar pagamento",
-          variant: "destructive",
-        });
+        
+        // Parse error message to provide better feedback
+        const errorMessage = error.message || "Falha ao inicializar pagamento";
+        
+        // Check if it's a specific business rule error (400)
+        if (errorMessage.includes("400:")) {
+          const actualMessage = errorMessage.replace("400: ", "").replace(/[\{\}]/g, "");
+          let parsedMessage = actualMessage;
+          
+          try {
+            const parsed = JSON.parse(actualMessage);
+            parsedMessage = parsed.message || actualMessage;
+          } catch {
+            // Keep the original message if JSON parsing fails
+          }
+          
+          toast({
+            title: "Não foi possível processar o pagamento",
+            description: parsedMessage,
+            variant: "destructive",
+          });
+        } else {
+          // For other errors, show generic message
+          toast({
+            title: "Erro",
+            description: "Falha ao inicializar pagamento. Tente novamente.",
+            variant: "destructive",
+          });
+        }
+        
         setLocation("/");
       }
     };
