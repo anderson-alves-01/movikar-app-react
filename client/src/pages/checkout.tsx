@@ -504,14 +504,22 @@ export default function Checkout() {
 
     const createPaymentIntent = async () => {
       try {
-        const response = await apiRequest("POST", "/api/create-payment-intent", {
+        console.log('🎯 Starting payment intent creation for checkout data:', checkoutData);
+        
+        const requestData = {
           vehicleId: checkoutData.vehicleId,
           startDate: checkoutData.startDate,
           endDate: checkoutData.endDate,
           totalPrice: checkoutData.totalPrice,
-        });
+        };
+        
+        console.log('📤 Making API request with data:', requestData);
+        
+        const response = await apiRequest("POST", "/api/create-payment-intent", requestData);
+        console.log('📥 API response received, parsing...');
 
         const result = await response.json();
+        console.log('✅ Payment intent created successfully:', result);
         setClientSecret(result.clientSecret);
         
         // Store payment intent ID in checkout data
@@ -555,11 +563,20 @@ export default function Checkout() {
             // Keep the original message if JSON parsing fails
           }
           
-          toast({
-            title: "Erro interno do servidor",
-            description: `Problema temporário: ${parsedMessage}`,
-            variant: "destructive",
-          });
+          // Special handling for common server issues
+          if (parsedMessage.includes("Stripe não configurado") || parsedMessage.includes("Serviço de pagamento")) {
+            toast({
+              title: "Serviço temporariamente indisponível",
+              description: "Sistema de pagamento em manutenção. Tente novamente em alguns minutos.",
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Erro interno do servidor",
+              description: `Problema temporário: ${parsedMessage}`,
+              variant: "destructive",
+            });
+          }
         } else {
           // For other errors, show generic message
           toast({

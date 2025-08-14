@@ -88,8 +88,20 @@ const upload = multer({
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 if (!stripeSecretKey) {
   console.warn('Warning: STRIPE_SECRET_KEY not found. Stripe functionality will be disabled.');
+} else {
+  console.log('✅ Stripe secret key loaded:', stripeSecretKey.substring(0, 10) + '...');
 }
-const stripe = stripeSecretKey ? new Stripe(stripeSecretKey) : null;
+
+let stripe: Stripe | null = null;
+if (stripeSecretKey) {
+  try {
+    stripe = new Stripe(stripeSecretKey);
+    console.log('✅ Stripe initialized successfully');
+  } catch (error) {
+    console.error('❌ Error initializing Stripe:', error);
+    stripe = null;
+  }
+}
 
 // DocuSign configuration
 const DOCUSIGN_INTEGRATION_KEY = process.env.DOCUSIGN_INTEGRATION_KEY || 'mock-integration-key';
@@ -492,9 +504,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check availability
       const isAvailable = await storage.checkVehicleAvailability(vehicleId, new Date(startDate), new Date(endDate));
-      console.log('📅 Vehicle availability:', isAvailable);
+      console.log('📅 Vehicle availability check:', {
+        vehicleId,
+        startDate,
+        endDate,
+        isAvailable
+      });
 
       if (!isAvailable) {
+        // Log more details about why it's not available
+        const existingBookings = await storage.getBookingsByVehicle(vehicleId);
+        const conflictingBookings = existingBookings.filter(booking => {
+          const bookingStart = new Date(booking.startDate);
+          const bookingEnd = new Date(booking.endDate);
+          const requestStart = new Date(startDate);
+          const requestEnd = new Date(endDate);
+          
+          return (requestStart <= bookingEnd && requestEnd >= bookingStart);
+        });
+        
+        console.log('❌ Vehicle not available - conflicting bookings:', conflictingBookings.length);
+        
         return res.status(400).json({ 
           message: "Veículo não disponível para as datas selecionadas" 
         });
