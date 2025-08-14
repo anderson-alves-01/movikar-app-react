@@ -1,0 +1,55 @@
+index-ClVwlq7Q.js:40 📡 getQueryFn - Making request to: /api/bookings/29
+index-ClVwlq7Q.js:40 📡 getQueryFn - Using cookie authentication
+index-ClVwlq7Q.js:40 📡 getQueryFn - Making request to: /api/inspections/reservation/29
+index-ClVwlq7Q.js:40 📡 getQueryFn - Using cookie authentication
+index-ClVwlq7Q.js:40 📡 getQueryFn - Response status: 200
+index-ClVwlq7Q.js:40  GET https://alugae.mobi/api/inspections/reservation/29?_t=1755175620818 404 (Not Found)
+Uz @ index-ClVwlq7Q.js:40
+i @ index-ClVwlq7Q.js:40
+p @ index-ClVwlq7Q.js:40
+start @ index-ClVwlq7Q.js:40
+fetch @ index-ClVwlq7Q.js:40
+Mu @ index-ClVwlq7Q.js:40
+onSubscribe @ index-ClVwlq7Q.js:40
+subscribe @ index-ClVwlq7Q.js:40
+(anonymous) @ index-ClVwlq7Q.js:40
+zT @ index-ClVwlq7Q.js:38
+ox @ index-ClVwlq7Q.js:40
+vl @ index-ClVwlq7Q.js:40
+DS @ index-ClVwlq7Q.js:40
+ci @ index-ClVwlq7Q.js:38
+o8 @ index-ClVwlq7Q.js:40
+Pi @ index-ClVwlq7Q.js:40
+gk @ index-ClVwlq7Q.js:40
+w @ index-ClVwlq7Q.js:25
+_ @ index-ClVwlq7Q.js:25Understand this error
+index-ClVwlq7Q.js:40 📡 getQueryFn - Response status: 404
+29:1 Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner.
+index-ClVwlq7Q.js:40 📡 apiRequest - POST /api/upload/photo with data
+index-ClVwlq7Q.js:40 📡 apiRequest - Using cookie authentication
+index-ClVwlq7Q.js:40 📡 apiRequest - Response: 200 
+index-ClVwlq7Q.js:40 📡 apiRequest - POST /api/inspections with data
+index-ClVwlq7Q.js:40 📡 apiRequest - Using cookie authentication
+index-ClVwlq7Q.js:40  POST https://alugae.mobi/api/inspections 500 (Internal Server Error)
+he @ index-ClVwlq7Q.js:40
+mutationFn @ index-ClVwlq7Q.js:598
+fn @ index-ClVwlq7Q.js:40
+p @ index-ClVwlq7Q.js:40
+start @ index-ClVwlq7Q.js:40
+execute @ index-ClVwlq7Q.js:40
+await in execute
+mutate @ index-ClVwlq7Q.js:40
+(anonymous) @ index-ClVwlq7Q.js:40
+g @ index-ClVwlq7Q.js:598
+CF @ index-ClVwlq7Q.js:37
+EF @ index-ClVwlq7Q.js:37
+OF @ index-ClVwlq7Q.js:37
+sS @ index-ClVwlq7Q.js:37
+ST @ index-ClVwlq7Q.js:37
+(anonymous) @ index-ClVwlq7Q.js:37
+rw @ index-ClVwlq7Q.js:40
+GO @ index-ClVwlq7Q.js:37
+Jv @ index-ClVwlq7Q.js:37
+Tj @ index-ClVwlq7Q.js:37
+WF @ index-ClVwlq7Q.js:37Understand this error
+index-ClVwlq7Q.js:40 📡 apiRequest - Response: 500 
