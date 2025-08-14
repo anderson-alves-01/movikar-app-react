@@ -437,6 +437,33 @@ export default function Checkout() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
+  // Fetch admin settings to check if checkout is enabled
+  const { data: adminSettings } = useQuery({
+    queryKey: ['/api/admin/settings'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/admin/settings');
+      const data = await response.json();
+      return data;
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+
+  // Check if checkout feature is enabled
+  useEffect(() => {
+    if (adminSettings && !adminSettings.enableRentNowCheckout) {
+      toast({
+        title: "Funcionalidade indisponível",
+        description: "O checkout está temporariamente desabilitado. Redirecionando...",
+        variant: "destructive",
+      });
+      
+      setTimeout(() => {
+        const vehicleId = params?.vehicleId;
+        setLocation(vehicleId ? `/vehicle/${vehicleId}` : "/");
+      }, 2000);
+    }
+  }, [adminSettings, params?.vehicleId, setLocation, toast]);
+
   // Get checkout data from URL params or server
   useEffect(() => {
     const loadCheckoutData = async () => {

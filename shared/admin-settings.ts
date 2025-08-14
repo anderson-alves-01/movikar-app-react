@@ -13,6 +13,7 @@ export interface AdminSettings {
   pixTransferDescription: string;
   enableInsuranceOption: boolean; // Feature toggle para opção de seguro
   enableContractSignature: boolean; // Feature toggle para assinatura de contratos
+  enableRentNowCheckout: boolean; // Feature toggle para checkout "Aluga agora"
   // Subscription plan pricing
   essentialPlanPrice: number;
   plusPlanPrice: number;

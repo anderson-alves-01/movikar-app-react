@@ -34,6 +34,7 @@ function AdminSettingsPage() {
     pixTransferDescription: "Repasse alugae",
     enableInsuranceOption: true,
     enableContractSignature: false,
+    enableRentNowCheckout: false,
     essentialPlanPrice: 29.90,
     plusPlanPrice: 59.90,
     annualDiscountPercentage: 20.00,
@@ -92,6 +93,7 @@ function AdminSettingsPage() {
         pixTransferDescription: currentSettings.pixTransferDescription || "Repasse alugae",
         enableInsuranceOption: currentSettings.enableInsuranceOption !== undefined ? currentSettings.enableInsuranceOption : true,
         enableContractSignature: currentSettings.enableContractSignature !== undefined ? currentSettings.enableContractSignature : false,
+        enableRentNowCheckout: currentSettings.enableRentNowCheckout !== undefined ? currentSettings.enableRentNowCheckout : false,
         essentialPlanPrice: parseFloat(currentSettings.essentialPlanPrice?.toString() || "29.90"),
         plusPlanPrice: parseFloat(currentSettings.plusPlanPrice?.toString() || "59.90"),
         annualDiscountPercentage: parseFloat(currentSettings.annualDiscountPercentage?.toString() || "20.00"),
@@ -131,6 +133,7 @@ function AdminSettingsPage() {
           pixTransferDescription: updatedData.pixTransferDescription || "Repasse alugae",
           enableInsuranceOption: updatedData.enableInsuranceOption !== undefined ? updatedData.enableInsuranceOption : true,
           enableContractSignature: updatedData.enableContractSignature !== undefined ? updatedData.enableContractSignature : false,
+          enableRentNowCheckout: updatedData.enableRentNowCheckout !== undefined ? updatedData.enableRentNowCheckout : false,
           essentialPlanPrice: parseFloat(updatedData.essentialPlanPrice?.toString() || "29.90"),
           plusPlanPrice: parseFloat(updatedData.plusPlanPrice?.toString() || "59.90"),
           annualDiscountPercentage: parseFloat(updatedData.annualDiscountPercentage?.toString() || "20.00"),
@@ -548,6 +551,25 @@ function AdminSettingsPage() {
 
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
+                    <Label htmlFor="enableRentNowCheckout" className="text-sm font-medium">
+                      Checkout "Aluga Agora"
+                    </Label>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Permite checkout direto do botão "Aluga Agora" nos cards de veículos
+                    </p>
+                  </div>
+                  <Switch
+                    id="enableRentNowCheckout"
+                    checked={settings.enableRentNowCheckout}
+                    onCheckedChange={(checked) => handleInputChange('enableRentNowCheckout', checked)}
+                    disabled={!isEditing}
+                  />
+                </div>
+
+                <Separator />
+
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
                     <Label htmlFor="enablePixTransfer" className="text-sm font-medium">
                       Repasses PIX Automáticos
                     </Label>
@@ -579,7 +601,7 @@ function AdminSettingsPage() {
                 </div>
 
                 {/* System Status Cards */}
-                <div className="grid grid-cols-3 gap-4 mt-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                   <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                     <div className="flex items-center gap-2 mb-1">
                       <CreditCard className="h-4 w-4 text-green-600" />
@@ -611,6 +633,20 @@ function AdminSettingsPage() {
                     </div>
                     <p className={`text-xs ${settings.enableContractSignature ? 'text-purple-600' : 'text-red-600'}`}>
                       {settings.enableContractSignature ? 'Assinatura Ativa' : 'Desabilitado'}
+                    </p>
+                  </div>
+
+                  <div className={`p-3 border rounded-lg ${settings.enableRentNowCheckout 
+                    ? 'bg-emerald-50 border-emerald-200' 
+                    : 'bg-red-50 border-red-200'}`}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <CreditCard className={`h-4 w-4 ${settings.enableRentNowCheckout ? 'text-emerald-600' : 'text-red-600'}`} />
+                      <span className={`text-sm font-medium ${settings.enableRentNowCheckout ? 'text-emerald-800' : 'text-red-800'}`}>
+                        Aluga Agora
+                      </span>
+                    </div>
+                    <p className={`text-xs ${settings.enableRentNowCheckout ? 'text-emerald-600' : 'text-red-600'}`}>
+                      {settings.enableRentNowCheckout ? 'Checkout Ativo' : 'Desabilitado'}
                     </p>
                   </div>
                 </div>

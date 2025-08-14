@@ -8,6 +8,7 @@ export interface FeatureFlags {
   pixTransferEnabled: boolean;
   stripeTestMode: boolean;
   contractSignatureEnabled: boolean;
+  rentNowCheckoutEnabled: boolean;
 }
 
 // Default admin settings (fallback when admin settings not available)
@@ -16,6 +17,7 @@ const defaultAdminSettings = {
   enablePixTransfer: true,
   pixTransferDescription: "Repasse alugae",
   enableContractSignature: false,
+  enableRentNowCheckout: false,
 };
 
 /**
@@ -36,14 +38,17 @@ export function getFeatureFlags(adminSettings?: any): FeatureFlags {
     stripeTestMode: !isProduction,
     
     // Contract signature based on admin settings (default false)
-    contractSignatureEnabled: settings.enableContractSignature || false
+    contractSignatureEnabled: settings.enableContractSignature || false,
+    
+    // Rent now checkout based on admin settings (default false)
+    rentNowCheckoutEnabled: settings.enableRentNowCheckout || false
   };
 }
 
 /**
  * Client-side feature flags (safe for frontend)
  */
-export function getClientFeatureFlags(adminSettings?: any): Pick<FeatureFlags, 'pixPaymentEnabled' | 'contractSignatureEnabled'> {
+export function getClientFeatureFlags(adminSettings?: any): Pick<FeatureFlags, 'pixPaymentEnabled' | 'contractSignatureEnabled' | 'rentNowCheckoutEnabled'> {
   const isProduction = import.meta.env.MODE === 'production';
   const settings = adminSettings || defaultAdminSettings;
   
@@ -52,6 +57,9 @@ export function getClientFeatureFlags(adminSettings?: any): Pick<FeatureFlags, '
     pixPaymentEnabled: settings.enablePixPayment && (isProduction || import.meta.env.VITE_ENABLE_PIX_PAYMENT === 'true'),
     
     // Contract signature based on admin settings (client-safe)
-    contractSignatureEnabled: settings.enableContractSignature || false
+    contractSignatureEnabled: settings.enableContractSignature || false,
+    
+    // Rent now checkout based on admin settings (client-safe)
+    rentNowCheckoutEnabled: settings.enableRentNowCheckout || false
   };
 }

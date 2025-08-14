@@ -480,14 +480,21 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
             <Button 
               type="submit" 
               className={`w-full font-semibold transition-colors ${
-                hasDateConflict() 
-                  ? 'bg-red-500 hover:bg-red-600 cursor-not-allowed text-white' 
-                  : 'bg-primary text-white hover:bg-red-600'
+                !adminSettings?.enableRentNowCheckout
+                  ? 'bg-gray-400 cursor-not-allowed text-white'
+                  : hasDateConflict() 
+                    ? 'bg-red-500 hover:bg-red-600 cursor-not-allowed text-white' 
+                    : 'bg-primary text-white hover:bg-red-600'
               }`}
-              disabled={!user || !bookingData.startDate || !bookingData.endDate || hasDateConflict()}
+              disabled={!user || !bookingData.startDate || !bookingData.endDate || hasDateConflict() || !adminSettings?.enableRentNowCheckout}
               data-testid="button-book-now"
             >
-              {hasDateConflict() ? (
+              {!adminSettings?.enableRentNowCheckout ? (
+                <span className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  Funcionalidade temporariamente desabilitada
+                </span>
+              ) : hasDateConflict() ? (
                 <span className="flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4" />
                   Datas indisponíveis - Escolha outras datas
@@ -498,9 +505,11 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
             </Button>
             
             <p className="text-xs text-gray-500 text-center">
-              {user 
-                ? "Você será redirecionado para finalizar o pagamento de forma segura."
-                : "Você precisa estar logado para fazer uma reserva."
+              {!adminSettings?.enableRentNowCheckout
+                ? "O sistema de checkout está temporariamente indisponível. Entre em contato com o suporte."
+                : user 
+                  ? "Você será redirecionado para finalizar o pagamento de forma segura."
+                  : "Você precisa estar logado para fazer uma reserva."
               }
             </p>
           </form>

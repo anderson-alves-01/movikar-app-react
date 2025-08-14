@@ -733,6 +733,7 @@ export const adminSettings = pgTable("admin_settings", {
   pixTransferDescription: varchar("pix_transfer_description", { length: 255 }).default("Repasse alugae").notNull(),
   enableInsuranceOption: boolean("enable_insurance_option").default(true).notNull(),
   enableContractSignature: boolean("enable_contract_signature").default(false).notNull(), // Feature toggle para assinatura de contratos
+  enableRentNowCheckout: boolean("enable_rent_now_checkout").default(false).notNull(), // Feature toggle para checkout "Aluga agora"
   // Subscription plan pricing
   essentialPlanPrice: decimal("essential_plan_price", { precision: 8, scale: 2 }).default("29.90").notNull(),
   plusPlanPrice: decimal("plus_plan_price", { precision: 8, scale: 2 }).default("59.90").notNull(),
