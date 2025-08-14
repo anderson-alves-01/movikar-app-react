@@ -34,6 +34,7 @@ import PaymentSuccess from "@/pages/payment-success";
 import ContractPreview from "@/pages/contract-preview";
 import ContractSignedSuccess from "@/pages/contract-signed-success";
 import ContractSignatureError from "@/pages/contract-signature-error";
+import ContractSigned from "@/pages/contract-signed";
 import LoadingDemo from "@/pages/loading-demo";
 import AdminSettings from "@/pages/admin-settings";
 import AdminCouponsPage from "@/pages/admin-coupons";
@@ -94,6 +95,7 @@ function Router() {
       <Route path="/contract-signed-success" component={ContractSignedSuccess} />
       <Route path="/contract-signature-error" component={ContractSignatureError} />
       <Route path="/contract-signature-callback" component={ContractSignedSuccess} />
+      <Route path="/contract-signed" component={ContractSigned} />
       <Route path="/loading-demo" component={LoadingDemo} />
       <Route path="/admin/settings" component={AdminSettings} />
       <Route path="/admin/reports" component={AdminReports} />
