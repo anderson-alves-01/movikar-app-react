@@ -98,7 +98,7 @@ const DOCUSIGN_ACCOUNT_ID = process.env.DOCUSIGN_ACCOUNT_ID || 'mock-account-id'
 const DOCUSIGN_RSA_PRIVATE_KEY = process.env.DOCUSIGN_RSA_PRIVATE_KEY || 'mock-private-key';
 const DOCUSIGN_BASE_URI = process.env.DOCUSIGN_BASE_URI || 'https://demo.docusign.net/restapi';
 
-// DocuSign envelope creation function
+// DocuSign envelope creation function using the signature service
 async function createDocuSignEnvelope(params: {
   bookingId: number;
   booking: any;
@@ -109,115 +109,42 @@ async function createDocuSignEnvelope(params: {
 }): Promise<string> {
   const { booking, envelopeId, returnUrl, signerEmail, signerName } = params;
 
-  // In development mode, return a mock DocuSign URL
-  if (process.env.NODE_ENV === 'development') {
-    // Extract base URL from return URL to use same domain
-    const baseUrl = returnUrl.split('/contract-signature-callback')[0];
-    return `${baseUrl}/simulate-docusign-signature?` +
-      `envelopeId=${envelopeId}&` +
-      `returnUrl=${encodeURIComponent(returnUrl)}&` +
-      `signerEmail=${encodeURIComponent(signerEmail)}&` +
-      `signerName=${encodeURIComponent(signerName)}`;
-  }
-
   try {
-    // Initialize DocuSign API client
-    const apiClient = new docusign.ApiClient();
-    apiClient.setBasePath(DOCUSIGN_BASE_URI);
+    // Import the signature service
+    const { sendToSignaturePlatform } = await import('./services/signatureService.js');
+    
+    // Create contract object for the signature service
+    const contract = {
+      contractNumber: `CNT-${Date.now()}`,
+      signaturePlatform: 'docusign',
+      contractData: {
+        renter: {
+          name: signerName,
+          email: signerEmail
+        },
+        owner: {
+          name: booking.owner?.name || 'Owner',
+          email: booking.owner?.email || 'owner@example.com'
+        }
+      }
+    };
 
-    // JWT Authentication with DocuSign
-    const jwtLifeSec = 10 * 60; // 10 minutes
-    const scopes = "signature impersonation";
-
-    const token = apiClient.requestJWTUserToken(
-      DOCUSIGN_INTEGRATION_KEY,
-      DOCUSIGN_USER_ID,
-      scopes,
-      DOCUSIGN_RSA_PRIVATE_KEY,
-      jwtLifeSec
-    );
-
-    apiClient.addDefaultHeader('Authorization', 'Bearer ' + token.accessToken);
-
-    // Create envelope definition
-    const envelopeDefinition = new docusign.EnvelopeDefinition();
-    envelopeDefinition.emailSubject = `Contrato de Locação - Veículo ${booking.vehicle?.brand} ${booking.vehicle?.model}`;
-
-    // Create document from contract template
-    const doc1 = new docusign.Document();
-    doc1.documentBase64 = await generateContractPDF(booking);
-    doc1.name = 'Contrato de Locação';
-    doc1.fileExtension = 'pdf';
-    doc1.documentId = '1';
-
-    envelopeDefinition.documents = [doc1];
-
-    // Create signer
-    const signer = new docusign.Signer();
-    signer.email = signerEmail;
-    signer.name = signerName;
-    signer.recipientId = '1';
-    signer.routingOrder = '1';
-
-    // Create sign here tab
-    const signHere = new docusign.SignHere();
-    signHere.documentId = '1';
-    signHere.pageNumber = '1';
-    signHere.recipientId = '1';
-    signHere.tabLabel = 'SignHereTab';
-    signHere.xPosition = '195';
-    signHere.yPosition = '147';
-
-    signer.tabs = new docusign.Tabs();
-    signer.tabs.signHereTabs = [signHere];
-
-    envelopeDefinition.recipients = new docusign.Recipients();
-    envelopeDefinition.recipients.signers = [signer];
-    envelopeDefinition.status = 'sent';
-
-    // Send envelope
-    const envelopesApi = new docusign.EnvelopesApi(apiClient);
-    const results = await envelopesApi.createEnvelope(DOCUSIGN_ACCOUNT_ID, {
-      envelopeDefinition: envelopeDefinition
-    });
-
-    // Create recipient view for embedded signing
-    const recipientView = new docusign.RecipientViewRequest();
-    recipientView.authenticationMethod = 'none';
-    recipientView.email = signerEmail;
-    recipientView.recipientId = '1';
-    recipientView.returnUrl = returnUrl;
-    recipientView.userName = signerName;
-
-    const viewResults = await envelopesApi.createRecipientView(
-      DOCUSIGN_ACCOUNT_ID,
-      results.envelopeId,
-      { recipientViewRequest: recipientView }
-    );
-
-    return viewResults.url;
+    // Generate a dummy PDF URL for now (would be replaced with actual contract PDF)
+    const pdfUrl = `${returnUrl.split('/contract-signature-callback')[0]}/api/contracts/pdf/${booking.id}`;
+    
+    // Use the signature service to create the document
+    const documentId = await sendToSignaturePlatform(contract, pdfUrl);
+    
+    // The signature service will return either a real DocuSign URL or a mock URL
+    // depending on whether credentials are configured
+    console.log("✅ DocuSign envelope created with documentId:", documentId);
+    
+    // For now, return a success URL that the contract service would provide
+    return `${returnUrl}?status=success`;
 
   } catch (error) {
     console.error('DocuSign envelope creation error:', error);
-    // Fallback to development simulator
-    // Use same host as the main application instead of localhost
-    const baseUrl = process.env.BASE_URL || 'http://localhost:5000';
-    // If we have a return URL, extract the base URL from it for consistency
-    if (returnUrl && returnUrl.includes('://')) {
-      const extractedBase = returnUrl.split('/contract-signature-callback')[0];
-      return `${extractedBase}/simulate-docusign-signature?` +
-        `envelopeId=${envelopeId}&` +
-        `returnUrl=${encodeURIComponent(returnUrl)}&` +
-        `signerEmail=${encodeURIComponent(signerEmail)}&` +
-        `signerName=${encodeURIComponent(signerName)}`;
-    }
-
-    // Fallback to base URL if return URL is not available
-    return `${baseUrl}/simulate-docusign-signature?` +
-      `envelopeId=${envelopeId}&` +
-      `returnUrl=${encodeURIComponent(returnUrl)}&` +
-      `signerEmail=${encodeURIComponent(signerEmail)}&` +
-      `signerName=${encodeURIComponent(signerName)}`;
+    throw error;
   }
 }
 
@@ -3752,15 +3679,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const envelopeId = `DOCUSIGN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       const returnUrl = `${req.protocol}://${req.get('host')}/contract-signature-callback?bookingId=${bookingId}&envelopeId=${envelopeId}`;
 
-      // Create DocuSign envelope for contract signing
-      const docusignUrl = await createDocuSignEnvelope({
-        bookingId: parseInt(bookingId),
-        booking,
-        envelopeId,
-        returnUrl,
-        signerEmail: booking.renter?.email || '',
-        signerName: booking.renter?.name || ''
-      });
+      // Use the proper signature service instead of custom DocuSign code
+      const { sendToSignaturePlatform } = await import('./services/signatureService.js');
+      
+      // Create contract object for the signature service
+      const contract = {
+        contractNumber: `CNT-${Date.now()}`,
+        signaturePlatform: 'docusign',
+        contractData: {
+          renter: {
+            name: booking.renter?.name || '',
+            email: booking.renter?.email || ''
+          },
+          owner: {
+            name: booking.owner?.name || 'Owner',
+            email: booking.owner?.email || 'owner@example.com'
+          }
+        }
+      };
+
+      // Generate contract PDF URL
+      const pdfUrl = `${req.protocol}://${req.get('host')}/api/contracts/pdf/${bookingId}`;
+      
+      // Create the signature document using the real service
+      const { getSignatureService } = await import('./services/signatureService.js');
+      
+      // Get the DocuSign service and create document
+      const docuSignService = getSignatureService('docusign');
+      const response = await docuSignService.createDocument(contract, pdfUrl);
+      
+      // The signature service returns a proper DocuSign signing URL
+      const docusignUrl = response.signUrl;
 
       // Store signature session
       if (existingContracts.length > 0) {

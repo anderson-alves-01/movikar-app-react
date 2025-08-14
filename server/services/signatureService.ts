@@ -9,6 +9,22 @@ interface SignaturePlatformResponse {
   status: string;
 }
 
+// Interface for contract data used in signature services
+interface ContractForSignature {
+  contractNumber: string;
+  signaturePlatform?: string;
+  contractData: {
+    renter: {
+      name: string;
+      email: string;
+    };
+    owner: {
+      name: string;
+      email: string;
+    };
+  };
+}
+
 // Autentique API integration
 class AutentiqueService {
   private apiKey: string;
@@ -21,7 +37,7 @@ class AutentiqueService {
     }
   }
 
-  async createDocument(contract: Contract, pdfUrl: string): Promise<SignaturePlatformResponse> {
+  async createDocument(contract: ContractForSignature, pdfUrl: string): Promise<SignaturePlatformResponse> {
     if (!this.apiKey) {
       // Mock response for testing
       return {
@@ -125,7 +141,7 @@ class D4SignService {
     this.cryptKey = process.env.D4SIGN_CRYPT_KEY || "";
   }
 
-  async createDocument(contract: Contract, pdfUrl: string): Promise<SignaturePlatformResponse> {
+  async createDocument(contract: ContractForSignature, pdfUrl: string): Promise<SignaturePlatformResponse> {
     if (!this.apiKey || !this.cryptKey) {
       // Mock response for testing
       return {
@@ -301,7 +317,7 @@ class DocuSignService {
     }
   }
 
-  async createDocument(contract: Contract, pdfUrl: string): Promise<SignaturePlatformResponse> {
+  async createDocument(contract: ContractForSignature, pdfUrl: string): Promise<SignaturePlatformResponse> {
     console.log("📄 DocuSignService.createDocument called");
     console.log(`🔑 Credentials check: Integration=${!!this.integrationKey} User=${!!this.userId} Private=${!!this.privateKey}`);
     
@@ -442,7 +458,7 @@ class ClickSignService {
     this.apiKey = process.env.CLICKSIGN_API_KEY || "";
   }
 
-  async createDocument(contract: Contract, pdfUrl: string): Promise<SignaturePlatformResponse> {
+  async createDocument(contract: ContractForSignature, pdfUrl: string): Promise<SignaturePlatformResponse> {
     if (!this.apiKey) {
       // Mock response for testing
       return {
@@ -468,7 +484,7 @@ try {
 }
 
 // Factory function to get the appropriate service
-function getSignatureService(platform: string) {
+export function getSignatureService(platform: string) {
   switch (platform) {
     case 'autentique':
       return new AutentiqueService();
@@ -485,7 +501,7 @@ function getSignatureService(platform: string) {
 
 // Main function to send document to signature platform
 export async function sendToSignaturePlatform(
-  contract: Contract, 
+  contract: ContractForSignature, 
   pdfUrl: string
 ): Promise<string> {
   const service = getSignatureService(contract.signaturePlatform || 'autentique');
