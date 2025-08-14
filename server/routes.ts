@@ -420,16 +420,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const checkoutId = `checkout_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-      // Store data for 30 minutes
+      // Store data for 45 minutes (increased from 30 to give more time)
       checkoutDataStore.set(checkoutId, {
         data: checkoutData,
         timestamp: Date.now(),
         userId: req.user!.id
       });
 
-      // Clean up old entries (older than 30 minutes)
+      // Clean up old entries (older than 45 minutes)
       for (const [key, value] of Array.from(checkoutDataStore.entries())) {
-        if (Date.now() - value.timestamp > 30 * 60 * 1000) {
+        if (Date.now() - value.timestamp > 45 * 60 * 1000) {
           checkoutDataStore.delete(key);
         }
       }
@@ -455,8 +455,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Acesso negado" });
       }
 
-      // Check if expired (30 minutes)
-      if (Date.now() - stored.timestamp > 30 * 60 * 1000) {
+      // Check if expired (45 minutes)
+      if (Date.now() - stored.timestamp > 45 * 60 * 1000) {
         checkoutDataStore.delete(checkoutId);
         return res.status(404).json({ message: "Dados de checkout expirados" });
       }

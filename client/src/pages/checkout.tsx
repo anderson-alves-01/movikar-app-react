@@ -475,23 +475,39 @@ export default function Checkout() {
           
           const parsedData = JSON.parse(decodeURIComponent(data));
           setCheckoutData(parsedData);
-        } catch (error) {
+        } catch (error: any) {
           console.error("Error parsing checkout data:", error);
-          toast({
-            title: "Erro",
-            description: "Dados de checkout inválidos",
-            variant: "destructive",
-          });
-          setLocation("/");
+          
+          // Check if this is a 404 (expired checkout data)
+          if (error.message?.includes("404")) {
+            toast({
+              title: "Sessão de checkout expirada",
+              description: "Seus dados de checkout expiraram. Você será redirecionado para selecionar o veículo novamente.",
+              variant: "destructive",
+            });
+            // Redirect to the vehicle detail page
+            setTimeout(() => {
+              setLocation(`/vehicles/${vehicleId}`);
+            }, 2000);
+          } else {
+            toast({
+              title: "Erro",
+              description: "Dados de checkout inválidos",
+              variant: "destructive",
+            });
+            setLocation("/");
+          }
         }
       } else {
-        // No data found
+        // No data found - redirect to vehicle page for rebooking
         toast({
-          title: "Erro",
-          description: "Dados de checkout não encontrados",
+          title: "Dados de checkout não encontrados",
+          description: "Redirecionando para seleção do veículo...",
           variant: "destructive",
         });
-        setLocation("/");
+        setTimeout(() => {
+          setLocation(`/vehicles/${vehicleId}`);
+        }, 1500);
       }
     };
 
@@ -516,7 +532,14 @@ export default function Checkout() {
         console.log('📤 Making API request with data:', requestData);
         
         const response = await apiRequest("POST", "/api/create-payment-intent", requestData);
-        console.log('📥 API response received, parsing...');
+        console.log('📥 API response received, status:', response.status);
+        
+        if (!response.ok) {
+          console.error('❌ API response not OK:', response.status, response.statusText);
+          const errorText = await response.text();
+          console.error('❌ Error response body:', errorText);
+          throw new Error(`API Error ${response.status}: ${errorText}`);
+        }
 
         const result = await response.json();
         console.log('✅ Payment intent created successfully:', result);
@@ -529,7 +552,12 @@ export default function Checkout() {
         } : null);
         
       } catch (error: any) {
-        console.error("Payment intent creation error:", error);
+        console.error("❌ Payment intent creation error:", error);
+        console.error("❌ Error details:", {
+          message: error.message,
+          name: error.name,
+          stack: error.stack
+        });
         
         // Parse error message to provide better feedback
         const errorMessage = error.message || "Falha ao inicializar pagamento";
