@@ -352,42 +352,19 @@ class DocuSignService {
         }
         const pdfBuffer = await pdfResponse.arrayBuffer();
         pdfBase64 = Buffer.from(pdfBuffer).toString('base64');
+        console.log('✅ Using provided PDF for DocuSign');
       } catch (error) {
-        console.warn('Failed to fetch PDF, using generated contract:', error);
-        pdfBase64 = await this.generateContractPDF(contract);
+        console.warn('Failed to fetch PDF, generating professional contract:', error);
+        pdfBase64 = await this.generateProfessionalContractPDF(contract);
       }
-
-      // Create a simple text document that DocuSign definitely accepts
-      const simpleText = `CONTRATO DE LOCACAO DE VEICULO
       
-Numero do Contrato: ${contract.contractNumber}
-
-LOCATARIO:
-Nome: ${contract.contractData.renter.name}
-Email: ${contract.contractData.renter.email}
-
-PROPRIETARIO:
-Nome: ${contract.contractData.owner.name}
-Email: ${contract.contractData.owner.email}
-
-Data: ${new Date().toLocaleDateString('pt-BR')}
-
-Este contrato estabelece os termos e condicoes para a locacao do veiculo entre as partes mencionadas acima.
-
-Assinatura do Locatario: ______________________
-
-
-Assinatura do Proprietario: ______________________`;
-
-      const textBase64 = Buffer.from(simpleText, 'utf8').toString('base64');
-      
-      // Create envelope definition using plain text
+      // Create envelope definition using professional PDF
       const envelopeDefinition = {
         emailSubject: `Contrato de Locação - ${contract.contractNumber}`,
         documents: [{
-          documentBase64: textBase64,
-          name: `Contrato-${contract.contractNumber}.txt`,
-          fileExtension: 'txt',
+          documentBase64: pdfBase64,
+          name: `Contrato-${contract.contractNumber}.pdf`,
+          fileExtension: 'pdf',
           documentId: '1'
         }],
         recipients: {
@@ -616,47 +593,252 @@ Assinatura do Proprietario: ______________________`;
   }
 
   // Generate a simple valid PDF for testing using a known working template
-  private async generateContractPDF(contract: ContractForSignature): Promise<string> {
-    // Use a well-formed, minimal PDF that DocuSign accepts
-    // This is a valid PDF with proper structure and encoding
-    const pdfContent = [
-      '%PDF-1.4',
-      '1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj',
-      '2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj',
-      '3 0 obj << /Type /Page /Parent 2 0 R /Resources << /Font << /F1 4 0 R >> >> /MediaBox [0 0 612 792] /Contents 5 0 R >> endobj',
-      '4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Times-Roman >> endobj',
-      '5 0 obj << /Length 180 >> stream',
-      'BT',
-      '/F1 12 Tf',
-      '50 750 Td',
-      '(CONTRATO DE LOCACAO DE VEICULO) Tj',
-      '0 -20 Td',
-      `(Contrato: ${contract.contractNumber}) Tj`,
-      '0 -20 Td',
-      `(Locatario: ${contract.contractData.renter.name}) Tj`,
-      '0 -20 Td',
-      `(Proprietario: ${contract.contractData.owner.name}) Tj`,
-      '0 -40 Td',
-      '(Assinatura Locatario: _______________) Tj',
-      '0 -40 Td',
-      '(Assinatura Proprietario: _______________) Tj',
-      'ET',
-      'endstream endobj',
-      'xref',
-      '0 6',
-      '0000000000 65535 f ',
-      '0000000009 00000 n ',
-      '0000000058 00000 n ',
-      '0000000115 00000 n ',
-      '0000000251 00000 n ',
-      '0000000318 00000 n ',
-      'trailer << /Size 6 /Root 1 0 R >>',
-      'startxref',
-      '518',
-      '%%EOF'
-    ].join('\n');
+  private async generateProfessionalContractPDF(contract: ContractForSignature): Promise<string> {
+    console.log('📄 Generating professional contract PDF for DocuSign');
+    
+    // Import the PDF generation service
+    const { generateContractPDF } = await import('./pdfService');
+    const { storage } = await import('../storage');
+    
+    // Get the default contract template
+    const template = await storage.getDefaultContractTemplate();
+    if (!template) {
+      throw new Error('Template de contrato não encontrado');
+    }
 
-    return Buffer.from(pdfContent, 'utf8').toString('base64');
+    // Create a mock contract object for PDF generation
+    const mockContract = {
+      id: 0,
+      bookingId: 0,
+      contractNumber: contract.contractNumber,
+      status: 'draft' as const,
+      templateId: template.id?.toString(),
+      contractData: contract.contractData,
+      signaturePlatform: 'docusign' as const,
+      externalDocumentId: null,
+      renterSigned: false,
+      renterSignedAt: null,
+      renterSignatureIp: null,
+      renterSignatureEvidence: null,
+      ownerSigned: false,
+      ownerSignedAt: null,
+      ownerSignatureIp: null,
+      ownerSignatureEvidence: null,
+      pdfUrl: null,
+      signedPdfUrl: null,
+      cloudStorageId: null,
+      createdBy: null,
+      reviewedBy: null,
+      reviewedAt: null,
+      cancelledAt: null,
+      cancellationReason: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    try {
+      // Generate PDF using the professional template
+      const pdfUrl = await generateContractPDF(mockContract, template);
+      
+      // Since generateContractPDF returns a file path, we need to read the file and convert to base64
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      
+      // The pdfUrl is typically a relative path like `/api/contracts/download/filename.pdf`
+      // We need to get the actual file path
+      const fileName = pdfUrl.split('/').pop();
+      const filePath = path.join(process.cwd(), 'uploads', fileName || '');
+      
+      const pdfBuffer = await fs.readFile(filePath);
+      return pdfBuffer.toString('base64');
+      
+    } catch (error) {
+      console.error('Error generating professional PDF, falling back to simple PDF:', error);
+      
+      // Fallback to a well-structured simple PDF if the complex generation fails
+      return this.generateSimplePDF(contract);
+    }
+  }
+
+  private async generateSimplePDF(contract: ContractForSignature): Promise<string> {
+    // Generate a comprehensive but simple contract using puppeteer directly
+    const puppeteer = await import('puppeteer');
+    
+    const contractHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+            }
+            .header {
+                text-align: center;
+                margin-bottom: 30px;
+                border-bottom: 2px solid #e74c3c;
+                padding-bottom: 20px;
+            }
+            .contract-number {
+                background: #f8f9fa;
+                padding: 10px;
+                border-left: 4px solid #e74c3c;
+                margin: 20px 0;
+            }
+            .section {
+                margin: 20px 0;
+            }
+            .section h3 {
+                color: #e74c3c;
+                border-bottom: 1px solid #ddd;
+                padding-bottom: 5px;
+            }
+            .parties {
+                display: flex;
+                justify-content: space-between;
+                margin: 20px 0;
+            }
+            .party {
+                flex: 1;
+                margin: 0 10px;
+                padding: 15px;
+                background: #f8f9fa;
+                border-radius: 5px;
+            }
+            .vehicle-details {
+                background: #fff;
+                border: 1px solid #ddd;
+                padding: 15px;
+                border-radius: 5px;
+            }
+            .terms-list {
+                padding-left: 20px;
+            }
+            .terms-list li {
+                margin: 5px 0;
+            }
+            .signature-area {
+                margin-top: 50px;
+                display: flex;
+                justify-content: space-between;
+            }
+            .signature-box {
+                width: 200px;
+                border-top: 1px solid #333;
+                text-align: center;
+                padding-top: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>CONTRATO DE LOCAÇÃO DE AUTOMÓVEL POR PRAZO DETERMINADO</h1>
+        </div>
+        
+        <div class="contract-number">
+            <strong>Contrato Nº:</strong> ${contract.contractNumber} | <strong>Data:</strong> ${new Date().toLocaleDateString('pt-BR')}
+        </div>
+
+        <div class="section">
+            <h3>1. PARTES CONTRATANTES</h3>
+            <div class="parties">
+                <div class="party">
+                    <h4>LOCADOR (Proprietário):</h4>
+                    <p><strong>Nome:</strong> ${contract.contractData.owner.name}</p>
+                    <p><strong>E-mail:</strong> ${contract.contractData.owner.email}</p>
+                    <p><strong>Telefone:</strong> ${contract.contractData.owner.phone || 'Não informado'}</p>
+                </div>
+                <div class="party">
+                    <h4>LOCATÁRIO:</h4>
+                    <p><strong>Nome:</strong> ${contract.contractData.renter.name}</p>
+                    <p><strong>E-mail:</strong> ${contract.contractData.renter.email}</p>
+                    <p><strong>Telefone:</strong> ${contract.contractData.renter.phone || 'Não informado'}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>2. OBJETO DO CONTRATO</h3>
+            <div class="vehicle-details">
+                <p><strong>Veículo:</strong> ${contract.contractData.vehicle.brand} ${contract.contractData.vehicle.model}</p>
+                <p><strong>Ano:</strong> ${contract.contractData.vehicle.year}</p>
+                <p><strong>Cor:</strong> ${contract.contractData.vehicle.color}</p>
+                <p><strong>Transmissão:</strong> ${contract.contractData.vehicle.transmission}</p>
+                <p><strong>Combustível:</strong> ${contract.contractData.vehicle.fuel}</p>
+                <p><strong>Lugares:</strong> ${contract.contractData.vehicle.seats}</p>
+                <p><strong>Categoria:</strong> ${contract.contractData.vehicle.category}</p>
+                <p><strong>Localização:</strong> ${contract.contractData.vehicle.location}</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>3. PERÍODO E VALORES</h3>
+            <p><strong>Data de Início:</strong> ${new Date(contract.contractData.booking.startDate).toLocaleDateString('pt-BR')}</p>
+            <p><strong>Data de Término:</strong> ${new Date(contract.contractData.booking.endDate).toLocaleDateString('pt-BR')}</p>
+            <p><strong>Valor Diário:</strong> R$ ${Number(contract.contractData.vehicle.pricePerDay).toFixed(2)}</p>
+            <p><strong>Valor Total:</strong> R$ ${Number(contract.contractData.booking.totalPrice).toFixed(2)}</p>
+            <p><strong>Taxa de Serviço:</strong> R$ ${Number(contract.contractData.booking.servicefee || 0).toFixed(2)}</p>
+        </div>
+
+        <div class="section">
+            <h3>4. TERMOS E CONDIÇÕES</h3>
+            <ul class="terms-list">
+                <li>O locatário deve ter no mínimo 21 anos e possuir CNH válida</li>
+                <li>O veículo deve ser devolvido no mesmo estado em que foi retirado</li>
+                <li>É proibido fumar no interior do veículo</li>
+                <li>Qualquer dano deve ser comunicado imediatamente</li>
+                <li>O locatário é responsável por multas de trânsito durante o período</li>
+                <li>Combustível deve ser devolvido no mesmo nível</li>
+                <li>Atraso na devolução acarreta multa de R$ 50,00 por dia</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>5. RESPONSABILIDADES</h3>
+            <p><strong>Do Locatário:</strong> Devolver o veículo nas mesmas condições, respeitar o horário de devolução, não fumar no interior do veículo, reportar qualquer problema imediatamente.</p>
+            <p><strong>Do Locador:</strong> Entregar o veículo em boas condições, fornecer documentação completa, manter seguro em dia, estar disponível para emergências.</p>
+        </div>
+
+        <div class="signature-area">
+            <div class="signature-box">
+                <div>Assinatura do Locatário</div>
+                <div>${contract.contractData.renter.name}</div>
+            </div>
+            <div class="signature-box">
+                <div>Assinatura do Locador</div>
+                <div>${contract.contractData.owner.name}</div>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+
+    const page = await browser.newPage();
+    await page.setContent(contractHtml, { waitUntil: 'networkidle0' });
+
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: {
+        top: '20mm',
+        right: '15mm',
+        bottom: '20mm',
+        left: '15mm'
+      }
+    });
+
+    await browser.close();
+    return pdfBuffer.toString('base64');
   }
 
   // Generate HTML contract that DocuSign can convert to PDF internally
