@@ -3174,6 +3174,83 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
+
+  // Métodos específicos para produção Stripe
+  async getUsersWithPix(): Promise<any[]> {
+    try {
+      const result = await pool.query(`
+        SELECT id, name, email, pix, location, created_at
+        FROM users 
+        WHERE pix IS NOT NULL AND pix != ''
+        ORDER BY created_at DESC
+      `);
+      return result.rows;
+    } catch (error) {
+      console.error('Error fetching users with PIX:', error);
+      throw error;
+    }
+  }
+
+  async getPayoutStatistics(): Promise<{
+    pending: number;
+    inReview: number;
+    completed: number;
+    failed: number;
+  }> {
+    try {
+      const result = await pool.query(`
+        SELECT 
+          status,
+          COUNT(*) as count
+        FROM payouts 
+        WHERE created_at >= NOW() - INTERVAL '30 days'
+        GROUP BY status
+      `);
+
+      const stats = {
+        pending: 0,
+        inReview: 0,
+        completed: 0,
+        failed: 0
+      };
+
+      result.rows.forEach(row => {
+        const count = parseInt(row.count);
+        switch (row.status) {
+          case 'pending':
+            stats.pending = count;
+            break;
+          case 'manual_review':
+            stats.inReview = count;
+            break;
+          case 'completed':
+            stats.completed = count;
+            break;
+          case 'failed':
+            stats.failed = count;
+            break;
+        }
+      });
+
+      return stats;
+    } catch (error) {
+      console.error('Error fetching payout statistics:', error);
+      return { pending: 0, inReview: 0, completed: 0, failed: 0 };
+    }
+  }
+
+  async updateBookingPaymentStatus(bookingId: number, status: 'pending' | 'paid' | 'failed'): Promise<void> {
+    try {
+      await pool.query(
+        'UPDATE bookings SET payment_status = $1, updated_at = NOW() WHERE id = $2',
+        [status, bookingId]
+      );
+      console.log(`✅ Booking ${bookingId} payment status updated to: ${status}`);
+    } catch (error) {
+      console.error('Error updating booking payment status:', error);
+      throw error;
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();

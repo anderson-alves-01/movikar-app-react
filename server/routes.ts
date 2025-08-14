@@ -4714,24 +4714,142 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Webhook Stripe para trigger automático
+  // Webhook Stripe para trigger automático - PRODUÇÃO
   app.post("/api/webhooks/stripe", async (req, res) => {
     try {
-      // TODO: Validar assinatura do webhook Stripe
-      const event = req.body;
+      console.log("🔔 Webhook Stripe recebido");
+      
+      // Validar assinatura do webhook (essencial para produção)
+      const sig = req.headers['stripe-signature'] as string;
+      const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+      
+      if (!webhookSecret) {
+        console.error("❌ STRIPE_WEBHOOK_SECRET não configurado");
+        return res.status(400).json({ error: "Webhook secret não configurado" });
+      }
 
-      const { autoPayoutService } = await import('./services/autoPayoutService.js');
-      await autoPayoutService.handleStripeWebhook(event);
+      let event: Stripe.Event;
+      try {
+        event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+      } catch (err: any) {
+        console.error("❌ Erro na validação do webhook:", err.message);
+        return res.status(400).json({ error: "Webhook signature verification failed" });
+      }
+
+      console.log("✅ Webhook validado:", event.type);
+
+      // Processar eventos relevantes
+      const { StripeProductionService } = await import('./services/stripeProductionService.js');
+      const stripeService = new StripeProductionService();
+
+      switch (event.type) {
+        case 'payment_intent.succeeded':
+          await stripeService.handlePaymentSucceeded(event.data.object as Stripe.PaymentIntent);
+          break;
+
+        case 'payment_intent.payment_failed':
+          console.log("❌ Pagamento falhou:", event.data.object.id);
+          // Atualizar booking para status failed
+          const failedBooking = await storage.getBookingByPaymentIntent(event.data.object.id);
+          if (failedBooking) {
+            await storage.updateBookingPaymentStatus(failedBooking.id, 'failed');
+          }
+          break;
+
+        case 'invoice.payment_succeeded':
+          console.log("✅ Fatura paga:", event.data.object.id);
+          break;
+
+        case 'customer.subscription.created':
+        case 'customer.subscription.updated':
+          console.log("📋 Assinatura atualizada:", event.data.object.id);
+          break;
+
+        case 'customer.subscription.deleted':
+          console.log("❌ Assinatura cancelada:", event.data.object.id);
+          break;
+
+        default:
+          console.log("ℹ️ Evento não processado:", event.type);
+      }
 
       res.json({ received: true });
 
     } catch (error: any) {
-      console.error("Error handling Stripe webhook:", error);
+      console.error("❌ Erro no webhook Stripe:", error);
       res.status(500).json({ message: "Webhook error" });
     }
   });
 
-  // Trigger manual de repasse (para testes)
+  // Configuração Stripe para produção
+  app.post("/api/admin/stripe/setup-production", authenticateToken, async (req, res) => {
+    try {
+      const user = req.user!;
+      if (user.role !== 'admin') {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      console.log("🚀 Configurando Stripe para produção...");
+
+      const { StripeProductionService } = await import('./services/stripeProductionService.js');
+      const stripeService = new StripeProductionService();
+
+      // 1. Validar configuração atual
+      const validation = await stripeService.validateProductionSetup();
+      
+      if (!validation.isValid) {
+        return res.status(400).json({
+          success: false,
+          message: "Configuração Stripe inválida",
+          issues: validation.issues,
+          recommendations: validation.recommendations
+        });
+      }
+
+      // 2. Configurar webhook
+      const webhook = await stripeService.setupWebhookEndpoint();
+      
+      // 3. Configurar produtos padrão
+      await stripeService.setupDefaultProducts();
+
+      res.json({
+        success: true,
+        message: "Stripe configurado para produção com sucesso!",
+        webhook: {
+          id: webhook.webhookId,
+          secret: webhook.webhookSecret.substring(0, 10) + "..." // Ocultar secret completo
+        },
+        recommendations: validation.recommendations
+      });
+
+    } catch (error: any) {
+      console.error("❌ Erro ao configurar Stripe:", error);
+      res.status(500).json({ message: "Erro ao configurar Stripe para produção" });
+    }
+  });
+
+  // Monitorar repasses PIX
+  app.get("/api/admin/payout-stats", authenticateToken, async (req, res) => {
+    try {
+      const user = req.user!;
+      if (user.role !== 'admin') {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      const { StripeProductionService } = await import('./services/stripeProductionService.js');
+      const stripeService = new StripeProductionService();
+
+      const stats = await stripeService.monitorPendingPayouts();
+      
+      res.json(stats);
+
+    } catch (error: any) {
+      console.error("❌ Erro ao buscar estatísticas:", error);
+      res.status(500).json({ message: "Erro ao buscar estatísticas de repasses" });
+    }
+  });
+
+  // Trigger manual de repasse (para testes e produção)
   app.post("/api/admin/trigger-payout/:bookingId", authenticateToken, async (req, res) => {
     try {
       const user = req.user!;

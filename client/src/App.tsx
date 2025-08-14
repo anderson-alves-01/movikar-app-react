@@ -52,6 +52,7 @@ import DebugAuth from "@/pages/debug-auth";
 import AuthDebug from "@/pages/auth-debug";
 import VehicleInspection from "@/pages/vehicle-inspection";
 import InspectionHistory from "@/pages/inspection-history";
+import StripeProduction from "@/pages/admin/StripeProduction";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt, IOSInstallPrompt } from "@/components/InstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
@@ -101,6 +102,7 @@ function Router() {
       <Route path="/admin/reports" component={AdminReports} />
       <Route path="/admin/subscriptions" component={AdminSubscriptions} />
       <Route path="/admin/coupons" component={AdminCouponsPage} />
+      <Route path="/admin/stripe-production" component={StripeProduction} />
       <Route path="/earnings" component={EarningsPage} />
       <Route path="/debug-pix" component={DebugPix} />
       <Route path="/subscription-plans" component={SubscriptionPlans} />
