@@ -2272,6 +2272,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get inspection by reservation/booking ID
+  app.get("/api/inspections/reservation/:id", authenticateToken, async (req, res) => {
+    try {
+      const reservationId = parseInt(req.params.id);
+      
+      // Verify that the booking belongs to the user (as renter or owner)
+      const booking = await storage.getBooking(reservationId);
+      if (!booking || (booking.renterId !== req.user!.id && booking.ownerId !== req.user!.id)) {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      const inspection = await storage.getInspectionByBooking(reservationId);
+      if (!inspection) {
+        return res.status(404).json({ message: "Vistoria não encontrada" });
+      }
+      
+      res.json(inspection);
+    } catch (error) {
+      console.error("Get inspection by reservation error:", error);
+      res.status(500).json({ message: "Falha ao buscar vistoria da reserva" });
+    }
+  });
+
   app.post("/api/inspections", authenticateToken, async (req, res) => {
     try {
       // Verificar se a reserva pertence ao usuário
