@@ -109,8 +109,8 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
     const insuranceFee = bookingData.includeInsurance ? subtotal * insuranceRate : 0;
     
     // Calculate security deposit (caução)
-    const securityDepositValue = parseFloat(vehicle.securityDepositValue || '20');
-    const securityDepositType = vehicle.securityDepositType || 'percentage';
+    const securityDepositValue = parseFloat(String(vehicle.securityDepositValue || '20'));
+    const securityDepositType = String(vehicle.securityDepositType || 'percentage');
     const securityDeposit = securityDepositType === 'percentage' 
       ? dailyRate * (securityDepositValue / 100)
       : securityDepositValue;
@@ -159,6 +159,26 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check for date conflicts before proceeding
+    if (hasDateConflict()) {
+      toast({
+        title: "Datas não disponíveis",
+        description: "As datas selecionadas conflitam com reservas existentes. Escolha outras datas.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Validate date selection
+    if (!bookingData.startDate || !bookingData.endDate) {
+      toast({
+        title: "Datas obrigatórias",
+        description: "Selecione as datas de retirada e devolução.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (!user) {
       toast({
@@ -247,9 +267,9 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
               <div className="flex justify-between items-center">
                 <span>Caução:</span>
                 <span className="font-medium text-gray-800">
-                  {(vehicle.securityDepositType || 'percentage') === 'percentage' 
-                    ? `${formatCurrency(parseFloat(vehicle.pricePerDay) * parseFloat(vehicle.securityDepositValue || '20') / 100)} (${vehicle.securityDepositValue || 20}%)`
-                    : `${formatCurrency(parseFloat(vehicle.securityDepositValue || '20'))} (valor fixo)`
+                  {(String(vehicle.securityDepositType) || 'percentage') === 'percentage' 
+                    ? `${formatCurrency(parseFloat(vehicle.pricePerDay) * parseFloat(String(vehicle.securityDepositValue || '20')) / 100)} (${vehicle.securityDepositValue || 20}%)`
+                    : `${formatCurrency(parseFloat(String(vehicle.securityDepositValue || '20')))} (valor fixo)`
                   }
                 </span>
               </div>
