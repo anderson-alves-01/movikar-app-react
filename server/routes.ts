@@ -590,9 +590,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Veículo não encontrado" });
       }
 
-      if (vehicle.status !== 'active') {
-        console.log('❌ FALHA NA VALIDAÇÃO - ETAPA 7B: Veículo não ativo');
+      // Verify vehicle status (both 'active' and 'approved' are valid for rental)
+      if (vehicle.status !== 'active' && vehicle.status !== 'approved') {
+        console.log('❌ FALHA NA VALIDAÇÃO - ETAPA 7B: Veículo não disponível para aluguel');
         console.log('📊 DETALHES: vehicleId =', vehicleIdNum, 'status =', vehicle.status);
+        console.log('ℹ️  NOTA: Status válidos para aluguel: active, approved');
         console.log('🎯 RETORNO: HTTP 400 - Veículo não está disponível para aluguel');
         return res.status(400).json({ message: "Veículo não está disponível para aluguel" });
       }
