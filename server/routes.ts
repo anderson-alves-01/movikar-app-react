@@ -516,11 +516,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create payment intent with appropriate payment methods
       if (!stripe) {
-        console.log('❌ Stripe not configured');
-        return res.status(500).json({ message: "Stripe não configurado" });
+        console.log('❌ Stripe not configured - STRIPE_SECRET_KEY missing');
+        return res.status(500).json({ message: "Serviço de pagamento não configurado" });
       }
 
       console.log('🎯 Creating Stripe payment intent...');
+      console.log('💰 Amount in BRL:', totalPrice, '-> cents:', Math.round(parseFloat(totalPrice) * 100));
+      
       const paymentIntent = await stripe.paymentIntents.create({
         amount: Math.round(parseFloat(totalPrice) * 100), // Convert to cents
         currency: 'brl',
@@ -539,12 +541,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         paymentIntentId: paymentIntent.id 
       });
     } catch (error) {
-      console.error("Create payment intent error:", error);
-      console.error("Error details:", {
+      console.error("💥 Create payment intent error:", error);
+      console.error("🔍 Error details:", {
         message: error instanceof Error ? error.message : String(error),
         type: error && typeof error === 'object' && 'type' in error ? error.type : 'unknown',
         code: error && typeof error === 'object' && 'code' in error ? error.code : 'unknown',
-        stack: error instanceof Error ? error.stack : undefined
+        stack: error instanceof Error ? error.stack?.substring(0, 500) : undefined,
+        stripeConfigured: !!stripe,
+        secretKeyExists: !!process.env.STRIPE_SECRET_KEY
       });
       res.status(500).json({ message: "Falha ao criar intent de pagamento" });
     }

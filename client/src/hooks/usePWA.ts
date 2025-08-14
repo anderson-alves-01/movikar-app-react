@@ -40,12 +40,16 @@ export function usePWA() {
 
   const installApp = async () => {
     if (!deferredPrompt) {
+      console.warn('No deferred prompt available');
       return false;
     }
 
     try {
-      deferredPrompt.prompt();
+      // Call prompt() method to show the install prompt
+      await deferredPrompt.prompt();
       const result = await deferredPrompt.userChoice;
+      
+      console.log('PWA install choice:', result.outcome);
       
       if (result.outcome === 'accepted') {
         setIsInstalled(true);
@@ -54,9 +58,13 @@ export function usePWA() {
         return true;
       }
       
+      setDeferredPrompt(null);
+      setIsInstallable(false);
       return false;
     } catch (error) {
       console.error('Error installing PWA:', error);
+      setDeferredPrompt(null);
+      setIsInstallable(false);
       return false;
     }
   };

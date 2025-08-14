@@ -543,6 +543,23 @@ export default function Checkout() {
             description: parsedMessage,
             variant: "destructive",
           });
+        } else if (errorMessage.includes("500:")) {
+          // Handle 500 errors more specifically
+          const actualMessage = errorMessage.replace("500: ", "").replace(/[\{\}]/g, "");
+          let parsedMessage = actualMessage;
+          
+          try {
+            const parsed = JSON.parse(actualMessage);
+            parsedMessage = parsed.message || actualMessage;
+          } catch {
+            // Keep the original message if JSON parsing fails
+          }
+          
+          toast({
+            title: "Erro interno do servidor",
+            description: `Problema temporário: ${parsedMessage}`,
+            variant: "destructive",
+          });
         } else {
           // For other errors, show generic message
           toast({
