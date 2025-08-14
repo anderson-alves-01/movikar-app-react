@@ -173,11 +173,16 @@ class DocuSignService {
     this.userId = process.env.DOCUSIGN_USER_ID || "";
     this.accountId = process.env.DOCUSIGN_ACCOUNT_ID || "";
     this.privateKey = process.env.DOCUSIGN_PRIVATE_KEY || "";
-    this.baseUrl = process.env.DOCUSIGN_BASE_URL || "https://demo.docusign.net/restapi";
+    // Note: DOCUSIGN_BASE_URL includes /restapi, but SDK needs base domain only for setBasePath
+    const baseUrlWithRestApi = process.env.DOCUSIGN_BASE_URL || "https://demo.docusign.net/restapi";
+    this.baseUrl = baseUrlWithRestApi;
+    
+    // For SDK, extract just the base domain without /restapi
+    const baseDomain = baseUrlWithRestApi.replace('/restapi', '');
 
-    // Initialize DocuSign API client
+    // Initialize DocuSign API client  
     this.apiClient = new docusign.ApiClient();
-    this.apiClient.setBasePath(this.baseUrl);
+    this.apiClient.setBasePath(baseDomain);
 
     if (!this.integrationKey || !this.userId || !this.privateKey) {
       console.warn("🟡 DocuSign credentials not configured - using mock mode");
@@ -388,10 +393,11 @@ Assinatura do Proprietario: ______________________`;
         recipients: {
           signers: [
             {
-              email: contract.contractData.renter.email,
+              email: contract.contractData.renter.email.toLowerCase().trim(),
               name: contract.contractData.renter.name,
               recipientId: '1',
               routingOrder: '1',
+              clientUserId: '1', // Adding clientUserId for embedded signing
               tabs: {
                 signHereTabs: [{
                   documentId: '1',
@@ -403,10 +409,10 @@ Assinatura do Proprietario: ______________________`;
               }
             },
             {
-              email: contract.contractData.owner.email,
+              email: contract.contractData.owner.email.toLowerCase().trim(),
               name: contract.contractData.owner.name,
               recipientId: '2',
-              routingOrder: '1',
+              routingOrder: '2', // Changed to sequential signing
               tabs: {
                 signHereTabs: [{
                   documentId: '1',
@@ -422,19 +428,107 @@ Assinatura do Proprietario: ______________________`;
         status: 'sent'
       };
 
-      // Send envelope
-      const envelopesApi = new docusign.EnvelopesApi(this.apiClient);
-      const results = await envelopesApi.createEnvelope(this.accountId, {
-        envelopeDefinition
-      });
+      // Send envelope using direct HTTP call to avoid SDK URL construction issues
+      console.log('Creating envelope with definition:', JSON.stringify(envelopeDefinition, null, 2));
+      
+      let results: any;
+      
+      try {
+        const accessToken = await this.getAccessToken();
+        const envelopeResponse = await fetch(
+          `${this.baseUrl}/v2.1/accounts/${this.accountId}/envelopes`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify(envelopeDefinition)
+          }
+        );
+
+        if (!envelopeResponse.ok) {
+          const errorData = await envelopeResponse.text();
+          console.error('HTTP error creating envelope:', {
+            status: envelopeResponse.status,
+            statusText: envelopeResponse.statusText,
+            url: envelopeResponse.url,
+            errorData: errorData
+          });
+          throw new Error(`HTTP ${envelopeResponse.status}: ${errorData}`);
+        }
+
+        results = await envelopeResponse.json();
+        console.log('Envelope creation results:', JSON.stringify(results, null, 2));
+        console.log('Envelope ID received:', results.envelopeId);
+
+        if (!results.envelopeId) {
+          throw new Error('No envelope ID returned from DocuSign');
+        }
+
+        // Add a small delay to ensure envelope is ready
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Verify envelope exists and get recipients for debugging
+        try {
+          const envelopeStatus = await fetch(
+            `${this.baseUrl}/v2.1/accounts/${this.accountId}/envelopes/${results.envelopeId}`,
+            {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${await this.getAccessToken()}`,
+                'Accept': 'application/json'
+              }
+            }
+          );
+          
+          if (envelopeStatus.ok) {
+            const envelopeInfo = await envelopeStatus.json();
+            console.log('Envelope status:', envelopeInfo.status);
+            
+            // Get recipients
+            const recipientsResponse = await fetch(
+              `${this.baseUrl}/v2.1/accounts/${this.accountId}/envelopes/${results.envelopeId}/recipients`,
+              {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${await this.getAccessToken()}`,
+                  'Accept': 'application/json'
+                }
+              }
+            );
+            
+            if (recipientsResponse.ok) {
+              const recipients = await recipientsResponse.json();
+              console.log('Envelope recipients:', JSON.stringify(recipients, null, 2));
+            }
+          }
+        } catch (verifyError) {
+          console.warn('Could not verify envelope:', verifyError);
+        }
+
+      } catch (envelopeError: any) {
+        console.error('Envelope creation failed:', {
+          message: envelopeError.message,
+          response: envelopeError.response?.body || envelopeError.response?.data,
+          status: envelopeError.response?.status
+        });
+        throw envelopeError;
+      }
 
       // Get signing URL for first recipient using direct HTTP call for better control
+      // Ensure exact match with what was sent in envelope creation
+      const signerEmail = contract.contractData.renter.email.toLowerCase().trim();
+      const signerName = contract.contractData.renter.name || 'Locatário';
+      
       const viewRequest = {
         returnUrl: `${process.env.APP_URL || 'http://localhost:5000'}/contract-signed`,
         authenticationMethod: 'none',
-        email: contract.contractData.renter.email,
-        userName: contract.contractData.renter.name || 'Locatário',
-        recipientId: '1'
+        email: signerEmail,
+        userName: signerName,
+        recipientId: '1',
+        clientUserId: '1' // Adding clientUserId which is sometimes required
       };
 
       console.log('Creating recipient view with parameters:', JSON.stringify(viewRequest, null, 2));
@@ -443,8 +537,11 @@ Assinatura do Proprietario: ______________________`;
       const directAccessToken = await this.getAccessToken();
       console.log('Direct access token available:', !!directAccessToken);
       
-      const response = await fetch(
-        `${this.baseUrl}/restapi/v2.1/accounts/${this.accountId}/envelopes/${results.envelopeId}/views/recipient`,
+      const fullUrl = `${this.baseUrl}/v2.1/accounts/${this.accountId}/envelopes/${results.envelopeId}/views/recipient`;
+      console.log('🔍 Full URL being constructed:', fullUrl);
+      console.log('🔍 Base URL:', this.baseUrl);
+      
+      const response = await fetch(fullUrl,
         {
           method: 'POST',
           headers: {
@@ -458,7 +555,14 @@ Assinatura do Proprietario: ______________________`;
 
       if (!response.ok) {
         const errorData = await response.text();
-        console.error('HTTP error creating recipient view:', response.status, errorData);
+        console.error('HTTP error creating recipient view:', {
+          status: response.status,
+          statusText: response.statusText,
+          url: response.url,
+          errorData: errorData,
+          envelopeId: results.envelopeId,
+          accountId: this.accountId
+        });
         throw new Error(`HTTP ${response.status}: ${errorData}`);
       }
 
