@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 import { Loading } from '@/components/ui/loading';
 import Header from '@/components/header';
+import { apiRequest } from "@/lib/queryClient";
+import type { AdminSettings } from "@shared/admin-settings";
 
 interface Inspection {
   id: number;
@@ -60,6 +62,21 @@ interface Reservation {
 export default function InspectionHistory() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'pending'>('all');
+
+  // Fetch feature toggles (public endpoint)
+  const { data: featureToggles } = useQuery({
+    queryKey: ['/api/public/feature-toggles'],
+    queryFn: async () => {
+      const response = await fetch('/api/public/feature-toggles');
+      if (!response.ok) {
+        throw new Error('Failed to fetch feature toggles');
+      }
+      const data = await response.json();
+      return data;
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    retry: false
+  });
 
   // Buscar vistorias concluídas
   const { data: inspections, isLoading: loadingInspections } = useQuery<Inspection[]>({
@@ -230,16 +247,18 @@ export default function InspectionHistory() {
                         </div>
                       </div>
 
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={() => window.location.href = `/inspection/${reservation.id}`}
-                          className="flex items-center gap-2"
-                          data-testid={`button-start-inspection-${reservation.id}`}
-                        >
-                          <Plus className="h-4 w-4" />
-                          Iniciar Vistoria
-                        </Button>
-                      </div>
+                      {featureToggles?.enableRentNowCheckout && (
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => window.location.href = `/inspection/${reservation.id}`}
+                            className="flex items-center gap-2"
+                            data-testid={`button-start-inspection-${reservation.id}`}
+                          >
+                            <Plus className="h-4 w-4" />
+                            Realizar Vistoria
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

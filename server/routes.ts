@@ -4599,6 +4599,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public endpoint for feature toggles (no authentication required)
+  app.get("/api/public/feature-toggles", async (req, res) => {
+    try {
+      console.log("🔧 Fetching public feature toggles...");
+      const dbSettings = await storage.getAdminSettings();
+      
+      // Return only the feature toggles that need to be public
+      const publicToggles = {
+        enableRentNowCheckout: dbSettings?.enableRentNowCheckout || false,
+        enableInsuranceOption: dbSettings?.enableInsuranceOption || false,
+        enableServiceFee: dbSettings?.enableServiceFee === true
+      };
+      
+      console.log("🔧 Public feature toggles:", publicToggles);
+      res.json(publicToggles);
+    } catch (error) {
+      console.error("Error fetching feature toggles:", error);
+      // Return default values on error
+      res.json({
+        enableRentNowCheckout: false,
+        enableInsuranceOption: false,
+        enableServiceFee: false
+      });
+    }
+  });
+
   // Admin Settings API routes
   app.get("/api/admin/settings", authenticateToken, requireAdmin, async (req, res) => {
     try {

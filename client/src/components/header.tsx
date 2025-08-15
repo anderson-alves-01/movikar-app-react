@@ -15,6 +15,9 @@ import { Search, Menu, User, MessageCircle, Car, LogOut, Shield, Bell, Gift, Spa
 import { useAuthStore } from "@/lib/auth";
 import { useSearch } from "@/contexts/SearchContext";
 import { buildSearchParams } from "@/lib/searchUtils";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import type { AdminSettings } from "@shared/admin-settings";
 // import AddVehicleModal from "./add-vehicle-modal";
 
 export default function Header() {
@@ -26,6 +29,21 @@ export default function Header() {
   const [refreshing, setRefreshing] = useState(false);
   const { user, token, clearAuth, refreshUser } = useAuthStore();
   const { updateFilter, clearFilters } = useSearch();
+
+  // Fetch feature toggles (public endpoint)
+  const { data: featureToggles } = useQuery({
+    queryKey: ['/api/public/feature-toggles'],
+    queryFn: async () => {
+      const response = await fetch('/api/public/feature-toggles');
+      if (!response.ok) {
+        throw new Error('Failed to fetch feature toggles');
+      }
+      const data = await response.json();
+      return data;
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    retry: false
+  });
 
   // Removed automatic refresh to prevent loops - use manual refresh button instead
 
@@ -295,12 +313,14 @@ export default function Header() {
                           <span className="text-purple-600 font-medium">Planos Premium</span>
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link href="/earnings" className="cursor-pointer">
-                          <DollarSign className="h-4 w-4 mr-2" />
-                          Meus Ganhos
-                        </Link>
-                      </DropdownMenuItem>
+                      {featureToggles?.enableRentNowCheckout && (
+                        <DropdownMenuItem asChild>
+                          <Link href="/earnings" className="cursor-pointer">
+                            <DollarSign className="h-4 w-4 mr-2" />
+                            Meus Ganhos
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem asChild>
                         <Link href="/document-verification" className="cursor-pointer">
                           <Shield className="h-4 w-4 mr-2" />

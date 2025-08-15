@@ -43,15 +43,19 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch admin settings for dynamic fee calculation
+  // Fetch admin settings for dynamic fee calculation (public endpoint)
   const { data: adminSettings } = useQuery({
-    queryKey: ['/api/admin/settings'],
+    queryKey: ['/api/public/feature-toggles'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/admin/settings');
+      const response = await fetch('/api/public/feature-toggles');
+      if (!response.ok) {
+        throw new Error('Failed to fetch feature toggles');
+      }
       const data = await response.json();
-      return data as AdminSettings;
+      return data;
     },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    retry: false
   });
 
   // Fetch unavailable dates for the vehicle
