@@ -602,21 +602,18 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
                   </Button>
                 )}
                 
-                <div className="text-xs text-gray-500 space-y-1 mt-3">
-                  <p className="text-center font-medium text-green-700">
-                    📧 <strong>Alugaê:</strong> Envia email para o proprietário (sem pagamento)
-                  </p>
-                  {adminSettings?.enableRentNowCheckout && (
+                {adminSettings?.enableRentNowCheckout && (
+                  <div className="text-xs text-gray-500 space-y-1 mt-3">
                     <p className="text-center font-medium text-blue-700">
                       💳 <strong>Pagar Agora:</strong> Pagamento imediato e confirmação automática
                     </p>
-                  )}
-                  {!user && (
-                    <p className="text-center text-amber-600 font-medium">
-                      ⚠️ Você precisa estar logado para usar essas opções
-                    </p>
-                  )}
-                </div>
+                    {!user && (
+                      <p className="text-center text-amber-600 font-medium">
+                        ⚠️ Você precisa estar logado para usar essas opções
+                      </p>
+                    )}
+                  </div>
+                )}
           </form>
         </CardContent>
       </Card>
