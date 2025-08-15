@@ -6326,6 +6326,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test endpoints for integration testing
+  if (process.env.NODE_ENV === 'development') {
+    // Schema validation endpoint
+    app.get("/api/test/schema-check", async (req, res) => {
+      try {
+        // Check if all monetization tables exist by running simple queries
+        const checks = [
+          { table: 'premium_services', query: () => db.select().from(premiumServices).limit(1) },
+          { table: 'qualified_leads', query: () => db.select().from(qualifiedLeads).limit(1) },
+          { table: 'vehicle_boosts', query: () => db.select().from(vehicleBoosts).limit(1) },
+          { table: 'user_premium_services', query: () => db.select().from(userPremiumServices).limit(1) }
+        ];
+
+        const tables = [];
+        for (const check of checks) {
+          try {
+            await check.query();
+            tables.push(check.table);
+          } catch (error) {
+            console.error(`Table ${check.table} check failed:`, error);
+          }
+        }
+
+        res.json({
+          status: 'success',
+          tables,
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error("Schema check error:", error);
+        res.status(500).json({ 
+          status: 'error',
+          message: error.message,
+          timestamp: new Date().toISOString()
+        });
+      }
+    });
+
+    // Test endpoint to validate APIs are working
+    app.get("/api/test/monetization-health", async (req, res) => {
+      try {
+        const checks = [];
+        
+        // Check each endpoint
+        const endpoints = [
+          { name: 'Premium Services', path: '/api/premium-services' },
+          { name: 'Qualified Leads', path: '/api/qualified-leads' },
+          { name: 'Vehicle Boosts', path: '/api/vehicle-boosts' },
+          { name: 'User Premium Services', path: '/api/user-premium-services' }
+        ];
+
+        for (const endpoint of endpoints) {
+          try {
+            // Make internal request to test endpoint
+            const testResponse = await fetch(`http://localhost:5000${endpoint.path}`);
+            checks.push({
+              name: endpoint.name,
+              path: endpoint.path,
+              status: testResponse.ok ? 'OK' : 'ERROR',
+              statusCode: testResponse.status
+            });
+          } catch (error) {
+            checks.push({
+              name: endpoint.name,
+              path: endpoint.path,
+              status: 'ERROR',
+              error: error.message
+            });
+          }
+        }
+
+        const allHealthy = checks.every(check => check.status === 'OK');
+        
+        res.json({
+          status: allHealthy ? 'healthy' : 'unhealthy',
+          checks,
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error("Health check error:", error);
+        res.status(500).json({ 
+          status: 'error',
+          message: error.message,
+          timestamp: new Date().toISOString()
+        });
+      }
+    });
+  }
+
   const httpServer = createServer(app);
   return httpServer;
 }

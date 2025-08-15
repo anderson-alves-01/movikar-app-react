@@ -82,6 +82,13 @@ export const MONETIZATION_CONFIG = {
     }
   },
 
+  // Preços dos boosts para fácil referência
+  BOOST_PRICING: {
+    HOMEPAGE_HIGHLIGHT: 15.00,
+    CATEGORY_HIGHLIGHT: 10.00,
+    EVENT_HIGHLIGHT: 25.00
+  },
+
   // 3. Ferramentas de Gestão Avançada (Módulos Opcionais)
   MANAGEMENT_MODULES: {
     CHECKIN_CHECKOUT: {

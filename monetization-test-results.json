@@ -1,0 +1,64 @@
+{
+  "timestamp": "2025-08-15T13:48:54.109Z",
+  "tests": [
+    {
+      "name": "1. Validação do Schema do Banco",
+      "status": "PASSOU",
+      "duration": "2746ms",
+      "details": "Todas as tabelas necessárias encontradas: premium_services, qualified_leads, vehicle_boosts, user_premium_services",
+      "timestamp": "2025-08-15T13:48:56.862Z"
+    },
+    {
+      "name": "2. Validação dos Dados de Demonstração",
+      "status": "FALHOU",
+      "duration": "374ms",
+      "details": "Leads Qualificados: encontrados 0, esperado mínimo 1",
+      "timestamp": "2025-08-15T13:48:57.236Z"
+    },
+    {
+      "name": "3. Funcionalidades de Leads Qualificados",
+      "status": "FALHOU",
+      "duration": "95ms",
+      "details": "Nenhum lead qualificado encontrado",
+      "timestamp": "2025-08-15T13:48:57.332Z"
+    },
+    {
+      "name": "4. Sistema de Boosts de Veículos",
+      "status": "FALHOU",
+      "duration": "165ms",
+      "details": "Nenhum boost de veículo encontrado",
+      "timestamp": "2025-08-15T13:48:57.497Z"
+    },
+    {
+      "name": "5. Serviços Premium",
+      "status": "PASSOU",
+      "duration": "51ms",
+      "details": "10 serviços premium válidos (tipos: support, inspection, cleaning, insurance, delivery)",
+      "timestamp": "2025-08-15T13:48:57.548Z"
+    },
+    {
+      "name": "6. Acessibilidade das Novas Páginas",
+      "status": "PASSOU",
+      "duration": "10ms",
+      "details": "Página de Leads: acessível (200), Página de Boosts: acessível (200)",
+      "timestamp": "2025-08-15T13:48:57.559Z"
+    },
+    {
+      "name": "7. APIs de Monetização",
+      "status": "PASSOU",
+      "duration": "40ms",
+      "details": "/api/qualified-leads: OK (object), /api/vehicle-boosts: OK (object), /api/premium-services: OK (array), /api/user-premium-services: OK (object)",
+      "timestamp": "2025-08-15T13:48:57.599Z"
+    }
+  ],
+  "summary": {
+    "total": 7,
+    "passed": 4,
+    "failed": 3,
+    "errors": [
+      "2. Validação dos Dados de Demonstração: Leads Qualificados: encontrados 0, esperado mínimo 1",
+      "3. Funcionalidades de Leads Qualificados: Nenhum lead qualificado encontrado",
+      "4. Sistema de Boosts de Veículos: Nenhum boost de veículo encontrado"
+    ]
+  }
+}
