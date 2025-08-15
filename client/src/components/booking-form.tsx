@@ -543,10 +543,9 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
               </div>
             )}
 
-            {/* Action Buttons - Only show if checkout is enabled */}
-            {adminSettings?.enableRentNowCheckout && (
-              <>
-                {/* Primary Action: Rent Now Request (No payment required) */}
+            {/* Action Buttons */}
+            
+                {/* Primary Action: Rent Now Request (No payment required) - Always visible */}
                 <Button 
                   type="button"
                   onClick={handleRentNow}
@@ -570,52 +569,54 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
                     </span>
                   ) : (
                     <span className="flex items-center gap-2">
-                      📧 Solicitar Aluguel
+                      📧 Alugaê
                       {pricing.days > 0 && <span className="ml-2 font-normal">({formatCurrency(pricing.total)})</span>}
                     </span>
                   )}
                 </Button>
 
-                {/* Secondary Action: Immediate Checkout (With payment) */}
-                <Button 
-                  type="submit" 
-                  variant="outline"
-                  className={`w-full font-semibold transition-colors ${
-                    hasDateConflict() 
-                      ? 'border-red-500 text-red-500 cursor-not-allowed' 
-                      : 'border-primary text-primary hover:bg-primary hover:text-white'
-                  }`}
-                  disabled={!user || !bookingData.startDate || !bookingData.endDate || hasDateConflict()}
-                  data-testid="button-book-now"
-                >
-                  {hasDateConflict() ? (
-                    <span className="flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4" />
-                      Datas indisponíveis
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      💳 Pagar Agora
-                      {pricing.days > 0 && <span className="ml-2 font-normal">({formatCurrency(pricing.total)})</span>}
-                    </span>
-                  )}
-                </Button>
+                {/* Secondary Action: Immediate Checkout (With payment) - Only show if "Checkout Aluga Agora" toggle is active */}
+                {adminSettings?.enableRentNowCheckout && (
+                  <Button 
+                    type="submit" 
+                    variant="outline"
+                    className={`w-full font-semibold transition-colors ${
+                      hasDateConflict() 
+                        ? 'border-red-500 text-red-500 cursor-not-allowed' 
+                        : 'border-primary text-primary hover:bg-primary hover:text-white'
+                    }`}
+                    disabled={!user || !bookingData.startDate || !bookingData.endDate || hasDateConflict()}
+                    data-testid="button-book-now"
+                  >
+                    {hasDateConflict() ? (
+                      <span className="flex items-center gap-2">
+                        <AlertTriangle className="h-4 w-4" />
+                        Datas indisponíveis
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        💳 Pagar Agora
+                        {pricing.days > 0 && <span className="ml-2 font-normal">({formatCurrency(pricing.total)})</span>}
+                      </span>
+                    )}
+                  </Button>
+                )}
                 
                 <div className="text-xs text-gray-500 space-y-1 mt-3">
                   <p className="text-center font-medium text-green-700">
-                    📧 <strong>Solicitar Aluguel:</strong> Envia email para o proprietário (sem pagamento)
+                    📧 <strong>Alugaê:</strong> Envia email para o proprietário (sem pagamento)
                   </p>
-                  <p className="text-center font-medium text-blue-700">
-                    💳 <strong>Pagar Agora:</strong> Pagamento imediato e confirmação automática
-                  </p>
+                  {adminSettings?.enableRentNowCheckout && (
+                    <p className="text-center font-medium text-blue-700">
+                      💳 <strong>Pagar Agora:</strong> Pagamento imediato e confirmação automática
+                    </p>
+                  )}
                   {!user && (
                     <p className="text-center text-amber-600 font-medium">
                       ⚠️ Você precisa estar logado para usar essas opções
                     </p>
                   )}
                 </div>
-              </>
-            )}
           </form>
         </CardContent>
       </Card>
