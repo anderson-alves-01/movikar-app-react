@@ -53,6 +53,8 @@ import AuthDebug from "@/pages/auth-debug";
 import VehicleInspection from "@/pages/vehicle-inspection";
 import InspectionHistory from "@/pages/inspection-history";
 import StripeProduction from "@/pages/admin/StripeProduction";
+import OwnerLeads from "@/pages/owner-leads";
+import VehicleBoosts from "@/pages/vehicle-boosts";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt, IOSInstallPrompt } from "@/components/InstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
@@ -119,6 +121,19 @@ function Router() {
       <Route path="/test-auth-flow" component={TestAuthFlow} />
       <Route path="/debug-auth" component={DebugAuth} />
       <Route path="/auth-debug" component={AuthDebug} />
+      
+      {/* New Monetization Routes */}
+      <Route path="/owner-leads">
+        <ProtectedRoute requireAuth={true}>
+          <OwnerLeads />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/vehicles/:vehicleId/boosts">
+        <ProtectedRoute requireAuth={true}>
+          <VehicleBoosts />
+        </ProtectedRoute>
+      </Route>
+      
       <Route component={NotFound} />
     </Switch>
   );

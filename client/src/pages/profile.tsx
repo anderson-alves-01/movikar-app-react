@@ -27,7 +27,10 @@ import {
   XCircle,
   Clock,
   AlertTriangle,
-  ClipboardCheck
+  ClipboardCheck,
+  Users,
+  Eye,
+  Zap
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -522,6 +525,49 @@ export default function Profile() {
 
           {/* Owner Bookings */}
           <TabsContent value="owner">
+            {/* Monetization Features for Owners */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <Users className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-green-800">Leads Qualificados</h3>
+                      <p className="text-sm text-green-600">Interessados nos seus veículos</p>
+                    </div>
+                  </div>
+                  <Button asChild variant="outline" className="w-full border-green-200 text-green-700 hover:bg-green-100">
+                    <Link href="/owner-leads">
+                      <Eye className="h-4 w-4 mr-2" />
+                      Ver Leads
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200">
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <Zap className="h-5 w-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-purple-800">Destacar Veículos</h3>
+                      <p className="text-sm text-purple-600">Aumente a visibilidade</p>
+                    </div>
+                  </div>
+                  <Button asChild variant="outline" className="w-full border-purple-200 text-purple-700 hover:bg-purple-100">
+                    <Link href="/vehicles">
+                      <Star className="h-4 w-4 mr-2" />
+                      Gerenciar Boosts
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
             <Card>
               <CardHeader>
                 <CardTitle>Reservas dos Meus Veículos</CardTitle>

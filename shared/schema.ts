@@ -1063,6 +1063,114 @@ export type InsertVehicleAvailability = z.infer<typeof insertVehicleAvailability
 export type WaitingQueue = typeof waitingQueue.$inferSelect;
 export type InsertWaitingQueue = z.infer<typeof insertWaitingQueueSchema>;
 
+// Qualified Leads table - Sistema de leads qualificados para locadores
+export const qualifiedLeads = pgTable("qualified_leads", {
+  id: serial("id").primaryKey(),
+  vehicleId: integer("vehicle_id").references(() => vehicles.id).notNull(),
+  ownerId: integer("owner_id").references(() => users.id).notNull(),
+  renterId: integer("renter_id").references(() => users.id).notNull(),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  contactInfo: jsonb("contact_info").$type<{
+    name: string;
+    phone: string;
+    email: string;
+  }>().notNull(),
+  status: varchar("status", { length: 20 }).default("pending").notNull(), // pending, purchased, expired
+  purchasedAt: timestamp("purchased_at"),
+  purchasedPrice: decimal("purchased_price", { precision: 8, scale: 2 }),
+  leadScore: integer("lead_score").default(0).notNull(), // Score baseado no interesse do locatário
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Vehicle Boost table - Sistema de destaque pago por anúncio
+export const vehicleBoosts = pgTable("vehicle_boosts", {
+  id: serial("id").primaryKey(),
+  vehicleId: integer("vehicle_id").references(() => vehicles.id).notNull(),
+  ownerId: integer("owner_id").references(() => users.id).notNull(),
+  boostType: varchar("boost_type", { length: 30 }).notNull(), // homepage_highlight, category_highlight, event_highlight
+  boostTitle: varchar("boost_title", { length: 100 }).notNull(),
+  boostDescription: text("boost_description"),
+  price: decimal("price", { precision: 8, scale: 2 }).notNull(),
+  duration: integer("duration").notNull(), // Duration in days
+  status: varchar("status", { length: 20 }).default("active").notNull(), // active, expired, cancelled
+  isActive: boolean("is_active").default(true).notNull(),
+  views: integer("views").default(0).notNull(),
+  clicks: integer("clicks").default(0).notNull(),
+  conversions: integer("conversions").default(0).notNull(), // Leads or bookings generated
+  paymentIntentId: varchar("payment_intent_id", { length: 255 }),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Premium Services table - Serviços premium para locatários
+export const premiumServices = pgTable("premium_services", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description").notNull(),
+  serviceType: varchar("service_type", { length: 50 }).notNull(), // document_verification, insurance, good_payer_certificate
+  price: decimal("price", { precision: 8, scale: 2 }).notNull(),
+  duration: integer("duration").default(1).notNull(), // Duration in days for services
+  isActive: boolean("is_active").default(true).notNull(),
+  features: jsonb("features").$type<string[]>().default([]),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User Premium Services table - Serviços premium adquiridos pelos usuários
+export const userPremiumServices = pgTable("user_premium_services", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  serviceId: integer("service_id").references(() => premiumServices.id).notNull(),
+  bookingId: integer("booking_id").references(() => bookings.id),
+  status: varchar("status", { length: 20 }).default("active").notNull(), // active, expired, used
+  purchasePrice: decimal("purchase_price", { precision: 8, scale: 2 }).notNull(),
+  paymentIntentId: varchar("payment_intent_id", { length: 255 }),
+  expiresAt: timestamp("expires_at"),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type QualifiedLead = typeof qualifiedLeads.$inferSelect;
+export type InsertQualifiedLead = typeof qualifiedLeads.$inferInsert;
+export type VehicleBoost = typeof vehicleBoosts.$inferSelect;
+export type InsertVehicleBoost = typeof vehicleBoosts.$inferInsert;
+export type PremiumService = typeof premiumServices.$inferSelect;
+export type InsertPremiumService = typeof premiumServices.$inferInsert;
+export type UserPremiumService = typeof userPremiumServices.$inferSelect;
+export type InsertUserPremiumService = typeof userPremiumServices.$inferInsert;
+
+// Zod schemas for new monetization features
+export const insertQualifiedLeadSchema = createInsertSchema(qualifiedLeads).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertVehicleBoostSchema = createInsertSchema(vehicleBoosts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPremiumServiceSchema = createInsertSchema(premiumServices).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertUserPremiumServiceSchema = createInsertSchema(userPremiumServices).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertQualifiedLeadForm = z.infer<typeof insertQualifiedLeadSchema>;
+export type InsertVehicleBoostForm = z.infer<typeof insertVehicleBoostSchema>;
+export type InsertPremiumServiceForm = z.infer<typeof insertPremiumServiceSchema>;
+export type InsertUserPremiumServiceForm = z.infer<typeof insertUserPremiumServiceSchema>;
+
 // Extended types with relations
 export type VehicleWithOwner = Vehicle & {
   owner: User;

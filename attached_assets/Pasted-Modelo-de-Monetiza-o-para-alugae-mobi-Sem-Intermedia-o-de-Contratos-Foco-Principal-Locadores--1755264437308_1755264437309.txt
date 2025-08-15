@@ -1,0 +1,58 @@
+Modelo de Monetização para alugae.mobi (Sem Intermediação de Contratos)
+Foco Principal: Locadores (quem oferece veículos/imóveis para alugar)
+1. Planos de Assinatura para Locadores (Modelo Freemium)
+Como funciona:
+Locadores pagam mensalmente/anualmente para acessar recursos avançados de gestão e visibilidade.
+Versão Gratuita (Básico):
+Até 3 anúncios ativos.
+Cálculo básico de diárias.
+Calendário de disponibilidade simples.
+Aparece em buscas orgânicas (sem destaque).
+Plano Premium (Ex.: R$ 39,90/mês):
+Anúncios ilimitados.
+Destaque nos resultados (ex.: selo "Premium", topo das buscas).
+Relatórios avançados: Taxa de ocupação, períodos de alta demanda, comparação de preços.
+Gestão inteligente de disponibilidade: Sincronização com calendários externos (Google Calendar), bloqueio automático de datas já reservadas.
+Cálculo personalizado de diárias: Regras dinâmicas (ex.: preços mais altos em feriados, eventos locais).
+Plano Enterprise (Ex.: R$ 149,90/mês):
+Para frotas ou imobiliárias: dashboard multiusuário, API de integração, suporte dedicado.
+Por que funciona?
+Locadores com mais itens para alugar precisam de eficiência. O plano Premium resolve dores reais (gestão de múltiplos anúncios, otimização de preços) e aumenta as chances de alugar.
+2. Destaque Pago por Anúncio (Pay-per-Boost)
+Como funciona:
+Locadores pagam para destacar anúncios específicos por um período limitado (ex.: 7 dias).
+Exemplos de destaque:
+"Anúncio em destaque na página inicial" (R$ 15,00/semana).
+"Destaque em buscas por categoria" (ex.: "carros populares" - R$ 10,00/semana).
+"Destaque durante eventos locais" (ex.: Carnaval, Rock in Rio - R$ 25,00/semana).
+Vantagens:
+Ideal para locadores que não querem assinatura, mas precisam de visibilidade pontual.
+Gera receita sob demanda e alinha-se à sazonalidade do mercado.
+3. Ferramentas de Gestão Avançada (Módulos Opcionais)
+Como funciona:
+Ofereça módulos pagos para locadores que precisam de funcionalidades específicas:
+Gestão de Check-in/Check-out (R$ 19,90/mês): Sistema para registrar entradas/saídas, gerar relatórios de uso.
+Preços Dinâmicos Automáticos (R$ 29,90/mês): Ajuste automático de diárias com base em demanda, concorrência ou eventos.
+Integração com Seguradoras (R$ 15,00/mês): Conexão direta para oferecer seguros aos locatários (a plataforma ganha comissão por indicação).
+Vantagens:
+Locadores pagam apenas pelo que usam (modelo "pay-as-you-go").
+Transforma funcionalidades técnicas em fontes de receita.
+4. Leads Qualificados para Locadores
+Como funciona:
+Venda contatos de locatários interessados (leads) para locadores.
+Exemplo:
+Um locatário clica em "Quero Alugar" para um carro específico em datas definidas.
+O app gera um lead com: contato do locatário + datas desejadas + veículo de interesse.
+Locadores compram pacotes de leads (ex.: 10 leads por R$ 50,00).
+Cuidados:
+Não cobre dos locatários: O lead é gerado gratuitamente para quem aluga.
+Transparência: Mostre aos locadores quantos locatários já visualizaram o anúncio (isso incentiva a compra de leads).
+5. Serviços Premium para Locatários (Opcionais)
+Como funciona:
+Mesmo sendo gratuito para locatários, ofereça serviços de valor agregado:
+Verificação Expressa de Documentos (R$ 9,90): Locatários pagam para ter seus documentos pré-validados (agiliza a aprovação pelo locador).
+Seguro de Proteção (R$ 15,00/dia): Parceria com seguradoras para cobrir danos ao veículo/imóvel (a plataforma ganha comissão).
+Histórico de Aluguéis (Gratuito, mas com upsell): Relatório gratuito de aluguéis anteriores + opção de "certificado de bom pagador" (R$ 19,90).
+Vantagens:
+Gera receita extra sem afastar locatários (os serviços são opcionais).
+Aumenta a confiança na plataforma (seguro e verificação atraem mais locadores).

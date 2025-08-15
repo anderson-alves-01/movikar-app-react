@@ -22,12 +22,20 @@ import {
   subscriptionPlans,
   userSubscriptions,
   vehicleInspections,
+  qualifiedLeads,
+  vehicleBoosts,
+  premiumServices,
+  userPremiumServices,
   type User, 
   type VehicleBrand, 
   type UserDocument,
   type SubscriptionPlan,
   type UserSubscription,
-  type VehicleInspection
+  type VehicleInspection,
+  type QualifiedLead,
+  type VehicleBoost,
+  type PremiumService,
+  type UserPremiumService
 } from "@shared/schema";
 import { ZodError } from "zod";
 // import { contractService } from "./services/contractService.js";
@@ -62,6 +70,7 @@ let currentAdminSettings: AdminSettings = {
   pixTransferDescription: "Repasse alugae",
   enableInsuranceOption: true, // Feature toggle para opção de seguro
   enableContractSignature: false, // Feature toggle para assinatura de contratos
+  enableRentNowCheckout: true, // Feature toggle para checkout "Aluga Agora"
   essentialPlanPrice: 29.90,
   plusPlanPrice: 59.90,
   annualDiscountPercentage: 15,
@@ -5972,6 +5981,348 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: 'Erro interno do servidor ao buscar vistorias pendentes',
         error: 'INTERNAL_SERVER_ERROR'
       });
+    }
+  });
+
+  // ========================
+  // NEW MONETIZATION ROUTES
+  // ========================
+
+  // Qualified Leads Routes - Sistema de leads qualificados para locadores
+  app.get("/api/leads/qualified", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      
+      // Get qualified leads for vehicles owned by the user
+      const leads = await db.select()
+        .from(qualifiedLeads)
+        .where(eq(qualifiedLeads.ownerId, userId))
+        .orderBy(desc(qualifiedLeads.createdAt));
+
+      res.json(leads);
+    } catch (error) {
+      console.error("Error fetching qualified leads:", error);
+      res.status(500).json({ message: "Erro ao buscar leads qualificados" });
+    }
+  });
+
+  // Purchase a qualified lead
+  app.post("/api/leads/:leadId/purchase", authenticateToken, async (req, res) => {
+    try {
+      const leadId = parseInt(req.params.leadId);
+      const userId = req.user!.id;
+
+      // Get the lead
+      const [lead] = await db.select()
+        .from(qualifiedLeads)
+        .where(and(
+          eq(qualifiedLeads.id, leadId),
+          eq(qualifiedLeads.ownerId, userId),
+          eq(qualifiedLeads.status, 'pending')
+        ));
+
+      if (!lead) {
+        return res.status(404).json({ message: "Lead não encontrado ou já comprado" });
+      }
+
+      // Check if lead has expired
+      if (new Date() > lead.expiresAt) {
+        await db.update(qualifiedLeads)
+          .set({ status: 'expired' })
+          .where(eq(qualifiedLeads.id, leadId));
+        return res.status(400).json({ message: "Lead expirado" });
+      }
+
+      // Create payment intent for lead purchase
+      const paymentIntent = await stripe!.paymentIntents.create({
+        amount: Math.round(lead.purchasedPrice || 5000), // Default R$ 50.00
+        currency: 'brl',
+        metadata: {
+          type: 'qualified_lead',
+          leadId: leadId.toString(),
+          userId: userId.toString()
+        }
+      });
+
+      // Update lead with payment intent
+      await db.update(qualifiedLeads)
+        .set({ 
+          status: 'purchased',
+          purchasedAt: new Date(),
+          purchasedPrice: String(lead.purchasedPrice || '50.00')
+        })
+        .where(eq(qualifiedLeads.id, leadId));
+
+      res.json({
+        clientSecret: paymentIntent.client_secret,
+        leadInfo: lead.contactInfo
+      });
+    } catch (error) {
+      console.error("Error purchasing lead:", error);
+      res.status(500).json({ message: "Erro ao comprar lead" });
+    }
+  });
+
+  // Vehicle Boost Routes - Sistema de destaque pago por anúncio
+  app.get("/api/vehicles/:vehicleId/boosts", authenticateToken, async (req, res) => {
+    try {
+      const vehicleId = parseInt(req.params.vehicleId);
+      const userId = req.user!.id;
+
+      // Verify vehicle ownership
+      const vehicle = await storage.getVehicle(vehicleId);
+      if (!vehicle || vehicle.ownerId !== userId) {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      const boosts = await db.select()
+        .from(vehicleBoosts)
+        .where(eq(vehicleBoosts.vehicleId, vehicleId))
+        .orderBy(desc(vehicleBoosts.createdAt));
+
+      res.json(boosts);
+    } catch (error) {
+      console.error("Error fetching vehicle boosts:", error);
+      res.status(500).json({ message: "Erro ao buscar impulsos do veículo" });
+    }
+  });
+
+  // Create vehicle boost
+  app.post("/api/vehicles/:vehicleId/boost", authenticateToken, async (req, res) => {
+    try {
+      const vehicleId = parseInt(req.params.vehicleId);
+      const userId = req.user!.id;
+
+      // Verify vehicle ownership
+      const vehicle = await storage.getVehicle(vehicleId);
+      if (!vehicle || vehicle.ownerId !== userId) {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      const { boostType, duration = 7 } = req.body;
+
+      const BOOST_PRICES = {
+        homepage_highlight: 15.00,
+        category_highlight: 10.00,
+        event_highlight: 25.00
+      };
+
+      const price = BOOST_PRICES[boostType as keyof typeof BOOST_PRICES];
+      if (!price) {
+        return res.status(400).json({ message: "Tipo de impulso inválido" });
+      }
+
+      // Create payment intent for boost
+      const paymentIntent = await stripe!.paymentIntents.create({
+        amount: Math.round(price * 100),
+        currency: 'brl',
+        metadata: {
+          type: 'vehicle_boost',
+          vehicleId: vehicleId.toString(),
+          userId: userId.toString(),
+          boostType,
+          duration: duration.toString()
+        }
+      });
+
+      // Create boost record
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setDate(startDate.getDate() + duration);
+
+      const [boost] = await db.insert(vehicleBoosts)
+        .values({
+          vehicleId,
+          ownerId: userId,
+          boostType,
+          boostTitle: `Destaque ${boostType}`,
+          boostDescription: `Veículo destacado por ${duration} dias`,
+          price: price.toString(),
+          duration,
+          startDate,
+          endDate,
+          paymentIntentId: paymentIntent.id
+        })
+        .returning();
+
+      res.json({
+        clientSecret: paymentIntent.client_secret,
+        boost
+      });
+    } catch (error) {
+      console.error("Error creating vehicle boost:", error);
+      res.status(500).json({ message: "Erro ao criar impulso do veículo" });
+    }
+  });
+
+  // Premium Services Routes - Serviços premium para locatários
+  app.get("/api/premium-services", async (req, res) => {
+    try {
+      const services = await db.select()
+        .from(premiumServices)
+        .where(eq(premiumServices.isActive, true))
+        .orderBy(asc(premiumServices.price));
+
+      res.json(services);
+    } catch (error) {
+      console.error("Error fetching premium services:", error);
+      res.status(500).json({ message: "Erro ao buscar serviços premium" });
+    }
+  });
+
+  // Purchase premium service
+  app.post("/api/premium-services/:serviceId/purchase", authenticateToken, async (req, res) => {
+    try {
+      const serviceId = parseInt(req.params.serviceId);
+      const userId = req.user!.id;
+      const { bookingId } = req.body;
+
+      // Get the service
+      const [service] = await db.select()
+        .from(premiumServices)
+        .where(and(
+          eq(premiumServices.id, serviceId),
+          eq(premiumServices.isActive, true)
+        ));
+
+      if (!service) {
+        return res.status(404).json({ message: "Serviço não encontrado" });
+      }
+
+      // Create payment intent
+      const paymentIntent = await stripe!.paymentIntents.create({
+        amount: Math.round(Number(service.price) * 100),
+        currency: 'brl',
+        metadata: {
+          type: 'premium_service',
+          serviceId: serviceId.toString(),
+          userId: userId.toString(),
+          bookingId: bookingId?.toString() || ''
+        }
+      });
+
+      // Calculate expiry date
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + service.duration);
+
+      // Create user premium service record
+      const [userService] = await db.insert(userPremiumServices)
+        .values({
+          userId,
+          serviceId,
+          bookingId: bookingId || null,
+          purchasePrice: service.price,
+          paymentIntentId: paymentIntent.id,
+          expiresAt
+        })
+        .returning();
+
+      res.json({
+        clientSecret: paymentIntent.client_secret,
+        service: userService
+      });
+    } catch (error) {
+      console.error("Error purchasing premium service:", error);
+      res.status(500).json({ message: "Erro ao comprar serviço premium" });
+    }
+  });
+
+  // Get user's premium services
+  app.get("/api/user/premium-services", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+
+      const userServices = await db.select({
+        id: userPremiumServices.id,
+        status: userPremiumServices.status,
+        purchasePrice: userPremiumServices.purchasePrice,
+        expiresAt: userPremiumServices.expiresAt,
+        usedAt: userPremiumServices.usedAt,
+        createdAt: userPremiumServices.createdAt,
+        service: {
+          name: premiumServices.name,
+          description: premiumServices.description,
+          serviceType: premiumServices.serviceType
+        }
+      })
+      .from(userPremiumServices)
+      .innerJoin(premiumServices, eq(userPremiumServices.serviceId, premiumServices.id))
+      .where(eq(userPremiumServices.userId, userId))
+      .orderBy(desc(userPremiumServices.createdAt));
+
+      res.json(userServices);
+    } catch (error) {
+      console.error("Error fetching user premium services:", error);
+      res.status(500).json({ message: "Erro ao buscar serviços premium do usuário" });
+    }
+  });
+
+  // Generate qualified lead when user shows interest in a vehicle
+  app.post("/api/vehicles/:vehicleId/generate-lead", authenticateToken, async (req, res) => {
+    try {
+      const vehicleId = parseInt(req.params.vehicleId);
+      const userId = req.user!.id;
+      const { startDate, endDate } = req.body;
+
+      const vehicle = await storage.getVehicle(vehicleId);
+      if (!vehicle) {
+        return res.status(404).json({ message: "Veículo não encontrado" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      // Check if lead already exists for this combination
+      const existingLead = await db.select()
+        .from(qualifiedLeads)
+        .where(and(
+          eq(qualifiedLeads.vehicleId, vehicleId),
+          eq(qualifiedLeads.renterId, userId),
+          eq(qualifiedLeads.status, 'pending')
+        ));
+
+      if (existingLead.length > 0) {
+        return res.status(400).json({ message: "Lead já existe para este veículo" });
+      }
+
+      // Calculate lead score
+      let leadScore = 0;
+      if (user.isVerified) leadScore += 15;
+      if (user.totalRentals > 0) leadScore += 20;
+      if (user.documentsSubmitted) leadScore += 10;
+
+      // Set expiry (72 hours)
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 72);
+
+      // Create qualified lead
+      const [lead] = await db.insert(qualifiedLeads)
+        .values({
+          vehicleId,
+          ownerId: vehicle.ownerId,
+          renterId: userId,
+          startDate: new Date(startDate),
+          endDate: new Date(endDate),
+          contactInfo: {
+            name: user.name,
+            phone: user.phone || '',
+            email: user.email
+          },
+          leadScore,
+          purchasedPrice: '50.00', // Default price
+          expiresAt
+        })
+        .returning();
+
+      res.json({
+        message: "Lead qualificado gerado com sucesso",
+        leadId: lead.id
+      });
+    } catch (error) {
+      console.error("Error generating qualified lead:", error);
+      res.status(500).json({ message: "Erro ao gerar lead qualificado" });
     }
   });
 
