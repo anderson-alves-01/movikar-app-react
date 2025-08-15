@@ -88,6 +88,28 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
     },
   });
 
+  // New mutation for "Rent Now" (immediate request without payment)
+  const rentNowMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest('POST', '/api/rent-now', data);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Solicitação enviada!",
+        description: `${data.message} Emails foram enviados para você e o proprietário.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/bookings'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Falha ao enviar solicitação",
+        variant: "destructive",
+      });
+    },
+  });
+
   const calculateDays = () => {
     if (!bookingData.startDate || !bookingData.endDate) return 0;
     const start = new Date(bookingData.startDate);
@@ -247,6 +269,51 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
         variant: "destructive",
       });
     }
+  };
+
+  // Handle "Rent Now" request (no payment, just request)
+  const handleRentNow = () => {
+    if (!user) {
+      toast({
+        title: "Login necessário",
+        description: "Você precisa estar logado para solicitar um aluguel.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!bookingData.startDate || !bookingData.endDate) {
+      toast({
+        title: "Datas obrigatórias",
+        description: "Selecione as datas de retirada e devolução.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (hasDateConflict()) {
+      toast({
+        title: "Datas indisponíveis",
+        description: "As datas selecionadas conflitam com reservas existentes.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const pricing = calculatePricing();
+    
+    const requestData = {
+      vehicleId: vehicle.id,
+      startDate: bookingData.startDate,
+      endDate: bookingData.endDate,
+      totalPrice: pricing.total,
+      serviceFee: pricing.serviceFee,
+      insuranceFee: pricing.insuranceFee,
+      securityDeposit: pricing.securityDeposit,
+      includeInsurance: bookingData.includeInsurance,
+    };
+    
+    rentNowMutation.mutate(requestData);
   };
 
   const pricing = calculatePricing();
@@ -476,15 +543,47 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
               </div>
             )}
 
-            {/* Submit Button - Only show if checkout is enabled */}
+            {/* Action Buttons - Only show if checkout is enabled */}
             {adminSettings?.enableRentNowCheckout && (
               <>
+                {/* Primary Action: Rent Now Request (No payment required) */}
+                <Button 
+                  type="button"
+                  onClick={handleRentNow}
+                  className={`w-full font-semibold transition-colors mb-3 ${
+                    hasDateConflict() 
+                      ? 'bg-gray-400 hover:bg-gray-500 cursor-not-allowed text-white' 
+                      : 'bg-green-600 text-white hover:bg-green-700'
+                  }`}
+                  disabled={rentNowMutation.isPending || !user || !bookingData.startDate || !bookingData.endDate || hasDateConflict()}
+                  data-testid="button-rent-now-request"
+                >
+                  {rentNowMutation.isPending ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Enviando solicitação...
+                    </span>
+                  ) : hasDateConflict() ? (
+                    <span className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      Datas indisponíveis - Escolha outras datas
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      📧 Solicitar Aluguel
+                      {pricing.days > 0 && <span className="ml-2 font-normal">({formatCurrency(pricing.total)})</span>}
+                    </span>
+                  )}
+                </Button>
+
+                {/* Secondary Action: Immediate Checkout (With payment) */}
                 <Button 
                   type="submit" 
+                  variant="outline"
                   className={`w-full font-semibold transition-colors ${
                     hasDateConflict() 
-                      ? 'bg-red-500 hover:bg-red-600 cursor-not-allowed text-white' 
-                      : 'bg-primary text-white hover:bg-red-600'
+                      ? 'border-red-500 text-red-500 cursor-not-allowed' 
+                      : 'border-primary text-primary hover:bg-primary hover:text-white'
                   }`}
                   disabled={!user || !bookingData.startDate || !bookingData.endDate || hasDateConflict()}
                   data-testid="button-book-now"
@@ -492,19 +591,29 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
                   {hasDateConflict() ? (
                     <span className="flex items-center gap-2">
                       <AlertTriangle className="h-4 w-4" />
-                      Datas indisponíveis - Escolha outras datas
+                      Datas indisponíveis
                     </span>
                   ) : (
-                    pricing.days > 0 ? `Alugar Agora - ${formatCurrency(pricing.total)}` : 'Alugar Agora'
+                    <span className="flex items-center gap-2">
+                      💳 Pagar Agora
+                      {pricing.days > 0 && <span className="ml-2 font-normal">({formatCurrency(pricing.total)})</span>}
+                    </span>
                   )}
                 </Button>
                 
-                <p className="text-xs text-gray-500 text-center">
-                  {user 
-                    ? "Você será redirecionado para finalizar o pagamento de forma segura."
-                    : "Você precisa estar logado para fazer uma reserva."
-                  }
-                </p>
+                <div className="text-xs text-gray-500 space-y-1 mt-3">
+                  <p className="text-center font-medium text-green-700">
+                    📧 <strong>Solicitar Aluguel:</strong> Envia email para o proprietário (sem pagamento)
+                  </p>
+                  <p className="text-center font-medium text-blue-700">
+                    💳 <strong>Pagar Agora:</strong> Pagamento imediato e confirmação automática
+                  </p>
+                  {!user && (
+                    <p className="text-center text-amber-600 font-medium">
+                      ⚠️ Você precisa estar logado para usar essas opções
+                    </p>
+                  )}
+                </div>
               </>
             )}
           </form>

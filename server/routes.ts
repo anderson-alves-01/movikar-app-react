@@ -935,6 +935,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // New "Rent Now" API - Creates booking with pending status and sends emails
+  app.post("/api/rent-now", authenticateToken, async (req, res) => {
+    try {
+      const { vehicleId, startDate, endDate, totalPrice, serviceFee, insuranceFee, securityDeposit, includeInsurance } = req.body;
+
+      // Validate required fields
+      if (!vehicleId || !startDate || !endDate || !totalPrice) {
+        return res.status(400).json({ message: "Dados obrigatórios: vehicleId, startDate, endDate, totalPrice" });
+      }
+
+      // Get vehicle and owner information
+      const vehicle = await storage.getVehicle(vehicleId);
+      if (!vehicle) {
+        return res.status(404).json({ message: "Veículo não encontrado" });
+      }
+
+      const owner = await storage.getUser(vehicle.ownerId);
+      if (!owner) {
+        return res.status(404).json({ message: "Proprietário não encontrado" });
+      }
+
+      const renter = req.user!;
+
+      // Check date availability
+      const startDateObj = new Date(startDate);
+      const endDateObj = new Date(endDate);
+      
+      console.log('🔍 rent-now: Checking availability with:', { vehicleId, startDate, endDate, startDateObj, endDateObj });
+      
+      const isAvailable = await storage.checkVehicleAvailability(vehicleId, startDateObj, endDateObj);
+
+      if (!isAvailable) {
+        return res.status(400).json({ 
+          message: "Veículo não disponível para as datas selecionadas. Tente outras datas." 
+        });
+      }
+
+      // Create booking with "pending" status (waiting for owner approval)
+      const bookingData = {
+        vehicleId: vehicleId,
+        renterId: renter.id,
+        ownerId: vehicle.ownerId,
+        startDate: startDateObj,
+        endDate: endDateObj,
+        totalPrice: totalPrice.toString(),
+        serviceFee: serviceFee?.toString() || '0',
+        insuranceFee: includeInsurance ? (insuranceFee?.toString() || '0') : '0',
+        securityDeposit: securityDeposit?.toString() || '0',
+        status: "pending" as const, // Waiting for owner approval
+        paymentStatus: "pending" as const, // No payment yet
+        inspectionStatus: "not_required" as const,
+        notes: `Solicitação "Alugar agora" - Aguardando aprovação do proprietário. Inclui seguro: ${includeInsurance ? 'Sim' : 'Não'}`
+      };
+
+      const booking = await storage.createBooking(bookingData);
+
+      // Import email service
+      const { sendRentNowNotification, sendRentRequestConfirmation } = await import('./services/emailService.js');
+
+      // Send notification email to owner
+      const ownerEmailSent = await sendRentNowNotification({
+        ownerName: owner.name,
+        ownerEmail: owner.email,
+        renterName: renter.name,
+        renterEmail: renter.email,
+        vehicleBrand: vehicle.brand,
+        vehicleModel: vehicle.model,
+        vehicleYear: vehicle.year,
+        startDate: startDate,
+        endDate: endDate,
+        totalPrice: totalPrice.toString(),
+        bookingId: booking.id.toString()
+      });
+
+      // Send confirmation email to renter
+      const renterEmailSent = await sendRentRequestConfirmation({
+        renterName: renter.name,
+        renterEmail: renter.email,
+        ownerName: owner.name,
+        vehicleBrand: vehicle.brand,
+        vehicleModel: vehicle.model,
+        vehicleYear: vehicle.year,
+        startDate: startDate,
+        endDate: endDate,
+        totalPrice: totalPrice.toString(),
+        bookingId: booking.id.toString()
+      });
+
+      console.log(`📧 Rent now emails: Owner=${ownerEmailSent ? '✅' : '❌'}, Renter=${renterEmailSent ? '✅' : '❌'}`);
+
+      res.json({ 
+        booking,
+        message: "Solicitação enviada com sucesso! O proprietário tem 24h para responder.",
+        emailsSent: {
+          owner: ownerEmailSent,
+          renter: renterEmailSent
+        }
+      });
+
+    } catch (error) {
+      console.error("Rent now error:", error);
+      res.status(500).json({ message: "Falha ao enviar solicitação de aluguel" });
+    }
+  });
+
   // Import validation middleware
   const { validateUser, validateVehicle, validateBooking, validateMessage, handleValidationErrors } = await import("./middleware/validation");
 

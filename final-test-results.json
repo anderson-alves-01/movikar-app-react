@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-08-15T14:26:51.762Z",
+  "timestamp": "2025-08-15T19:01:01.016Z",
   "summary": {
     "total": 6,
     "passed": 6,
@@ -16,10 +16,10 @@
       "test": "Database Data",
       "passed": true,
       "details": [
-        "premium_services: 25",
-        "qualified_leads: 25",
-        "vehicle_boosts: 15",
-        "user_premium_services: 10"
+        "premium_services: 30",
+        "qualified_leads: 30",
+        "vehicle_boosts: 18",
+        "user_premium_services: 12"
       ]
     },
     {

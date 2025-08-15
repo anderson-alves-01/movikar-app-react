@@ -867,6 +867,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async checkVehicleAvailability(vehicleId: number, startDate: Date, endDate: Date): Promise<boolean> {
+    // Validate inputs
+    if (!vehicleId || !startDate || !endDate) {
+      console.error('checkVehicleAvailability: Invalid inputs', { vehicleId, startDate, endDate });
+      throw new Error('Invalid inputs for vehicle availability check');
+    }
+
     // Convert Date objects to ISO strings for database comparison
     const startDateStr = startDate.toISOString();
     const endDateStr = endDate.toISOString();
