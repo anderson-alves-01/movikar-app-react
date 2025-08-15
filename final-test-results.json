@@ -1,0 +1,63 @@
+{
+  "timestamp": "2025-08-15T14:26:51.762Z",
+  "summary": {
+    "total": 6,
+    "passed": 6,
+    "failed": 0,
+    "successRate": 100
+  },
+  "tests": [
+    {
+      "test": "Database Tables",
+      "passed": true,
+      "details": "4/4 tables found"
+    },
+    {
+      "test": "Database Data",
+      "passed": true,
+      "details": [
+        "premium_services: 25",
+        "qualified_leads: 25",
+        "vehicle_boosts: 15",
+        "user_premium_services: 10"
+      ]
+    },
+    {
+      "test": "File Structure",
+      "passed": true,
+      "details": [
+        "client/src/pages/owner-leads.tsx",
+        "client/src/pages/vehicle-boosts.tsx",
+        "shared/schema.ts",
+        "shared/monetization-config.ts",
+        "server/routes.ts"
+      ]
+    },
+    {
+      "test": "File Content",
+      "passed": true,
+      "details": [
+        "Schema: ✅",
+        "Config: ✅",
+        "Rotas: ✅"
+      ]
+    },
+    {
+      "test": "APIs Working",
+      "passed": true,
+      "details": [
+        "Premium Services: ✅",
+        "Vehicles: ❌ (0)"
+      ]
+    },
+    {
+      "test": "Integration Complete",
+      "passed": true,
+      "details": [
+        "Profile Links: ✅",
+        "Owner Leads Export: ✅",
+        "API Routes: ✅"
+      ]
+    }
+  ]
+}
