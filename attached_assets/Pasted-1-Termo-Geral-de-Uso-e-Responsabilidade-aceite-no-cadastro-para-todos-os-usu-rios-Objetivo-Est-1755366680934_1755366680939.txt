@@ -1,0 +1,44 @@
+1. Termo Geral de Uso e Responsabilidade (aceite no cadastro para todos os usuários)
+Objetivo:
+Estabelecer que a plataforma é apenas intermediária.
+Incluir isenção de responsabilidade.
+Incluir recomendações de boas práticas (sem obrigatoriedade).
+Principais pontos:
+Natureza da plataforma (apenas intermediação).
+Isenção de responsabilidade por acidentes, danos, furtos ou inadimplência.
+Cadastro verdadeiro e correto.
+Proibição de negociação fora da plataforma (valor fixo do carro).
+Visualização de datas indisponiveis e possibilidade de solicitar aluguel informando as datas necessarias. O locatario somente ira receber notificação da intenção de aluguel.
+Recomendações de boas práticas (seguro, contrato, fotos do veículo, conferência da CNH).
+Como a plataforma é somente um ponto de conexão(Locatário/Locador) não teremos a ação de firmar contrato entre as partes e nem calculo de seguro contra acidentes e sinistros.
+2. Confirmação ao Cadastrar Carro (aceite no momento de colocar o carro para aluguel)
+Objetivo:
+Reforçar boas práticas.
+Garantir que os documentos do veículo e do locador estão corretos.
+
+
+Principais pontos:
+Upload da foto do documento do carro.
+Upload da CNH válida do locador.
+Confirmação de ciência das boas práticas recomendadas.
+Declaração de que as informações são verdadeiras e completas.
+Aceite digital específico para essa etapa, sem criar responsabilidade adicional para a plataforma.
+
+
+3. Confirmação no Momento do Aluguel (aceite ao finalizar a locação)
+Objetivo:
+Garantir que o locatário confirme o pagamento e ciência das recomendações.
+Proteger a plataforma de qualquer responsabilidade pelo uso do veículo.
+
+
+Principais pontos:
+Abertura de conversas entre o Locatario e Locador.
+Confirmação de que entendeu que o valor do carro é fixo, podendo haver caução ou não calculado pela plataforma..
+Reforço de ciência das boas práticas (seguro, contrato, fotos, CNH).
+Aceite digital específico para esta etapa.
+
+
+FLUXO FINAL DE ACEITES:
+Cadastro do usuário → Termo Geral de Uso e Responsabilidade.
+Cadastro do carro → Confirmação de documentos + boas práticas.
+Finalização do aluguel → Travamento de datas + reforço de boas práticas + Inicio de negociação por conversa no app.
