@@ -58,8 +58,23 @@ import VehicleBoosts from "@/pages/vehicle-boosts";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt, IOSInstallPrompt } from "@/components/InstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
+import { useQuery } from "@tanstack/react-query";
 
 function Router() {
+  // Fetch feature toggles to conditionally show routes
+  const { data: featureToggles } = useQuery({
+    queryKey: ['/api/public/feature-toggles'],
+    queryFn: async () => {
+      const response = await fetch('/api/public/feature-toggles');
+      if (!response.ok) {
+        throw new Error('Failed to fetch feature toggles');
+      }
+      return response.json();
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    retry: false
+  });
+
   return (
     <Switch>
       <Route path="/" component={Home} />
@@ -105,7 +120,10 @@ function Router() {
       <Route path="/admin/subscriptions" component={AdminSubscriptions} />
       <Route path="/admin/coupons" component={AdminCouponsPage} />
       <Route path="/admin/stripe-production" component={StripeProduction} />
-      <Route path="/earnings" component={EarningsPage} />
+      {/* Only show earnings route when feature is enabled */}
+      {featureToggles?.enableRentNowCheckout && (
+        <Route path="/earnings" component={EarningsPage} />
+      )}
       <Route path="/debug-pix" component={DebugPix} />
       <Route path="/subscription-plans" component={SubscriptionPlans} />
       <Route path="/subscription-checkout" component={SubscriptionCheckout} />
