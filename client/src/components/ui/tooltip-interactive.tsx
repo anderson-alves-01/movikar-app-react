@@ -326,15 +326,19 @@ export function useOnboarding() {
 
   useEffect(() => {
     const seen = localStorage.getItem('hasSeenOnboarding');
+    console.log('🎯 Onboarding hook init:', { seen, hasSeenOnboarding, isOnboardingActive });
     if (!seen) {
-      setIsOnboardingActive(true);
+      // Don't auto-start onboarding anymore, only when manually triggered
+      setHasSeenOnboarding(false);
     } else {
       setHasSeenOnboarding(true);
     }
   }, []);
 
   const startOnboarding = () => {
+    console.log('🚀 Starting onboarding...');
     setIsOnboardingActive(true);
+    setHasSeenOnboarding(true);
   };
 
   const completeOnboarding = () => {

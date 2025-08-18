@@ -341,7 +341,13 @@ export default function Header() {
                           Suporte & FAQ
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={startOnboarding} data-testid="button-start-tutorial">
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          console.log('🎯 Tutorial button clicked!');
+                          startOnboarding();
+                        }} 
+                        data-testid="button-start-tutorial"
+                      >
                         <HelpCircle className="h-4 w-4 mr-2" />
                         Iniciar tutorial
                       </DropdownMenuItem>

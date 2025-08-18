@@ -147,6 +147,14 @@ export function OnboardingFlow({ page = "home", customSteps }: OnboardingFlowPro
 
   // Only show onboarding on specific pages
   const shouldShowOnboarding = () => {
+    console.log('🔍 Checking onboarding visibility:', {
+      isOnboardingActive,
+      location,
+      page,
+      hasUser: !!user,
+      customSteps: !!customSteps
+    });
+    
     if (!isOnboardingActive) return false;
     
     // Show on home page for new users
@@ -161,7 +169,10 @@ export function OnboardingFlow({ page = "home", customSteps }: OnboardingFlowPro
     return false;
   };
 
-  if (!shouldShowOnboarding()) return null;
+  const showOnboarding = shouldShowOnboarding();
+  console.log('🎭 OnboardingFlow render:', { showOnboarding, isOnboardingActive, location, page });
+
+  if (!showOnboarding) return null;
 
   return (
     <InteractiveTooltip
