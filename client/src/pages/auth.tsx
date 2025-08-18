@@ -33,6 +33,8 @@ export default function Auth() {
     confirmPassword: '',
     rememberMe: false,
     acceptTerms: false,
+    // CNH validation fields
+    requiresCNH: false,
   });
   const [cityOpen, setCityOpen] = useState(false);
   const [citySearchValue, setCitySearchValue] = useState("");

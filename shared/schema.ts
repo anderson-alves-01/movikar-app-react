@@ -41,6 +41,13 @@ export const users = pgTable("users", {
   rejectionReason: text("rejection_reason"),
   canRentVehicles: boolean("can_rent_vehicles").default(false),
   pix: varchar("pix", { length: 255 }), // Chave PIX para recebimento de valores
+  // CNH and selfie validation fields
+  cnhNumber: varchar("cnh_number", { length: 11 }),
+  cnhImageUrl: text("cnh_image_url"),
+  selfieImageUrl: text("selfie_image_url"),
+  cnhValidatedAt: timestamp("cnh_validated_at"),
+  cnhValidationStatus: varchar("cnh_validation_status", { length: 20 }).default("pending"), // pending, approved, rejected
+  cnhRejectionReason: text("cnh_rejection_reason"),
   // Subscription fields
   subscriptionPlan: varchar("subscription_plan", { length: 20 }).default("free").notNull(), // free, essencial, plus
   subscriptionStatus: varchar("subscription_status", { length: 20 }).default("active").notNull(), // active, cancelled, expired
@@ -79,6 +86,21 @@ export const vehicles = pgTable("vehicles", {
   ownerId: integer("owner_id").references(() => users.id).notNull(),
   brand: varchar("brand", { length: 50 }).notNull(),
   model: varchar("model", { length: 50 }).notNull(),
+  specificModel: varchar("specific_model", { length: 100 }), // Modelo específico detalhado (ex: "Civic LX 1.8 16V Flex Aut")
+  // Delivery and pickup flexibility
+  deliveryOptions: jsonb("delivery_options").$type<{
+    homeDelivery: boolean;
+    airportDelivery: boolean;
+    customLocation: boolean;
+    deliveryFee: number;
+    deliveryRadius: number; // km
+  }>().default({ homeDelivery: false, airportDelivery: false, customLocation: false, deliveryFee: 0, deliveryRadius: 0 }),
+  pickupTimeFlexibility: jsonb("pickup_time_flexibility").$type<{
+    flexible24h: boolean;
+    specificHours: string; // ex: "08:00-18:00"
+    weekendAvailable: boolean;
+    emergencyPickup: boolean;
+  }>().default({ flexible24h: false, specificHours: "08:00-18:00", weekendAvailable: false, emergencyPickup: false }),
   year: integer("year").notNull(),
   color: text("color"),
   licensePlate: varchar("license_plate", { length: 8 }).notNull().unique(), // Placa do veículo (formato ABC-1234 ou ABC1D23)
@@ -701,6 +723,94 @@ export const insertSavedVehicleSchema = createInsertSchema(savedVehicles).omit({
   createdAt: true,
   updatedAt: true,
 });
+
+// Support system - messages and chat
+export const supportTickets = pgTable("support_tickets", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  subject: varchar("subject", { length: 200 }).notNull(),
+  description: text("description").notNull(),
+  status: varchar("status", { length: 20 }).default("open").notNull(), // open, in_progress, closed
+  priority: varchar("priority", { length: 20 }).default("medium").notNull(), // low, medium, high, urgent
+  category: varchar("category", { length: 50 }).notNull(), // booking_issue, payment_problem, vehicle_issue, account_help
+  assignedTo: integer("assigned_to").references(() => users.id), // admin user
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const supportMessages = pgTable("support_messages", {
+  id: serial("id").primaryKey(),
+  ticketId: integer("ticket_id").references(() => supportTickets.id).notNull(),
+  senderId: integer("sender_id").references(() => users.id).notNull(),
+  message: text("message").notNull(),
+  attachments: jsonb("attachments").$type<string[]>().default([]),
+  isAdminResponse: boolean("is_admin_response").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Enhanced review system for both renters and owners
+export const reviewResponses = pgTable("review_responses", {
+  id: serial("id").primaryKey(),
+  reviewId: integer("review_id").references(() => reviews.id).notNull(),
+  responderId: integer("responder_id").references(() => users.id).notNull(),
+  response: text("response").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Car model selection database for better UX
+export const carModels = pgTable("car_models", {
+  id: serial("id").primaryKey(),
+  brand: varchar("brand", { length: 50 }).notNull(),
+  model: varchar("model", { length: 50 }).notNull(),
+  specificModel: varchar("specific_model", { length: 100 }).notNull(),
+  year: integer("year").notNull(),
+  category: varchar("category", { length: 30 }).notNull(),
+  transmission: varchar("transmission", { length: 20 }).notNull(),
+  fuel: varchar("fuel", { length: 20 }).notNull(),
+  engineSize: varchar("engine_size", { length: 10 }),
+  doors: integer("doors").default(4),
+  seats: integer("seats").default(5),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  brandModelIdx: index("brand_model_idx").on(table.brand, table.model),
+}));
+
+// Insert schemas for new tables
+export const insertSupportTicketSchema = createInsertSchema(supportTickets).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSupportMessageSchema = createInsertSchema(supportMessages).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertReviewResponseSchema = createInsertSchema(reviewResponses).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertCarModelSchema = createInsertSchema(carModels).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Types for new functionality
+export type User = typeof users.$inferSelect;
+export type InsertUser = typeof users.$inferInsert;
+export type Vehicle = typeof vehicles.$inferSelect;
+export type InsertVehicle = typeof vehicles.$inferInsert;
+export type SupportTicket = typeof supportTickets.$inferSelect;
+export type InsertSupportTicket = typeof supportTickets.$inferInsert;
+export type SupportMessage = typeof supportMessages.$inferSelect;
+export type InsertSupportMessage = typeof supportMessages.$inferInsert;
+export type ReviewResponse = typeof reviewResponses.$inferSelect;
+export type InsertReviewResponse = typeof reviewResponses.$inferInsert;
+export type CarModel = typeof carModels.$inferSelect;
+export type InsertCarModel = typeof carModels.$inferInsert;
 
 export const updateSavedVehicleSchema = createInsertSchema(savedVehicles).omit({
   id: true,
