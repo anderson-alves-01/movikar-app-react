@@ -10,6 +10,8 @@ import { Star, User, Car, Clock, MessageSquare } from "lucide-react";
 import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import Header from "@/components/header";
+import { useAuthStore } from "@/lib/auth";
 
 interface PendingBooking {
   id: number;
@@ -213,7 +215,9 @@ export default function Reviews() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <>
+        <Header />
+        <div className="container mx-auto px-4 py-8">
         <div className="space-y-4">
           <div className="h-8 bg-gray-200 rounded animate-pulse"></div>
           <div className="space-y-4">
@@ -222,12 +226,15 @@ export default function Reviews() {
             ))}
           </div>
         </div>
-      </div>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <>
+      <Header />
+      <div className="container mx-auto px-4 py-8">
       <div className="flex items-center gap-3 mb-8">
         <Star className="h-8 w-8 text-yellow-500" />
         <div>
@@ -238,7 +245,7 @@ export default function Reviews() {
         </div>
       </div>
 
-      {!pendingReviews || pendingReviews.length === 0 ? (
+      {!pendingReviews || (Array.isArray(pendingReviews) && pendingReviews.length === 0) ? (
         <Card>
           <CardContent className="text-center py-12">
             <MessageSquare className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
@@ -250,7 +257,7 @@ export default function Reviews() {
         </Card>
       ) : (
         <div className="grid gap-6">
-          {pendingReviews.map((booking: PendingBooking) => {
+          {Array.isArray(pendingReviews) ? pendingReviews.map((booking: PendingBooking) => {
             const isOwner = booking.ownerId === user?.id;
             const isRenter = booking.renterId === user?.id;
             
@@ -312,7 +319,7 @@ export default function Reviews() {
                 </CardContent>
               </Card>
             );
-          })}
+          }) : null}
         </div>
       )}
 
@@ -324,6 +331,7 @@ export default function Reviews() {
           onSubmit={handleSubmitReview}
         />
       )}
-    </div>
+      </div>
+    </>
   );
 }
