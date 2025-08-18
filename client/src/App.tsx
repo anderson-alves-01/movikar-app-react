@@ -53,6 +53,8 @@ import Support from "@/pages/support";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt, IOSInstallPrompt } from "@/components/InstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
+import { OnboardingFlow, OnboardingTrigger } from "@/components/onboarding/onboarding-flow";
+import { PageTransition } from "@/components/ui/page-transition";
 import { useQuery } from "@tanstack/react-query";
 
 function Router() {
@@ -71,80 +73,95 @@ function Router() {
   });
 
   return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/auth" component={Auth} />
-      <Route path="/login" component={Auth} />
-      <Route path="/register" component={Auth} />
-      <Route path="/profile" component={Profile} />
-      <Route path="/vehicle/:id" component={VehicleDetail} />
-      <Route path="/vehicle/:id/edit" component={VehicleEdit} />
-      <Route path="/admin" component={AdminDashboard} />
-      <Route path="/admin/contracts" component={AdminContracts} />
-      <Route path="/admin/vehicle-brands" component={AdminVehicleBrands} />
-      <Route path="/admin/vehicle-approval" component={AdminVehicleApproval} />
-      <Route path="/admin/document-verification" component={AdminDocumentVerification} />
-      <Route path="/admin/users" component={AdminUsers} />
-      <Route path="/admin/bookings" component={AdminBookings} />
-      <Route path="/admin/documents" component={AdminDocuments} />
-      <Route path="/reservations" component={Reservations} />
-      <Route path="/vehicles" component={Vehicles} />
-      <Route path="/vehicles/create" component={VehicleEdit} />
-      <Route path="/my-vehicles" component={Vehicles} />
-      <Route path="/dashboard" component={Profile} />
-      <Route path="/messages" component={Messages} />
-      <Route path="/contracts" component={Contracts} />
+    <>
+      <Switch>
+        <Route path="/">
+          <>
+            <Home />
+            <OnboardingFlow page="home" />
+          </>
+        </Route>
+        <Route path="/auth" component={Auth} />
+        <Route path="/login" component={Auth} />
+        <Route path="/register" component={Auth} />
+        <Route path="/profile">
+          <>
+            <Profile />
+            <OnboardingFlow page="profile" />
+          </>
+        </Route>
+        <Route path="/vehicle/:id" component={VehicleDetail} />
+        <Route path="/vehicle/:id/edit" component={VehicleEdit} />
+        <Route path="/admin" component={AdminDashboard} />
+        <Route path="/admin/contracts" component={AdminContracts} />
+        <Route path="/admin/vehicle-brands" component={AdminVehicleBrands} />
+        <Route path="/admin/vehicle-approval" component={AdminVehicleApproval} />
+        <Route path="/admin/document-verification" component={AdminDocumentVerification} />
+        <Route path="/admin/users" component={AdminUsers} />
+        <Route path="/admin/bookings" component={AdminBookings} />
+        <Route path="/admin/documents" component={AdminDocuments} />
+        <Route path="/reservations" component={Reservations} />
+        <Route path="/vehicles" component={Vehicles} />
+        <Route path="/vehicles/create" component={VehicleEdit} />
+        <Route path="/my-vehicles" component={Vehicles} />
+        <Route path="/dashboard" component={Profile} />
+        <Route path="/messages" component={Messages} />
+        <Route path="/contracts" component={Contracts} />
 
-      <Route path="/contracts/:id" component={ContractPreview} />
-      <Route path="/rewards" component={Rewards} />
-      <Route path="/suggestions" component={Suggestions} />
-      <Route path="/saved-vehicles" component={SavedVehicles} />
-      <Route path="/document-verification" component={DocumentVerification} />
-      <Route path="/performance" component={PerformanceDashboard} />
-      <Route path="/checkout/:vehicleId" component={Checkout} />
-      <Route path="/checkout" component={Checkout} />
-      <Route path="/payment-success" component={PaymentSuccess} />
-      <Route path="/contract-preview/:bookingId" component={ContractPreview} />
-      <Route path="/contract-signed-success" component={ContractSignedSuccess} />
-      <Route path="/contract-signature-error" component={ContractSignatureError} />
-      <Route path="/contract-signature-callback" component={ContractSignedSuccess} />
-      <Route path="/contract-signed" component={ContractSigned} />
-      <Route path="/admin/settings" component={AdminSettings} />
-      <Route path="/admin/reports" component={AdminReports} />
-      <Route path="/admin/subscriptions" component={AdminSubscriptions} />
-      <Route path="/admin/coupons" component={AdminCouponsPage} />
-      <Route path="/admin/stripe-production" component={StripeProduction} />
-      {/* Only show earnings route when feature is enabled */}
-      {featureToggles?.enableRentNowCheckout && (
-        <Route path="/earnings" component={EarningsPage} />
-      )}
-      <Route path="/subscription-plans" component={SubscriptionPlans} />
-      <Route path="/subscription-checkout" component={SubscriptionCheckout} />
-      <Route path="/subscription-success">
-        <ProtectedRoute requireAuth={true}>
-          <SubscriptionSuccess />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/inspection/:reservationId" component={VehicleInspection} />
-      <Route path="/inspection-history" component={InspectionHistory} />
+        <Route path="/contracts/:id" component={ContractPreview} />
+        <Route path="/rewards" component={Rewards} />
+        <Route path="/suggestions" component={Suggestions} />
+        <Route path="/saved-vehicles" component={SavedVehicles} />
+        <Route path="/document-verification" component={DocumentVerification} />
+        <Route path="/performance" component={PerformanceDashboard} />
+        <Route path="/checkout/:vehicleId" component={Checkout} />
+        <Route path="/checkout" component={Checkout} />
+        <Route path="/payment-success" component={PaymentSuccess} />
+        <Route path="/contract-preview/:bookingId" component={ContractPreview} />
+        <Route path="/contract-signed-success" component={ContractSignedSuccess} />
+        <Route path="/contract-signature-error" component={ContractSignatureError} />
+        <Route path="/contract-signature-callback" component={ContractSignedSuccess} />
+        <Route path="/contract-signed" component={ContractSigned} />
+        <Route path="/admin/settings" component={AdminSettings} />
+        <Route path="/admin/reports" component={AdminReports} />
+        <Route path="/admin/subscriptions" component={AdminSubscriptions} />
+        <Route path="/admin/coupons" component={AdminCouponsPage} />
+        <Route path="/admin/stripe-production" component={StripeProduction} />
+        {/* Only show earnings route when feature is enabled */}
+        {featureToggles?.enableRentNowCheckout && (
+          <Route path="/earnings" component={EarningsPage} />
+        )}
+        <Route path="/subscription-plans" component={SubscriptionPlans} />
+        <Route path="/subscription-checkout" component={SubscriptionCheckout} />
+        <Route path="/subscription-success">
+          <ProtectedRoute requireAuth={true}>
+            <SubscriptionSuccess />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/inspection/:reservationId" component={VehicleInspection} />
+        <Route path="/inspection-history" component={InspectionHistory} />
+        
+        {/* New Monetization Routes */}
+        <Route path="/owner-leads">
+          <ProtectedRoute requireAuth={true}>
+            <OwnerLeads />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/vehicles/:vehicleId/boosts">
+          <ProtectedRoute requireAuth={true}>
+            <VehicleBoosts />
+          </ProtectedRoute>
+        </Route>
+        
+        <Route path="/reviews" component={Reviews} />
+        <Route path="/support" component={Support} />
+        
+        <Route component={NotFound} />
+      </Switch>
       
-      {/* New Monetization Routes */}
-      <Route path="/owner-leads">
-        <ProtectedRoute requireAuth={true}>
-          <OwnerLeads />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/vehicles/:vehicleId/boosts">
-        <ProtectedRoute requireAuth={true}>
-          <VehicleBoosts />
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/reviews" component={Reviews} />
-      <Route path="/support" component={Support} />
-      
-      <Route component={NotFound} />
-    </Switch>
+      {/* Global onboarding trigger */}
+      <OnboardingTrigger />
+    </>
   );
 }
 

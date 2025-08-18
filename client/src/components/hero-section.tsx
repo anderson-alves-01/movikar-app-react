@@ -72,11 +72,11 @@ export default function HeroSection({ onSearch }: HeroSectionProps) {
                     <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input 
                       type="text" 
-                      placeholder="São Paulo, SP" 
+                      placeholder="São Paulo, SP"
                       className="pl-10 h-12 text-sm"
                       value={searchData.location}
                       onChange={(e) => setSearchData(prev => ({ ...prev, location: e.target.value }))}
-                      data-testid="input-search"
+                      data-testid="search-input"
                     />
                   </div>
                 </div>
@@ -119,7 +119,7 @@ export default function HeroSection({ onSearch }: HeroSectionProps) {
           </Card>
 
           {/* Value Propositions */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16 feature-cards">
             <div className="text-center">
               <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
                 <Shield className="h-8 w-8 text-white" />
