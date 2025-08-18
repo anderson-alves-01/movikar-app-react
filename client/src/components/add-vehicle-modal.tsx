@@ -458,7 +458,7 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
               <Input 
                 type="number" 
                 min="2000" 
-                max="2024" 
+                max={new Date().getFullYear().toString()} 
                 placeholder="2023"
                 value={vehicleData.year}
                 onChange={(e) => setVehicleData(prev => ({ ...prev, year: e.target.value }))}

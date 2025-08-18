@@ -325,7 +325,7 @@ export default function VehicleDetail() {
                       <span className="mx-2">•</span>
                       <span>{vehicle.owner.totalRentals} aluguéis</span>
                     </div>
-                    <div className="text-sm text-gray-500 mt-1">Membro desde 2022</div>
+                    <div className="text-sm text-gray-500 mt-1">Membro desde {vehicle.owner?.createdAt ? new Date(vehicle.owner.createdAt).getFullYear() : new Date().getFullYear()}</div>
                   </div>
                   <Button 
                     className="bg-secondary text-white hover:bg-teal-600 transition-colors"

@@ -209,9 +209,9 @@ export default function VehicleFilters({ filters, onFiltersChange }: VehicleFilt
                 <Label className="text-sm font-medium text-gray-700 mb-2 block">Ano do Veículo</Label>
                 <div className="px-2">
                   <Slider
-                    value={[filters.yearMin || 2015, filters.yearMax || 2024]}
+                    value={[filters.yearMin || 2015, filters.yearMax || new Date().getFullYear()]}
                     onValueChange={handleYearChange}
-                    max={2024}
+                    max={new Date().getFullYear()}
                     min={2010}
                     step={1}
                     className="w-full"
@@ -219,7 +219,7 @@ export default function VehicleFilters({ filters, onFiltersChange }: VehicleFilt
                 </div>
                 <div className="flex justify-between text-sm text-gray-600 mt-2">
                   <span>{filters.yearMin || 2015}</span>
-                  <span>{filters.yearMax || 2024}</span>
+                  <span>{filters.yearMax || new Date().getFullYear()}</span>
                 </div>
               </div>
 

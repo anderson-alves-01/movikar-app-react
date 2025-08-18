@@ -36,6 +36,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency } from "@/lib/currency";
 import Header from "@/components/header";
+import { validatePixKey, formatPixKey } from "@/utils/pixValidator";
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
@@ -291,9 +292,29 @@ export default function Profile() {
                         <Input
                           id="pixKey"
                           value={editData.pixKey}
-                          onChange={(e) => setEditData(prev => ({ ...prev, pixKey: e.target.value }))}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            const formatted = formatPixKey(value);
+                            setEditData(prev => ({ ...prev, pixKey: formatted }));
+                          }}
                           placeholder="CPF, e-mail, telefone ou chave aleatória"
                         />
+                        {editData.pixKey && (() => {
+                          const validation = validatePixKey(editData.pixKey);
+                          if (!validation.isValid) {
+                            return (
+                              <p className="text-xs text-red-500 mt-1">
+                                {validation.errorMessage}
+                              </p>
+                            );
+                          } else {
+                            return (
+                              <p className="text-xs text-green-600 mt-1">
+                                ✓ Chave PIX válida ({validation.type?.toUpperCase()})
+                              </p>
+                            );
+                          }
+                        })()}
                         <p className="text-xs text-gray-600 mt-1">
                           Configure sua chave PIX para receber repasses das locações
                         </p>
@@ -339,7 +360,7 @@ export default function Profile() {
                       <span>•</span>
                       <span>{user.totalRentals} aluguéis</span>
                       <span>•</span>
-                      <span>Membro desde 2024</span>
+                      <span>Membro desde {new Date().getFullYear()}</span>
                     </div>
 
                     <div className="space-y-2 text-sm text-gray-600">

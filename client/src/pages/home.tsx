@@ -321,7 +321,7 @@ export default function Home() {
           </div>
 
           <div className="border-t border-gray-700 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400 text-sm">© 2024 alugae.mobi. Todos os direitos reservados.</p>
+            <p className="text-gray-400 text-sm">© {new Date().getFullYear()} alugae.mobi. Todos os direitos reservados.</p>
             <div className="flex items-center space-x-6 mt-4 md:mt-0">
               <div className="flex items-center text-sm text-gray-400">
                 <span className="mr-2">🛡️</span>

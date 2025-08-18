@@ -2,14 +2,16 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthStore } from "@/lib/auth";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Crown, Star, Sparkles, Check, X, Plus, Minus } from "lucide-react";
+import { Crown, Star, Sparkles, Check, X, Plus, Minus, ArrowLeft } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import Header from "@/components/header";
 
 interface SubscriptionPlan {
   id: number;
@@ -46,6 +48,7 @@ export default function SubscriptionPlans() {
   const queryClient = useQueryClient();
   const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   const { user: storeUser } = useAuthStore();
+  const [, setLocation] = useLocation();
 
   // Clear any previous checkout state when component loads
   useEffect(() => {
@@ -419,11 +422,25 @@ export default function SubscriptionPlans() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
-      <div className="max-w-6xl mx-auto py-12">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <Header />
+      <div className="p-4">
+        <div className="max-w-6xl mx-auto py-12">
+          {/* Back Button and Header */}
+          <div className="flex items-center mb-8">
+            <Button
+              variant="ghost"
+              onClick={() => setLocation('/dashboard')}
+              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+              data-testid="button-back-to-dashboard"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Voltar ao Dashboard</span>
+            </Button>
+          </div>
+          
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
             Planos de Assinatura
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
@@ -620,6 +637,7 @@ export default function SubscriptionPlans() {
                 comodidade de um pagamento único por ano.
               </p>
             </div>
+          </div>
           </div>
         </div>
       </div>

@@ -7,10 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff, Mail, Lock, User, Phone, Loader2, Gift, MapPin } from "lucide-react";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Eye, EyeOff, Mail, Lock, User, Phone, Loader2, Gift, MapPin, Check, ChevronsUpDown } from "lucide-react";
 import { useAuthStore } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { formatPhoneNumber, validatePhoneNumber, filterCities } from "@/utils/phoneFormatter";
+import { cn } from "@/lib/utils";
 
 export default function Auth() {
   const [, setLocation] = useLocation();
@@ -30,6 +34,9 @@ export default function Auth() {
     rememberMe: false,
     acceptTerms: false,
   });
+  const [cityOpen, setCityOpen] = useState(false);
+  const [citySearchValue, setCitySearchValue] = useState("");
+  const [cityOptions, setCityOptions] = useState<string[]>([]);
 
   const { setAuth } = useAuthStore();
   const { toast } = useToast();
@@ -232,7 +239,17 @@ export default function Auth() {
   };
 
   const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    if (field === 'phone' && typeof value === 'string') {
+      const formatted = formatPhoneNumber(value);
+      setFormData(prev => ({ ...prev, [field]: formatted }));
+    } else if (field === 'location' && typeof value === 'string') {
+      setFormData(prev => ({ ...prev, [field]: value }));
+      setCitySearchValue(value);
+      const filtered = filterCities(value);
+      setCityOptions(filtered);
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   const switchMode = () => {
@@ -316,18 +333,26 @@ export default function Auth() {
               {authMode === 'register' && (
                 <div>
                   <Label htmlFor="phone">Telefone</Label>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Aceitamos números brasileiros e internacionais para turistas
+                  </p>
                   <div className="relative mt-1">
                     <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
                       id="phone"
                       type="tel"
                       className="pl-10"
-                      placeholder="(11) 99999-9999"
+                      placeholder="+55 (11) 99999-9999 ou (11) 99999-9999"
                       value={formData.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
                       data-testid="input-phone"
                     />
                   </div>
+                  {formData.phone && !validatePhoneNumber(formData.phone) && (
+                    <p className="text-xs text-red-500 mt-1">
+                      Formato inválido. Use: (11) 99999-9999 ou +55 (11) 99999-9999
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -343,10 +368,23 @@ export default function Auth() {
                     className="pl-10"
                     placeholder="seu@email.com"
                     value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    onChange={(e) => {
+                      // Preserve dots and validate email format
+                      const emailValue = e.target.value;
+                      if (emailValue.includes('.') || emailValue.includes('@')) {
+                        setFormData(prev => ({ ...prev, email: emailValue }));
+                      } else {
+                        handleInputChange('email', emailValue);
+                      }
+                    }}
                     data-testid="input-email"
                   />
                 </div>
+                {formData.email && !formData.email.includes('@') && formData.email.length > 0 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Digite um e-mail válido com @
+                  </p>
+                )}
               </div>
 
               {/* Password Field */}
@@ -389,17 +427,60 @@ export default function Auth() {
               {authMode === 'register' && (
                 <div>
                   <Label htmlFor="location">Localização</Label>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Digite sua cidade para busca inteligente
+                  </p>
                   <div className="relative mt-1">
-                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="location"
-                      type="text"
-                      className="pl-10"
-                      placeholder="São Paulo, SP"
-                      value={formData.location}
-                      onChange={(e) => handleInputChange('location', e.target.value)}
-                      data-testid="input-location"
-                    />
+                    <Popover open={cityOpen} onOpenChange={setCityOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={cityOpen}
+                          className="w-full justify-between pl-10 font-normal"
+                          data-testid="button-select-city"
+                        >
+                          <MapPin className="absolute left-3 h-4 w-4 text-gray-400" />
+                          {formData.location || "Selecione sua cidade..."}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0">
+                        <Command>
+                          <CommandInput 
+                            placeholder="Digite sua cidade..." 
+                            value={citySearchValue}
+                            onValueChange={(value) => {
+                              setCitySearchValue(value);
+                              const filtered = filterCities(value);
+                              setCityOptions(filtered);
+                            }}
+                          />
+                          <CommandEmpty>Nenhuma cidade encontrada.</CommandEmpty>
+                          <CommandGroup>
+                            {cityOptions.map((city) => (
+                              <CommandItem
+                                key={city}
+                                value={city}
+                                onSelect={(currentValue) => {
+                                  setFormData(prev => ({ ...prev, location: currentValue }));
+                                  setCityOpen(false);
+                                  setCitySearchValue("");
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    formData.location === city ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {city}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 </div>
               )}
