@@ -50,6 +50,14 @@ Preferred communication style: Simple, everyday language.
 - **Dynamic Subscription Values**: Tracks actual paid amounts, vehicle counts, payment intent IDs, and metadata for user subscriptions.
 - **Checkout URL Optimization**: Implemented temporary server-side data storage to resolve HTTP 431 errors caused by long URLs, reducing URL length significantly.
 
+## Recent Changes
+
+### August 18, 2025 - Deployment Fixes
+- **Fixed TypeScript deployment errors**: Corrected undefined import reference `cnhValidationRecords` to `cnhValidation` in storage.ts
+- **Updated table references**: Changed `createCNHValidation` method to use the correct table name `cnhValidation`
+- **Removed invalid import**: Removed non-existent `vehicleReviews` table import from storage.ts
+- **Build verification**: Confirmed successful build and application startup after fixes
+
 ## External Dependencies
 
 ### Frontend

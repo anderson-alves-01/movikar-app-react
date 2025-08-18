@@ -1,5 +1,5 @@
 import { 
-  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity, adminSettings, savedVehicles, coupons, subscriptionPlans, userSubscriptions, vehicleInspections, payouts, ownerInspections, cnhValidationRecords, deliveryPickupSettings, supportTickets, supportMessages, vehicleReviews,
+  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity, adminSettings, savedVehicles, coupons, subscriptionPlans, userSubscriptions, vehicleInspections, payouts, ownerInspections, cnhValidation, deliveryPickupSettings, supportTickets, supportMessages,
   type User, type InsertUser, type Vehicle, type InsertVehicle, 
   type Booking, type InsertBooking, type Review, type InsertReview,
   type Message, type InsertMessage, type VehicleWithOwner, type BookingWithDetails,
@@ -3391,8 +3391,8 @@ export class DatabaseStorage implements IStorage {
 
   // CNH Validation (Feature 2)
   async createCNHValidation(cnhData: any): Promise<any> {
-    const [cnhValidation] = await db
-      .insert(cnhValidationRecords)
+    const [cnhValidationResult] = await db
+      .insert(cnhValidation)
       .values({
         userId: cnhData.userId,
         cnhNumber: cnhData.cnhNumber,
@@ -3404,7 +3404,7 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date()
       })
       .returning();
-    return cnhValidation;
+    return cnhValidationResult;
   }
 
   // Support Tickets (Feature 3)
