@@ -12,6 +12,7 @@ import { useSearch } from "@/contexts/SearchContext";
 import { CarLoading, VehicleCardSkeleton } from "@/components/ui/loading";
 import { useAuthStore } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
 
 export default function Home() {
   const { filters, clearFilters } = useSearch();
@@ -104,6 +105,7 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       <HeroSection onSearch={handleSearch} />
+      <OnboardingFlow page="home" />
       
       {/* Subscription Banner */}
       <section className="py-8 bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800">

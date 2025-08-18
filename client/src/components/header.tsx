@@ -18,6 +18,7 @@ import { buildSearchParams } from "@/lib/searchUtils";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import type { AdminSettings } from "@shared/admin-settings";
+import { useOnboarding } from "@/components/ui/tooltip-interactive";
 // import AddVehicleModal from "./add-vehicle-modal";
 
 export default function Header() {
@@ -29,6 +30,7 @@ export default function Header() {
   const [refreshing, setRefreshing] = useState(false);
   const { user, token, clearAuth, refreshUser } = useAuthStore();
   const { updateFilter, clearFilters } = useSearch();
+  const { startOnboarding } = useOnboarding();
 
   // Fetch feature toggles (public endpoint)
   const { data: featureToggles } = useQuery({
@@ -338,6 +340,10 @@ export default function Header() {
                           <HelpCircle className="h-4 w-4 mr-2" />
                           Suporte & FAQ
                         </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={startOnboarding} data-testid="button-start-tutorial">
+                        <HelpCircle className="h-4 w-4 mr-2" />
+                        Iniciar tutorial
                       </DropdownMenuItem>
                       {user.role === 'admin' && (
                         <>
