@@ -58,7 +58,7 @@ const AnimatedInput = React.forwardRef<HTMLInputElement, AnimatedInputProps>(
           onBlur={handleBlur}
           whileFocus={animateOnFocus ? { scale: 1.02 } : undefined}
           transition={{ duration: 0.2 }}
-          {...props}
+          {...(props as any)}
         />
         
         {error && (

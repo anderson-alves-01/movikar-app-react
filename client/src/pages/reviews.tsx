@@ -179,11 +179,11 @@ export default function Reviews() {
   const { toast } = useToast();
   const [selectedBooking, setSelectedBooking] = useState<PendingBooking | null>(null);
 
-  const { data: user } = useQuery({
+  const { data: user } = useQuery<{ id: number; name: string; email: string }>({
     queryKey: ["/api/auth/user"],
   });
 
-  const { data: pendingReviews, isLoading } = useQuery({
+  const { data: pendingReviews, isLoading } = useQuery<PendingBooking[]>({
     queryKey: ["/api/bookings/pending-reviews"],
     enabled: !!user,
   });
@@ -326,7 +326,7 @@ export default function Reviews() {
       {selectedBooking && (
         <ReviewModal
           booking={selectedBooking}
-          isOwner={selectedBooking.ownerId === user?.id}
+          isOwner={selectedBooking?.ownerId === user?.id}
           onClose={() => setSelectedBooking(null)}
           onSubmit={handleSubmitReview}
         />
