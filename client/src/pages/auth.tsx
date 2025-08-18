@@ -31,6 +31,7 @@ export default function Auth() {
     password: '',
     name: '',
     phone: '',
+    ddi: '+55',
     location: '',
     confirmPassword: '',
     rememberMe: false,
@@ -233,7 +234,7 @@ export default function Auth() {
         email: formData.email,
         password: formData.password,
         name: formData.name,
-        phone: formData.phone,
+        phone: formData.ddi + formData.phone,
         location: formData.location,
       });
     } else {
@@ -245,10 +246,7 @@ export default function Auth() {
   };
 
   const handleInputChange = (field: string, value: string | boolean) => {
-    if (field === 'phone' && typeof value === 'string') {
-      const formatted = formatPhoneNumber(value);
-      setFormData(prev => ({ ...prev, [field]: formatted }));
-    } else if (field === 'location' && typeof value === 'string') {
+    if (field === 'location' && typeof value === 'string') {
       setFormData(prev => ({ ...prev, [field]: value }));
       setCitySearchValue(value);
       const filtered = filterCities(value);
@@ -265,6 +263,7 @@ export default function Auth() {
       password: '',
       name: '',
       phone: '',
+      ddi: '+55',
       location: '',
       confirmPassword: '',
       rememberMe: false,
@@ -340,23 +339,48 @@ export default function Auth() {
                 <div>
                   <Label htmlFor="phone">Telefone</Label>
                   <p className="text-xs text-gray-500 mt-1">
-                    Aceitamos números brasileiros e internacionais para turistas
+                    Aceitamos números brasileiros e internacionais
                   </p>
-                  <div className="relative mt-1">
-                    <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="phone"
-                      type="tel"
-                      className="pl-10"
-                      placeholder="+55 (11) 99999-9999 ou (11) 99999-9999"
-                      value={formData.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      data-testid="input-phone"
-                    />
+                  <div className="flex gap-2 mt-1">
+                    {/* DDI Field */}
+                    <div className="w-24">
+                      <Input
+                        id="ddi"
+                        type="text"
+                        placeholder="+55"
+                        value={formData.ddi || '+55'}
+                        onChange={(e) => {
+                          let value = e.target.value;
+                          if (!value.startsWith('+')) {
+                            value = '+' + value.replace(/[^0-9]/g, '');
+                          }
+                          handleInputChange('ddi', value);
+                        }}
+                        data-testid="input-ddi"
+                        className="text-center"
+                      />
+                    </div>
+                    {/* Phone Number Field */}
+                    <div className="flex-1 relative">
+                      <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="phone"
+                        type="tel"
+                        className="pl-10"
+                        placeholder="(11) 99999-9999"
+                        value={formData.phone}
+                        onChange={(e) => {
+                          // Remove formatting and keep only numbers
+                          const value = e.target.value.replace(/[^0-9]/g, '');
+                          handleInputChange('phone', value);
+                        }}
+                        data-testid="input-phone"
+                      />
+                    </div>
                   </div>
-                  {formData.phone && !validatePhoneNumber(formData.phone) && (
+                  {formData.phone && formData.phone.length > 0 && formData.phone.length < 10 && (
                     <p className="text-xs text-red-500 mt-1">
-                      Formato inválido. Use: (11) 99999-9999 ou +55 (11) 99999-9999
+                      Telefone deve ter pelo menos 10 dígitos
                     </p>
                   )}
                 </div>
@@ -374,15 +398,7 @@ export default function Auth() {
                     className="pl-10"
                     placeholder="seu@email.com"
                     value={formData.email}
-                    onChange={(e) => {
-                      // Preserve dots and validate email format
-                      const emailValue = e.target.value;
-                      if (emailValue.includes('.') || emailValue.includes('@')) {
-                        setFormData(prev => ({ ...prev, email: emailValue }));
-                      } else {
-                        handleInputChange('email', emailValue);
-                      }
-                    }}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
                     data-testid="input-email"
                   />
                 </div>

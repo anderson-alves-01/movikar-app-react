@@ -24,7 +24,7 @@ export const users = pgTable("users", {
   name: varchar("name", { length: 100 }).notNull(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   password: varchar("password", { length: 255 }).notNull(),
-  phone: varchar("phone", { length: 20 }),
+  phone: varchar("phone", { length: 25 }),
   role: varchar("role", { length: 20 }).notNull().default("renter"), // renter, owner, both, admin
   avatar: text("avatar"),
   isOwner: boolean("is_owner").default(false),

@@ -52,6 +52,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### August 18, 2025 - Authentication & UI Fixes
+- **Email validation fix**: Removed automatic dot removal from email addresses - emails now preserve all characters including periods
+- **Phone number system overhaul**: Replaced automatic formatting with separate DDI field (+55 Brazil default) and clean phone number input
+- **Database schema update**: Extended phone field length to accommodate international numbers with country codes
+- **Form validation improvements**: Simplified phone validation to require minimum 10 digits without complex formatting rules
+- **User experience enhancement**: DDI field auto-formats with + prefix, phone field accepts only numbers for cleaner data storage
+
 ### August 18, 2025 - Micro-Interactions & Dynamic Onboarding Implementation
 - **Comprehensive micro-interactions system**: Implemented AnimatedButton, AnimatedCard, AnimatedNav, and AnimatedInput components with hover effects, scaling, and ripple animations
 - **Dynamic onboarding tutorial**: Created InteractiveTooltip system with automatic step progression, spotlight highlighting, and viewport boundary detection
