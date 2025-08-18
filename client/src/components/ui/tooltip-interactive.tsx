@@ -47,9 +47,12 @@ export function InteractiveTooltip({
       if (element) {
         setTargetElement(element);
         
-        // Calculate tooltip position
+        // Calculate tooltip position with viewport boundaries
         const rect = element.getBoundingClientRect();
         const position = currentStepData.position || "bottom";
+        const tooltipWidth = 320; // Approximate tooltip width
+        const tooltipHeight = 300; // Approximate tooltip height
+        const margin = 20; // Margin from viewport edges
         
         let x = 0, y = 0;
         
@@ -74,6 +77,23 @@ export function InteractiveTooltip({
             x = window.innerWidth / 2;
             y = window.innerHeight / 2;
             break;
+        }
+        
+        // Adjust position to stay within viewport
+        // Check horizontal bounds
+        if (x + tooltipWidth / 2 > window.innerWidth - margin) {
+          x = window.innerWidth - tooltipWidth / 2 - margin;
+        }
+        if (x - tooltipWidth / 2 < margin) {
+          x = tooltipWidth / 2 + margin;
+        }
+        
+        // Check vertical bounds
+        if (y + tooltipHeight > window.innerHeight - margin) {
+          y = window.innerHeight - tooltipHeight - margin;
+        }
+        if (y < margin) {
+          y = margin;
         }
         
         setTooltipPosition({ x, y });
@@ -127,36 +147,45 @@ export function InteractiveTooltip({
   const getTooltipStyle = () => {
     const position = currentStepData.position || "bottom";
     
+    // Ensure tooltip stays within viewport bounds
+    const baseStyle = {
+      left: Math.max(20, Math.min(tooltipPosition.x, window.innerWidth - 340)),
+      top: Math.max(20, Math.min(tooltipPosition.y, window.innerHeight - 320)),
+      maxWidth: '320px'
+    };
+    
     switch (position) {
       case "top":
         return {
-          left: tooltipPosition.x,
-          top: tooltipPosition.y,
+          ...baseStyle,
           transform: "translate(-50%, -100%)"
         };
       case "bottom":
         return {
-          left: tooltipPosition.x,
-          top: tooltipPosition.y,
+          ...baseStyle,
           transform: "translate(-50%, 0%)"
         };
       case "left":
         return {
-          left: tooltipPosition.x,
-          top: tooltipPosition.y,
+          ...baseStyle,
           transform: "translate(-100%, -50%)"
         };
       case "right":
         return {
-          left: tooltipPosition.x,
-          top: tooltipPosition.y,
+          ...baseStyle,
           transform: "translate(0%, -50%)"
         };
       case "center":
         return {
-          left: tooltipPosition.x,
-          top: tooltipPosition.y,
-          transform: "translate(-50%, -50%)"
+          ...baseStyle,
+          left: Math.max(20, (window.innerWidth - 320) / 2),
+          top: Math.max(20, (window.innerHeight - 300) / 2),
+          transform: "translate(0%, 0%)"
+        };
+      default:
+        return {
+          ...baseStyle,
+          transform: "translate(-50%, 0%)"
         };
     }
   };
@@ -199,7 +228,7 @@ export function InteractiveTooltip({
         exit={{ opacity: 0, scale: 0.8, y: 10 }}
         transition={{ duration: 0.3 }}
       >
-        <Card className="w-80 max-w-sm shadow-xl">
+        <Card className="w-80 max-w-[90vw] shadow-xl">
           <CardContent className="p-6">
             {/* Header */}
             <div className="flex items-start justify-between mb-4">

@@ -26,7 +26,7 @@ const homeOnboardingSteps: TooltipStep[] = [
     target: "[data-testid='button-login']",
     title: "Faça login",
     content: "Clique aqui para entrar na sua conta ou criar uma nova. Você precisa estar logado para alugar ou anunciar veículos.",
-    position: "left"
+    position: "bottom"
   },
   {
     id: "features",
