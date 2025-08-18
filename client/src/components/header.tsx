@@ -295,6 +295,12 @@ export default function Header() {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
+                        <Link href="/reviews" className="cursor-pointer">
+                          <Star className="h-4 w-4 mr-2" />
+                          Avaliações
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
                         <Link href="/suggestions" className="cursor-pointer">
                           <Sparkles className="h-4 w-4 mr-2" />
                           Sugestões

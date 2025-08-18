@@ -2534,13 +2534,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
         reviewerId: req.user!.id,
       });
 
+      // Verificar se a reserva existe e se o usuário tem permissão para avaliar
+      const booking = await storage.getBooking(reviewData.bookingId);
+      if (!booking) {
+        return res.status(404).json({ message: "Reserva não encontrada" });
+      }
+
+      // Verificar se o usuário faz parte da reserva (locador ou locatário)
+      if (booking.renterId !== req.user!.id && booking.ownerId !== req.user!.id) {
+        return res.status(403).json({ message: "Não autorizado a avaliar esta reserva" });
+      }
+
+      // Verificar se a reserva está finalizada
+      if (booking.status !== 'completed') {
+        return res.status(400).json({ message: "Reserva deve estar finalizada para ser avaliada" });
+      }
+
+      // Verificar se já existe avaliação deste usuário para esta reserva
+      const existingReview = await storage.getReviewByBookingAndReviewer(reviewData.bookingId, req.user!.id);
+      if (existingReview) {
+        return res.status(400).json({ message: "Você já avaliou esta reserva" });
+      }
+
       const review = await storage.createReview(reviewData);
+
+      // Atualizar rating do usuário avaliado e do veículo (se aplicável)
+      await updateUserAndVehicleRatings(reviewData.revieweeId, reviewData.vehicleId);
+
       res.status(201).json(review);
     } catch (error) {
       console.error("Create review error:", error);
       res.status(400).json({ message: "Falha ao criar avaliação" });
     }
   });
+
+  // Buscar reservas elegíveis para avaliação
+  app.get("/api/bookings/pending-reviews", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      
+      // Buscar reservas finalizadas do usuário que ainda não foram avaliadas
+      const bookings = await storage.getBookingsPendingReview(userId);
+      
+      res.json(bookings);
+    } catch (error) {
+      console.error("Get pending reviews error:", error);
+      res.status(500).json({ message: "Falha ao buscar reservas para avaliação" });
+    }
+  });
+
+  // Buscar avaliações de um usuário
+  app.get("/api/users/:id/reviews", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const reviews = await storage.getReviewsByUser(userId);
+      res.json(reviews);
+    } catch (error) {
+      console.error("Get user reviews error:", error);
+      res.status(500).json({ message: "Falha ao buscar avaliações do usuário" });
+    }
+  });
+
+  // Buscar avaliações recebidas por um usuário
+  app.get("/api/users/:id/received-reviews", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const reviews = await storage.getReceivedReviewsByUser(userId);
+      res.json(reviews);
+    } catch (error) {
+      console.error("Get received reviews error:", error);
+      res.status(500).json({ message: "Falha ao buscar avaliações recebidas" });
+    }
+  });
+
+  // Função auxiliar para atualizar ratings de usuário e veículo
+  async function updateUserAndVehicleRatings(userId: number, vehicleId?: number) {
+    try {
+      // Atualizar rating do usuário
+      const userReviews = await storage.getReceivedReviewsByUser(userId);
+      if (userReviews.length > 0) {
+        const averageRating = userReviews.reduce((sum, review) => sum + review.rating, 0) / userReviews.length;
+        await storage.updateUserRating(userId, averageRating);
+      }
+
+      // Atualizar rating do veículo se fornecido
+      if (vehicleId) {
+        const vehicleReviews = await storage.getReviewsByVehicle(vehicleId);
+        if (vehicleReviews.length > 0) {
+          const averageRating = vehicleReviews.reduce((sum, review) => sum + review.rating, 0) / vehicleReviews.length;
+          await storage.updateVehicleRating(vehicleId, averageRating);
+        }
+      }
+    } catch (error) {
+      console.error("Error updating ratings:", error);
+    }
+  }
 
   // Vehicle Inspection routes
   app.get("/api/inspections/booking/:bookingId", authenticateToken, async (req, res) => {

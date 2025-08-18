@@ -78,7 +78,12 @@ export interface IStorage {
   // Reviews
   getReviewsByVehicle(vehicleId: number): Promise<Review[]>;
   getReviewsByUser(userId: number, type: 'given' | 'received'): Promise<Review[]>;
+  getReceivedReviewsByUser(userId: number): Promise<Review[]>;
+  getReviewByBookingAndReviewer(bookingId: number, reviewerId: number): Promise<Review | undefined>;
+  getBookingsPendingReview(userId: number): Promise<BookingWithDetails[]>;
   createReview(review: InsertReview): Promise<Review>;
+  updateUserRating(userId: number, rating: number): Promise<void>;
+  updateVehicleRating(vehicleId: number, rating: number): Promise<void>;
 
   // Messages
   getMessagesBetweenUsers(userId1: number, userId2: number, bookingId?: number): Promise<Message[]>;
@@ -925,12 +930,98 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(reviews.createdAt));
   }
 
+  async getReceivedReviewsByUser(userId: number): Promise<Review[]> {
+    return await db
+      .select()
+      .from(reviews)
+      .where(eq(reviews.revieweeId, userId))
+      .orderBy(desc(reviews.createdAt));
+  }
+
+  async getReviewByBookingAndReviewer(bookingId: number, reviewerId: number): Promise<Review | undefined> {
+    const [review] = await db
+      .select()
+      .from(reviews)
+      .where(and(
+        eq(reviews.bookingId, bookingId),
+        eq(reviews.reviewerId, reviewerId)
+      ));
+    return review;
+  }
+
+  async getBookingsPendingReview(userId: number): Promise<BookingWithDetails[]> {
+    // Busca reservas completadas onde o usuário ainda não fez sua avaliação
+    const userBookings = await db
+      .select({
+        ...getTableColumns(bookings),
+        vehicle: {
+          id: vehicles.id,
+          brand: vehicles.brand,
+          model: vehicles.model,
+          year: vehicles.year,
+          images: vehicles.images,
+          licensePlate: vehicles.licensePlate,
+          ownerId: vehicles.ownerId,
+        },
+        renter: {
+          id: users.id,
+          name: users.name,
+          email: users.email,
+          avatar: users.avatar,
+          rating: users.rating,
+        }
+      })
+      .from(bookings)
+      .innerJoin(vehicles, eq(bookings.vehicleId, vehicles.id))
+      .innerJoin(users, eq(bookings.renterId, users.id))
+      .where(and(
+        eq(bookings.status, 'completed'),
+        or(
+          eq(bookings.renterId, userId),
+          eq(bookings.ownerId, userId)
+        )
+      ))
+      .orderBy(desc(bookings.endDate));
+
+    // Filtrar apenas as que não têm avaliação do usuário atual
+    const pendingReviews: BookingWithDetails[] = [];
+    
+    for (const booking of userBookings) {
+      const existingReview = await this.getReviewByBookingAndReviewer(booking.id, userId);
+      if (!existingReview) {
+        pendingReviews.push(booking as BookingWithDetails);
+      }
+    }
+
+    return pendingReviews;
+  }
+
   async createReview(insertReview: InsertReview): Promise<Review> {
     const [review] = await db
       .insert(reviews)
       .values(insertReview)
       .returning();
     return review;
+  }
+
+  async updateUserRating(userId: number, rating: number): Promise<void> {
+    await db
+      .update(users)
+      .set({ 
+        rating: rating.toFixed(2),
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+  }
+
+  async updateVehicleRating(vehicleId: number, rating: number): Promise<void> {
+    await db
+      .update(vehicles)
+      .set({ 
+        rating: rating.toFixed(2),
+        updatedAt: new Date()
+      })
+      .where(eq(vehicles.id, vehicleId));
   }
 
   // Messages

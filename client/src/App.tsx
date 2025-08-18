@@ -55,6 +55,7 @@ import InspectionHistory from "@/pages/inspection-history";
 import StripeProduction from "@/pages/admin/StripeProduction";
 import OwnerLeads from "@/pages/owner-leads";
 import VehicleBoosts from "@/pages/vehicle-boosts";
+import Reviews from "@/pages/reviews";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt, IOSInstallPrompt } from "@/components/InstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
@@ -151,6 +152,8 @@ function Router() {
           <VehicleBoosts />
         </ProtectedRoute>
       </Route>
+      
+      <Route path="/reviews" component={Reviews} />
       
       <Route component={NotFound} />
     </Switch>
