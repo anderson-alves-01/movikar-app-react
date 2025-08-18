@@ -295,7 +295,7 @@ export default function Home() {
                 <li><a href="#" className="hover:text-white transition-colors">Como alugar</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Seguros</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Documentos necessários</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">FAQ</a></li>
+                <li><a href="/support" className="hover:text-white transition-colors">FAQ</a></li>
               </ul>
             </div>
 
@@ -312,8 +312,8 @@ export default function Home() {
             <div>
               <h4 className="text-lg font-semibold mb-4">Suporte</h4>
               <ul className="space-y-2 text-gray-300">
-                <li><a href="#" className="hover:text-white transition-colors">Central de ajuda</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contato</a></li>
+                <li><a href="/support" className="hover:text-white transition-colors">Central de ajuda</a></li>
+                <li><a href="/support" className="hover:text-white transition-colors">Contato</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Termos de uso</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Política de privacidade</a></li>
               </ul>

@@ -663,7 +663,7 @@ export default function Auth() {
               </div>
 
               {/* Home Button */}
-              <div className="text-center pt-4 border-t">
+              <div className="text-center pt-4 border-t space-y-2">
                 <Button
                   type="button"
                   variant="outline"
@@ -671,6 +671,16 @@ export default function Auth() {
                   onClick={() => setLocation('/')}
                 >
                   🏠 Voltar ao Início
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-xs text-gray-500 hover:text-gray-700"
+                  onClick={() => setLocation('/support')}
+                  data-testid="link-support"
+                >
+                  Precisa de ajuda? Central de Suporte
                 </Button>
               </div>
             </form>

@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Search, Menu, User, MessageCircle, Car, LogOut, Shield, Bell, Gift, Sparkles, BarChart3, RotateCcw, DollarSign, BookmarkCheck, Crown, RefreshCw, Star } from "lucide-react";
+import { Search, Menu, User, MessageCircle, Car, LogOut, Shield, Bell, Gift, Sparkles, BarChart3, RotateCcw, DollarSign, BookmarkCheck, Crown, RefreshCw, Star, HelpCircle } from "lucide-react";
 import { useAuthStore } from "@/lib/auth";
 import { useSearch } from "@/contexts/SearchContext";
 import { buildSearchParams } from "@/lib/searchUtils";
@@ -331,6 +331,12 @@ export default function Header() {
                         <Link href="/document-verification" className="cursor-pointer">
                           <Shield className="h-4 w-4 mr-2" />
                           Verificação
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/support" className="cursor-pointer">
+                          <HelpCircle className="h-4 w-4 mr-2" />
+                          Suporte & FAQ
                         </Link>
                       </DropdownMenuItem>
                       {user.role === 'admin' && (
