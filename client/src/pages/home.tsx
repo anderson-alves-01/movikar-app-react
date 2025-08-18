@@ -258,9 +258,11 @@ export default function Home() {
                 </div>
               </div>
               
-              <Button variant="secondary" size="lg" className="bg-white text-primary font-bold hover:bg-gray-100">
-                Anunciar meu carro
-              </Button>
+              <Link href="/vehicles">
+                <Button variant="secondary" size="lg" className="bg-white text-primary font-bold hover:bg-gray-100">
+                  Anunciar meu carro
+                </Button>
+              </Link>
             </div>
             
             <div className="text-center lg:text-right">

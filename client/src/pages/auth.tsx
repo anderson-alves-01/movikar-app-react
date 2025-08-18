@@ -166,7 +166,7 @@ export default function Auth() {
 
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       // Para sistema httpOnly cookies, o token pode vir vazio
       setAuth(data.user, data.token || '');
       
@@ -174,6 +174,22 @@ export default function Auth() {
       if (authMode === 'register' && referralCode) {
         console.log('🎯 Applying referral code after registration:', referralCode);
         applyReferralMutation.mutate(referralCode);
+      }
+      
+      // Force refresh auth state to prevent 401 errors
+      if (authMode === 'register') {
+        try {
+          const authResponse = await fetch('/api/auth/user', {
+            method: 'GET',
+            credentials: 'include',
+          });
+          if (authResponse.ok) {
+            const userData = await authResponse.json();
+            setAuth(userData, '');
+          }
+        } catch (error) {
+          console.log('Auth refresh failed, but proceeding:', error);
+        }
       }
       
       toast({
@@ -268,6 +284,7 @@ export default function Auth() {
       confirmPassword: '',
       rememberMe: false,
       acceptTerms: false,
+      requiresCNH: false,
     });
   };
 
