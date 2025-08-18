@@ -52,11 +52,12 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### August 18, 2025 - Deployment Fixes
-- **Fixed TypeScript deployment errors**: Corrected undefined import reference `cnhValidationRecords` to `cnhValidation` in storage.ts
-- **Updated table references**: Changed `createCNHValidation` method to use the correct table name `cnhValidation`
-- **Removed invalid import**: Removed non-existent `vehicleReviews` table import from storage.ts
-- **Build verification**: Confirmed successful build and application startup after fixes
+### August 18, 2025 - Registration Flow & Modal Improvements
+- **Fixed "Star is not defined" production error**: Added missing Star import to header.tsx component that was causing crashes after user registration
+- **Enhanced modal scrolling**: Added proper scroll bars to Terms of Use and Privacy Policy modals with max-height constraints
+- **Fixed TypeScript errors**: Corrected checkbox type handling in privacy policy modal
+- **Registration flow validation**: Comprehensive testing of user registration, authentication, and redirect flows
+- **Build verification**: Confirmed successful production build without any Star reference errors
 
 ## External Dependencies
 

@@ -32,7 +32,7 @@ export default function TermsOfUseModal({ open, onOpenChange, onAccept }: TermsO
           </DialogTitle>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 pr-4">
+        <ScrollArea className="flex-1 pr-4 max-h-[60vh] overflow-y-auto">
           <div className="space-y-6 text-sm text-gray-700">
             
             {/* Seção 1 - Natureza da Plataforma */}

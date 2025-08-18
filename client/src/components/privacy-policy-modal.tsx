@@ -31,7 +31,7 @@ export default function PrivacyPolicyModal({ open, onOpenChange, onAccept }: Pri
           </DialogTitle>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 pr-4">
+        <ScrollArea className="flex-1 pr-4 max-h-[60vh] overflow-y-auto">
           <div className="space-y-6 text-sm text-gray-700">
             
             {/* Seção 1 - Coleta de Dados */}
@@ -173,7 +173,7 @@ export default function PrivacyPolicyModal({ open, onOpenChange, onAccept }: Pri
             <Checkbox
               id="accept-privacy"
               checked={accepted}
-              onCheckedChange={setAccepted}
+              onCheckedChange={(checked) => setAccepted(checked === true)}
               data-testid="checkbox-accept-privacy"
             />
             <label 
