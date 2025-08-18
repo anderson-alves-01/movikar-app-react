@@ -15,6 +15,8 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatPhoneNumber, validatePhoneNumber, filterCities } from "@/utils/phoneFormatter";
 import { cn } from "@/lib/utils";
+import TermsOfUseModal from "@/components/terms-of-use-modal";
+import PrivacyPolicyModal from "@/components/privacy-policy-modal";
 
 export default function Auth() {
   const [, setLocation] = useLocation();
@@ -39,6 +41,8 @@ export default function Auth() {
   const [cityOpen, setCityOpen] = useState(false);
   const [citySearchValue, setCitySearchValue] = useState("");
   const [cityOptions, setCityOptions] = useState<string[]>([]);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
   const { setAuth } = useAuthStore();
   const { toast } = useToast();
@@ -425,6 +429,26 @@ export default function Auth() {
                 </div>
               </div>
 
+              {/* Confirm Password Field (Register only) - Moved right after password */}
+              {authMode === 'register' && (
+                <div>
+                  <Label htmlFor="confirmPassword">Confirmar senha</Label>
+                  <div className="relative mt-1">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      required
+                      className="pl-10"
+                      placeholder="••••••••"
+                      value={formData.confirmPassword}
+                      onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                      data-testid="input-confirm-password"
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Location Field (Register only) */}
               {authMode === 'register' && (
                 <div>
@@ -487,26 +511,6 @@ export default function Auth() {
                 </div>
               )}
 
-              {/* Confirm Password Field (Register only) */}
-              {authMode === 'register' && (
-                <div>
-                  <Label htmlFor="confirmPassword">Confirmar senha</Label>
-                  <div className="relative mt-1">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      required
-                      className="pl-10"
-                      placeholder="••••••••"
-                      value={formData.confirmPassword}
-                      onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                      data-testid="input-confirm-password"
-                    />
-                  </div>
-                </div>
-              )}
-
               {/* Remember Me / Accept Terms */}
               <div className="space-y-3">
                 {authMode === 'login' ? (
@@ -535,13 +539,31 @@ export default function Auth() {
                     />
                     <Label htmlFor="acceptTerms" className="ml-3 text-sm text-gray-700">
                       Aceito os{" "}
-                      <a href="#" className="text-primary hover:text-red-600">
+                      <Button 
+                        type="button"
+                        variant="link" 
+                        className="text-primary hover:text-red-600 p-0 h-auto font-normal text-sm underline"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setShowTermsModal(true);
+                        }}
+                        data-testid="link-terms"
+                      >
                         termos de uso
-                      </a>{" "}
+                      </Button>{" "}
                       e{" "}
-                      <a href="#" className="text-primary hover:text-red-600">
+                      <Button 
+                        type="button"
+                        variant="link" 
+                        className="text-primary hover:text-red-600 p-0 h-auto font-normal text-sm underline"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setShowPrivacyModal(true);
+                        }}
+                        data-testid="link-privacy"
+                      >
                         política de privacidade
-                      </a>
+                      </Button>
                     </Label>
                   </div>
                 )}
@@ -655,6 +677,31 @@ export default function Auth() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modals */}
+      <TermsOfUseModal 
+        open={showTermsModal} 
+        onOpenChange={setShowTermsModal}
+        onAccept={() => {
+          setFormData(prev => ({ ...prev, acceptTerms: true }));
+          toast({
+            title: "✅ Termos aceitos",
+            description: "Você aceitou os termos de uso.",
+          });
+        }}
+      />
+      
+      <PrivacyPolicyModal 
+        open={showPrivacyModal} 
+        onOpenChange={setShowPrivacyModal}
+        onAccept={() => {
+          // Privacy policy acceptance is handled together with terms
+          toast({
+            title: "✅ Política aceita",
+            description: "Você aceitou a política de privacidade.",
+          });
+        }}
+      />
     </div>
   );
 }
