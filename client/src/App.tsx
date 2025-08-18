@@ -1,4 +1,3 @@
-import TestAuthFlow from "@/pages/test-auth-flow";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -35,27 +34,22 @@ import ContractPreview from "@/pages/contract-preview";
 import ContractSignedSuccess from "@/pages/contract-signed-success";
 import ContractSignatureError from "@/pages/contract-signature-error";
 import ContractSigned from "@/pages/contract-signed";
-import LoadingDemo from "@/pages/loading-demo";
 import AdminSettings from "@/pages/admin-settings";
 import AdminCouponsPage from "@/pages/admin-coupons";
 import AdminReports from "@/pages/admin-reports";
 import AdminSubscriptions from "@/pages/admin-subscriptions";
 import EarningsPage from "@/pages/earnings";
-import DebugPix from "@/pages/debug-pix";
 import SavedVehicles from "@/pages/saved-vehicles";
 import SubscriptionPlans from "@/pages/subscription-plans";
 import SubscriptionCheckout from "@/pages/subscription-checkout";
-import SubscriptionCheckoutDebug from "@/pages/subscription-checkout-debug";
 import SubscriptionSuccess from "@/pages/subscription-success";
-import TestSubscription from "@/pages/test-subscription";
-import DebugAuth from "@/pages/debug-auth";
-import AuthDebug from "@/pages/auth-debug";
 import VehicleInspection from "@/pages/vehicle-inspection";
 import InspectionHistory from "@/pages/inspection-history";
 import StripeProduction from "@/pages/admin/StripeProduction";
 import OwnerLeads from "@/pages/owner-leads";
 import VehicleBoosts from "@/pages/vehicle-boosts";
 import Reviews from "@/pages/reviews";
+import Support from "@/pages/support";
 import NotFound from "@/pages/not-found";
 import { InstallPrompt, IOSInstallPrompt } from "@/components/InstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
@@ -115,7 +109,6 @@ function Router() {
       <Route path="/contract-signature-error" component={ContractSignatureError} />
       <Route path="/contract-signature-callback" component={ContractSignedSuccess} />
       <Route path="/contract-signed" component={ContractSigned} />
-      <Route path="/loading-demo" component={LoadingDemo} />
       <Route path="/admin/settings" component={AdminSettings} />
       <Route path="/admin/reports" component={AdminReports} />
       <Route path="/admin/subscriptions" component={AdminSubscriptions} />
@@ -125,21 +118,15 @@ function Router() {
       {featureToggles?.enableRentNowCheckout && (
         <Route path="/earnings" component={EarningsPage} />
       )}
-      <Route path="/debug-pix" component={DebugPix} />
       <Route path="/subscription-plans" component={SubscriptionPlans} />
       <Route path="/subscription-checkout" component={SubscriptionCheckout} />
-      <Route path="/subscription-checkout-debug" component={SubscriptionCheckoutDebug} />
       <Route path="/subscription-success">
         <ProtectedRoute requireAuth={true}>
           <SubscriptionSuccess />
         </ProtectedRoute>
       </Route>
-      <Route path="/test-subscription" component={TestSubscription} />
       <Route path="/inspection/:reservationId" component={VehicleInspection} />
       <Route path="/inspection-history" component={InspectionHistory} />
-      <Route path="/test-auth-flow" component={TestAuthFlow} />
-      <Route path="/debug-auth" component={DebugAuth} />
-      <Route path="/auth-debug" component={AuthDebug} />
       
       {/* New Monetization Routes */}
       <Route path="/owner-leads">
@@ -154,6 +141,7 @@ function Router() {
       </Route>
       
       <Route path="/reviews" component={Reviews} />
+      <Route path="/support" component={Support} />
       
       <Route component={NotFound} />
     </Switch>

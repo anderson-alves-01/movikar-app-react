@@ -6736,6 +6736,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Support contact endpoint
+  app.post("/api/support/contact", async (req: Request, res: Response) => {
+    try {
+      const { name, email, subject, message, priority } = req.body;
+
+      // Validate required fields
+      if (!name || !email || !subject || !message) {
+        return res.status(400).json({ 
+          message: "Todos os campos são obrigatórios" 
+        });
+      }
+
+      // Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ 
+          message: "E-mail inválido" 
+        });
+      }
+
+      // Log the support request (in production, you'd save to database or send email)
+      console.log('📧 Support request received:', {
+        name,
+        email,
+        subject,
+        priority,
+        message: message.substring(0, 100) + '...',
+        timestamp: new Date().toISOString()
+      });
+
+      // Here you would typically:
+      // 1. Save to database
+      // 2. Send email to support team
+      // 3. Create support ticket
+      // 4. Send confirmation email to user
+
+      res.json({ 
+        message: "Mensagem enviada com sucesso! Entraremos em contato em breve.",
+        ticketId: `SUP-${Date.now()}` // Generate a simple ticket ID
+      });
+
+    } catch (error) {
+      console.error("Support contact error:", error);
+      res.status(500).json({ 
+        message: "Erro interno do servidor. Tente novamente." 
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
