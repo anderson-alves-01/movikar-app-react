@@ -6634,6 +6634,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }
 
+  // Car Models API for the new car model selector feature
+  app.get("/api/car-models", async (req, res) => {
+    try {
+      const carModels = await storage.getCarModels();
+      res.json(carModels);
+    } catch (error) {
+      console.error("Error fetching car models:", error);
+      res.status(500).json({ message: "Erro ao carregar modelos de carros" });
+    }
+  });
+
+  // CNH Validation API for the new CNH validation feature
+  app.post("/api/user/validate-cnh", authenticateToken, async (req: AuthRequest, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Usuário não autenticado" });
+      }
+
+      const { cnhNumber } = req.body;
+      
+      // In a real implementation, you would upload images to storage and validate
+      const cnhValidation = await storage.createCNHValidation({
+        userId: req.user.id,
+        cnhNumber,
+        cnhDocumentUrl: "mock_cnh_url", // Would be uploaded image URL
+        selfieUrl: "mock_selfie_url", // Would be uploaded selfie URL
+        expirationDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
+        status: "pending",
+      });
+
+      res.json({ success: true, cnhValidation });
+    } catch (error) {
+      console.error("Error validating CNH:", error);
+      res.status(500).json({ message: "Erro ao validar CNH" });
+    }
+  });
+
+  // Support Tickets API for the new support chat feature
+  app.get("/api/support/tickets", authenticateToken, async (req: AuthRequest, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Usuário não autenticado" });
+      }
+
+      const tickets = await storage.getSupportTicketsByUser(req.user.id);
+      res.json(tickets);
+    } catch (error) {
+      console.error("Error fetching support tickets:", error);
+      res.status(500).json({ message: "Erro ao carregar tickets de suporte" });
+    }
+  });
+
+  app.post("/api/support/tickets", authenticateToken, async (req: AuthRequest, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Usuário não autenticado" });
+      }
+
+      const { subject, description, category, priority } = req.body;
+      
+      const ticket = await storage.createSupportTicket({
+        userId: req.user.id,
+        subject,
+        description,
+        category,
+        priority,
+        status: "open",
+      });
+
+      res.json(ticket);
+    } catch (error) {
+      console.error("Error creating support ticket:", error);
+      res.status(500).json({ message: "Erro ao criar ticket de suporte" });
+    }
+  });
+
+  // Reviews API for the new rating/review feature
+  app.post("/api/reviews", authenticateToken, async (req: AuthRequest, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Usuário não autenticado" });
+      }
+
+      const { bookingId, vehicleId, revieweeId, rating, comment, type } = req.body;
+      
+      const review = await storage.createReview({
+        bookingId,
+        reviewerId: req.user.id,
+        revieweeId,
+        vehicleId,
+        rating,
+        comment,
+        type,
+      });
+
+      res.json(review);
+    } catch (error) {
+      console.error("Error creating review:", error);
+      res.status(500).json({ message: "Erro ao criar avaliação" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

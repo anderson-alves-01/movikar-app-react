@@ -1,5 +1,5 @@
 import { 
-  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity, adminSettings, savedVehicles, coupons, subscriptionPlans, userSubscriptions, vehicleInspections, payouts, ownerInspections,
+  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity, adminSettings, savedVehicles, coupons, subscriptionPlans, userSubscriptions, vehicleInspections, payouts, ownerInspections, cnhValidationRecords, deliveryPickupSettings, supportTickets, supportMessages, vehicleReviews,
   type User, type InsertUser, type Vehicle, type InsertVehicle, 
   type Booking, type InsertBooking, type Review, type InsertReview,
   type Message, type InsertMessage, type VehicleWithOwner, type BookingWithDetails,
@@ -81,9 +81,28 @@ export interface IStorage {
   getReceivedReviewsByUser(userId: number): Promise<Review[]>;
   getReviewByBookingAndReviewer(bookingId: number, reviewerId: number): Promise<Review | undefined>;
   getBookingsPendingReview(userId: number): Promise<BookingWithDetails[]>;
+  getReviewsByBooking(bookingId: number): Promise<Review[]>;
+  getAllReviews(): Promise<Review[]>;
   createReview(review: InsertReview): Promise<Review>;
+  createReviewResponse(response: any): Promise<any>;
   updateUserRating(userId: number, rating: number): Promise<void>;
   updateVehicleRating(vehicleId: number, rating: number): Promise<void>;
+
+  // Car Models (New Feature)
+  getCarModels(): Promise<any[]>;
+
+  // CNH Validation (New Feature)
+  createCNHValidation(cnhData: any): Promise<any>;
+
+  // Support Tickets (New Feature)
+  getSupportTicketsByUser(userId: number): Promise<any[]>;
+  createSupportTicket(ticketData: any): Promise<any>;
+  getSupportMessages(ticketId: number): Promise<any[]>;
+  createSupportMessage(messageData: any): Promise<any>;
+
+  // Delivery/Pickup Settings (New Feature)
+  getDeliveryPickupSettings(vehicleId: number): Promise<any>;
+  createOrUpdateDeliveryPickupSettings(settingsData: any): Promise<any>;
 
   // Messages
   getMessagesBetweenUsers(userId1: number, userId2: number, bookingId?: number): Promise<Message[]>;
@@ -3347,6 +3366,159 @@ export class DatabaseStorage implements IStorage {
       console.error('Error updating booking payment status:', error);
       throw error;
     }
+  }
+
+  // New feature implementations for the 5 major features
+
+  // Car Models (Feature 1)
+  async getCarModels(): Promise<any[]> {
+    // Return a comprehensive list of popular Brazilian car models
+    return [
+      { brand: 'Volkswagen', models: ['Gol', 'Polo', 'T-Cross', 'Nivus', 'Jetta', 'Tiguan', 'Amarok'] },
+      { brand: 'Chevrolet', models: ['Onix', 'Prisma', 'Tracker', 'Cruze', 'S10', 'Equinox'] },
+      { brand: 'Fiat', models: ['Argo', 'Mobi', 'Strada', 'Toro', 'Pulse', 'Fastback'] },
+      { brand: 'Ford', models: ['Ka', 'EcoSport', 'Territory', 'Ranger', 'Bronco Sport'] },
+      { brand: 'Hyundai', models: ['HB20', 'Creta', 'Tucson', 'ix35', 'Azera'] },
+      { brand: 'Toyota', models: ['Etios', 'Yaris', 'Corolla', 'RAV4', 'Hilux', 'SW4'] },
+      { brand: 'Honda', models: ['Fit', 'City', 'Civic', 'HR-V', 'CR-V'] },
+      { brand: 'Nissan', models: ['March', 'Versa', 'Kicks', 'Frontier'] },
+      { brand: 'Renault', models: ['Kwid', 'Sandero', 'Logan', 'Duster', 'Captur', 'Oroch'] },
+      { brand: 'Peugeot', models: ['208', '2008', '3008', '5008'] },
+      { brand: 'Jeep', models: ['Renegade', 'Compass', 'Commander', 'Wrangler'] },
+      { brand: 'Mitsubishi', models: ['ASX', 'Eclipse Cross', 'L200', 'Pajero'] }
+    ];
+  }
+
+  // CNH Validation (Feature 2)
+  async createCNHValidation(cnhData: any): Promise<any> {
+    const [cnhValidation] = await db
+      .insert(cnhValidationRecords)
+      .values({
+        userId: cnhData.userId,
+        cnhNumber: cnhData.cnhNumber,
+        cnhDocumentUrl: cnhData.cnhDocumentUrl,
+        selfieUrl: cnhData.selfieUrl,
+        expirationDate: cnhData.expirationDate,
+        status: cnhData.status,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    return cnhValidation;
+  }
+
+  // Support Tickets (Feature 3)
+  async getSupportTicketsByUser(userId: number): Promise<any[]> {
+    return await db
+      .select()
+      .from(supportTickets)
+      .where(eq(supportTickets.userId, userId))
+      .orderBy(desc(supportTickets.createdAt));
+  }
+
+  async createSupportTicket(ticketData: any): Promise<any> {
+    const [ticket] = await db
+      .insert(supportTickets)
+      .values({
+        userId: ticketData.userId,
+        subject: ticketData.subject,
+        description: ticketData.description,
+        category: ticketData.category,
+        priority: ticketData.priority,
+        status: ticketData.status,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    return ticket;
+  }
+
+  async getSupportMessages(ticketId: number): Promise<any[]> {
+    return await db
+      .select()
+      .from(supportMessages)
+      .where(eq(supportMessages.ticketId, ticketId))
+      .orderBy(asc(supportMessages.createdAt));
+  }
+
+  async createSupportMessage(messageData: any): Promise<any> {
+    const [message] = await db
+      .insert(supportMessages)
+      .values({
+        ticketId: messageData.ticketId,
+        senderId: messageData.senderId,
+        message: messageData.message,
+        isAdminResponse: messageData.isAdminResponse,
+        createdAt: new Date()
+      })
+      .returning();
+    return message;
+  }
+
+  // Delivery/Pickup Settings (Feature 4)
+  async getDeliveryPickupSettings(vehicleId: number): Promise<any> {
+    const [settings] = await db
+      .select()
+      .from(deliveryPickupSettings)
+      .where(eq(deliveryPickupSettings.vehicleId, vehicleId));
+    return settings || null;
+  }
+
+  async createOrUpdateDeliveryPickupSettings(settingsData: any): Promise<any> {
+    // Check if settings already exist
+    const existing = await this.getDeliveryPickupSettings(settingsData.vehicleId);
+    
+    if (existing) {
+      // Update existing settings
+      const [updated] = await db
+        .update(deliveryPickupSettings)
+        .set({
+          ...settingsData,
+          updatedAt: new Date()
+        })
+        .where(eq(deliveryPickupSettings.vehicleId, settingsData.vehicleId))
+        .returning();
+      return updated;
+    } else {
+      // Create new settings
+      const [created] = await db
+        .insert(deliveryPickupSettings)
+        .values({
+          ...settingsData,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+      return created;
+    }
+  }
+
+  // Reviews (Feature 5 - additional methods)
+  async getReviewsByBooking(bookingId: number): Promise<Review[]> {
+    return await db
+      .select()
+      .from(reviews)
+      .where(eq(reviews.bookingId, bookingId))
+      .orderBy(desc(reviews.createdAt));
+  }
+
+  async getAllReviews(): Promise<Review[]> {
+    return await db
+      .select()
+      .from(reviews)
+      .orderBy(desc(reviews.createdAt));
+  }
+
+  async createReviewResponse(response: any): Promise<any> {
+    // For now, return mock response as the reviews table doesn't have a responses relation
+    // In a real implementation, you would have a separate reviewResponses table
+    return {
+      id: Date.now(),
+      reviewId: response.reviewId,
+      responderId: response.responderId,
+      response: response.response,
+      createdAt: new Date()
+    };
   }
 }
 

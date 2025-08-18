@@ -105,7 +105,7 @@ export default function SupportChat({ trigger }: SupportChatProps) {
         description: "Sua solicitação foi enviada. Responderemos em breve!",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/support/tickets'] });
-      setSelectedTicket(newTicket);
+      setSelectedTicket((newTicket as any).data || newTicket as SupportTicket);
       setView('chat');
       setNewTicketForm({ subject: '', description: '', category: 'general', priority: 'medium' });
     },
@@ -248,14 +248,14 @@ export default function SupportChat({ trigger }: SupportChatProps) {
                     <MessageCircle className="h-8 w-8 mx-auto mb-2 animate-pulse" />
                     <p>Carregando...</p>
                   </div>
-                ) : tickets.length === 0 ? (
+                ) : (tickets as SupportTicket[]).length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <MessageSquare className="h-8 w-8 mx-auto mb-2" />
                     <p>Nenhuma solicitação ainda</p>
                     <p className="text-xs">Clique em "Nova Solicitação" para começar</p>
                   </div>
                 ) : (
-                  tickets.map((ticket: SupportTicket) => (
+                  (tickets as SupportTicket[]).map((ticket: SupportTicket) => (
                     <Card
                       key={ticket.id}
                       className="cursor-pointer hover:shadow-md transition-shadow"
@@ -267,7 +267,7 @@ export default function SupportChat({ trigger }: SupportChatProps) {
                       <CardContent className="p-4">
                         <div className="flex justify-between items-start mb-2">
                           <h4 className="font-medium text-sm truncate">{ticket.subject}</h4>
-                          <Badge className={getStatusColor(ticket.status)} size="sm">
+                          <Badge className={getStatusColor(ticket.status)}>
                             {getStatusLabel(ticket.status)}
                           </Badge>
                         </div>
@@ -392,7 +392,7 @@ export default function SupportChat({ trigger }: SupportChatProps) {
               </div>
 
               <div className="flex-1 overflow-y-auto space-y-4 mb-4 max-h-80">
-                {messages.map((message: SupportMessage) => (
+                {(messages as SupportMessage[]).map((message: SupportMessage) => (
                   <div
                     key={message.id}
                     className={`flex ${message.senderId === user?.id ? 'justify-end' : 'justify-start'}`}

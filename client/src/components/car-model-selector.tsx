@@ -56,7 +56,7 @@ export default function CarModelSelector({
     queryFn: async (): Promise<CarModel[]> => {
       try {
         const response = await apiRequest('GET', '/api/car-models');
-        return response as CarModel[];
+        return (response as any).data || response as CarModel[];
       } catch (error) {
         console.warn('Failed to load car models from database, using fallback');
         return getFallbackCarModels();

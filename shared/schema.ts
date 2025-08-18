@@ -799,10 +799,6 @@ export const insertCarModelSchema = createInsertSchema(carModels).omit({
 });
 
 // Types for new functionality
-export type User = typeof users.$inferSelect;
-export type InsertUser = typeof users.$inferInsert;
-export type Vehicle = typeof vehicles.$inferSelect;
-export type InsertVehicle = typeof vehicles.$inferInsert;
 export type SupportTicket = typeof supportTickets.$inferSelect;
 export type InsertSupportTicket = typeof supportTickets.$inferInsert;
 export type SupportMessage = typeof supportMessages.$inferSelect;
@@ -822,7 +818,6 @@ export const updateSavedVehicleSchema = createInsertSchema(savedVehicles).omit({
 
 
 // Types
-export type User = typeof users.$inferSelect;
 export type InsertSavedVehicle = z.infer<typeof insertSavedVehicleSchema>;
 export type UpdateSavedVehicle = z.infer<typeof updateSavedVehicleSchema>;
 export type SavedVehicle = typeof savedVehicles.$inferSelect;
@@ -1141,6 +1136,7 @@ export type InsertSubscriptionPlan = typeof subscriptionPlans.$inferInsert;
 export type UserSubscription = typeof userSubscriptions.$inferSelect;
 export type InsertUserSubscription = typeof userSubscriptions.$inferInsert;
 
+export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UserDocument = typeof userDocuments.$inferSelect;
 export type InsertUserDocument = z.infer<typeof insertUserDocumentSchema>;
@@ -1339,4 +1335,124 @@ export const payoutsRelations = relations(payouts, ({ one }) => ({
     references: [users.id],
     relationName: "payoutsAsRenter",
   }),
+}));
+
+// CNH Validation table - Sistema de validação de CNH com selfie
+export const cnhValidation = pgTable("cnh_validation", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  cnhNumber: varchar("cnh_number", { length: 20 }).notNull(),
+  cnhDocumentUrl: text("cnh_document_url").notNull(), // URL da foto da CNH
+  selfieUrl: text("selfie_url").notNull(), // URL da selfie
+  status: varchar("status", { length: 20 }).default("pending").notNull(), // pending, approved, rejected
+  rejectionReason: text("rejection_reason"),
+  validatedAt: timestamp("validated_at"),
+  expirationDate: date("expiration_date").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Delivery and Pickup Settings table - Sistema flexível de entrega e coleta
+export const deliveryPickupSettings = pgTable("delivery_pickup_settings", {
+  id: serial("id").primaryKey(),
+  vehicleId: integer("vehicle_id").references(() => vehicles.id).notNull(),
+  ownerId: integer("owner_id").references(() => users.id).notNull(),
+  allowDelivery: boolean("allow_delivery").default(false).notNull(),
+  allowPickup: boolean("allow_pickup").default(false).notNull(),
+  deliveryFee: decimal("delivery_fee", { precision: 8, scale: 2 }).default("0").notNull(),
+  pickupFee: decimal("pickup_fee", { precision: 8, scale: 2 }).default("0").notNull(),
+  maxDeliveryDistance: integer("max_delivery_distance").default(10).notNull(), // km
+  availableHours: jsonb("available_hours").$type<{
+    start: string; // "08:00"
+    end: string; // "18:00"
+  }>().default({ start: "08:00", end: "18:00" }),
+  locations: jsonb("locations").$type<{
+    id: string;
+    name: string;
+    address: string;
+    latitude?: number;
+    longitude?: number;
+    isActive: boolean;
+  }[]>().default([]),
+  specialInstructions: text("special_instructions"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Types for new tables
+export type CNHValidation = typeof cnhValidation.$inferSelect;
+export type InsertCNHValidation = typeof cnhValidation.$inferInsert;
+export type DeliveryPickupSettings = typeof deliveryPickupSettings.$inferSelect;
+export type InsertDeliveryPickupSettings = typeof deliveryPickupSettings.$inferInsert;
+
+// Insert schemas for new tables
+export const insertCNHValidationSchema = createInsertSchema(cnhValidation).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  validatedAt: true,
+});
+
+export const insertDeliveryPickupSettingsSchema = createInsertSchema(deliveryPickupSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Relations for new tables
+export const cnhValidationRelations = relations(cnhValidation, ({ one }) => ({
+  user: one(users, {
+    fields: [cnhValidation.userId],
+    references: [users.id],
+  }),
+}));
+
+export const deliveryPickupSettingsRelations = relations(deliveryPickupSettings, ({ one }) => ({
+  vehicle: one(vehicles, {
+    fields: [deliveryPickupSettings.vehicleId],
+    references: [vehicles.id],
+  }),
+  owner: one(users, {
+    fields: [deliveryPickupSettings.ownerId],
+    references: [users.id],
+  }),
+}));
+
+export const supportTicketsRelations = relations(supportTickets, ({ one, many }) => ({
+  user: one(users, {
+    fields: [supportTickets.userId],
+    references: [users.id],
+  }),
+  assignedToUser: one(users, {
+    fields: [supportTickets.assignedTo],
+    references: [users.id],
+  }),
+  messages: many(supportMessages),
+}));
+
+export const supportMessagesRelations = relations(supportMessages, ({ one }) => ({
+  ticket: one(supportTickets, {
+    fields: [supportMessages.ticketId],
+    references: [supportTickets.id],
+  }),
+  sender: one(users, {
+    fields: [supportMessages.senderId],
+    references: [users.id],
+  }),
+}));
+
+export const reviewResponsesRelations = relations(reviewResponses, ({ one }) => ({
+  review: one(reviews, {
+    fields: [reviewResponses.reviewId],
+    references: [reviews.id],
+  }),
+  responder: one(users, {
+    fields: [reviewResponses.responderId],
+    references: [users.id],
+  }),
+}));
+
+export const carModelsRelations = relations(carModels, ({ many }) => ({
+  // Add relation to vehicles if needed
 }));
