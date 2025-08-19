@@ -21,7 +21,7 @@ export class EmailService {
       console.warn('⚠️ RESEND_API_KEY não configurado - e-mails não serão enviados');
     }
   }
-  private fromEmail = 'onboarding@resend.dev'; // Domínio verificado do Resend para testes
+  private fromEmail = process.env.FROM_EMAIL || 'suporte@alugae.mobi';
 
   async sendBookingConfirmationToRenter(data: BookingEmailData): Promise<boolean> {
     try {
@@ -38,19 +38,14 @@ export class EmailService {
         return false;
       }
 
-      // Para desenvolvimento, usar email do proprietário da conta Resend
-      const testEmail = 'asouzamax@gmail.com';
-      console.log(`📧 Modo de desenvolvimento: enviando para ${testEmail} ao invés de ${data.renterEmail}`);
-
       const result = await resend.emails.send({
         from: this.fromEmail,
-        to: testEmail,
-        subject: `[TESTE] Reserva Confirmada - ${data.vehicleBrand} ${data.vehicleModel}`,
+        to: data.renterEmail,
+        subject: `Reserva Confirmada - ${data.vehicleBrand} ${data.vehicleModel}`,
         html: this.generateRenterConfirmationEmail(data)
       });
       
       console.log('✅ E-mail enviado para locatário com sucesso. ID:', result.data?.id);
-      console.log('📧 Email original seria para:', data.renterEmail);
       return true;
     } catch (error) {
       console.error('❌ Erro ao enviar e-mail para locatário:', error);
@@ -75,19 +70,14 @@ export class EmailService {
         return false;
       }
 
-      // Para desenvolvimento, usar email do proprietário da conta Resend
-      const testEmail = 'asouzamax@gmail.com';
-      console.log(`📧 Modo de desenvolvimento: enviando para ${testEmail} ao invés de ${data.ownerEmail}`);
-
       const result = await resend.emails.send({
         from: this.fromEmail,
-        to: testEmail,
-        subject: `[TESTE] Nova Reserva - ${data.vehicleBrand} ${data.vehicleModel}`,
+        to: data.ownerEmail,
+        subject: `Nova Reserva - ${data.vehicleBrand} ${data.vehicleModel}`,
         html: this.generateOwnerNotificationEmail(data)
       });
       
       console.log('✅ E-mail enviado para proprietário com sucesso. ID:', result.data?.id);
-      console.log('📧 Email original seria para:', data.ownerEmail);
       return true;
     } catch (error) {
       console.error('❌ Erro ao enviar e-mail para proprietário:', error);
