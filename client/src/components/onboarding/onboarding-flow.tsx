@@ -10,31 +10,39 @@ const homeOnboardingSteps: TooltipStep[] = [
     id: "welcome",
     target: "body",
     title: "Bem-vindo ao alugae.mobi!",
-    content: "Vamos fazer um tour rápido pela plataforma para você conhecer as principais funcionalidades.",
+    content: "Vamos fazer um tour rápido pela plataforma. Este tutorial vai te mostrar como usar as principais funcionalidades.",
     position: "center",
-    showPrev: false,
-    delay: 500
+    showNext: true,
+    showSkip: true
   },
   {
     id: "search",
-    target: "[data-testid='search-input']",
+    target: "[data-testid='input-search-location']",
     title: "Busque veículos",
     content: "Use a barra de pesquisa para encontrar carros disponíveis na sua região. Você pode filtrar por localização, datas e tipo de veículo.",
-    position: "bottom"
+    position: "bottom",
+    showNext: true,
+    showPrev: true,
+    showSkip: true
   },
   {
     id: "login",
     target: "[data-testid='button-login']",
-    title: "Faça login",
+    title: "Faça login ou registre-se",
     content: "Clique aqui para entrar na sua conta ou criar uma nova. Você precisa estar logado para alugar ou anunciar veículos.",
-    position: "bottom"
+    position: "bottom",
+    showNext: true,
+    showPrev: true,
+    showSkip: true
   },
   {
-    id: "features",
-    target: ".feature-cards",
-    title: "Conheça os recursos",
-    content: "Explore nossos principais recursos: aluguel seguro, vistoria digital, pagamentos protegidos e muito mais.",
-    position: "top"
+    id: "vehicle-cards",
+    target: "[data-testid='vehicle-card']:first-child",
+    title: "Explore veículos disponíveis",
+    content: "Navegue pelos veículos disponíveis. Clique em qualquer um para ver mais detalhes, fotos e fazer uma reserva.",
+    position: "top",
+    showPrev: true,
+    showSkip: true
   }
 ];
 
