@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,7 +36,40 @@ export default function Support() {
     message: "",
     priority: "medium"
   });
+  const [openAccordionItem, setOpenAccordionItem] = useState<string>("");
   const { toast } = useToast();
+
+  // Handle anchor navigation on load
+  useEffect(() => {
+    const handleAnchorNavigation = () => {
+      const hash = window.location.hash.substring(1); // Remove the '#'
+      if (hash) {
+        setTimeout(() => {
+          // First, try to expand the accordion item
+          setOpenAccordionItem(hash);
+          
+          // Then scroll to the element
+          const element = document.getElementById(hash);
+          if (element) {
+            element.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'start' 
+            });
+          }
+        }, 100);
+      }
+    };
+
+    // Run on initial load
+    handleAnchorNavigation();
+    
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleAnchorNavigation);
+    
+    return () => {
+      window.removeEventListener('hashchange', handleAnchorNavigation);
+    };
+  }, []);
 
   // Handle support channel actions
   const handleChannelAction = (channelTitle: string) => {
@@ -323,7 +356,13 @@ export default function Support() {
                 <CardTitle className="text-xl text-gray-900">{category}</CardTitle>
               </CardHeader>
               <CardContent>
-                <Accordion type="single" collapsible className="w-full">
+                <Accordion 
+                  type="single" 
+                  collapsible 
+                  className="w-full"
+                  value={openAccordionItem}
+                  onValueChange={setOpenAccordionItem}
+                >
                   {faqItems
                     .filter((item) => item.category === category)
                     .map((item) => (
