@@ -201,10 +201,12 @@ export default function Home() {
             <div className="py-12">
               <CarLoading text="Carregando veículos disponíveis..." />
               
-              {/* Loading skeletons */}
+              {/* Enhanced loading skeletons with staggered animation */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8">
                 {Array.from({ length: 12 }).map((_, i) => (
-                  <VehicleCardSkeleton key={i} />
+                  <div key={i} style={{ animationDelay: `${i * 0.1}s` }}>
+                    <VehicleCardSkeleton />
+                  </div>
                 ))}
               </div>
             </div>
