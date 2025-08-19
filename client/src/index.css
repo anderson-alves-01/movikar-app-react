@@ -2,6 +2,107 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile Responsive Base Styles */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* Improved touch scroll on iOS */
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  body {
+    /* Better mobile font rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Prevent zoom on input focus (iOS) */
+    font-size: 16px;
+  }
+  
+  /* Prevent double-tap zoom on mobile */
+  button, input, select, textarea {
+    touch-action: manipulation;
+  }
+  
+  /* Better touch targets for mobile */
+  button, a[role="button"], [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Mobile-First Components */
+@layer components {
+  .mobile-container {
+    @apply px-4 mx-auto max-w-7xl;
+  }
+  
+  .mobile-padding {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+  
+  .mobile-text {
+    @apply text-sm sm:text-base;
+  }
+  
+  .mobile-button {
+    @apply px-4 py-2 text-sm font-medium rounded-lg touch-manipulation min-h-[44px];
+  }
+  
+  .mobile-card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6;
+  }
+  
+  .mobile-grid {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3;
+  }
+  
+  .mobile-form {
+    @apply space-y-4;
+  }
+  
+  .mobile-input {
+    @apply w-full px-3 py-2 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent;
+  }
+  
+  .mobile-table-wrapper {
+    @apply overflow-x-auto -mx-4 sm:mx-0;
+  }
+  
+  .mobile-table {
+    @apply w-full min-w-full divide-y divide-gray-200;
+  }
+  
+  .mobile-dialog {
+    @apply w-full max-w-lg mx-4 sm:mx-auto;
+  }
+}
+
+/* Mobile Utilities */
+@layer utilities {
+  .tap-highlight-none {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .touch-pan-y {
+    touch-action: pan-y;
+  }
+  
+  .touch-pan-x {
+    touch-action: pan-x;
+  }
+}
+
 /* Global Animations */
 @keyframes slideInUp {
   from {

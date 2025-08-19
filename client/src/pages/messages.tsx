@@ -80,11 +80,11 @@ export default function Messages() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className="py-8">
-        <div className="max-w-7xl mx-auto px-4">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Mensagens</h1>
+      <div className="py-4 sm:py-8">
+        <div className="max-w-7xl mx-auto mobile-padding">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8">Mensagens</h1>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 h-[calc(100vh-200px)] sm:h-[600px]">
             {/* Lista de Conversas */}
             <div className="lg:col-span-1">
               <Card className="h-full flex flex-col">
@@ -99,7 +99,7 @@ export default function Messages() {
                       placeholder="Buscar conversas..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 text-sm"
                     />
                   </div>
                 </CardHeader>

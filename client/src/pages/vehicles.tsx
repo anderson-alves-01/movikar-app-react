@@ -158,11 +158,11 @@ export default function Vehicles() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className="py-8">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Meus Veículos</h1>
-            <Button onClick={() => setShowAddVehicleModal(true)}>
+      <div className="py-4 sm:py-8">
+        <div className="max-w-6xl mx-auto mobile-padding">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 gap-4">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Meus Veículos</h1>
+            <Button onClick={() => setShowAddVehicleModal(true)} className="w-full sm:w-auto">
               <Plus className="w-4 h-4 mr-2" />
               Adicionar Veículo
             </Button>
@@ -176,7 +176,7 @@ export default function Vehicles() {
               text="Carregando seus veículos..." 
               className="mb-8"
             />
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="bg-white rounded-lg shadow-md overflow-hidden animate-pulse">
                   <div className="h-48 bg-gray-200" />
@@ -193,7 +193,7 @@ export default function Vehicles() {
             </div>
           </div>
         ) : vehicles?.length ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {vehicles.map((vehicle) => (
               <Card key={vehicle.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300">
                 <div className="relative">
@@ -219,9 +219,9 @@ export default function Vehicles() {
                   </div>
                 </div>
                 
-                <CardContent className="p-4">
+                <CardContent className="p-3 sm:p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-gray-800">
+                    <h3 className="font-semibold text-gray-800 text-sm sm:text-base truncate">
                       {vehicle.brand} {vehicle.model} {vehicle.year}
                     </h3>
                     {vehicle.rating && Number(vehicle.rating) > 0 && (

@@ -41,13 +41,13 @@ export default function AdminDashboard() {
       <div className="min-h-screen bg-gray-50">
         <Header />
         <div className="py-8">
-          <div className="max-w-4xl mx-auto px-4">
+          <div className="max-w-4xl mx-auto mobile-padding">
             <div className="text-center py-12">
-              <Shield className="h-16 w-16 text-red-500 mx-auto mb-4" />
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">Acesso Negado</h1>
-              <p className="text-gray-600">Você precisa de privilégios de administrador para acessar esta página.</p>
+              <Shield className="h-12 w-12 sm:h-16 sm:w-16 text-red-500 mx-auto mb-4" />
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Acesso Negado</h1>
+              <p className="text-gray-600 text-sm sm:text-base px-4">Você precisa de privilégios de administrador para acessar esta página.</p>
               <Link href="/">
-                <Button className="mt-4">Voltar ao Início</Button>
+                <Button className="mt-4 w-full sm:w-auto">Voltar ao Início</Button>
               </Link>
             </div>
           </div>
