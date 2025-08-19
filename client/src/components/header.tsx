@@ -121,15 +121,7 @@ export default function Header() {
                 placeholder="Onde?" 
                 value={searchLocation}
                 className="border-none outline-none text-sm font-medium text-gray-800 bg-transparent w-32 focus-visible:ring-0" 
-                onChange={(e) => {
-                  setSearchLocation(e.target.value);
-                  const trimmedValue = e.target.value.trim();
-                  if (trimmedValue.length > 2) {
-                    updateFilter('location', trimmedValue);
-                  } else if (trimmedValue.length === 0) {
-                    updateFilter('location', '');
-                  }
-                }}
+                onChange={(e) => setSearchLocation(e.target.value)}
                 data-testid="input-search-header"
               />
               <div className="border-l border-gray-300 h-6 mx-4"></div>
@@ -138,10 +130,7 @@ export default function Header() {
                 value={startDate}
                 placeholder="Check-in"
                 className="border-none outline-none text-sm text-gray-600 bg-transparent focus-visible:ring-0" 
-                onChange={(e) => {
-                  setStartDate(e.target.value);
-                  updateFilter('startDate', e.target.value);
-                }}
+                onChange={(e) => setStartDate(e.target.value)}
               />
               <div className="border-l border-gray-300 h-6 mx-4"></div>
               <Input 
@@ -149,19 +138,41 @@ export default function Header() {
                 value={endDate}
                 placeholder="Check-out"
                 className="border-none outline-none text-sm text-gray-600 bg-transparent focus-visible:ring-0" 
-                onChange={(e) => {
-                  setEndDate(e.target.value);
-                  updateFilter('endDate', e.target.value);
-                }}
+                onChange={(e) => setEndDate(e.target.value)}
               />
               <Button 
                 size="sm" 
-                className="bg-gray-500 text-white p-2 rounded-full ml-4 hover:bg-gray-600 transition-colors"
-                onClick={handleClearSearch}
-                title="Limpar busca"
+                className="ml-4 bg-primary text-white hover:bg-red-600 px-4 py-1"
+                onClick={() => {
+                  updateFilter('location', searchLocation);
+                  updateFilter('startDate', startDate);
+                  updateFilter('endDate', endDate);
+                  
+                  // Scroll to results
+                  setTimeout(() => {
+                    const resultadosSection = document.getElementById('resultados');
+                    if (resultadosSection) {
+                      resultadosSection.scrollIntoView({ 
+                        behavior: 'smooth',
+                        block: 'start'
+                      });
+                    }
+                  }, 100);
+                }}
               >
-                <RotateCcw className="h-4 w-4" />
+                <Search className="h-4 w-4" />
               </Button>
+              {(searchLocation || startDate || endDate) && (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="ml-2 p-1"
+                  onClick={handleClearSearch}
+                  title="Limpar busca"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              )}
             </div>
 
             {/* Right Side */}
@@ -357,15 +368,7 @@ export default function Header() {
                     placeholder="Onde?" 
                     value={searchLocation}
                     className="bg-transparent outline-none flex-1 text-gray-700 border-none focus-visible:ring-0" 
-                    onChange={(e) => {
-                      setSearchLocation(e.target.value);
-                      const trimmedValue = e.target.value.trim();
-                      if (trimmedValue.length > 2) {
-                        updateFilter('location', trimmedValue);
-                      } else if (trimmedValue.length === 0) {
-                        updateFilter('location', '');
-                      }
-                    }}
+                    onChange={(e) => setSearchLocation(e.target.value)}
                   />
                 </div>
                 
@@ -375,32 +378,50 @@ export default function Header() {
                     value={startDate}
                     placeholder="Check-in"
                     className="flex-1 text-sm border border-gray-300 rounded-lg p-2"
-                    onChange={(e) => {
-                      setStartDate(e.target.value);
-                      updateFilter('startDate', e.target.value);
-                    }}
+                    onChange={(e) => setStartDate(e.target.value)}
                   />
                   <Input 
                     type="date" 
                     value={endDate}
                     placeholder="Check-out"
                     className="flex-1 text-sm border border-gray-300 rounded-lg p-2"
-                    onChange={(e) => {
-                      setEndDate(e.target.value);
-                      updateFilter('endDate', e.target.value);
-                    }}
+                    onChange={(e) => setEndDate(e.target.value)}
                   />
                 </div>
                 
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  className="w-full"
-                  onClick={handleClearSearch}
-                >
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  Limpar busca
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    className="flex-1 bg-primary text-white hover:bg-red-600"
+                    onClick={() => {
+                      updateFilter('location', searchLocation);
+                      updateFilter('startDate', startDate);
+                      updateFilter('endDate', endDate);
+                      setShowSearch(false);
+                      
+                      // Scroll to results
+                      setTimeout(() => {
+                        const resultadosSection = document.getElementById('resultados');
+                        if (resultadosSection) {
+                          resultadosSection.scrollIntoView({ 
+                            behavior: 'smooth',
+                            block: 'start'
+                          });
+                        }
+                      }, 100);
+                    }}
+                  >
+                    <Search className="h-4 w-4 mr-2" />
+                    Buscar
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={handleClearSearch}
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           )}

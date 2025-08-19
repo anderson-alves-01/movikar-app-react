@@ -1,41 +1,6 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
-import { MapPin, Calendar, Search, Shield, Clock, DollarSign } from "lucide-react";
-import { SearchFilters } from "@/types";
+import { Shield, Clock, DollarSign } from "lucide-react";
 
-interface HeroSectionProps {
-  onSearch: (filters: SearchFilters) => void;
-}
-
-export default function HeroSection({ onSearch }: HeroSectionProps) {
-  const [searchData, setSearchData] = useState({
-    location: '',
-    startDate: '',
-    endDate: '',
-  });
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSearch({
-      location: searchData.location,
-      startDate: searchData.startDate ? new Date(searchData.startDate) : undefined,
-      endDate: searchData.endDate ? new Date(searchData.endDate) : undefined,
-    });
-
-    // Scroll automático para a seção de resultados após buscar
-    setTimeout(() => {
-      const resultadosSection = document.getElementById('resultados');
-      if (resultadosSection) {
-        resultadosSection.scrollIntoView({ 
-          behavior: 'smooth',
-          block: 'start'
-        });
-      }
-    }, 100);
-  };
+export default function HeroSection() {
 
   return (
     <section className="relative bg-gradient-to-br from-gray-900 to-gray-800 text-white py-20">
@@ -62,61 +27,15 @@ export default function HeroSection({ onSearch }: HeroSectionProps) {
             </p>
           </div>
 
-          {/* Search Form */}
-          <Card className="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-4xl mx-auto text-gray-800">
-            <form onSubmit={handleSearch}>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-700">Localização</Label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input 
-                      type="text" 
-                      placeholder="São Paulo, SP"
-                      className="pl-10 h-12 text-sm"
-                      value={searchData.location}
-                      onChange={(e) => setSearchData(prev => ({ ...prev, location: e.target.value }))}
-                      data-testid="search-input"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-700">Retirada</Label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input 
-                      type="date" 
-                      className="pl-10 h-12 text-sm"
-                      value={searchData.startDate}
-                      onChange={(e) => setSearchData(prev => ({ ...prev, startDate: e.target.value }))}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-700">Devolução</Label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input 
-                      type="date" 
-                      className="pl-10 h-12 text-sm"
-                      value={searchData.endDate}
-                      onChange={(e) => setSearchData(prev => ({ ...prev, endDate: e.target.value }))}
-                    />
-                  </div>
-                </div>
-                <div className="flex items-end">
-                  <Button 
-                    type="submit" 
-                    className="w-full h-12 bg-primary text-white font-semibold hover:bg-red-600 transition-colors shadow-lg"
-                    data-testid="button-search"
-                  >
-                    <Search className="h-4 w-4 mr-2" />
-                    Buscar
-                  </Button>
-                </div>
-              </div>
-            </form>
-          </Card>
+          {/* Hero Call-to-Action */}
+          <div className="bg-black bg-opacity-30 backdrop-blur-sm rounded-2xl p-8 max-w-3xl mx-auto">
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+              Use a busca no topo da página para encontrar carros disponíveis
+            </h2>
+            <p className="text-lg text-gray-300">
+              Digite sua localização e selecione as datas para ver todos os veículos disponíveis perto de você
+            </p>
+          </div>
 
           {/* Value Propositions */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16 feature-cards">

@@ -108,7 +108,7 @@ export default function Home() {
       {/* Spacer for fixed header */}
       <div className="h-14 sm:h-16"></div>
       
-      <HeroSection onSearch={handleSearch} />
+      <HeroSection />
       <OnboardingFlow page="home" />
       
       {/* Subscription Banner */}
@@ -157,25 +157,7 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Filters */}
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-800">Filtros</h3>
-              <Button
-                variant="outline"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                {showFilters ? 'Ocultar' : 'Mostrar'} Filtros
-              </Button>
-            </div>
-            
-            {showFilters && (
-              <VehicleFilters 
-                filters={combinedFilters} 
-                onFiltersChange={handleFilterChange} 
-              />
-            )}
-          </div>
+
 
           {/* Loading State */}
           {isLoading && (
