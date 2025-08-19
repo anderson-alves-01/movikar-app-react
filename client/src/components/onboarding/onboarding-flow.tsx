@@ -17,7 +17,7 @@ const homeOnboardingSteps: TooltipStep[] = [
   },
   {
     id: "search",
-    target: "[data-testid='input-search-location']",
+    target: "[data-testid='search-input']",
     title: "Busque veículos",
     content: "Use a barra de pesquisa para encontrar carros disponíveis na sua região. Você pode filtrar por localização, datas e tipo de veículo.",
     position: "bottom",

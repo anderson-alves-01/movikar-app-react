@@ -49,7 +49,9 @@ export function InteractiveTooltip({
     setTargetElement(null);
     
     const findAndHighlightTarget = () => {
+      console.log('🔍 Looking for target:', currentStepData.target);
       const element = document.querySelector(currentStepData.target) as HTMLElement;
+      console.log('🎯 Target element found:', !!element, element?.tagName);
       if (element) {
         setTargetElement(element);
         
@@ -156,9 +158,9 @@ export function InteractiveTooltip({
     onSkip();
   };
 
-  console.log('🎯 InteractiveTooltip render:', { isActive, steps: steps.length, currentStep, hasStepData: !!currentStepData, targetElementExists: !!targetElement });
+  console.log('🎯 InteractiveTooltip render:', { isActive, steps: steps.length, currentStep, hasStepData: !!currentStepData, targetElementExists: !!targetElement, target: currentStepData?.target });
   
-  if (!isActive || !currentStepData || !targetElement) return null;
+  if (!isActive || !currentStepData) return null;
 
   const getTooltipStyle = () => {
     const position = currentStepData.position || "bottom";
