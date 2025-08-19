@@ -40,8 +40,14 @@ export function InteractiveTooltip({
   const currentStepData = steps[currentStep];
 
   useEffect(() => {
-    if (!isActive || !currentStepData) return;
+    if (!isActive || !currentStepData) {
+      setTargetElement(null);
+      return;
+    }
 
+    // Clear any previous target element first
+    setTargetElement(null);
+    
     const findAndHighlightTarget = () => {
       const element = document.querySelector(currentStepData.target) as HTMLElement;
       if (element) {
@@ -108,22 +114,27 @@ export function InteractiveTooltip({
       }
     };
 
-    // Delay to allow page to render
-    const timeout = setTimeout(findAndHighlightTarget, currentStepData.delay || 100);
+    // Add a small delay to ensure previous tooltip is hidden
+    const timer = setTimeout(() => {
+      findAndHighlightTarget();
+    }, 50);
     
     return () => {
-      clearTimeout(timeout);
+      clearTimeout(timer);
       if (targetElement) {
         targetElement.style.zIndex = '';
         targetElement.classList.remove('onboarding-highlight');
       }
     };
-  }, [currentStep, isActive, currentStepData, targetElement]);
+  }, [isActive, currentStepData, currentStep]);
 
   const handleNext = () => {
     if (currentStepData.action) {
       currentStepData.action();
     }
+    
+    // Clear current target before moving to next step
+    setTargetElement(null);
     
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
@@ -133,6 +144,9 @@ export function InteractiveTooltip({
   };
 
   const handlePrev = () => {
+    // Clear current target before moving to previous step  
+    setTargetElement(null);
+    
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
@@ -142,9 +156,9 @@ export function InteractiveTooltip({
     onSkip();
   };
 
-  console.log('🎯 InteractiveTooltip render:', { isActive, steps: steps.length, currentStep, hasStepData: !!currentStepData });
+  console.log('🎯 InteractiveTooltip render:', { isActive, steps: steps.length, currentStep, hasStepData: !!currentStepData, targetElementExists: !!targetElement });
   
-  if (!isActive || !currentStepData) return null;
+  if (!isActive || !currentStepData || !targetElement) return null;
 
   const getTooltipStyle = () => {
     const position = currentStepData.position || "bottom";
