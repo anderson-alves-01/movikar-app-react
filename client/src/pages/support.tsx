@@ -166,7 +166,7 @@ export default function Support() {
           <div className="flex items-center justify-between h-16">
             <Button
               variant="ghost"
-              onClick={() => navigate(-1)}
+              onClick={() => window.history.back()}
               className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
               data-testid="button-back"
             >

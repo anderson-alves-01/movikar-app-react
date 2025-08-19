@@ -317,27 +317,30 @@ export function InteractiveTooltip({
             </div>
 
             {/* Actions */}
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex flex-col gap-3">
+              {/* Top row - Previous button (left aligned) */}
+              <div className="flex justify-start">
                 {currentStep > 0 && currentStepData.showPrev !== false && (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handlePrev}
-                    className="mr-2"
+                    className="text-xs px-3 py-1.5"
                   >
-                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    <ChevronLeft className="h-3 w-3 mr-1" />
                     Anterior
                   </Button>
                 )}
               </div>
               
-              <div className="flex space-x-2">
+              {/* Bottom row - Skip and Next/Complete buttons */}
+              <div className="flex justify-between gap-2">
                 {currentStepData.showSkip !== false && (
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleSkip}
+                    className="text-xs px-3 py-1.5 text-gray-500 hover:text-gray-700"
                   >
                     Pular tutorial
                   </Button>
@@ -347,11 +350,11 @@ export function InteractiveTooltip({
                   <Button
                     size="sm"
                     onClick={handleNext}
-                    className="bg-blue-600 hover:bg-blue-700"
+                    className="bg-blue-600 hover:bg-blue-700 text-xs px-4 py-1.5 ml-auto"
                   >
                     {currentStep === steps.length - 1 ? 'Concluir' : 'Próximo'}
                     {currentStep < steps.length - 1 && (
-                      <ChevronRight className="h-4 w-4 ml-1" />
+                      <ChevronRight className="h-3 w-3 ml-1" />
                     )}
                   </Button>
                 )}
