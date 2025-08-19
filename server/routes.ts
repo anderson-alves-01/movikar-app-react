@@ -2780,17 +2780,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user!.id;
       console.log(`🔍 Fetching pending reviews for user ${userId}`);
       
+      // Validar userId
+      if (!userId || typeof userId !== 'number') {
+        console.error(`❌ Invalid userId: ${userId}`);
+        return res.status(400).json({ message: "ID de usuário inválido" });
+      }
+      
       // Buscar reservas finalizadas do usuário que ainda não foram avaliadas
       const bookings = await storage.getBookingsPendingReview(userId);
       
       console.log(`🔍 Found ${bookings.length} pending reviews for user ${userId}`);
-      res.json(bookings);
+      res.json(bookings || []);
     } catch (error) {
       console.error("❌ Get pending reviews error:", error);
-      console.error("❌ Error stack:", error instanceof Error ? error.stack : 'Unknown error');
+      console.error("❌ Error type:", typeof error);
+      console.error("❌ Error name:", error instanceof Error ? error.name : 'Unknown');
+      console.error("❌ Error message:", error instanceof Error ? error.message : String(error));
+      console.error("❌ Error stack:", error instanceof Error ? error.stack : 'No stack trace');
+      
       res.status(500).json({ 
         message: "Falha ao buscar reservas para avaliação",
-        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        error: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : String(error)) : undefined,
+        timestamp: new Date().toISOString()
       });
     }
   });

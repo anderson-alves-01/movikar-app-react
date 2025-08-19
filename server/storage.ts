@@ -1001,14 +1001,87 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log(`📋 Getting pending reviews for user ${userId}`);
       
-      // Implementação mais simples que retorna lista vazia por enquanto
-      // TODO: Implementar lógica completa após resolver problemas de tipos
-      console.log(`📋 Returning empty list for now to avoid 500 errors`);
-      return [];
+      // Busca reservas elegíveis para avaliação usando a estrutura correta
+      const eligibleBookings = await db
+        .select()
+        .from(bookings)
+        .where(and(
+          or(
+            eq(bookings.status, 'completed'),
+            eq(bookings.status, 'approved'), 
+            eq(bookings.status, 'rejected')
+          ),
+          or(
+            eq(bookings.renterId, userId),
+            eq(bookings.ownerId, userId)
+          )
+        ))
+        .orderBy(desc(bookings.endDate))
+        .limit(50); // Limite para evitar sobrecarga
+
+      console.log(`📋 Found ${eligibleBookings.length} eligible bookings`);
+
+      const pendingReviews: any[] = [];
+      
+      for (const booking of eligibleBookings) {
+        try {
+          // Verificar se o usuário já avaliou esta reserva
+          const existingReviews = await db
+            .select()
+            .from(reviews)
+            .where(and(
+              eq(reviews.bookingId, booking.id),
+              eq(reviews.reviewerId, userId)
+            ));
+
+          if (existingReviews.length > 0) {
+            console.log(`📋 User ${userId} already reviewed booking ${booking.id}, skipping`);
+            continue;
+          }
+
+          // Buscar dados relacionados de forma segura
+          const [vehicle] = await db
+            .select()
+            .from(vehicles)
+            .where(eq(vehicles.id, booking.vehicleId));
+
+          const [renter] = await db
+            .select()
+            .from(users)
+            .where(eq(users.id, booking.renterId));
+
+          const [owner] = await db
+            .select()
+            .from(users)
+            .where(eq(users.id, booking.ownerId));
+
+          // Só adicionar se todos os dados necessários estão disponíveis
+          if (vehicle && renter && owner) {
+            const bookingWithDetails = {
+              ...booking,
+              vehicle,
+              renter,
+              owner
+            };
+            
+            pendingReviews.push(bookingWithDetails);
+            console.log(`📋 Added booking ${booking.id} to pending reviews`);
+          } else {
+            console.log(`📋 Missing data for booking ${booking.id} - vehicle: ${!!vehicle}, renter: ${!!renter}, owner: ${!!owner}`);
+          }
+        } catch (itemError) {
+          console.error(`📋 Error processing booking ${booking.id}:`, itemError);
+          continue;
+        }
+      }
+
+      console.log(`📋 Returning ${pendingReviews.length} pending reviews for user ${userId}`);
+      return pendingReviews as BookingWithDetails[];
       
     } catch (error) {
       console.error('📋 Error in getBookingsPendingReview:', error);
-      // Return empty array instead of throwing to prevent 500 errors
+      console.error('📋 Error details:', error instanceof Error ? error.message : 'Unknown error');
+      // Return empty array to prevent 500 errors while maintaining functionality
       return [];
     }
   }
