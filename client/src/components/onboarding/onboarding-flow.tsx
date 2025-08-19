@@ -155,17 +155,30 @@ export function OnboardingFlow({ page = "home", customSteps }: OnboardingFlowPro
       customSteps: !!customSteps
     });
     
-    if (!isOnboardingActive) return false;
+    if (!isOnboardingActive) {
+      console.log('❌ Onboarding not active, returning false');
+      return false;
+    }
     
-    // Show on home page for new users
-    if (location === "/" && page === "home") return true;
+    // Show on home page when onboarding is active (regardless of user status)
+    if (location === "/" && page === "home") {
+      console.log('✅ On home page, showing onboarding');
+      return true;
+    }
     
     // Show on profile page if user just logged in
-    if (location === "/profile" && page === "profile" && user) return true;
+    if (location === "/profile" && page === "profile" && user) {
+      console.log('✅ On profile page with user, showing onboarding');
+      return true;
+    }
     
     // Show custom onboarding
-    if (customSteps) return true;
+    if (customSteps) {
+      console.log('✅ Custom steps provided, showing onboarding');
+      return true;
+    }
     
+    console.log('❌ No matching conditions, hiding onboarding');
     return false;
   };
 
