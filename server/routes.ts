@@ -2451,7 +2451,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ownerId: vehicle.ownerId,
         startDate: startDate.toISOString().split('T')[0],
         endDate: endDate.toISOString().split('T')[0],
-        totalCost: totalPrice.toFixed(2), // Convert to string
+        totalPrice: totalPrice.toFixed(2), // Convert to string
         status: req.body.status || "pending",
         paymentStatus: req.body.paymentStatus || "pending",
         notes: req.body.notes || null,
@@ -2484,10 +2484,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             vehicleModel: vehicle.model,
             startDate: new Date(booking.startDate).toLocaleDateString('pt-BR'),
             endDate: new Date(booking.endDate).toLocaleDateString('pt-BR'),
-            totalPrice: parseFloat(booking.totalCost),
-            renterName: renter.firstName || renter.username || renter.email,
+            totalPrice: parseFloat(booking.totalPrice || "0"),
+            renterName: renter.name || renter.email,
             renterEmail: renter.email,
-            ownerName: owner.firstName || owner.username || owner.email,
+            ownerName: owner.name || owner.email,
             ownerEmail: owner.email
           };
 
@@ -2540,8 +2540,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check vehicle availability
       const isAvailable = await storage.checkVehicleAvailability(
         req.body.vehicleId,
-        startDate.toISOString().split('T')[0],
-        endDate.toISOString().split('T')[0]
+        startDate,
+        endDate
       );
 
       if (!isAvailable) {
@@ -2555,7 +2555,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ownerId: vehicle.ownerId,
         startDate: startDate.toISOString().split('T')[0],
         endDate: endDate.toISOString().split('T')[0],
-        totalCost: totalPrice.toFixed(2),
+        totalPrice: totalPrice.toFixed(2),
         status: "pending",
         paymentStatus: "pending",
         notes: "Solicitação via botão Alugar - aguardando confirmação do proprietário",
@@ -2572,9 +2572,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         startDate: startDate.toLocaleDateString('pt-BR'),
         endDate: endDate.toLocaleDateString('pt-BR'),
         totalPrice: totalPrice,
-        renterName: renter.firstName || renter.username || renter.email,
+        renterName: renter.name || renter.email,
         renterEmail: renter.email,
-        ownerName: owner.firstName || owner.username || owner.email,
+        ownerName: owner.name || owner.email,
         ownerEmail: owner.email
       };
 
