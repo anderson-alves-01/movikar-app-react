@@ -1,5 +1,5 @@
 import { 
-  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity, adminSettings, savedVehicles, coupons, subscriptionPlans, userSubscriptions, vehicleInspections, payouts, ownerInspections, cnhValidation, deliveryPickupSettings, supportTickets, supportMessages,
+  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity, adminSettings, savedVehicles, coupons, subscriptionPlans, userSubscriptions, vehicleInspections, payouts, ownerInspections, cnhValidation, deliveryPickupSettings, supportTickets, supportMessages, userDocuments,
   type User, type InsertUser, type Vehicle, type InsertVehicle, 
   type Booking, type InsertBooking, type Review, type InsertReview,
   type Message, type InsertMessage, type VehicleWithOwner, type BookingWithDetails,
@@ -3577,43 +3577,6 @@ export class DatabaseStorage implements IStorage {
       response: response.response,
       createdAt: new Date()
     };
-  }
-
-  // User Document methods
-  async getUserDocuments(userId: number): Promise<any[]> {
-    const documents = await db
-      .select()
-      .from(userDocuments)
-      .where(eq(userDocuments.userId, userId))
-      .orderBy(desc(userDocuments.uploadedAt));
-    
-    return documents.map(doc => ({
-      id: doc.id,
-      userId: doc.userId,
-      documentType: doc.documentType,
-      documentUrl: doc.documentUrl,
-      documentNumber: doc.documentNumber,
-      status: doc.status,
-      rejectionReason: doc.rejectionReason,
-      uploadedAt: doc.uploadedAt,
-      reviewedAt: doc.reviewedAt,
-      reviewedBy: doc.reviewedBy,
-    }));
-  }
-
-  async createUserDocument(document: any): Promise<any> {
-    const [newDocument] = await db
-      .insert(userDocuments)
-      .values({
-        userId: document.userId,
-        documentType: document.documentType,
-        documentUrl: document.documentUrl,
-        documentNumber: document.documentNumber,
-        status: document.status || 'pending'
-      })
-      .returning();
-    
-    return newDocument;
   }
 }
 
