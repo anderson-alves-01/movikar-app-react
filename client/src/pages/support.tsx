@@ -618,7 +618,7 @@ export default function Support() {
                 <p><strong>Razão Social:</strong> Alugae Tecnologia Ltda</p>
                 <p><strong>Endereço:</strong> São Paulo, SP</p>
                 <p><strong>Site:</strong> https://alugae.mobi</p>
-                <p><strong>E-mail:</strong> contato@alugae.mobi</p>
+                <p><strong>E-mail:</strong> {contactInfo?.supportEmail || "contato@alugae.mobi"}</p>
               </div>
             </div>
           </div>
