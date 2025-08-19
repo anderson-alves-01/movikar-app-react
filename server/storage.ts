@@ -998,50 +998,64 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getBookingsPendingReview(userId: number): Promise<BookingWithDetails[]> {
-    // Busca reservas completadas onde o usuário ainda não fez sua avaliação
-    const userBookings = await db
-      .select({
-        ...getTableColumns(bookings),
-        vehicle: {
-          id: vehicles.id,
-          brand: vehicles.brand,
-          model: vehicles.model,
-          year: vehicles.year,
-          images: vehicles.images,
-          licensePlate: vehicles.licensePlate,
-          ownerId: vehicles.ownerId,
-        },
-        renter: {
-          id: users.id,
-          name: users.name,
-          email: users.email,
-          avatar: users.avatar,
-          rating: users.rating,
+    try {
+      // Busca reservas completadas ou rejeitadas/aprovadas onde o usuário ainda não fez sua avaliação
+      const userBookings = await db
+        .select()
+        .from(bookings)
+        .innerJoin(vehicles, eq(bookings.vehicleId, vehicles.id))
+        .innerJoin(users, eq(bookings.renterId, users.id))
+        .where(and(
+          or(
+            eq(bookings.status, 'completed'),
+            eq(bookings.status, 'approved'),
+            eq(bookings.status, 'rejected')
+          ),
+          or(
+            eq(bookings.renterId, userId),
+            eq(bookings.ownerId, userId)
+          )
+        ))
+        .orderBy(desc(bookings.endDate));
+
+      // Filtrar apenas as que não têm avaliação do usuário atual
+      const pendingReviews: BookingWithDetails[] = [];
+      
+      for (const result of userBookings) {
+        const booking = result.bookings;
+        const vehicle = result.vehicles;
+        const renter = result.users;
+        
+        const existingReview = await this.getReviewByBookingAndReviewer(booking.id, userId);
+        if (!existingReview) {
+          // Buscar o proprietário do veículo se necessário
+          let owner = null;
+          if (booking.ownerId !== renter.id) {
+            const [ownerResult] = await db
+              .select()
+              .from(users)
+              .where(eq(users.id, booking.ownerId));
+            owner = ownerResult;
+          } else {
+            owner = renter;
+          }
+
+          const bookingWithDetails: BookingWithDetails = {
+            ...booking,
+            vehicle,
+            renter,
+            owner
+          };
+          
+          pendingReviews.push(bookingWithDetails);
         }
-      })
-      .from(bookings)
-      .innerJoin(vehicles, eq(bookings.vehicleId, vehicles.id))
-      .innerJoin(users, eq(bookings.renterId, users.id))
-      .where(and(
-        eq(bookings.status, 'completed'),
-        or(
-          eq(bookings.renterId, userId),
-          eq(bookings.ownerId, userId)
-        )
-      ))
-      .orderBy(desc(bookings.endDate));
-
-    // Filtrar apenas as que não têm avaliação do usuário atual
-    const pendingReviews: BookingWithDetails[] = [];
-    
-    for (const booking of userBookings) {
-      const existingReview = await this.getReviewByBookingAndReviewer(booking.id, userId);
-      if (!existingReview) {
-        pendingReviews.push(booking as BookingWithDetails);
       }
-    }
 
-    return pendingReviews;
+      return pendingReviews;
+    } catch (error) {
+      console.error('Error in getBookingsPendingReview:', error);
+      return [];
+    }
   }
 
   async createReview(insertReview: InsertReview): Promise<Review> {
