@@ -191,30 +191,35 @@ export default function TermsOfUseModal({ open, onOpenChange, onAccept }: TermsO
           </div>
         </ScrollArea>
 
-        <DialogFooter className="border-t pt-4">
-          <div className="flex items-center space-x-3 flex-1">
+        <DialogFooter className="border-t pt-6 pb-4 px-6">
+          {/* Checkbox section */}
+          <div className="flex items-start space-x-3 mb-6 w-full">
             <Checkbox
               id="accept-terms"
               checked={accepted}
               onCheckedChange={(value) => setAccepted(value === true)}
               data-testid="accept-terms-checkbox"
+              className="mt-0.5"
             />
-            <label htmlFor="accept-terms" className="text-sm text-gray-700">
+            <label htmlFor="accept-terms" className="text-sm text-gray-700 leading-relaxed flex-1">
               Li e aceito integralmente os termos de uso da plataforma
             </label>
           </div>
-          <div className="flex space-x-2">
+
+          {/* Buttons section - properly aligned */}
+          <div className="flex items-center justify-end space-x-3 w-full">
             <Button 
               variant="outline" 
               onClick={() => onOpenChange(false)}
               data-testid="button-cancel-terms"
+              className="px-6 py-2 min-w-[100px] border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
             >
               Cancelar
             </Button>
             <Button 
               onClick={handleAccept} 
               disabled={!accepted}
-              className="bg-primary hover:bg-red-600"
+              className="px-6 py-2 min-w-[140px] bg-gradient-to-r from-primary to-red-500 hover:from-primary/90 hover:to-red-500/90 text-white font-medium shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
               data-testid="button-accept-terms"
             >
               Aceitar Termos
