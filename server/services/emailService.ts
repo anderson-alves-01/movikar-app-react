@@ -1,201 +1,208 @@
 import { Resend } from 'resend';
 
-if (!process.env.RESEND_API_KEY) {
-  throw new Error("RESEND_API_KEY environment variable must be set");
-}
-
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-interface RentNowEmailParams {
+export interface BookingEmailData {
+  bookingId: string;
+  vehicleBrand: string;
+  vehicleModel: string;
+  startDate: string;
+  endDate: string;
+  totalPrice: number;
+  renterName: string;
+  renterEmail: string;
   ownerName: string;
   ownerEmail: string;
-  renterName: string;
-  renterEmail: string;
-  vehicleBrand: string;
-  vehicleModel: string;
-  vehicleYear: number;
-  startDate: string;
-  endDate: string;
-  totalPrice: string;
-  bookingId: string;
 }
 
-export async function sendRentNowNotification(params: RentNowEmailParams): Promise<boolean> {
-  try {
-    const startDateFormatted = new Date(params.startDate).toLocaleDateString('pt-BR');
-    const endDateFormatted = new Date(params.endDate).toLocaleDateString('pt-BR');
-    
-    const emailHtml = `
-      <!DOCTYPE html>
-      <html lang="pt-BR">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Nova Solicitação de Aluguel - alugae.mobi</title>
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: #dc2626; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-          .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
-          .vehicle-info { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
-          .highlight { background: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b; }
-          .footer { text-align: center; margin-top: 30px; color: #666; }
-          .button { background: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>🚗 Nova Solicitação de Aluguel</h1>
-            <p>alugae.mobi</p>
-          </div>
-          
-          <div class="content">
-            <p>Olá <strong>${params.ownerName}</strong>,</p>
-            
-            <p>Você recebeu uma nova solicitação de aluguel através do botão "Alugar agora"!</p>
-            
-            <div class="highlight">
-              <h3>⚡ Ação Imediata Necessária</h3>
-              <p>As datas foram automaticamente bloqueadas no seu calendário. Você tem 24 horas para aceitar ou recusar esta solicitação.</p>
-            </div>
-            
-            <div class="vehicle-info">
-              <h3>📋 Detalhes da Solicitação</h3>
-              <p><strong>Veículo:</strong> ${params.vehicleBrand} ${params.vehicleModel} ${params.vehicleYear}</p>
-              <p><strong>Locatário:</strong> ${params.renterName} (${params.renterEmail})</p>
-              <p><strong>Período:</strong> ${startDateFormatted} até ${endDateFormatted}</p>
-              <p><strong>Valor Total:</strong> R$ ${params.totalPrice}</p>
-              <p><strong>ID da Reserva:</strong> #${params.bookingId}</p>
-            </div>
-            
-            <p><strong>Próximos passos:</strong></p>
-            <ol>
-              <li>Acesse sua conta no alugae.mobi</li>
-              <li>Revise os detalhes da solicitação</li>
-              <li>Aceite ou recuse até 24h</li>
-              <li>Se aceitar, entre em contato com o locatário</li>
-            </ol>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="https://alugae.mobi/owner-dashboard" class="button">Gerenciar Solicitação</a>
-            </div>
-            
-            <div class="footer">
-              <p>📧 Email automático do sistema alugae.mobi</p>
-              <p>Não responda este email. Para suporte, acesse nossa plataforma.</p>
-            </div>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
+export class EmailService {
+  private fromEmail = 'suporte@alugae.mobi';
 
-    await resend.emails.send({
-      from: 'alugae.mobi <noreply@alugae.mobi>',
-      to: [params.ownerEmail],
-      subject: `🚗 Nova Solicitação: ${params.vehicleBrand} ${params.vehicleModel} - ${startDateFormatted} a ${endDateFormatted}`,
-      html: emailHtml,
-    });
-
-    console.log(`✅ Email enviado para proprietário: ${params.ownerEmail}`);
-    return true;
-  } catch (error) {
-    console.error('❌ Erro ao enviar email:', error);
-    return false;
+  async sendBookingConfirmationToRenter(data: BookingEmailData): Promise<boolean> {
+    try {
+      await resend.emails.send({
+        from: this.fromEmail,
+        to: data.renterEmail,
+        subject: `Reserva Confirmada - ${data.vehicleBrand} ${data.vehicleModel}`,
+        html: this.generateRenterConfirmationEmail(data)
+      });
+      return true;
+    } catch (error) {
+      console.error('Erro ao enviar e-mail para locatário:', error);
+      return false;
+    }
   }
-}
 
-interface RentRequestConfirmationParams {
-  renterName: string;
-  renterEmail: string;
-  ownerName: string;
-  vehicleBrand: string;
-  vehicleModel: string;
-  vehicleYear: number;
-  startDate: string;
-  endDate: string;
-  totalPrice: string;
-  bookingId: string;
-}
+  async sendBookingNotificationToOwner(data: BookingEmailData): Promise<boolean> {
+    try {
+      await resend.emails.send({
+        from: this.fromEmail,
+        to: data.ownerEmail,
+        subject: `Nova Reserva - ${data.vehicleBrand} ${data.vehicleModel}`,
+        html: this.generateOwnerNotificationEmail(data)
+      });
+      return true;
+    } catch (error) {
+      console.error('Erro ao enviar e-mail para proprietário:', error);
+      return false;
+    }
+  }
 
-export async function sendRentRequestConfirmation(params: RentRequestConfirmationParams): Promise<boolean> {
-  try {
-    const startDateFormatted = new Date(params.startDate).toLocaleDateString('pt-BR');
-    const endDateFormatted = new Date(params.endDate).toLocaleDateString('pt-BR');
-    
-    const emailHtml = `
+  private generateRenterConfirmationEmail(data: BookingEmailData): string {
+    return `
       <!DOCTYPE html>
-      <html lang="pt-BR">
+      <html>
       <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Solicitação Enviada - alugae.mobi</title>
+        <meta charset="utf-8">
+        <title>Reserva Confirmada</title>
         <style>
           body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: #059669; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+          .header { background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
           .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
-          .vehicle-info { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
-          .highlight { background: #dcfce7; padding: 15px; border-radius: 8px; border-left: 4px solid #059669; }
+          .booking-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+          .detail-row { display: flex; justify-content: space-between; margin: 10px 0; padding: 10px 0; border-bottom: 1px solid #eee; }
+          .total { font-weight: bold; font-size: 18px; color: #dc2626; }
           .footer { text-align: center; margin-top: 30px; color: #666; }
         </style>
       </head>
       <body>
         <div class="container">
           <div class="header">
-            <h1>✅ Solicitação Enviada!</h1>
-            <p>alugae.mobi</p>
+            <h1>🚗 Reserva Confirmada!</h1>
+            <p>Sua reserva foi criada com sucesso</p>
           </div>
-          
           <div class="content">
-            <p>Olá <strong>${params.renterName}</strong>,</p>
+            <p>Olá <strong>${data.renterName}</strong>,</p>
+            <p>Sua reserva do veículo foi confirmada! Aqui estão os detalhes:</p>
             
-            <p>Sua solicitação de aluguel foi enviada com sucesso!</p>
-            
-            <div class="highlight">
-              <h3>⏰ Status da Solicitação</h3>
-              <p>As datas foram bloqueadas temporariamente. O proprietário ${params.ownerName} tem até 24 horas para responder.</p>
+            <div class="booking-details">
+              <h3>Detalhes da Reserva</h3>
+              <div class="detail-row">
+                <span>Reserva ID:</span>
+                <span><strong>#${data.bookingId}</strong></span>
+              </div>
+              <div class="detail-row">
+                <span>Veículo:</span>
+                <span><strong>${data.vehicleBrand} ${data.vehicleModel}</strong></span>
+              </div>
+              <div class="detail-row">
+                <span>Data de Retirada:</span>
+                <span>${data.startDate}</span>
+              </div>
+              <div class="detail-row">
+                <span>Data de Devolução:</span>
+                <span>${data.endDate}</span>
+              </div>
+              <div class="detail-row total">
+                <span>Valor Total:</span>
+                <span>R$ ${data.totalPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+              </div>
             </div>
             
-            <div class="vehicle-info">
-              <h3>📋 Resumo da Solicitação</h3>
-              <p><strong>Veículo:</strong> ${params.vehicleBrand} ${params.vehicleModel} ${params.vehicleYear}</p>
-              <p><strong>Proprietário:</strong> ${params.ownerName}</p>
-              <p><strong>Período:</strong> ${startDateFormatted} até ${endDateFormatted}</p>
-              <p><strong>Valor Total:</strong> R$ ${params.totalPrice}</p>
-              <p><strong>ID da Reserva:</strong> #${params.bookingId}</p>
-            </div>
+            <h3>Próximos Passos:</h3>
+            <ul>
+              <li>O proprietário entrará em contato para combinar os detalhes</li>
+              <li>Tenha seus documentos em ordem (CNH válida)</li>
+              <li>Chegue no horário combinado para retirada</li>
+            </ul>
             
-            <p><strong>O que acontece agora:</strong></p>
-            <ol>
-              <li>Notificamos o proprietário sobre sua solicitação</li>
-              <li>Você receberá um email quando ele responder</li>
-              <li>Se aprovado, prosseguiremos com o pagamento</li>
-              <li>Se recusado, as datas serão liberadas automaticamente</li>
-            </ol>
+            <p>Você pode acompanhar sua reserva na área <strong>Minhas Reservas</strong> em nosso site.</p>
             
             <div class="footer">
-              <p>📧 Email automático do sistema alugae.mobi</p>
-              <p>Acompanhe o status na sua conta: https://alugae.mobi/bookings</p>
+              <p>Obrigado por escolher o alugae.mobi!</p>
+              <p>Em caso de dúvidas, entre em contato: <a href="mailto:suporte@alugae.mobi">suporte@alugae.mobi</a></p>
             </div>
           </div>
         </div>
       </body>
       </html>
     `;
+  }
 
-    await resend.emails.send({
-      from: 'alugae.mobi <noreply@alugae.mobi>',
-      to: [params.renterEmail],
-      subject: `✅ Solicitação Enviada: ${params.vehicleBrand} ${params.vehicleModel} - Aguardando Resposta`,
-      html: emailHtml,
-    });
-
-    console.log(`✅ Email de confirmação enviado para locatário: ${params.renterEmail}`);
-    return true;
-  } catch (error) {
-    console.error('❌ Erro ao enviar email de confirmação:', error);
-    return false;
+  private generateOwnerNotificationEmail(data: BookingEmailData): string {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Nova Reserva Recebida</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+          .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+          .booking-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+          .detail-row { display: flex; justify-content: space-between; margin: 10px 0; padding: 10px 0; border-bottom: 1px solid #eee; }
+          .total { font-weight: bold; font-size: 18px; color: #dc2626; }
+          .action-button { background: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0; }
+          .footer { text-align: center; margin-top: 30px; color: #666; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🎉 Nova Reserva!</h1>
+            <p>Você recebeu uma nova solicitação de reserva</p>
+          </div>
+          <div class="content">
+            <p>Olá <strong>${data.ownerName}</strong>,</p>
+            <p>Você recebeu uma nova reserva para seu veículo! Aqui estão os detalhes:</p>
+            
+            <div class="booking-details">
+              <h3>Detalhes da Reserva</h3>
+              <div class="detail-row">
+                <span>Reserva ID:</span>
+                <span><strong>#${data.bookingId}</strong></span>
+              </div>
+              <div class="detail-row">
+                <span>Veículo:</span>
+                <span><strong>${data.vehicleBrand} ${data.vehicleModel}</strong></span>
+              </div>
+              <div class="detail-row">
+                <span>Locatário:</span>
+                <span><strong>${data.renterName}</strong></span>
+              </div>
+              <div class="detail-row">
+                <span>E-mail do Locatário:</span>
+                <span>${data.renterEmail}</span>
+              </div>
+              <div class="detail-row">
+                <span>Data de Retirada:</span>
+                <span>${data.startDate}</span>
+              </div>
+              <div class="detail-row">
+                <span>Data de Devolução:</span>
+                <span>${data.endDate}</span>
+              </div>
+              <div class="detail-row total">
+                <span>Valor Total:</span>
+                <span>R$ ${data.totalPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+              </div>
+            </div>
+            
+            <h3>Próximos Passos:</h3>
+            <ul>
+              <li>Entre em contato com o locatário para combinar os detalhes</li>
+              <li>Confirme horário e local de entrega</li>
+              <li>Prepare a documentação do veículo</li>
+              <li>Realize a vistoria prévia</li>
+            </ul>
+            
+            <a href="mailto:${data.renterEmail}" class="action-button">Entrar em Contato com o Locatário</a>
+            
+            <p>Você pode gerenciar todas as suas reservas na área <strong>Meus Veículos</strong> em nosso site.</p>
+            
+            <div class="footer">
+              <p>Obrigado por usar o alugae.mobi!</p>
+              <p>Em caso de dúvidas, entre em contato: <a href="mailto:suporte@alugae.mobi">suporte@alugae.mobi</a></p>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
   }
 }
+
+export const emailService = new EmailService();

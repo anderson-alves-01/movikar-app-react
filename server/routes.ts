@@ -54,6 +54,7 @@ import docusign from 'docusign-esign';
 import { getFeatureFlags } from "@shared/feature-flags";
 import type { AdminSettings } from "@shared/admin-settings";
 import { registerHealthRoutes } from "./routes/health";
+import { emailService, type BookingEmailData } from "./services/emailService";
 
 // In-memory storage for admin settings
 let currentAdminSettings: AdminSettings = {
@@ -2470,10 +2471,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const booking = await storage.createBooking(bookingData);
+
+      // Send confirmation emails
+      try {
+        const renter = await storage.getUser(booking.renterId);
+        const owner = await storage.getUser(vehicle.ownerId);
+        
+        if (renter && owner) {
+          const emailData: BookingEmailData = {
+            bookingId: booking.id.toString(),
+            vehicleBrand: vehicle.brand,
+            vehicleModel: vehicle.model,
+            startDate: new Date(booking.startDate).toLocaleDateString('pt-BR'),
+            endDate: new Date(booking.endDate).toLocaleDateString('pt-BR'),
+            totalPrice: parseFloat(booking.totalCost),
+            renterName: renter.firstName || renter.username || renter.email,
+            renterEmail: renter.email,
+            ownerName: owner.firstName || owner.username || owner.email,
+            ownerEmail: owner.email
+          };
+
+          // Send emails asynchronously (don't block response)
+          Promise.all([
+            emailService.sendBookingConfirmationToRenter(emailData),
+            emailService.sendBookingNotificationToOwner(emailData)
+          ]).catch(error => {
+            console.error('Erro ao enviar e-mails de confirmação:', error);
+          });
+        }
+      } catch (emailError) {
+        console.error('Erro ao preparar dados para e-mail:', emailError);
+        // Don't fail the booking if email sending fails
+      }
+
       res.status(201).json(booking);
     } catch (error) {
       console.error("Create booking error:", error);
       res.status(400).json({ message: "Falha ao criar reserva. Verifique os dados informados" });
+    }
+  });
+
+  // New "Rent Now" endpoint - sends emails and creates booking request
+  app.post("/api/rent-now", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      // Get vehicle and owner information
+      const vehicle = await storage.getVehicle(req.body.vehicleId);
+      if (!vehicle) {
+        return res.status(404).json({ message: "Veículo não encontrado" });
+      }
+
+      // Get renter information
+      const renter = await storage.getUser(req.user!.id);
+      if (!renter) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      // Get owner information
+      const owner = await storage.getUser(vehicle.ownerId);
+      if (!owner) {
+        return res.status(404).json({ message: "Proprietário não encontrado" });
+      }
+
+      // Parse dates and calculate fees
+      const startDate = new Date(req.body.startDate);
+      const endDate = new Date(req.body.endDate);
+      const totalPrice = parseFloat(req.body.totalPrice || "0");
+
+      // Check vehicle availability
+      const isAvailable = await storage.checkVehicleAvailability(
+        req.body.vehicleId,
+        startDate.toISOString().split('T')[0],
+        endDate.toISOString().split('T')[0]
+      );
+
+      if (!isAvailable) {
+        return res.status(400).json({ message: "Veículo não disponível para as datas selecionadas" });
+      }
+
+      // Prepare booking data
+      const bookingPayload = {
+        vehicleId: req.body.vehicleId,
+        renterId: req.user!.id,
+        ownerId: vehicle.ownerId,
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0],
+        totalCost: totalPrice.toFixed(2),
+        status: "pending",
+        paymentStatus: "pending",
+        notes: "Solicitação via botão Alugar - aguardando confirmação do proprietário",
+      };
+
+      const bookingData = insertBookingSchema.parse(bookingPayload);
+      const booking = await storage.createBooking(bookingData);
+
+      // Prepare email data
+      const emailData: BookingEmailData = {
+        bookingId: booking.id.toString(),
+        vehicleBrand: vehicle.brand,
+        vehicleModel: vehicle.model,
+        startDate: startDate.toLocaleDateString('pt-BR'),
+        endDate: endDate.toLocaleDateString('pt-BR'),
+        totalPrice: totalPrice,
+        renterName: renter.firstName || renter.username || renter.email,
+        renterEmail: renter.email,
+        ownerName: owner.firstName || owner.username || owner.email,
+        ownerEmail: owner.email
+      };
+
+      // Send emails (don't block the response)
+      Promise.all([
+        emailService.sendBookingConfirmationToRenter(emailData),
+        emailService.sendBookingNotificationToOwner(emailData)
+      ]).catch(error => {
+        console.error('Erro ao enviar e-mails de confirmação:', error);
+      });
+
+      res.status(201).json({
+        booking,
+        message: "Solicitação de aluguel enviada com sucesso!",
+        emails: "E-mails de confirmação enviados para você e o proprietário."
+      });
+
+    } catch (error) {
+      console.error("Rent now error:", error);
+      res.status(400).json({ message: "Falha ao processar solicitação. Verifique os dados informados" });
     }
   });
 
