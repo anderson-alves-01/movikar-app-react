@@ -114,18 +114,25 @@ export default function Profile() {
   // Update user mutation
   const updateUserMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest('PUT', '/api/auth/user', data);
-      return response.json();
+      console.log('🔄 Enviando dados para atualização do perfil:', data);
+      const response = await apiRequest('PUT', '/api/profile', data);
+      const result = await response.json();
+      console.log('✅ Resposta do servidor:', result);
+      return result;
     },
     onSuccess: (data) => {
+      console.log('✅ Perfil atualizado com sucesso:', data);
       setAuth(data);
       setIsEditing(false);
       toast({
         title: "Perfil atualizado!",
         description: "Suas informações foram atualizadas com sucesso.",
       });
+      // Revalidate user data
+      refreshUser();
     },
     onError: (error: any) => {
+      console.error('❌ Erro ao atualizar perfil:', error);
       toast({
         title: "Erro",
         description: error.message || "Falha ao atualizar perfil",
@@ -203,13 +210,48 @@ export default function Profile() {
   };
 
   const handleSaveProfile = () => {
-    // Converter pixKey para pix antes de enviar para API
-    const dataToSend: any = {
-      ...editData,
-      pix: editData.pixKey, // Mapear pixKey para pix
-    };
-    delete dataToSend.pixKey; // Remover pixKey
-    updateUserMutation.mutate(dataToSend);
+    try {
+      // Validação básica
+      if (!editData.name || editData.name.trim() === '') {
+        toast({
+          title: "Erro",
+          description: "Nome é obrigatório",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validação da chave PIX se fornecida
+      if (editData.pixKey && editData.pixKey.trim() !== '') {
+        const isValidPix = validatePixKey(editData.pixKey);
+        if (!isValidPix) {
+          toast({
+            title: "Erro",
+            description: "Chave PIX inválida. Verifique o formato.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
+      // Converter pixKey para pix antes de enviar para API
+      const dataToSend: any = {
+        name: editData.name.trim(),
+        phone: editData.phone?.trim() || '',
+        location: editData.location?.trim() || '',
+        pix: editData.pixKey?.trim() || null, // Mapear pixKey para pix
+      };
+
+      console.log('📤 Dados preparados para envio:', dataToSend);
+      updateUserMutation.mutate(dataToSend);
+    } catch (error) {
+      console.error('❌ Erro ao preparar dados para envio:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao preparar dados. Tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (!user) {
