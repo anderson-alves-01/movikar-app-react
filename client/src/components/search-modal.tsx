@@ -109,16 +109,26 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 autoFocus
                 data-testid="input-search-modal"
               />
-              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <Button
+                variant="ghost"
+                size="sm" 
+                onClick={() => handleSearch(searchQuery)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100"
+                disabled={!searchQuery.trim()}
+              >
+                <Search className="h-4 w-4 text-gray-400" />
+              </Button>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSearchQuery("")}
-              className="p-1 hover:bg-gray-100"
-            >
-              <X className="h-5 w-5" />
-            </Button>
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSearchQuery("")}
+                className="p-1 hover:bg-gray-100"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            )}
           </div>
         </div>
 
@@ -218,6 +228,31 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                   <option value="Manual">Manual</option>
                 </select>
               </div>
+            </div>
+            
+            {/* Apply Filters Button */}
+            <div className="mt-3 pt-3 border-t border-gray-200">
+              <Button
+                onClick={() => {
+                  // Apply current query if there is one
+                  if (searchQuery.trim()) {
+                    handleSearch(searchQuery);
+                  } else {
+                    // Just close modal and let filters apply
+                    onClose();
+                    // Navigate to vehicles if needed
+                    const currentPath = window.location.pathname;
+                    if (currentPath === '/' || currentPath === '/home') {
+                      window.location.href = '/#resultados';
+                    }
+                  }
+                }}
+                className="w-full bg-red-500 hover:bg-red-600 text-white"
+                data-testid="button-apply-search"
+              >
+                <Search className="h-4 w-4 mr-2" />
+                Buscar
+              </Button>
             </div>
           </div>
         )}
