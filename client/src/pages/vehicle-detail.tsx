@@ -310,26 +310,37 @@ export default function VehicleDetail() {
             <Card>
               <CardContent className="p-6">
                 <h3 className="text-xl font-semibold text-gray-800 mb-4">Proprietário</h3>
-                <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-                  <Avatar className="h-16 w-16">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                  <Avatar className="h-16 w-16 flex-shrink-0">
                     <AvatarImage src={vehicle.owner.avatar} />
                     <AvatarFallback>
                       <User className="h-8 w-8" />
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-800">{vehicle.owner.name}</div>
-                    <div className="flex items-center text-sm text-gray-600 mt-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                      <span>{vehicle.owner.rating}</span>
-                      <span className="mx-2">•</span>
-                      <span>{vehicle.owner.totalRentals} aluguéis</span>
+                  
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="font-semibold text-lg text-gray-800 truncate">{vehicle.owner.name}</div>
+                    
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
+                        <span className="font-medium">{vehicle.owner.rating}</span>
+                      </div>
+                      
+                      <div className="text-sm text-gray-600">
+                        <span className="font-medium">{vehicle.owner.totalRentals}</span> aluguéis
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-500 mt-1">Membro desde {vehicle.owner?.createdAt ? new Date(vehicle.owner.createdAt).getFullYear() : new Date().getFullYear()}</div>
+                    
+                    <div className="text-sm text-gray-500">
+                      Membro desde {vehicle.owner?.createdAt ? new Date(vehicle.owner.createdAt).getFullYear() : new Date().getFullYear()}
+                    </div>
                   </div>
+                  
                   <Button 
-                    className="bg-secondary text-white hover:bg-teal-600 transition-colors"
+                    className="bg-secondary text-white hover:bg-teal-600 transition-colors w-full sm:w-auto flex-shrink-0 mt-2 sm:mt-0"
                     onClick={() => setShowMessages(!showMessages)}
+                    data-testid="button-contact-owner"
                   >
                     <MessageCircle className="h-4 w-4 mr-2" />
                     Conversar
