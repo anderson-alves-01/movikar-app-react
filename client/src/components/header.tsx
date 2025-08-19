@@ -197,7 +197,12 @@ export default function Header() {
                 size="sm"
                 onClick={() => {
                   console.log('🎯 Tutorial button clicked!');
-                  startOnboarding();
+                  console.log('🎯 startOnboarding function:', typeof startOnboarding);
+                  if (typeof startOnboarding === 'function') {
+                    startOnboarding();
+                  } else {
+                    console.error('❌ startOnboarding is not a function:', startOnboarding);
+                  }
                 }}
                 data-testid="button-start-tutorial"
                 title="Iniciar tutorial interativo"
