@@ -662,7 +662,7 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
             <div className="relative">
               <Input 
                 type="number" 
-                min="1" 
+                min="0" 
                 max="100"
                 step="0.01"
                 placeholder="20.00"
@@ -673,7 +673,7 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
               <span className="absolute right-3 top-3 text-gray-500">%</span>
             </div>
             <p className="text-sm text-gray-500 mt-1">
-              Percentual da diária que será retido como caução. Recomendado: 20%
+              Percentual da diária que será retido como caução. Use 0% para sem caução. Recomendado: 20%
             </p>
           </div>
 
