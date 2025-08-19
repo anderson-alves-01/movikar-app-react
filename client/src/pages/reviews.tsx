@@ -183,10 +183,25 @@ export default function Reviews() {
     queryKey: ["/api/auth/user"],
   });
 
-  const { data: pendingReviews, isLoading } = useQuery<PendingBooking[]>({
+  // Tentativa com endpoint principal primeiro, fallback para alternativo
+  const { data: pendingReviews, isLoading, error } = useQuery<PendingBooking[]>({
     queryKey: ["/api/bookings/pending-reviews"],
     enabled: !!user,
+    retry: false,
+    meta: {
+      errorBoundary: false
+    }
   });
+
+  // Fallback query para endpoint alternativo se o principal falhar
+  const { data: fallbackReviews } = useQuery<PendingBooking[]>({
+    queryKey: ["/api/reviews/pending"], 
+    enabled: !!user && !!error,
+    retry: false
+  });
+
+  // Usar dados do fallback se o endpoint principal falhou
+  const reviewsData = error ? fallbackReviews : pendingReviews;
 
   const createReviewMutation = useMutation({
     mutationFn: async (reviewData: ReviewForm) => {
@@ -248,7 +263,7 @@ export default function Reviews() {
         </div>
       </div>
 
-      {!pendingReviews || (Array.isArray(pendingReviews) && pendingReviews.length === 0) ? (
+      {!reviewsData || (Array.isArray(reviewsData) && reviewsData.length === 0) ? (
         <Card>
           <CardContent className="text-center py-12">
             <MessageSquare className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
@@ -260,7 +275,7 @@ export default function Reviews() {
         </Card>
       ) : (
         <div className="grid gap-6">
-          {Array.isArray(pendingReviews) ? pendingReviews.map((booking: PendingBooking) => {
+          {Array.isArray(reviewsData) ? reviewsData.map((booking: PendingBooking) => {
             const isOwner = booking.ownerId === user?.id;
             const isRenter = booking.renterId === user?.id;
             

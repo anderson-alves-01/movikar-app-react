@@ -1,0 +1,94 @@
+index-B_-ZAIfU.js:48  GET https://alugae.mobi/api/bookings/pending-reviews?_t=1755646320025 500 (Internal Server Error)
+tW @ index-B_-ZAIfU.js:48
+i @ index-B_-ZAIfU.js:48
+g @ index-B_-ZAIfU.js:48
+start @ index-B_-ZAIfU.js:48
+fetch @ index-B_-ZAIfU.js:48
+Ld @ index-B_-ZAIfU.js:48
+setOptions @ index-B_-ZAIfU.js:48
+(anonymous) @ index-B_-ZAIfU.js:48
+Lg @ index-B_-ZAIfU.js:40
+xc @ index-B_-ZAIfU.js:40
+_q @ index-B_-ZAIfU.js:40
+mo @ index-B_-ZAIfU.js:40
+K2 @ index-B_-ZAIfU.js:40
+Hi @ index-B_-ZAIfU.js:38
+(anonymous) @ index-B_-ZAIfU.js:40
+setTimeout
+s @ index-B_-ZAIfU.js:48
+o @ index-B_-ZAIfU.js:48
+batch @ index-B_-ZAIfU.js:48
+us @ index-B_-ZAIfU.js:48
+setData @ index-B_-ZAIfU.js:48
+onSuccess @ index-B_-ZAIfU.js:48
+f @ index-B_-ZAIfU.js:48
+Promise.then
+g @ index-B_-ZAIfU.js:48
+start @ index-B_-ZAIfU.js:48
+fetch @ index-B_-ZAIfU.js:48
+Ld @ index-B_-ZAIfU.js:48
+onSubscribe @ index-B_-ZAIfU.js:48
+subscribe @ index-B_-ZAIfU.js:48
+(anonymous) @ index-B_-ZAIfU.js:48
+m_ @ index-B_-ZAIfU.js:38
+Lg @ index-B_-ZAIfU.js:40
+xc @ index-B_-ZAIfU.js:40
+K2 @ index-B_-ZAIfU.js:40
+Hi @ index-B_-ZAIfU.js:38
+_q @ index-B_-ZAIfU.js:40
+mo @ index-B_-ZAIfU.js:40
+W_ @ index-B_-ZAIfU.js:40
+w @ index-B_-ZAIfU.js:25
+T @ index-B_-ZAIfU.js:25Understand this error
+index-B_-ZAIfU.js:48 📡 getQueryFn - Response status: 500
+index-B_-ZAIfU.js:48 📡 getQueryFn - Making request to: /api/bookings/pending-reviews
+index-B_-ZAIfU.js:48 📡 getQueryFn - Using cookie authentication
+index-B_-ZAIfU.js:48  GET https://alugae.mobi/api/bookings/pending-reviews?_t=1755646321639 500 (Internal Server Error)
+tW @ index-B_-ZAIfU.js:48
+i @ index-B_-ZAIfU.js:48
+g @ index-B_-ZAIfU.js:48
+(anonymous) @ index-B_-ZAIfU.js:48
+Promise.then
+(anonymous) @ index-B_-ZAIfU.js:48
+Promise.catch
+g @ index-B_-ZAIfU.js:48
+start @ index-B_-ZAIfU.js:48
+fetch @ index-B_-ZAIfU.js:48
+Ld @ index-B_-ZAIfU.js:48
+setOptions @ index-B_-ZAIfU.js:48
+(anonymous) @ index-B_-ZAIfU.js:48
+Lg @ index-B_-ZAIfU.js:40
+xc @ index-B_-ZAIfU.js:40
+_q @ index-B_-ZAIfU.js:40
+mo @ index-B_-ZAIfU.js:40
+K2 @ index-B_-ZAIfU.js:40
+Hi @ index-B_-ZAIfU.js:38
+(anonymous) @ index-B_-ZAIfU.js:40
+setTimeout
+s @ index-B_-ZAIfU.js:48
+o @ index-B_-ZAIfU.js:48
+batch @ index-B_-ZAIfU.js:48
+us @ index-B_-ZAIfU.js:48
+setData @ index-B_-ZAIfU.js:48
+onSuccess @ index-B_-ZAIfU.js:48
+f @ index-B_-ZAIfU.js:48
+Promise.then
+g @ index-B_-ZAIfU.js:48
+start @ index-B_-ZAIfU.js:48
+fetch @ index-B_-ZAIfU.js:48
+Ld @ index-B_-ZAIfU.js:48
+onSubscribe @ index-B_-ZAIfU.js:48
+subscribe @ index-B_-ZAIfU.js:48
+(anonymous) @ index-B_-ZAIfU.js:48
+m_ @ index-B_-ZAIfU.js:38
+Lg @ index-B_-ZAIfU.js:40
+xc @ index-B_-ZAIfU.js:40
+K2 @ index-B_-ZAIfU.js:40
+Hi @ index-B_-ZAIfU.js:38
+_q @ index-B_-ZAIfU.js:40
+mo @ index-B_-ZAIfU.js:40
+W_ @ index-B_-ZAIfU.js:40
+w @ index-B_-ZAIfU.js:25
+T @ index-B_-ZAIfU.js:25Understand this error
+index-B_-ZAIfU.js:48 📡 getQueryFn - Response status: 500
+reviews?booking=41&reviewee=2&type=renter_to_owner&vehicle=34:1 Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner.
