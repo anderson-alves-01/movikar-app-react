@@ -91,7 +91,7 @@ export default function Header() {
   return (
     <>
       <header className="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-50 w-full">
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
           <div className="flex justify-between items-center h-14 sm:h-16">
             {/* Logo */}
             <Link href="/">
@@ -99,8 +99,8 @@ export default function Header() {
                 <img 
                   src="/logo.png" 
                   alt="ALUGAE" 
-                  className="h-8 sm:h-10 w-auto mr-1 sm:mr-2 min-h-[32px] sm:min-h-[40px] object-contain"
-                  style={{ imageRendering: 'crisp-edges' }}
+                  className="h-8 sm:h-10 w-auto mr-2 sm:mr-3 min-h-[32px] sm:min-h-[40px] object-contain flex-shrink-0"
+                  style={{ imageRendering: 'crisp-edges', minWidth: '80px' }}
                   onError={(e) => {
                     // Fallback para texto se imagem não carregar
                     e.currentTarget.style.display = 'none';
@@ -348,14 +348,59 @@ export default function Header() {
 
           {/* Mobile Search */}
           {showSearch && (
-            <div className="md:hidden px-4 pb-4">
-              <div className="flex items-center bg-gray-100 rounded-lg p-3">
-                <Search className="h-5 w-5 text-gray-400 mr-3" />
-                <Input 
-                  type="text" 
-                  placeholder="Buscar carros..." 
-                  className="bg-transparent outline-none flex-1 text-gray-700 border-none focus-visible:ring-0" 
-                />
+            <div className="md:hidden px-3 pb-4">
+              <div className="flex flex-col gap-3 bg-gray-50 rounded-lg p-3">
+                <div className="flex items-center bg-white rounded-lg p-2 border">
+                  <Search className="h-4 w-4 text-gray-400 mr-2" />
+                  <Input 
+                    type="text" 
+                    placeholder="Onde?" 
+                    value={searchLocation}
+                    className="bg-transparent outline-none flex-1 text-gray-700 border-none focus-visible:ring-0" 
+                    onChange={(e) => {
+                      setSearchLocation(e.target.value);
+                      const trimmedValue = e.target.value.trim();
+                      if (trimmedValue.length > 2) {
+                        updateFilter('location', trimmedValue);
+                      } else if (trimmedValue.length === 0) {
+                        updateFilter('location', '');
+                      }
+                    }}
+                  />
+                </div>
+                
+                <div className="flex gap-2">
+                  <Input 
+                    type="date" 
+                    value={startDate}
+                    placeholder="Check-in"
+                    className="flex-1 text-sm border border-gray-300 rounded-lg p-2"
+                    onChange={(e) => {
+                      setStartDate(e.target.value);
+                      updateFilter('startDate', e.target.value);
+                    }}
+                  />
+                  <Input 
+                    type="date" 
+                    value={endDate}
+                    placeholder="Check-out"
+                    className="flex-1 text-sm border border-gray-300 rounded-lg p-2"
+                    onChange={(e) => {
+                      setEndDate(e.target.value);
+                      updateFilter('endDate', e.target.value);
+                    }}
+                  />
+                </div>
+                
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleClearSearch}
+                >
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  Limpar busca
+                </Button>
               </div>
             </div>
           )}
