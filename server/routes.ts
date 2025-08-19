@@ -4920,6 +4920,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public endpoint for contact information (no authentication required)
+  app.get("/api/public/contact-info", async (req, res) => {
+    try {
+      console.log("📞 Fetching public contact information...");
+      const dbSettings = await storage.getAdminSettings();
+      
+      // Return public contact information
+      const contactInfo = {
+        supportEmail: dbSettings?.supportEmail || "sac@alugae.mobi",
+        supportPhone: dbSettings?.supportPhone || "(11) 9999-9999"
+      };
+      
+      console.log("📞 Public contact info:", contactInfo);
+      res.json(contactInfo);
+    } catch (error) {
+      console.error("Error fetching public contact info:", error);
+      res.status(500).json({
+        supportEmail: "sac@alugae.mobi",
+        supportPhone: "(11) 9999-9999"
+      });
+    }
+  });
+
   // Admin Settings API routes
   app.get("/api/admin/settings", authenticateToken, requireAdmin, async (req, res) => {
     try {

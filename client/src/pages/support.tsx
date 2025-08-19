@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { 
   MessageCircle, 
   Mail, 
@@ -38,6 +39,12 @@ export default function Support() {
   });
   const [openAccordionItem, setOpenAccordionItem] = useState<string>("");
   const { toast } = useToast();
+  
+  // Fetch contact information from admin settings
+  const { data: contactInfo } = useQuery({
+    queryKey: ['/api/public/contact-info'],
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
 
   // Handle anchor navigation on load
   useEffect(() => {
@@ -73,6 +80,9 @@ export default function Support() {
 
   // Handle support channel actions
   const handleChannelAction = (channelTitle: string) => {
+    const supportEmail = contactInfo?.supportEmail || "sac@alugae.mobi";
+    const supportPhone = contactInfo?.supportPhone || "(11) 9999-9999";
+    
     switch (channelTitle) {
       case "Chat Online":
         // Placeholder for chat functionality - could integrate with Intercom, Zendesk, etc.
@@ -82,12 +92,14 @@ export default function Support() {
         });
         break;
       case "E-mail":
-        window.open("mailto:suporte@alugae.mobi?subject=Suporte alugae.mobi", "_blank");
+        window.open(`mailto:${supportEmail}?subject=Suporte alugae.mobi`, "_blank");
         break;
       case "WhatsApp":
-        const whatsappNumber = "5561995098662";
+        // Remove formatting from phone number for WhatsApp
+        const cleanPhone = supportPhone.replace(/\D/g, "");
+        const fullNumber = cleanPhone.startsWith("55") ? cleanPhone : `55${cleanPhone}`;
         const message = "Olá! Preciso de ajuda com o alugae.mobi";
-        const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+        const whatsappUrl = `https://wa.me/${fullNumber}?text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, "_blank");
         break;
       default:
@@ -190,13 +202,13 @@ export default function Support() {
       id: "central-de-ajuda",
       category: "Suporte",
       question: "Como acessar a central de ajuda?",
-      answer: "Nossa central de ajuda está disponível 24/7 através do chat online, WhatsApp (+55 61 99509-8662) e e-mail (suporte@alugae.mobi). Escolha o canal que preferir para receber atendimento personalizado."
+      answer: `Nossa central de ajuda está disponível 24/7 através do chat online, WhatsApp (${contactInfo?.supportPhone || "(11) 9999-9999"}) e e-mail (${contactInfo?.supportEmail || "sac@alugae.mobi"}). Escolha o canal que preferir para receber atendimento personalizado.`
     },
     {
       id: "contato",
       category: "Suporte",
       question: "Como entrar em contato conosco?",
-      answer: "Você pode nos contatar através de múltiplos canais: Chat online (24/7), WhatsApp (+55 61 99509-8662) em horário comercial, ou e-mail suporte@alugae.mobi com resposta em até 24h."
+      answer: `Você pode nos contatar através de múltiplos canais: Chat online (24/7), WhatsApp (${contactInfo?.supportPhone || "(11) 9999-9999"}) em horário comercial, ou e-mail ${contactInfo?.supportEmail || "sac@alugae.mobi"} com resposta em até 24h.`
     },
     {
       id: "termos-de-uso",
@@ -249,14 +261,14 @@ export default function Support() {
     {
       icon: Mail,
       title: "E-mail",
-      description: "suporte@alugae.mobi",
+      description: contactInfo?.supportEmail || "sac@alugae.mobi",
       availability: "Resposta em até 24h",
       action: "Enviar E-mail"
     },
     {
       icon: Phone,
       title: "WhatsApp",
-      description: "+55 (61) 99509-8662",
+      description: contactInfo?.supportPhone || "(11) 9999-9999",
       availability: "Seg-Sex: 8h às 22h",
       action: "Enviar Mensagem"
     }
