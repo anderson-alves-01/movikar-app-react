@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { X, ChevronLeft, ChevronRight, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTooltipPortal } from "./tooltip-portal";
 
 export interface TooltipStep {
   id: string;
@@ -33,6 +34,7 @@ export function InteractiveTooltip({
   onSkip,
   className 
 }: InteractiveTooltipProps) {
+  const { tooltipId, isActive: isPortalActive, registerTooltip, unregisterTooltip, renderTooltip } = useTooltipPortal();
   const [currentStep, setCurrentStep] = useState(0);
   const [targetElement, setTargetElement] = useState<HTMLElement | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
@@ -167,9 +169,25 @@ export function InteractiveTooltip({
     onSkip();
   };
 
-  console.log('🎯 InteractiveTooltip render:', { isActive, steps: steps.length, currentStep, hasStepData: !!currentStepData, targetElementExists: !!targetElement, target: currentStepData?.target, isTransitioning });
+  // Register/unregister tooltip when active state changes
+  useEffect(() => {
+    if (isActive) {
+      if (!registerTooltip()) {
+        console.log('🚫 Tooltip blocked by another active tooltip');
+        return;
+      }
+    } else {
+      unregisterTooltip();
+    }
+    
+    return () => {
+      unregisterTooltip();
+    };
+  }, [isActive, registerTooltip, unregisterTooltip]);
+
+  console.log('🎯 InteractiveTooltip render:', { isActive, isPortalActive, steps: steps.length, currentStep, hasStepData: !!currentStepData, targetElementExists: !!targetElement, target: currentStepData?.target, isTransitioning, tooltipId });
   
-  if (!isActive || !currentStepData || isTransitioning) return null;
+  if (!isActive || !isPortalActive || !currentStepData || isTransitioning) return null;
 
   const getTooltipStyle = () => {
     const position = currentStepData.position || "bottom";
@@ -344,6 +362,8 @@ export function InteractiveTooltip({
       </motion.div>
     </>
   );
+
+  return renderTooltip(tooltipContent);
 }
 
 // The onboarding hook is now in @/contexts/OnboardingContext
