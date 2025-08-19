@@ -217,15 +217,17 @@ export default function Reviews() {
     return (
       <>
         <Header />
-        <div className="container mx-auto px-4 py-8">
-        <div className="space-y-4">
-          <div className="h-8 bg-gray-200 rounded animate-pulse"></div>
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded animate-pulse"></div>
-            ))}
+        <div className="pt-20 pb-8"> {/* Adiciona padding-top para compensar header fixo */}
+          <div className="container mx-auto px-4">
+            <div className="space-y-4">
+              <div className="h-8 bg-gray-200 rounded animate-pulse"></div>
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-32 bg-gray-200 rounded animate-pulse"></div>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
         </div>
       </>
     );
@@ -234,7 +236,8 @@ export default function Reviews() {
   return (
     <>
       <Header />
-      <div className="container mx-auto px-4 py-8">
+      <div className="pt-20 pb-8"> {/* Adiciona padding-top para compensar header fixo */}
+        <div className="container mx-auto px-4">
       <div className="flex items-center gap-3 mb-8">
         <Star className="h-8 w-8 text-yellow-500" />
         <div>
@@ -331,6 +334,7 @@ export default function Reviews() {
           onSubmit={handleSubmitReview}
         />
       )}
+        </div>
       </div>
     </>
   );
