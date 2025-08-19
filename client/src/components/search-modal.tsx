@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Clock, Bookmark, X, ArrowLeft } from "lucide-react";
+import { Search, Clock, Bookmark, X, ArrowLeft, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSearch } from "@/contexts/SearchContext";
@@ -20,44 +20,19 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"recentes" | "salvas">("recentes");
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
-  const { updateFilter } = useSearch();
+  const [showFilters, setShowFilters] = useState(false);
+  const { updateFilter, category, priceRange, fuelType, transmission } = useSearch();
 
-  // Load search history from localStorage and add some sample data
+  // Load search history from localStorage
   useEffect(() => {
     const history = localStorage.getItem('search-history');
-    
     if (history) {
-      setSearchHistory(JSON.parse(history));
-    } else {
-      // Add some sample search history items
-      const sampleHistory = [
-        {
-          id: '1',
-          query: 'Aluguel apt noroeste',
-          category: 'Imóveis',
-          timestamp: new Date()
-        },
-        {
-          id: '2',
-          query: 'toyota ethios',
-          category: 'Carros, vans e utilitários',
-          timestamp: new Date()
-        },
-        {
-          id: '3',
-          query: 'bmw',
-          category: 'Carros, vans e utilitários',
-          timestamp: new Date()
-        },
-        {
-          id: '4',
-          query: 'honda fit',
-          category: 'Carros, vans e utilitários',
-          timestamp: new Date()
-        }
-      ];
-      setSearchHistory(sampleHistory);
-      localStorage.setItem('search-history', JSON.stringify(sampleHistory));
+      try {
+        setSearchHistory(JSON.parse(history));
+      } catch (error) {
+        console.error('Error parsing search history:', error);
+        setSearchHistory([]);
+      }
     }
   }, []);
 
@@ -66,28 +41,34 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       // Add to search history
       const newHistoryItem: SearchHistoryItem = {
         id: Date.now().toString(),
-        query,
-        category: "Carros, vans e utilitários", // Default category
+        query: query.trim(),
+        category: "Carros, vans e utilitários",
         timestamp: new Date()
       };
 
-      const updatedHistory = [newHistoryItem, ...searchHistory.slice(0, 9)]; // Keep only last 10
+      const updatedHistory = [newHistoryItem, ...searchHistory.filter(item => item.query !== query.trim()).slice(0, 9)];
       setSearchHistory(updatedHistory);
       localStorage.setItem('search-history', JSON.stringify(updatedHistory));
 
-      // Apply search
-      updateFilter('location', query);
+      // Apply search filter - this will trigger the search
+      updateFilter('location', query.trim());
       
-      // Scroll to results
-      setTimeout(() => {
-        const resultadosSection = document.getElementById('resultados');
-        if (resultadosSection) {
-          resultadosSection.scrollIntoView({ 
-            behavior: 'smooth',
-            block: 'start'
-          });
-        }
-      }, 100);
+      // Navigate to vehicles page if not already there
+      const currentPath = window.location.pathname;
+      if (currentPath === '/' || currentPath === '/home') {
+        window.location.href = '/#resultados';
+      } else {
+        // Scroll to results if already on vehicles page
+        setTimeout(() => {
+          const resultadosSection = document.getElementById('resultados') || document.querySelector('[data-testid="vehicles-grid"]');
+          if (resultadosSection) {
+            resultadosSection.scrollIntoView({ 
+              behavior: 'smooth',
+              block: 'start'
+            });
+          }
+        }, 100);
+      }
       
       onClose();
     }
@@ -166,6 +147,80 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
             Buscas Salvas
           </button>
         </div>
+
+        {/* Quick Filters Bar */}
+        <div className="px-4 py-2 border-b border-gray-100">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowFilters(!showFilters)}
+            className="w-full justify-center gap-2"
+          >
+            <Filter className="h-4 w-4" />
+            Filtros Avançados
+          </Button>
+        </div>
+
+        {/* Advanced Filters (when expanded) */}
+        {showFilters && (
+          <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Categoria</label>
+                <select 
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                  value={category || ''}
+                  onChange={(e) => updateFilter('category', e.target.value)}
+                >
+                  <option value="">Todas</option>
+                  <option value="Sedã">Sedã</option>
+                  <option value="SUV">SUV</option>
+                  <option value="Hatch">Hatch</option>
+                  <option value="Picape">Picape</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Preço/dia</label>
+                <select 
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                  value={priceRange || ''}
+                  onChange={(e) => updateFilter('priceRange', e.target.value)}
+                >
+                  <option value="">Qualquer</option>
+                  <option value="0-100">Até R$ 100</option>
+                  <option value="100-200">R$ 100-200</option>
+                  <option value="200+">R$ 200+</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Combustível</label>
+                <select 
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                  value={fuelType || ''}
+                  onChange={(e) => updateFilter('fuelType', e.target.value)}
+                >
+                  <option value="">Qualquer</option>
+                  <option value="Flex">Flex</option>
+                  <option value="Gasolina">Gasolina</option>
+                  <option value="Etanol">Etanol</option>
+                  <option value="Diesel">Diesel</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Transmissão</label>
+                <select 
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                  value={transmission || ''}
+                  onChange={(e) => updateFilter('transmission', e.target.value)}
+                >
+                  <option value="">Qualquer</option>
+                  <option value="Automático">Automático</option>
+                  <option value="Manual">Manual</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Content */}
         <div className="overflow-y-auto max-h-96">

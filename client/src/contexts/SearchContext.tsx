@@ -6,6 +6,14 @@ interface SearchContextType {
   setFilters: (filters: SearchFilters) => void;
   updateFilter: (key: string, value: any) => void;
   clearFilters: () => void;
+  // Individual filter access
+  location?: string;
+  category?: string;
+  priceRange?: string;
+  fuelType?: string;
+  transmission?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 const SearchContext = createContext<SearchContextType | undefined>(undefined);
@@ -41,7 +49,15 @@ export function SearchProvider({ children }: SearchProviderProps) {
       filters,
       setFilters,
       updateFilter,
-      clearFilters
+      clearFilters,
+      // Individual filter access
+      location: filters.location,
+      category: filters.category,
+      priceRange: filters.priceRange,
+      fuelType: filters.fuelType,
+      transmission: filters.transmission,
+      startDate: filters.startDate,
+      endDate: filters.endDate
     }}>
       {children}
     </SearchContext.Provider>
