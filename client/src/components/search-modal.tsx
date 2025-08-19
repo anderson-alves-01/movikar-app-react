@@ -272,7 +272,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
         </div>
 
         {/* Security Banner */}
-        <div className="p-4 bg-gradient-to-r from-orange-500 to-red-500 text-white">
+        <div className="p-4 bg-gradient-to-r from-red-500 to-red-600 text-white">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
               <span className="text-lg">🛡️</span>

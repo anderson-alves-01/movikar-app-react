@@ -53,11 +53,11 @@ export function SearchProvider({ children }: SearchProviderProps) {
       // Individual filter access
       location: filters.location,
       category: filters.category,
-      priceRange: filters.priceRange,
-      fuelType: filters.fuelType,
-      transmission: filters.transmission,
-      startDate: filters.startDate,
-      endDate: filters.endDate
+      priceRange: (filters as any).priceRange,
+      fuelType: (filters as any).fuelType,
+      transmission: (filters as any).transmission,
+      startDate: filters.startDate ? filters.startDate.toISOString().split('T')[0] : undefined,
+      endDate: filters.endDate ? filters.endDate.toISOString().split('T')[0] : undefined
     }}>
       {children}
     </SearchContext.Provider>
