@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CalendarDays, MapPin, Car, User, Clock, X, FileText, Eye, PenTool, Search, CheckCircle2, AlertTriangle, CameraIcon } from "lucide-react";
+import { CalendarDays, MapPin, Car, User, Clock, X, FileText, Eye, PenTool, Search, CheckCircle2, AlertTriangle, CameraIcon, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency } from "@/lib/currency";
@@ -62,6 +62,15 @@ interface WaitingQueueEntry {
     imageUrl?: string;
     location: string;
   };
+}
+
+interface ReviewForm {
+  bookingId: number;
+  revieweeId: number;
+  vehicleId?: number;
+  rating: number;
+  comment: string;
+  type: 'owner_to_renter' | 'renter_to_owner';
 }
 
 export default function Reservations() {
@@ -229,6 +238,27 @@ export default function Reservations() {
     },
   });
 
+  const createReviewMutation = useMutation({
+    mutationFn: async (reviewData: ReviewForm) => {
+      return apiRequest("POST", "/api/reviews", reviewData);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Avaliação enviada",
+        description: "Sua avaliação foi registrada com sucesso!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
+      setForceRefresh(prev => prev + 1);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao enviar avaliação",
+        description: error.message || "Não foi possível enviar sua avaliação",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleRemoveFromQueue = (queueId: number) => {
     removeFromQueueMutation.mutate(queueId);
   };
@@ -314,6 +344,21 @@ export default function Reservations() {
     setForceRefresh(prev => prev + 1);
   };
 
+  const handleReview = (booking: Booking) => {
+    const isOwner = user?.id === booking.owner?.id;
+    const reviewData: ReviewForm = {
+      bookingId: booking.id,
+      revieweeId: isOwner ? booking.renter!.id : booking.owner!.id,
+      vehicleId: !isOwner ? booking.vehicleId : undefined, // Apenas locatários avaliam veículos
+      rating: 5, // Valor padrão
+      comment: "",
+      type: isOwner ? 'owner_to_renter' : 'renter_to_owner'
+    };
+    
+    // Redirecionar para página de reviews com os dados
+    window.location.href = `/reviews?booking=${booking.id}&reviewee=${reviewData.revieweeId}&type=${reviewData.type}${reviewData.vehicleId ? `&vehicle=${reviewData.vehicleId}` : ''}`;
+  };
+
   const shouldShowInspectionButton = (booking: Booking) => {
     // Mostrar botão de vistoria APENAS para:
     // 1. Reservas PAGAS (paymentStatus === "paid")
@@ -339,6 +384,21 @@ export default function Reservations() {
                               (booking.inspection && booking.inspection.approvalDecision === true);
     
     return isOwner && isReturnDate && isPaidOrInspected;
+  };
+
+  const shouldShowReviewButton = (booking: Booking) => {
+    // Mostrar botão de avaliação quando:
+    // 1. Reserva foi aprovada ou rejeitada
+    // 2. Usuário ainda não avaliou esta reserva
+    // 3. Usuário é proprietário ou locatário da reserva
+    const isOwner = user?.id === booking.owner?.id;
+    const isRenter = user?.id === booking.renter?.id;
+    const isApprovedOrRejected = booking.status === 'approved' || booking.status === 'rejected' || booking.status === 'completed';
+    
+    // TODO: Verificar se já existe avaliação para esta reserva
+    // Por enquanto, sempre mostrar se as outras condições forem atendidas
+    
+    return (isOwner || isRenter) && isApprovedOrRejected;
   };
 
   const getInspectionBadge = (booking: Booking) => {
@@ -442,7 +502,7 @@ export default function Reservations() {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="py-8">
+        <div className="pt-20 pb-8">
           <div className="max-w-4xl mx-auto px-4">
             <div className="text-center py-12">
               <h1 className="text-2xl font-bold text-gray-900 mb-4">Acesso Restrito</h1>
@@ -457,7 +517,7 @@ export default function Reservations() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className="py-8">
+      <div className="pt-20 pb-8">
         <div className="max-w-6xl mx-auto px-4">
           <h1 className="text-3xl font-bold text-gray-900 mb-8">Minhas Reservas</h1>
 
@@ -549,6 +609,18 @@ export default function Reservations() {
                               >
                                 <CheckCircle2 className="w-4 h-4 mr-1" />
                                 Vistoria Proprietário
+                              </Button>
+                            )}
+
+                            {shouldShowReviewButton(booking) && (
+                              <Button 
+                                size="sm" 
+                                className="bg-yellow-500 hover:bg-yellow-600 text-white"
+                                onClick={() => handleReview(booking)}
+                                data-testid={`button-review-${booking.id}`}
+                              >
+                                <Star className="w-4 h-4 mr-1" />
+                                Avaliar
                               </Button>
                             )}
                             
@@ -684,6 +756,18 @@ export default function Reservations() {
                               >
                                 <CheckCircle2 className="w-4 h-4 mr-1" />
                                 Vistoria Proprietário
+                              </Button>
+                            )}
+
+                            {shouldShowReviewButton(booking) && (
+                              <Button 
+                                size="sm" 
+                                className="bg-yellow-500 hover:bg-yellow-600 text-white"
+                                onClick={() => handleReview(booking)}
+                                data-testid={`button-review-${booking.id}`}
+                              >
+                                <Star className="w-4 h-4 mr-1" />
+                                Avaliar
                               </Button>
                             )}
                             
