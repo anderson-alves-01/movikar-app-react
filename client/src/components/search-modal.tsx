@@ -174,6 +174,31 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
         {/* Advanced Filters (when expanded) */}
         {showFilters && (
           <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+            {/* Date Fields */}
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Retirada</label>
+                <input
+                  type="date"
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                  value={startDate || ''}
+                  onChange={(e) => updateFilter('startDate', e.target.value ? new Date(e.target.value) : undefined)}
+                  data-testid="input-start-date"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Devolução</label>
+                <input
+                  type="date"
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                  value={endDate || ''}
+                  onChange={(e) => updateFilter('endDate', e.target.value ? new Date(e.target.value) : undefined)}
+                  data-testid="input-end-date"
+                />
+              </div>
+            </div>
+            
+            {/* Other Filters */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Categoria</label>
