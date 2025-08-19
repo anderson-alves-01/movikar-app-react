@@ -104,6 +104,10 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
+      
+      {/* Spacer for fixed header */}
+      <div className="h-14 sm:h-16"></div>
+      
       <HeroSection onSearch={handleSearch} />
       <OnboardingFlow page="home" />
       
