@@ -56,8 +56,8 @@ export function SearchProvider({ children }: SearchProviderProps) {
       priceRange: (filters as any).priceRange,
       fuelType: (filters as any).fuelType,
       transmission: (filters as any).transmission,
-      startDate: filters.startDate ? filters.startDate.toISOString().split('T')[0] : undefined,
-      endDate: filters.endDate ? filters.endDate.toISOString().split('T')[0] : undefined
+      startDate: filters.startDate,
+      endDate: filters.endDate
     }}>
       {children}
     </SearchContext.Provider>

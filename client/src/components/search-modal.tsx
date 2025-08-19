@@ -29,7 +29,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [activeTab, setActiveTab] = useState<"recentes" | "salvas">("recentes");
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
   const [showFilters, setShowFilters] = useState(false);
-  const { updateFilter, category, priceRange, fuelType, transmission } = useSearch();
+  const { updateFilter, category, priceRange, fuelType, transmission, filters } = useSearch();
 
   // Load search history from localStorage
   useEffect(() => {
@@ -45,7 +45,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   }, []);
 
   const handleSearch = (query: string, saveToHistory: boolean = true) => {
-    if (query.trim() || category || priceRange || fuelType || transmission || filters.startDate || filters.endDate) {
+    if (query.trim() || category || priceRange || fuelType || transmission || filters?.startDate || filters?.endDate) {
       // Add to search history if requested
       if (saveToHistory) {
         const searchDescription = query.trim() || 'Busca com filtros';
@@ -55,8 +55,8 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
         if (priceRange) appliedFilters.push(`Preço: ${priceRange}`);
         if (fuelType) appliedFilters.push(`Combustível: ${fuelType}`);
         if (transmission) appliedFilters.push(`Transmissão: ${transmission}`);
-        if (filters.startDate) appliedFilters.push(`Retirada: ${filters.startDate.toLocaleDateString('pt-BR')}`);
-        if (filters.endDate) appliedFilters.push(`Devolução: ${filters.endDate.toLocaleDateString('pt-BR')}`);
+        if (filters?.startDate) appliedFilters.push(`Retirada: ${new Date(filters.startDate).toLocaleDateString('pt-BR')}`);
+        if (filters?.endDate) appliedFilters.push(`Devolução: ${new Date(filters.endDate).toLocaleDateString('pt-BR')}`);
         
         const categoryDisplay = appliedFilters.length > 0 ? appliedFilters.join(', ') : 'Carros, vans e utilitários';
         
@@ -70,8 +70,8 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
             priceRange,
             fuelType,
             transmission,
-            startDate: filters.startDate?.toISOString(),
-            endDate: filters.endDate?.toISOString()
+            startDate: filters?.startDate,
+            endDate: filters?.endDate
           }
         };
 
