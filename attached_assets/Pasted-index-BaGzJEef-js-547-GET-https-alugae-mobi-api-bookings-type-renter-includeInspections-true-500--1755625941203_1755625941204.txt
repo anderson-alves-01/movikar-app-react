@@ -1,0 +1,66 @@
+index-BaGzJEef.js:547  GET https://alugae.mobi/api/bookings?type=renter&includeInspections=true 500 (Internal Server Error)
+queryFn @ index-BaGzJEef.js:547
+i @ index-BaGzJEef.js:48
+g @ index-BaGzJEef.js:48
+start @ index-BaGzJEef.js:48
+fetch @ index-BaGzJEef.js:48
+Ld @ index-BaGzJEef.js:48
+fetch @ index-BaGzJEef.js:48
+refetch @ index-BaGzJEef.js:48
+onFocus @ index-BaGzJEef.js:48
+(anonymous) @ index-BaGzJEef.js:48
+(anonymous) @ index-BaGzJEef.js:48
+batch @ index-BaGzJEef.js:48
+onFocus @ index-BaGzJEef.js:48
+(anonymous) @ index-BaGzJEef.js:48
+await in (anonymous)
+(anonymous) @ index-BaGzJEef.js:48
+onFocus @ index-BaGzJEef.js:48
+(anonymous) @ index-BaGzJEef.js:48
+r @ index-BaGzJEef.js:48Understand this error
+index-BaGzJEef.js:547  GET https://alugae.mobi/api/bookings?type=owner&includeInspections=true 500 (Internal Server Error)
+queryFn @ index-BaGzJEef.js:547
+i @ index-BaGzJEef.js:48
+g @ index-BaGzJEef.js:48
+start @ index-BaGzJEef.js:48
+fetch @ index-BaGzJEef.js:48
+Ld @ index-BaGzJEef.js:48
+fetch @ index-BaGzJEef.js:48
+refetch @ index-BaGzJEef.js:48
+onFocus @ index-BaGzJEef.js:48
+(anonymous) @ index-BaGzJEef.js:48
+(anonymous) @ index-BaGzJEef.js:48
+batch @ index-BaGzJEef.js:48
+onFocus @ index-BaGzJEef.js:48
+(anonymous) @ index-BaGzJEef.js:48
+await in (anonymous)
+(anonymous) @ index-BaGzJEef.js:48
+onFocus @ index-BaGzJEef.js:48
+(anonymous) @ index-BaGzJEef.js:48
+r @ index-BaGzJEef.js:48Understand this error
+index-BaGzJEef.js:547  GET https://alugae.mobi/api/bookings?type=renter&includeInspections=true 403 (Forbidden)
+queryFn @ index-BaGzJEef.js:547
+i @ index-BaGzJEef.js:48
+g @ index-BaGzJEef.js:48
+(anonymous) @ index-BaGzJEef.js:48
+Promise.then
+(anonymous) @ index-BaGzJEef.js:48
+Promise.catch
+g @ index-BaGzJEef.js:48
+start @ index-BaGzJEef.js:48
+fetch @ index-BaGzJEef.js:48
+Ld @ index-BaGzJEef.js:48
+fetch @ index-BaGzJEef.js:48
+refetch @ index-BaGzJEef.js:48
+onFocus @ index-BaGzJEef.js:48
+(anonymous) @ index-BaGzJEef.js:48
+(anonymous) @ index-BaGzJEef.js:48
+batch @ index-BaGzJEef.js:48
+onFocus @ index-BaGzJEef.js:48
+(anonymous) @ index-BaGzJEef.js:48
+await in (anonymous)
+(anonymous) @ index-BaGzJEef.js:48
+onFocus @ index-BaGzJEef.js:48
+(anonymous) @ index-BaGzJEef.js:48
+r @ index-BaGzJEef.js:48Understand this error
+index-BaGzJEef.js:547  GET https://alugae.mobi/api/bookings?type=owner&includeInspections=true 403 (Forbidden)

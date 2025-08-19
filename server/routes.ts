@@ -2438,13 +2438,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const serviceFee = (totalPrice * 0.1).toFixed(2); // 10% service fee
       const insuranceFee = (totalPrice * 0.05).toFixed(2); // 5% insurance fee
 
-      // Prepare booking data with proper type conversions
+      // Prepare booking data with proper type conversions (fix timezone issue)
       const bookingPayload = {
         vehicleId: req.body.vehicleId,
         renterId: req.user!.id,
         ownerId: vehicle.ownerId,
-        startDate: startDate.toISOString().split('T')[0],
-        endDate: endDate.toISOString().split('T')[0],
+        startDate: startDate.toLocaleDateString('en-CA'), // YYYY-MM-DD format without timezone shift
+        endDate: endDate.toLocaleDateString('en-CA'), // YYYY-MM-DD format without timezone shift
         totalPrice: totalPrice.toFixed(2), // Convert to string
         status: req.body.status || "pending",
         paymentStatus: req.body.paymentStatus || "pending",

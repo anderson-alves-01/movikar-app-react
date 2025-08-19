@@ -26,16 +26,30 @@ export class EmailService {
   async sendBookingConfirmationToRenter(data: BookingEmailData): Promise<boolean> {
     try {
       console.log('📧 Enviando e-mail para locatário:', data.renterEmail);
-      await resend.emails.send({
+      console.log('📧 Dados do e-mail:', { 
+        bookingId: data.bookingId, 
+        vehicle: `${data.vehicleBrand} ${data.vehicleModel}`,
+        period: `${data.startDate} - ${data.endDate}`,
+        price: data.totalPrice 
+      });
+      
+      if (!process.env.RESEND_API_KEY) {
+        console.error('❌ RESEND_API_KEY não está configurado!');
+        return false;
+      }
+
+      const result = await resend.emails.send({
         from: this.fromEmail,
         to: data.renterEmail,
         subject: `Reserva Confirmada - ${data.vehicleBrand} ${data.vehicleModel}`,
         html: this.generateRenterConfirmationEmail(data)
       });
-      console.log('✅ E-mail enviado para locatário com sucesso');
+      
+      console.log('✅ E-mail enviado para locatário com sucesso. ID:', result.data?.id);
       return true;
     } catch (error) {
       console.error('❌ Erro ao enviar e-mail para locatário:', error);
+      console.error('❌ Detalhes do erro:', JSON.stringify(error, null, 2));
       return false;
     }
   }
@@ -43,16 +57,31 @@ export class EmailService {
   async sendBookingNotificationToOwner(data: BookingEmailData): Promise<boolean> {
     try {
       console.log('📧 Enviando e-mail para proprietário:', data.ownerEmail);
-      await resend.emails.send({
+      console.log('📧 Dados do e-mail:', { 
+        bookingId: data.bookingId, 
+        vehicle: `${data.vehicleBrand} ${data.vehicleModel}`,
+        renter: data.renterName,
+        period: `${data.startDate} - ${data.endDate}`,
+        price: data.totalPrice 
+      });
+      
+      if (!process.env.RESEND_API_KEY) {
+        console.error('❌ RESEND_API_KEY não está configurado!');
+        return false;
+      }
+
+      const result = await resend.emails.send({
         from: this.fromEmail,
         to: data.ownerEmail,
         subject: `Nova Reserva - ${data.vehicleBrand} ${data.vehicleModel}`,
         html: this.generateOwnerNotificationEmail(data)
       });
-      console.log('✅ E-mail enviado para proprietário com sucesso');
+      
+      console.log('✅ E-mail enviado para proprietário com sucesso. ID:', result.data?.id);
       return true;
     } catch (error) {
       console.error('❌ Erro ao enviar e-mail para proprietário:', error);
+      console.error('❌ Detalhes do erro:', JSON.stringify(error, null, 2));
       return false;
     }
   }
