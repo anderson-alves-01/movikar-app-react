@@ -2094,16 +2094,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Vehicle routes - simplified to avoid Drizzle issues
   app.get("/api/vehicles", async (req, res) => {
     try {
-      const { category, location, minPrice, maxPrice } = req.query;
+      const { 
+        category, 
+        location, 
+        minPrice, 
+        maxPrice, 
+        priceRange, 
+        fuelType, 
+        transmission,
+        startDate,
+        endDate
+      } = req.query;
 
-      // Use storage layer instead of direct Drizzle queries
+      // Parse price range if provided instead of minPrice/maxPrice
+      let parsedMinPrice, parsedMaxPrice;
+      if (priceRange && priceRange !== '') {
+        const range = priceRange as string;
+        if (range === '0-100') {
+          parsedMinPrice = 0;
+          parsedMaxPrice = 100;
+        } else if (range === '100-200') {
+          parsedMinPrice = 100;
+          parsedMaxPrice = 200;
+        } else if (range === '200-300') {
+          parsedMinPrice = 200;
+          parsedMaxPrice = 300;
+        } else if (range === '200+') {
+          parsedMinPrice = 200;
+        } else if (range === '300+') {
+          parsedMinPrice = 300;
+        }
+      } else {
+        // Fallback to individual minPrice/maxPrice
+        parsedMinPrice = minPrice ? parseFloat(minPrice as string) : undefined;
+        parsedMaxPrice = maxPrice ? parseFloat(maxPrice as string) : undefined;
+      }
+
+      // Use storage layer with enhanced filters
       const filters = {
         category: category as string || undefined,
         location: location as string || undefined,
-        minPrice: minPrice ? parseFloat(minPrice as string) : undefined,
-        maxPrice: maxPrice ? parseFloat(maxPrice as string) : undefined
+        minPrice: parsedMinPrice,
+        maxPrice: parsedMaxPrice,
+        fuelType: fuelType as string || undefined,
+        transmission: transmission as string || undefined,
+        startDate: startDate ? new Date(startDate as string) : undefined,
+        endDate: endDate ? new Date(endDate as string) : undefined
       };
 
+      console.log('🔍 Vehicle search filters:', filters);
       const vehiclesData = await storage.searchVehicles(filters);
       res.json(vehiclesData);
     } catch (error) {

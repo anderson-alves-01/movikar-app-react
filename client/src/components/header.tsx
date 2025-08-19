@@ -28,6 +28,12 @@ export default function Header() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  
+  // Advanced filter states
+  const [category, setCategory] = useState("");
+  const [priceRange, setPriceRange] = useState("");
+  const [fuelType, setFuelType] = useState("");
+  const [transmission, setTransmission] = useState("");
 
   const { user, token, clearAuth } = useAuthStore();
   const { updateFilter, clearFilters } = useSearch();
@@ -86,7 +92,33 @@ export default function Header() {
     setSearchLocation("");
     setStartDate("");
     setEndDate("");
+    setCategory("");
+    setPriceRange("");
+    setFuelType("");
+    setTransmission("");
     clearFilters();
+  };
+
+  const handleSearch = () => {
+    // Apply all filters including advanced ones
+    updateFilter('location', searchLocation);
+    updateFilter('startDate', startDate);
+    updateFilter('endDate', endDate);
+    updateFilter('category', category);
+    updateFilter('priceRange', priceRange);
+    updateFilter('fuelType', fuelType);
+    updateFilter('transmission', transmission);
+    
+    // Scroll to results
+    setTimeout(() => {
+      const resultadosSection = document.getElementById('resultados');
+      if (resultadosSection) {
+        resultadosSection.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    }, 100);
   };
 
   return (
@@ -144,22 +176,7 @@ export default function Header() {
               <Button 
                 size="sm" 
                 className="ml-4 bg-primary text-white hover:bg-red-600 px-4 py-1"
-                onClick={() => {
-                  updateFilter('location', searchLocation);
-                  updateFilter('startDate', startDate);
-                  updateFilter('endDate', endDate);
-                  
-                  // Scroll to results
-                  setTimeout(() => {
-                    const resultadosSection = document.getElementById('resultados');
-                    if (resultadosSection) {
-                      resultadosSection.scrollIntoView({ 
-                        behavior: 'smooth',
-                        block: 'start'
-                      });
-                    }
-                  }, 100);
-                }}
+                onClick={handleSearch}
               >
                 <Search className="h-4 w-4" />
               </Button>
@@ -405,21 +422,8 @@ export default function Header() {
                     size="sm" 
                     className="flex-1 bg-primary text-white hover:bg-red-600"
                     onClick={() => {
-                      updateFilter('location', searchLocation);
-                      updateFilter('startDate', startDate);
-                      updateFilter('endDate', endDate);
+                      handleSearch();
                       setShowSearch(false);
-                      
-                      // Scroll to results
-                      setTimeout(() => {
-                        const resultadosSection = document.getElementById('resultados');
-                        if (resultadosSection) {
-                          resultadosSection.scrollIntoView({ 
-                            behavior: 'smooth',
-                            block: 'start'
-                          });
-                        }
-                      }, 100);
                     }}
                   >
                     <Search className="h-4 w-4 mr-2" />
@@ -447,38 +451,57 @@ export default function Header() {
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <label className="block text-xs font-medium text-gray-700 mb-1">Categoria</label>
-                        <select className="w-full p-2 border border-gray-300 rounded-md text-sm">
-                          <option>Todas</option>
-                          <option>Sedã</option>
-                          <option>SUV</option>
-                          <option>Hatch</option>
+                        <select 
+                          className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                          value={category}
+                          onChange={(e) => setCategory(e.target.value)}
+                        >
+                          <option value="">Todas</option>
+                          <option value="Sedã">Sedã</option>
+                          <option value="SUV">SUV</option>
+                          <option value="Hatch">Hatch</option>
+                          <option value="Picape">Picape</option>
                         </select>
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-700 mb-1">Preço/dia</label>
-                        <select className="w-full p-2 border border-gray-300 rounded-md text-sm">
-                          <option>Qualquer</option>
-                          <option>Até R$ 100</option>
-                          <option>R$ 100-200</option>
-                          <option>R$ 200+</option>
+                        <select 
+                          className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                          value={priceRange}
+                          onChange={(e) => setPriceRange(e.target.value)}
+                        >
+                          <option value="">Qualquer</option>
+                          <option value="0-100">Até R$ 100</option>
+                          <option value="100-200">R$ 100-200</option>
+                          <option value="200+">R$ 200+</option>
                         </select>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <label className="block text-xs font-medium text-gray-700 mb-1">Combustível</label>
-                        <select className="w-full p-2 border border-gray-300 rounded-md text-sm">
-                          <option>Qualquer</option>
-                          <option>Flex</option>
-                          <option>Gasolina</option>
+                        <select 
+                          className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                          value={fuelType}
+                          onChange={(e) => setFuelType(e.target.value)}
+                        >
+                          <option value="">Qualquer</option>
+                          <option value="Flex">Flex</option>
+                          <option value="Gasolina">Gasolina</option>
+                          <option value="Etanol">Etanol</option>
+                          <option value="Diesel">Diesel</option>
                         </select>
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-700 mb-1">Transmissão</label>
-                        <select className="w-full p-2 border border-gray-300 rounded-md text-sm">
-                          <option>Qualquer</option>
-                          <option>Automático</option>
-                          <option>Manual</option>
+                        <select 
+                          className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                          value={transmission}
+                          onChange={(e) => setTransmission(e.target.value)}
+                        >
+                          <option value="">Qualquer</option>
+                          <option value="Automático">Automático</option>
+                          <option value="Manual">Manual</option>
                         </select>
                       </div>
                     </div>
@@ -495,42 +518,74 @@ export default function Header() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
-                    <select className="w-full p-2 border border-gray-300 rounded-md text-sm">
-                      <option>Todas as categorias</option>
-                      <option>Sedã</option>
-                      <option>SUV</option>
-                      <option>Hatch</option>
-                      <option>Picape</option>
+                    <select 
+                      className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      data-testid="select-category"
+                    >
+                      <option value="">Todas as categorias</option>
+                      <option value="Sedã">Sedã</option>
+                      <option value="SUV">SUV</option>
+                      <option value="Hatch">Hatch</option>
+                      <option value="Picape">Picape</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Preço por dia</label>
-                    <select className="w-full p-2 border border-gray-300 rounded-md text-sm">
-                      <option>Qualquer preço</option>
-                      <option>Até R$ 100</option>
-                      <option>R$ 100 - R$ 200</option>
-                      <option>R$ 200 - R$ 300</option>
-                      <option>Acima de R$ 300</option>
+                    <select 
+                      className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                      value={priceRange}
+                      onChange={(e) => setPriceRange(e.target.value)}
+                      data-testid="select-price"
+                    >
+                      <option value="">Qualquer preço</option>
+                      <option value="0-100">Até R$ 100</option>
+                      <option value="100-200">R$ 100 - R$ 200</option>
+                      <option value="200-300">R$ 200 - R$ 300</option>
+                      <option value="300+">Acima de R$ 300</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Combustível</label>
-                    <select className="w-full p-2 border border-gray-300 rounded-md text-sm">
-                      <option>Qualquer</option>
-                      <option>Flex</option>
-                      <option>Gasolina</option>
-                      <option>Etanol</option>
-                      <option>Diesel</option>
+                    <select 
+                      className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                      value={fuelType}
+                      onChange={(e) => setFuelType(e.target.value)}
+                      data-testid="select-fuel"
+                    >
+                      <option value="">Qualquer</option>
+                      <option value="Flex">Flex</option>
+                      <option value="Gasolina">Gasolina</option>
+                      <option value="Etanol">Etanol</option>
+                      <option value="Diesel">Diesel</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Transmissão</label>
-                    <select className="w-full p-2 border border-gray-300 rounded-md text-sm">
-                      <option>Qualquer</option>
-                      <option>Automático</option>
-                      <option>Manual</option>
+                    <select 
+                      className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                      value={transmission}
+                      onChange={(e) => setTransmission(e.target.value)}
+                      data-testid="select-transmission"
+                    >
+                      <option value="">Qualquer</option>
+                      <option value="Automático">Automático</option>
+                      <option value="Manual">Manual</option>
                     </select>
                   </div>
+                </div>
+                
+                {/* Apply Filters Button for Desktop */}
+                <div className="mt-4 flex justify-end">
+                  <Button 
+                    size="sm" 
+                    className="bg-primary text-white hover:bg-red-600 px-6"
+                    onClick={handleSearch}
+                    data-testid="button-apply-filters"
+                  >
+                    Aplicar Filtros
+                  </Button>
                 </div>
               </div>
             </div>

@@ -38,11 +38,12 @@ export interface IStorage {
     category?: string;
     minPrice?: number;
     maxPrice?: number;
-    startDate?: Date;
-    endDate?: Date;
+    startDate?: Date | string;
+    endDate?: Date | string;
     features?: string[];
     transmission?: string;
     fuel?: string;
+    fuelType?: string;
     rating?: number;
     yearMin?: number;
     yearMax?: number;
@@ -375,11 +376,12 @@ export class DatabaseStorage implements IStorage {
     category?: string;
     minPrice?: number;
     maxPrice?: number;
-    startDate?: Date;
-    endDate?: Date;
+    startDate?: Date | string;
+    endDate?: Date | string;
     features?: string[];
     transmission?: string;
     fuel?: string;
+    fuelType?: string;
     rating?: number;
     yearMin?: number;
     yearMax?: number;
@@ -416,6 +418,20 @@ export class DatabaseStorage implements IStorage {
       if (filters.maxPrice) {
         whereConditions.push(`v.price_per_day <= $${paramIndex}`);
         params.push(filters.maxPrice);
+        paramIndex++;
+      }
+
+      // New advanced filters
+      if (filters.transmission) {
+        whereConditions.push(`v.transmission = $${paramIndex}`);
+        params.push(filters.transmission);
+        paramIndex++;
+      }
+
+      if (filters.fuelType || filters.fuel) {
+        const fuelValue = filters.fuelType || filters.fuel;
+        whereConditions.push(`v.fuel = $${paramIndex}`);
+        params.push(fuelValue);
         paramIndex++;
       }
 
