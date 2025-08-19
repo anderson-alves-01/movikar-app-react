@@ -19,6 +19,14 @@ import { db, pool } from "./db";
 import { eq, and, gte, lte, desc, asc, or, like, ilike, sql, lt, ne, inArray, not, isNull } from "drizzle-orm";
 import { getTableColumns } from "drizzle-orm";
 
+export interface BookingFilters {
+  userId?: number;
+  vehicleId?: number;
+  status?: string;
+  startDate?: Date;
+  endDate?: Date;
+}
+
 export interface IStorage {
   // Users
   getUser(id: number): Promise<User | undefined>;
