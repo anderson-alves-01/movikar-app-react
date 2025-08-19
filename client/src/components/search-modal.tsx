@@ -3,6 +3,7 @@ import { Search, Clock, Bookmark, X, ArrowLeft, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSearch } from "@/contexts/SearchContext";
+import { useLocation } from "wouter";
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const { updateFilter, category, priceRange, fuelType, transmission, filters } = useSearch();
+  const [, setLocation] = useLocation();
 
   // Load search history from localStorage
   useEffect(() => {
@@ -70,8 +72,8 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
             priceRange,
             fuelType,
             transmission,
-            startDate: filters?.startDate,
-            endDate: filters?.endDate
+            startDate: filters?.startDate ? filters.startDate.toISOString() : undefined,
+            endDate: filters?.endDate ? filters.endDate.toISOString() : undefined
           }
         };
 
@@ -88,22 +90,19 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
         updateFilter('location', query.trim());
       }
       
-      // Navigate to vehicles page if not already there
-      const currentPath = window.location.pathname;
-      if (currentPath === '/' || currentPath === '/home') {
-        window.location.href = '/#resultados';
-      } else {
-        // Scroll to results if already on vehicles page
-        setTimeout(() => {
-          const resultadosSection = document.getElementById('resultados') || document.querySelector('[data-testid="vehicles-grid"]');
-          if (resultadosSection) {
-            resultadosSection.scrollIntoView({ 
-              behavior: 'smooth',
-              block: 'start'
-            });
-          }
-        }, 100);
-      }
+      // Always redirect to home page to show results
+      setLocation('/');
+      
+      // Scroll to results after navigation
+      setTimeout(() => {
+        const resultadosSection = document.getElementById('resultados');
+        if (resultadosSection) {
+          resultadosSection.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      }, 300);
       
       onClose();
     }

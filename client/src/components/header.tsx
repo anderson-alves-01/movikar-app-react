@@ -111,7 +111,10 @@ export default function Header() {
     updateFilter('fuelType', fuelType);
     updateFilter('transmission', transmission);
     
-    // Scroll to results
+    // Always redirect to home page to show results
+    setLocation('/');
+    
+    // Scroll to results after navigation
     setTimeout(() => {
       const resultadosSection = document.getElementById('resultados');
       if (resultadosSection) {
@@ -120,7 +123,7 @@ export default function Header() {
           block: 'start'
         });
       }
-    }, 100);
+    }, 300);
   };
 
   return (
