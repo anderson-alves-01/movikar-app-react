@@ -91,7 +91,7 @@ export default function Support() {
     },
     {
       question: "Como funciona o seguro dos veículos?",
-      answer: "Todos os aluguéis contam com cobertura de seguro básico. Oferecemos também seguros adicionais para maior proteção. Consulte os detalhes antes de confirmar."
+      answer: "É recomendado que o proprietario possua seguro próprio para evitar transtornos."
     },
     {
       question: "Posso cancelar minha reserva?",
@@ -99,7 +99,7 @@ export default function Support() {
     },
     {
       question: "Como funciona a vistoria do veículo?",
-      answer: "Antes e após o aluguel, realizamos vistoria digital através do app, documentando o estado do veículo para proteger locatário e proprietário."
+      answer: "Antes e após o aluguel, é recomendado que,  a vistoria seja realizada documentando o estado do veículo para proteger locatário e proprietário."
     },
     {
       question: "Problemas com pagamento - o que fazer?",
