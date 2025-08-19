@@ -992,47 +992,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const booking = await storage.createBooking(bookingData);
 
-      // Import email service
-      const { sendRentNowNotification, sendRentRequestConfirmation } = await import('./services/emailService.js');
-
-      // Send notification email to owner
-      const ownerEmailSent = await sendRentNowNotification({
-        ownerName: owner.name,
-        ownerEmail: owner.email,
-        renterName: renter.name,
-        renterEmail: renter.email,
+      // Send notification emails using the existing emailService
+      const emailData: BookingEmailData = {
+        bookingId: booking.id.toString(),
         vehicleBrand: vehicle.brand,
         vehicleModel: vehicle.model,
-        vehicleYear: vehicle.year,
-        startDate: startDate,
-        endDate: endDate,
-        totalPrice: totalPrice.toString(),
-        bookingId: booking.id.toString()
-      });
-
-      // Send confirmation email to renter
-      const renterEmailSent = await sendRentRequestConfirmation({
-        renterName: renter.name,
+        startDate: startDateObj.toLocaleDateString('pt-BR'),
+        endDate: endDateObj.toLocaleDateString('pt-BR'),
+        totalPrice: parseFloat(totalPrice.toString()),
+        renterName: renter.name || renter.email,
         renterEmail: renter.email,
-        ownerName: owner.name,
-        vehicleBrand: vehicle.brand,
-        vehicleModel: vehicle.model,
-        vehicleYear: vehicle.year,
-        startDate: startDate,
-        endDate: endDate,
-        totalPrice: totalPrice.toString(),
-        bookingId: booking.id.toString()
-      });
+        ownerName: owner.name || owner.email,
+        ownerEmail: owner.email
+      };
 
-      console.log(`📧 Rent now emails: Owner=${ownerEmailSent ? '✅' : '❌'}, Renter=${renterEmailSent ? '✅' : '❌'}`);
+      // Send emails asynchronously (don't block the response)
+      Promise.all([
+        emailService.sendBookingConfirmationToRenter(emailData),
+        emailService.sendBookingNotificationToOwner(emailData)
+      ]).catch(error => {
+        console.error('Erro ao enviar e-mails de confirmação:', error);
+      });
 
       res.json({ 
         booking,
         message: "Solicitação enviada com sucesso! O proprietário tem 24h para responder.",
-        emailsSent: {
-          owner: ownerEmailSent,
-          renter: renterEmailSent
-        }
+        emailsSent: true
       });
 
     } catch (error) {
