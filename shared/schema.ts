@@ -1286,6 +1286,8 @@ export type BookingWithDetails = Booking & {
   vehicle: Vehicle;
   renter: User;
   owner: User;
+  inspection?: VehicleInspection;
+  ownerInspection?: OwnerInspection;
 };
 
 export type ContractWithDetails = Contract & {

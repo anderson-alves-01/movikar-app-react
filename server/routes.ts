@@ -2375,11 +2375,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('📋 Bookings fetched:', bookings.length);
       bookings.forEach(booking => {
-        console.log(`📋 Booking ${booking.id}: ownerInspection=${!!booking.ownerInspection}, status=${booking.status}`);
-        if (booking.ownerInspection) {
+        console.log(`📋 Booking ${booking.id}: status=${booking.status}`);
+        // Check if ownerInspection exists before accessing properties
+        if ((booking as any).ownerInspection) {
           console.log(`📋 Owner inspection for booking ${booking.id}:`, {
-            status: booking.ownerInspection.status,
-            depositDecision: booking.ownerInspection.depositDecision
+            status: (booking as any).ownerInspection.status,
+            depositDecision: (booking as any).ownerInspection.depositDecision
           });
         }
       });
@@ -2409,10 +2410,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Acesso negado" });
       }
 
-      if (includeInspections && booking.ownerInspection) {
+      if (includeInspections && (booking as any).ownerInspection) {
         console.log(`📋 Owner inspection for booking ${booking.id}:`, {
-          status: booking.ownerInspection.status,
-          depositDecision: booking.ownerInspection.depositDecision
+          status: (booking as any).ownerInspection.status,
+          depositDecision: (booking as any).ownerInspection.depositDecision
         });
       }
 
