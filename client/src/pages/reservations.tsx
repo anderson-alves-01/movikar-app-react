@@ -837,9 +837,12 @@ export default function Reservations() {
                     {selectedBooking.status === "rejected" && "Rejeitado"}
                     {selectedBooking.status === "completed" && "Concluído"}
                   </Badge>
-                  <Badge variant="outline">
-                    Pagamento: {selectedBooking.paymentStatus === 'paid' || selectedBooking.paymentStatus === 'completed' ? 'Pago' : 'Pendente'}
-                  </Badge>
+                  {/* Mostrar status de pagamento apenas quando checkout estiver habilitado */}
+                  {featureToggles?.enableRentNowCheckout && (
+                    <Badge variant="outline">
+                      Pagamento: {selectedBooking.paymentStatus === 'paid' || selectedBooking.paymentStatus === 'completed' ? 'Pago' : 'Pendente'}
+                    </Badge>
+                  )}
                 </div>
               </div>
 
