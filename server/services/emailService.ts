@@ -16,34 +16,43 @@ export interface BookingEmailData {
 }
 
 export class EmailService {
+  constructor() {
+    if (!process.env.RESEND_API_KEY) {
+      console.warn('⚠️ RESEND_API_KEY não configurado - e-mails não serão enviados');
+    }
+  }
   private fromEmail = 'suporte@alugae.mobi';
 
   async sendBookingConfirmationToRenter(data: BookingEmailData): Promise<boolean> {
     try {
+      console.log('📧 Enviando e-mail para locatário:', data.renterEmail);
       await resend.emails.send({
         from: this.fromEmail,
         to: data.renterEmail,
         subject: `Reserva Confirmada - ${data.vehicleBrand} ${data.vehicleModel}`,
         html: this.generateRenterConfirmationEmail(data)
       });
+      console.log('✅ E-mail enviado para locatário com sucesso');
       return true;
     } catch (error) {
-      console.error('Erro ao enviar e-mail para locatário:', error);
+      console.error('❌ Erro ao enviar e-mail para locatário:', error);
       return false;
     }
   }
 
   async sendBookingNotificationToOwner(data: BookingEmailData): Promise<boolean> {
     try {
+      console.log('📧 Enviando e-mail para proprietário:', data.ownerEmail);
       await resend.emails.send({
         from: this.fromEmail,
         to: data.ownerEmail,
         subject: `Nova Reserva - ${data.vehicleBrand} ${data.vehicleModel}`,
         html: this.generateOwnerNotificationEmail(data)
       });
+      console.log('✅ E-mail enviado para proprietário com sucesso');
       return true;
     } catch (error) {
-      console.error('Erro ao enviar e-mail para proprietário:', error);
+      console.error('❌ Erro ao enviar e-mail para proprietário:', error);
       return false;
     }
   }

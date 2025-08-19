@@ -99,13 +99,20 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
       return response.json();
     },
     onSuccess: (data) => {
+      console.log('✅ Rent now success:', data);
       toast({
         title: "Solicitação enviada!",
         description: `${data.message} Emails foram enviados para você e o proprietário.`,
       });
       queryClient.invalidateQueries({ queryKey: ['/api/bookings'] });
+      
+      // Redirect to profile/bookings page after successful request
+      setTimeout(() => {
+        window.location.href = '/profile?tab=bookings';
+      }, 2000);
     },
     onError: (error: any) => {
+      console.error('❌ Rent now error:', error);
       toast({
         title: "Erro",
         description: error.message || "Falha ao enviar solicitação",

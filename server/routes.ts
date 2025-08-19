@@ -939,10 +939,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // New "Rent Now" API - Creates booking with pending status and sends emails
   app.post("/api/rent-now", authenticateToken, async (req, res) => {
     try {
+      console.log('📝 Rent now request received:', req.body);
       const { vehicleId, startDate, endDate, totalPrice, serviceFee, insuranceFee, securityDeposit, includeInsurance } = req.body;
 
       // Validate required fields
       if (!vehicleId || !startDate || !endDate || !totalPrice) {
+        console.log('❌ Missing required fields:', { vehicleId, startDate, endDate, totalPrice });
         return res.status(400).json({ message: "Dados obrigatórios: vehicleId, startDate, endDate, totalPrice" });
       }
 
@@ -991,6 +993,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       const booking = await storage.createBooking(bookingData);
+      console.log('✅ Booking created successfully:', booking.id);
 
       // Send notification emails using the existing emailService
       const emailData: BookingEmailData = {
@@ -1007,11 +1010,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       // Send emails asynchronously (don't block the response)
+      console.log('📧 Iniciando envio de e-mails:', emailData);
       Promise.all([
         emailService.sendBookingConfirmationToRenter(emailData),
         emailService.sendBookingNotificationToOwner(emailData)
-      ]).catch(error => {
-        console.error('Erro ao enviar e-mails de confirmação:', error);
+      ]).then(() => {
+        console.log('✅ Todos os e-mails foram enviados com sucesso');
+      }).catch(error => {
+        console.error('❌ Erro ao enviar e-mails de confirmação:', error);
       });
 
       res.json({ 
