@@ -91,15 +91,15 @@ export default function Header() {
   return (
     <>
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+          <div className="flex justify-between items-center h-14 sm:h-16">
             {/* Logo */}
             <Link href="/">
               <div className="flex items-center cursor-pointer">
                 <img 
                   src="/logo.png" 
                   alt="ALUGAE" 
-                  className="h-10 w-auto mr-2 min-h-[40px] object-contain"
+                  className="h-8 sm:h-10 w-auto mr-1 sm:mr-2 min-h-[32px] sm:min-h-[40px] object-contain"
                   style={{ imageRendering: 'crisp-edges' }}
                   onError={(e) => {
                     // Fallback para texto se imagem não carregar
@@ -165,15 +165,15 @@ export default function Header() {
             </div>
 
             {/* Right Side */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-1 sm:space-x-4">
               {/* Mobile Search */}
               <Button
                 variant="ghost"
                 size="sm"
-                className="md:hidden"
+                className="md:hidden p-2"
                 onClick={() => setShowSearch(!showSearch)}
               >
-                <Search className="h-5 w-5" />
+                <Search className="h-4 w-4" />
               </Button>
 
               {user ? (
@@ -184,13 +184,13 @@ export default function Header() {
                       variant="default"
                       size="sm"
                       title="Fazer upgrade do plano"
-                      className="hidden sm:flex bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white border-0 shadow-md"
+                      className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white border-0 shadow-md p-2"
                     >
                       <Crown className="h-4 w-4" />
                     </Button>
                   </Link>
 
-                  {/* Add Vehicle Button */}
+                  {/* Add Vehicle Button - Hidden on mobile */}
                   <Link href="/vehicles">
                     <Button
                       variant="outline"
@@ -208,13 +208,13 @@ export default function Header() {
                       variant="ghost" 
                       size="sm" 
                       title="Ver mensagens"
-                      className="relative"
+                      className="relative p-2"
                     >
-                      <Bell className="h-5 w-5 text-gray-600" />
+                      <Bell className="h-4 w-4 text-gray-600" />
                       {unreadCount > 0 && (
                         <Badge 
                           variant="destructive" 
-                          className="absolute -top-2 -right-2 px-1.5 py-0.5 text-xs min-w-[1.25rem] h-5 flex items-center justify-center rounded-full"
+                          className="absolute -top-1 -right-1 px-1 py-0.5 text-xs min-w-[1rem] h-4 flex items-center justify-center rounded-full"
                         >
                           {unreadCount > 99 ? '99+' : unreadCount}
                         </Badge>
@@ -227,14 +227,14 @@ export default function Header() {
                     <DropdownMenuTrigger asChild>
                       <Button 
                         variant="ghost" 
-                        className="flex items-center space-x-2 bg-white border border-gray-300 rounded-full px-3 py-2 hover:shadow-md transition-shadow"
+                        className="flex items-center space-x-1 sm:space-x-2 bg-white border border-gray-300 rounded-full px-2 sm:px-3 py-2 hover:shadow-md transition-shadow"
                         data-testid="header-user-menu"
                       >
                         <Menu className="h-4 w-4 text-gray-600" />
-                        <Avatar className="h-8 w-8">
+                        <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
                           <AvatarImage src={user.avatar} />
                           <AvatarFallback>
-                            <User className="h-4 w-4" />
+                            <User className="h-3 w-3 sm:h-4 sm:w-4" />
                           </AvatarFallback>
                         </Avatar>
                       </Button>
@@ -315,19 +315,9 @@ export default function Header() {
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link href="/support" className="cursor-pointer">
-                          <HelpCircle className="h-4 w-4 mr-2" />
+                          <Shield className="h-4 w-4 mr-2" />
                           Suporte & FAQ
                         </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => {
-                          console.log('🎯 Tutorial button clicked in menu!');
-                          startOnboarding();
-                        }} 
-                        data-testid="button-start-tutorial-menu"
-                      >
-                        <HelpCircle className="h-4 w-4 mr-2" />
-                        Iniciar tutorial
                       </DropdownMenuItem>
                       {user.role === 'admin' && (
                         <>
