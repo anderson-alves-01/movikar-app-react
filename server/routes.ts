@@ -2778,14 +2778,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/bookings/pending-reviews", authenticateToken, async (req, res) => {
     try {
       const userId = req.user!.id;
+      console.log(`🔍 Fetching pending reviews for user ${userId}`);
       
       // Buscar reservas finalizadas do usuário que ainda não foram avaliadas
       const bookings = await storage.getBookingsPendingReview(userId);
       
+      console.log(`🔍 Found ${bookings.length} pending reviews for user ${userId}`);
       res.json(bookings);
     } catch (error) {
-      console.error("Get pending reviews error:", error);
-      res.status(500).json({ message: "Falha ao buscar reservas para avaliação" });
+      console.error("❌ Get pending reviews error:", error);
+      console.error("❌ Error stack:", error instanceof Error ? error.stack : 'Unknown error');
+      res.status(500).json({ 
+        message: "Falha ao buscar reservas para avaliação",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  // Endpoint de teste simples
+  app.get("/api/bookings/pending-reviews/test", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      console.log(`🧪 Test endpoint called for user ${userId}`);
+      
+      // Testar busca simples de reservas
+      const bookings = await db
+        .select()
+        .from(bookings)
+        .where(eq(bookings.renterId, userId))
+        .limit(5);
+      
+      res.json({ 
+        message: "Test endpoint working",
+        userId,
+        bookingsCount: bookings.length,
+        bookings
+      });
+    } catch (error) {
+      console.error("❌ Test endpoint error:", error);
+      res.status(500).json({ message: "Test failed", error: error.message });
     }
   });
 
