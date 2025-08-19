@@ -191,6 +191,22 @@ export default function Header() {
                 <Search className="h-5 w-5" />
               </Button>
 
+              {/* Tutorial Button - Always visible */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  console.log('🎯 Tutorial button clicked!');
+                  startOnboarding();
+                }}
+                data-testid="button-start-tutorial"
+                title="Iniciar tutorial interativo"
+                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+              >
+                <HelpCircle className="h-4 w-4 mr-1" />
+                <span className="hidden sm:inline">Tutorial</span>
+              </Button>
+
               {user ? (
                 <>
                   {/* Subscription Button */}
@@ -343,10 +359,10 @@ export default function Header() {
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => {
-                          console.log('🎯 Tutorial button clicked!');
+                          console.log('🎯 Tutorial button clicked in menu!');
                           startOnboarding();
                         }} 
-                        data-testid="button-start-tutorial"
+                        data-testid="button-start-tutorial-menu"
                       >
                         <HelpCircle className="h-4 w-4 mr-2" />
                         Iniciar tutorial
