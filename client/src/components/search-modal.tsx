@@ -343,8 +343,9 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="opacity-0 group-hover:opacity-100 p-1"
+                      className="opacity-100 md:opacity-0 md:group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500"
                       onClick={() => removeFromHistory(item.id)}
+                      data-testid={`button-remove-history-${item.id}`}
                     >
                       <X className="h-4 w-4" />
                     </Button>
