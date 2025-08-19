@@ -21,11 +21,11 @@ export class EmailService {
       console.warn('⚠️ RESEND_API_KEY não configurado - e-mails não serão enviados');
     }
   }
-  private fromEmail = 'suporte@alugae.mobi';
+  private fromEmail = 'onboarding@resend.dev'; // Domínio verificado do Resend para testes
 
   async sendBookingConfirmationToRenter(data: BookingEmailData): Promise<boolean> {
     try {
-      console.log('📧 Enviando e-mail para locatário:', data.renterEmail);
+      console.log('📧 Tentativa de envio de e-mail para locatário:', data.renterEmail);
       console.log('📧 Dados do e-mail:', { 
         bookingId: data.bookingId, 
         vehicle: `${data.vehicleBrand} ${data.vehicleModel}`,
@@ -38,14 +38,19 @@ export class EmailService {
         return false;
       }
 
+      // Para desenvolvimento, usar email do proprietário da conta Resend
+      const testEmail = 'asouzamax@gmail.com';
+      console.log(`📧 Modo de desenvolvimento: enviando para ${testEmail} ao invés de ${data.renterEmail}`);
+
       const result = await resend.emails.send({
         from: this.fromEmail,
-        to: data.renterEmail,
-        subject: `Reserva Confirmada - ${data.vehicleBrand} ${data.vehicleModel}`,
+        to: testEmail,
+        subject: `[TESTE] Reserva Confirmada - ${data.vehicleBrand} ${data.vehicleModel}`,
         html: this.generateRenterConfirmationEmail(data)
       });
       
       console.log('✅ E-mail enviado para locatário com sucesso. ID:', result.data?.id);
+      console.log('📧 Email original seria para:', data.renterEmail);
       return true;
     } catch (error) {
       console.error('❌ Erro ao enviar e-mail para locatário:', error);
@@ -56,7 +61,7 @@ export class EmailService {
 
   async sendBookingNotificationToOwner(data: BookingEmailData): Promise<boolean> {
     try {
-      console.log('📧 Enviando e-mail para proprietário:', data.ownerEmail);
+      console.log('📧 Tentativa de envio de e-mail para proprietário:', data.ownerEmail);
       console.log('📧 Dados do e-mail:', { 
         bookingId: data.bookingId, 
         vehicle: `${data.vehicleBrand} ${data.vehicleModel}`,
@@ -70,14 +75,19 @@ export class EmailService {
         return false;
       }
 
+      // Para desenvolvimento, usar email do proprietário da conta Resend
+      const testEmail = 'asouzamax@gmail.com';
+      console.log(`📧 Modo de desenvolvimento: enviando para ${testEmail} ao invés de ${data.ownerEmail}`);
+
       const result = await resend.emails.send({
         from: this.fromEmail,
-        to: data.ownerEmail,
-        subject: `Nova Reserva - ${data.vehicleBrand} ${data.vehicleModel}`,
+        to: testEmail,
+        subject: `[TESTE] Nova Reserva - ${data.vehicleBrand} ${data.vehicleModel}`,
         html: this.generateOwnerNotificationEmail(data)
       });
       
       console.log('✅ E-mail enviado para proprietário com sucesso. ID:', result.data?.id);
+      console.log('📧 Email original seria para:', data.ownerEmail);
       return true;
     } catch (error) {
       console.error('❌ Erro ao enviar e-mail para proprietário:', error);
