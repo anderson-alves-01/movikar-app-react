@@ -142,6 +142,8 @@ export function InteractiveTooltip({
     onSkip();
   };
 
+  console.log('🎯 InteractiveTooltip render:', { isActive, steps: steps.length, currentStep, hasStepData: !!currentStepData });
+  
   if (!isActive || !currentStepData) return null;
 
   const getTooltipStyle = () => {
@@ -336,9 +338,10 @@ export function useOnboarding() {
   }, []);
 
   const startOnboarding = () => {
-    console.log('🚀 Starting onboarding...');
+    console.log('🚀 Starting onboarding...', { current: isOnboardingActive });
     setIsOnboardingActive(true);
     setHasSeenOnboarding(true);
+    console.log('🚀 Onboarding state updated to active');
   };
 
   const completeOnboarding = () => {
