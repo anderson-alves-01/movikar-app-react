@@ -4903,7 +4903,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const publicToggles = {
         enableRentNowCheckout: dbSettings?.enableRentNowCheckout || false,
         enableInsuranceOption: dbSettings?.enableInsuranceOption || false,
-        enableServiceFee: dbSettings?.enableServiceFee === true
+        enableServiceFee: dbSettings?.enableServiceFee === true,
+        contractSignatureEnabled: dbSettings?.enableContractSignature || false
       };
       
       console.log("🔧 Public feature toggles:", publicToggles);

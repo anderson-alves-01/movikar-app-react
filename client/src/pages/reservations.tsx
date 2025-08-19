@@ -129,6 +129,20 @@ export default function Reservations() {
     gcTime: 0,
   });
 
+  // Fetch feature toggles to check if contract signature is enabled
+  const { data: featureToggles } = useQuery({
+    queryKey: ['/api/public/feature-toggles'],
+    queryFn: async () => {
+      const response = await fetch('/api/public/feature-toggles');
+      if (!response.ok) {
+        throw new Error('Failed to fetch feature toggles');
+      }
+      return response.json();
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    retry: false
+  });
+
   // Auto-refresh functionality
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -829,7 +843,8 @@ export default function Reservations() {
                 </div>
               </div>
 
-              {/* Contratos */}
+              {/* Contratos - Only show when digital signature is enabled */}
+              {featureToggles?.contractSignatureEnabled && (
               <div>
                 <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
                   <FileText className="w-4 h-4 mr-2" />
@@ -910,6 +925,7 @@ export default function Reservations() {
                   </div>
                 )}
               </div>
+              )}
 
               {/* Detalhes da Vistoria */}
               {(() => {
