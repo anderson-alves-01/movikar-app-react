@@ -286,6 +286,12 @@ export default function Auth() {
       acceptTerms: false,
       requiresCNH: false,
     });
+
+    // Scroll to top of page smoothly
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
   };
 
   return (
