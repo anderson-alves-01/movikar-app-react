@@ -27,15 +27,7 @@ export default function HeroSection() {
             </p>
           </div>
 
-          {/* Hero Call-to-Action */}
-          <div className="bg-black bg-opacity-30 backdrop-blur-sm rounded-2xl p-8 max-w-3xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
-              Use a busca no topo da página para encontrar carros disponíveis
-            </h2>
-            <p className="text-lg text-gray-300">
-              Digite sua localização e selecione as datas para ver todos os veículos disponíveis perto de você
-            </p>
-          </div>
+
 
           {/* Value Propositions */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16 feature-cards">
