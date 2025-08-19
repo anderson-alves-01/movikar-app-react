@@ -38,6 +38,30 @@ export default function Support() {
   });
   const { toast } = useToast();
 
+  // Handle support channel actions
+  const handleChannelAction = (channelTitle: string) => {
+    switch (channelTitle) {
+      case "Chat Online":
+        // Placeholder for chat functionality - could integrate with Intercom, Zendesk, etc.
+        toast({
+          title: "Chat em desenvolvimento",
+          description: "Em breve você poderá conversar conosco pelo chat online!",
+        });
+        break;
+      case "E-mail":
+        window.open("mailto:suporte@alugae.mobi?subject=Suporte alugae.mobi", "_blank");
+        break;
+      case "WhatsApp":
+        const whatsappNumber = "5561995098662";
+        const message = "Olá! Preciso de ajuda com o alugae.mobi";
+        const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, "_blank");
+        break;
+      default:
+        break;
+    }
+  };
+
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -128,7 +152,7 @@ export default function Support() {
     {
       icon: Phone,
       title: "WhatsApp",
-      description: "+55 (11) 99999-9999",
+      description: "+55 (61) 99509-8662",
       availability: "Seg-Sex: 8h às 22h",
       action: "Enviar Mensagem"
     }
@@ -171,7 +195,7 @@ export default function Support() {
         {/* Contact Channels */}
         <section>
           <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-            Como podemos ajudar?
+            Canais de Atendimento
           </h2>
           <div className="grid md:grid-cols-3 gap-6">
             {supportChannels.map((channel, index) => (
@@ -187,7 +211,11 @@ export default function Support() {
                       <Clock className="h-4 w-4 mr-2" />
                       {channel.availability}
                     </div>
-                    <Button className="w-full" data-testid={`button-${channel.action.toLowerCase().replace(/\s+/g, '-')}`}>
+                    <Button 
+                      className="w-full" 
+                      onClick={() => handleChannelAction(channel.title)}
+                      data-testid={`button-${channel.action.toLowerCase().replace(/\s+/g, '-')}`}
+                    >
                       {channel.action}
                     </Button>
                   </div>
