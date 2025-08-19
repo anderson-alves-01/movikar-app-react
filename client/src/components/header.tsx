@@ -18,12 +18,14 @@ import { buildSearchParams } from "@/lib/searchUtils";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import type { AdminSettings } from "@shared/admin-settings";
+import SearchModal from "./search-modal";
 
 // import AddVehicleModal from "./add-vehicle-modal";
 
 export default function Header() {
   const [, setLocation] = useLocation();
   const [showSearch, setShowSearch] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
   const [searchLocation, setSearchLocation] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -148,60 +150,14 @@ export default function Header() {
             </Link>
 
             {/* Search Bar (Desktop) */}
-            <div className="hidden md:flex items-center bg-white border border-gray-300 rounded-full shadow-sm hover:shadow-md transition-shadow duration-200 px-4 py-2">
-              <Input 
-                type="text" 
-                placeholder="Onde?" 
-                value={searchLocation}
-                className="border-none outline-none text-sm font-medium text-gray-800 bg-transparent w-32 focus-visible:ring-0" 
-                onChange={(e) => setSearchLocation(e.target.value)}
-                data-testid="input-search-header"
-              />
-              <div className="border-l border-gray-300 h-6 mx-4"></div>
-              <Input 
-                type="date" 
-                value={startDate}
-                placeholder="Check-in"
-                className="border-none outline-none text-sm text-gray-600 bg-transparent focus-visible:ring-0" 
-                onChange={(e) => setStartDate(e.target.value)}
-              />
-              <div className="border-l border-gray-300 h-6 mx-4"></div>
-              <Input 
-                type="date" 
-                value={endDate}
-                placeholder="Check-out"
-                className="border-none outline-none text-sm text-gray-600 bg-transparent focus-visible:ring-0" 
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-              <Button 
-                size="sm" 
-                className="ml-4 bg-primary text-white hover:bg-red-600 px-4 py-1"
-                onClick={handleSearch}
-              >
-                <Search className="h-4 w-4" />
-              </Button>
-              
-              {/* Advanced Filters Toggle */}
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="ml-2 text-gray-600 hover:text-gray-800"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                Filtros
-              </Button>
-              {(searchLocation || startDate || endDate) && (
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="ml-2 p-1"
-                  onClick={handleClearSearch}
-                  title="Limpar busca"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                </Button>
-              )}
+            <div 
+              className="hidden md:flex items-center bg-white border border-gray-300 rounded-full shadow-sm hover:shadow-md transition-shadow duration-200 px-4 py-2 cursor-pointer min-w-[300px]"
+              onClick={() => setShowSearchModal(true)}
+            >
+              <Search className="h-4 w-4 text-gray-400 mr-2" />
+              <span className="text-sm text-gray-500 flex-1">Buscar veículos...</span>
             </div>
+
 
             {/* Right Side */}
             <div className="flex items-center space-x-1 sm:space-x-4">
@@ -210,7 +166,8 @@ export default function Header() {
                 variant="ghost"
                 size="sm"
                 className="md:hidden p-2"
-                onClick={() => setShowSearch(!showSearch)}
+                onClick={() => setShowSearchModal(true)}
+                data-testid="button-mobile-search"
               >
                 <Search className="h-4 w-4" />
               </Button>
@@ -593,7 +550,11 @@ export default function Header() {
         </div>
       </header>
 
-
+      {/* Search Modal */}
+      <SearchModal 
+        isOpen={showSearchModal}
+        onClose={() => setShowSearchModal(false)}
+      />
     </>
   );
 }
