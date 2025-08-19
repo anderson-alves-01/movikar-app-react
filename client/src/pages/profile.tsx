@@ -638,83 +638,95 @@ export default function Profile() {
                     {ownerBookings.map((booking: any) => (
                       <Card key={booking.id} className="border border-gray-200">
                         <CardContent className="p-4">
-                          <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center space-x-4">
-                              <img
-                                src={booking.vehicle.images?.[0] || "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100"}
-                                alt={`${booking.vehicle.brand} ${booking.vehicle.model}`}
-                                className="w-16 h-16 rounded-lg object-cover"
-                              />
-                              <div>
-                                <h3 className="font-semibold text-gray-800">
-                                  {booking.vehicle.brand} {booking.vehicle.model} {booking.vehicle.year}
-                                </h3>
-                                <p className="text-sm text-gray-600">
-                                  Locatário: {booking.renter.name}
-                                </p>
-                                <p className="text-sm text-gray-600">
-                                  {formatDate(booking.startDate)} - {formatDate(booking.endDate)}
-                                </p>
+                          {/* Mobile Layout - Stack elements vertically */}
+                          <div className="space-y-4 sm:space-y-0">
+                            {/* Vehicle info and status - responsive layout */}
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                              <div className="flex items-center space-x-3 sm:space-x-4 flex-1">
+                                <img
+                                  src={booking.vehicle.images?.[0] || "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100"}
+                                  alt={`${booking.vehicle.brand} ${booking.vehicle.model}`}
+                                  className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-cover flex-shrink-0"
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="font-semibold text-gray-800 text-sm sm:text-base truncate">
+                                    {booking.vehicle.brand} {booking.vehicle.model} {booking.vehicle.year}
+                                  </h3>
+                                  <p className="text-xs sm:text-sm text-gray-600 truncate">
+                                    Locatário: {booking.renter.name}
+                                  </p>
+                                  <p className="text-xs sm:text-sm text-gray-600">
+                                    {formatDate(booking.startDate)} - {formatDate(booking.endDate)}
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              {/* Status and price - mobile optimized */}
+                              <div className="flex items-center justify-between sm:flex-col sm:items-end sm:text-right gap-2">
+                                <div className="flex-shrink-0">
+                                  {getStatusBadge(booking.status)}
+                                </div>
+                                <div className="text-base sm:text-lg font-bold text-gray-800">
+                                  {formatCurrency(booking.totalPrice)}
+                                </div>
                               </div>
                             </div>
-                            <div className="text-right">
-                              {getStatusBadge(booking.status)}
-                              <div className="text-lg font-bold text-gray-800 mt-2">
-                                {formatCurrency(booking.totalPrice)}
-                              </div>
-                            </div>
-                          </div>
 
-                          <div className="flex items-center justify-between">
-                            <div className="flex space-x-2">
-                              <Button variant="outline" size="sm" asChild>
-                                <Link href={`/vehicle/${booking.vehicle.id}`}>
-                                  Ver veículo
-                                </Link>
-                              </Button>
-                              <Button variant="outline" size="sm">
-                                <MessageCircle className="h-4 w-4 mr-2" />
-                                Conversar
-                              </Button>
-                            </div>
-
-                            {booking.status === 'pending' && (
-                              <div className="flex space-x-2">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => handleBookingAction(booking.id, 'approved')}
-                                >
-                                  <CheckCircle className="h-4 w-4 mr-2" />
-                                  Aprovar
+                            {/* Action buttons - responsive layout */}
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                              <div className="flex flex-wrap gap-2">
+                                <Button variant="outline" size="sm" asChild className="text-xs sm:text-sm">
+                                  <Link href={`/vehicle/${booking.vehicle.id}`}>
+                                    Ver veículo
+                                  </Link>
                                 </Button>
-                                <Button 
-                                  variant="destructive" 
-                                  size="sm"
-                                  onClick={() => handleBookingAction(booking.id, 'rejected')}
-                                >
-                                  <XCircle className="h-4 w-4 mr-2" />
-                                  Rejeitar
+                                <Button variant="outline" size="sm" className="text-xs sm:text-sm">
+                                  <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                  Conversar
                                 </Button>
                               </div>
-                            )}
 
-                            {/* Vistoria Button - Multiple status check for robustness */}
-                            {(['aguardando_vistoria', 'awaiting_inspection'].includes(booking.status)) && (
-                              <Button 
-                                variant="default" 
-                                size="sm"
-                                className="bg-orange-600 hover:bg-orange-700 text-white"
-                                asChild
-                              >
-                                <Link href={`/inspection/${booking.id}`}>
-                                  <ClipboardCheck className="h-4 w-4 mr-2" />
-                                  Fazer Vistoria
-                                </Link>
-                              </Button>
-                            )}
+                              {/* Status-specific action buttons */}
+                              <div className="flex flex-wrap gap-2 justify-end">
+                                {booking.status === 'pending' && (
+                                  <>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      className="text-xs sm:text-sm"
+                                      onClick={() => handleBookingAction(booking.id, 'approved')}
+                                    >
+                                      <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                      Aprovar
+                                    </Button>
+                                    <Button 
+                                      variant="destructive" 
+                                      size="sm"
+                                      className="text-xs sm:text-sm"
+                                      onClick={() => handleBookingAction(booking.id, 'rejected')}
+                                    >
+                                      <XCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                      Rejeitar
+                                    </Button>
+                                  </>
+                                )}
 
-
+                                {/* Vistoria Button - Multiple status check for robustness */}
+                                {(['aguardando_vistoria', 'awaiting_inspection'].includes(booking.status)) && (
+                                  <Button 
+                                    variant="default" 
+                                    size="sm"
+                                    className="bg-orange-600 hover:bg-orange-700 text-white text-xs sm:text-sm"
+                                    asChild
+                                  >
+                                    <Link href={`/inspection/${booking.id}`}>
+                                      <ClipboardCheck className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                      Fazer Vistoria
+                                    </Link>
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
