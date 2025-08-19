@@ -2939,7 +2939,31 @@ export class DatabaseStorage implements IStorage {
 
   async getInspectionsByOwner(ownerId: number): Promise<VehicleInspection[]> {
     return await db
-      .select()
+      .select({
+        id: vehicleInspections.id,
+        bookingId: vehicleInspections.bookingId,
+        renterId: vehicleInspections.renterId,
+        inspectorId: vehicleInspections.inspectorId,
+        vehicleCondition: vehicleInspections.vehicleCondition,
+        exteriorCondition: vehicleInspections.exteriorCondition,
+        interiorCondition: vehicleInspections.interiorCondition,
+        engineCondition: vehicleInspections.engineCondition,
+        tiresCondition: vehicleInspections.tiresCondition,
+        fuelLevel: vehicleInspections.fuelLevel,
+        mileage: vehicleInspections.mileage,
+        observations: vehicleInspections.observations,
+        approved: vehicleInspections.approved,
+        rejectionReason: vehicleInspections.rejectionReason,
+        inspectedAt: vehicleInspections.inspectedAt,
+        status: vehicleInspections.status,
+        vehicleId: vehicleInspections.vehicleId,
+        ownerId: vehicleInspections.ownerId,
+        depositDecision: vehicleInspections.depositDecision,
+        depositAmount: vehicleInspections.depositAmount,
+        decidedAt: vehicleInspections.decidedAt,
+        createdAt: vehicleInspections.createdAt,
+        updatedAt: vehicleInspections.updatedAt
+      })
       .from(vehicleInspections)
       .leftJoin(bookings, eq(vehicleInspections.bookingId, bookings.id))
       .leftJoin(vehicles, eq(bookings.vehicleId, vehicles.id))

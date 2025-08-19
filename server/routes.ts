@@ -1,4 +1,8 @@
 import type { Express, Request, Response, NextFunction } from "express";
+
+interface AuthRequest extends Request {
+  user?: User;
+}
 import { createServer, type Server } from "http";
 import rateLimit from "express-rate-limit";
 import { storage } from "./storage";
@@ -1716,8 +1720,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Atualizar status do usuário
       await storage.updateUser(userId, {
-        documentsSubmitted: true,
-        documentsSubmittedAt: new Date()
+        documentsSubmitted: true
       });
 
       console.log("✅ User status updated");
