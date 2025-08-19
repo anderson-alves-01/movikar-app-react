@@ -104,6 +104,7 @@ function Router() {
         <Route path="/reservations" component={Reservations} />
         <Route path="/vehicles" component={Vehicles} />
         <Route path="/vehicles/create" component={VehicleEdit} />
+        <Route path="/add-vehicle" component={VehicleEdit} />
         <Route path="/my-vehicles" component={Vehicles} />
         <Route path="/dashboard" component={Profile} />
         <Route path="/messages" component={Messages} />
