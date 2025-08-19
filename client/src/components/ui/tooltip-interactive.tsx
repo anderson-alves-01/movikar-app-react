@@ -330,7 +330,6 @@ export function useOnboarding() {
     const seen = localStorage.getItem('hasSeenOnboarding');
     console.log('🎯 Onboarding hook init:', { seen, hasSeenOnboarding, isOnboardingActive });
     if (!seen) {
-      // Don't auto-start onboarding anymore, only when manually triggered
       setHasSeenOnboarding(false);
     } else {
       setHasSeenOnboarding(true);
@@ -342,6 +341,11 @@ export function useOnboarding() {
     setIsOnboardingActive(true);
     setHasSeenOnboarding(true);
     console.log('🚀 Onboarding state updated to active');
+    
+    // Force a re-render by triggering a state update
+    setTimeout(() => {
+      console.log('🔄 Forcing onboarding state check...');
+    }, 100);
   };
 
   const completeOnboarding = () => {

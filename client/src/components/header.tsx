@@ -192,10 +192,10 @@ export default function Header() {
               </Button>
 
               {/* Tutorial Button - Always visible */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   console.log('🎯 Tutorial button clicked!');
                   console.log('🎯 startOnboarding function:', typeof startOnboarding);
                   if (typeof startOnboarding === 'function') {
@@ -206,11 +206,11 @@ export default function Header() {
                 }}
                 data-testid="button-start-tutorial"
                 title="Iniciar tutorial interativo"
-                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 px-3 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
               >
                 <HelpCircle className="h-4 w-4 mr-1" />
                 <span className="hidden sm:inline">Tutorial</span>
-              </Button>
+              </button>
 
               {user ? (
                 <>
