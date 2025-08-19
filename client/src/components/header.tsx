@@ -11,14 +11,14 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Search, Menu, User, MessageCircle, Car, LogOut, Shield, Bell, Gift, Sparkles, BarChart3, RotateCcw, DollarSign, BookmarkCheck, Crown, RefreshCw, Star, HelpCircle } from "lucide-react";
+import { Search, Menu, User, MessageCircle, Car, LogOut, Shield, Bell, Gift, Sparkles, BarChart3, RotateCcw, DollarSign, BookmarkCheck, Crown, Star } from "lucide-react";
 import { useAuthStore } from "@/lib/auth";
 import { useSearch } from "@/contexts/SearchContext";
 import { buildSearchParams } from "@/lib/searchUtils";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import type { AdminSettings } from "@shared/admin-settings";
-import { useOnboarding } from "@/contexts/OnboardingContext";
+
 // import AddVehicleModal from "./add-vehicle-modal";
 
 export default function Header() {
@@ -27,10 +27,10 @@ export default function Header() {
   const [searchLocation, setSearchLocation] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [refreshing, setRefreshing] = useState(false);
-  const { user, token, clearAuth, refreshUser } = useAuthStore();
+
+  const { user, token, clearAuth } = useAuthStore();
   const { updateFilter, clearFilters } = useSearch();
-  const { startOnboarding } = useOnboarding();
+
 
   // Fetch feature toggles (public endpoint)
   const { data: featureToggles } = useQuery({
@@ -46,22 +46,6 @@ export default function Header() {
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
     retry: false
   });
-
-  // Removed automatic refresh to prevent loops - use manual refresh button instead
-
-  // Manual refresh function for user data
-  const handleRefreshUser = async () => {
-    setRefreshing(true);
-    try {
-      console.log('🔄 Header - Manual user refresh triggered');
-      await refreshUser();
-      // Force a small delay to show refresh feedback
-      setTimeout(() => setRefreshing(false), 500);
-    } catch (error) {
-      console.log('❌ Header - Manual refresh failed:', error);
-      setRefreshing(false);
-    }
-  };
 
   // Disable unread message count to prevent auth loops
   const unreadCount = 0;
@@ -115,7 +99,8 @@ export default function Header() {
                 <img 
                   src="/logo.png" 
                   alt="ALUGAE" 
-                  className="h-8 w-auto mr-2"
+                  className="h-10 w-auto mr-2 min-h-[40px] object-contain"
+                  style={{ imageRendering: 'crisp-edges' }}
                   onError={(e) => {
                     // Fallback para texto se imagem não carregar
                     e.currentTarget.style.display = 'none';
@@ -191,27 +176,6 @@ export default function Header() {
                 <Search className="h-5 w-5" />
               </Button>
 
-              {/* Tutorial Button - Always visible */}
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log('🎯 Tutorial button clicked!');
-                  console.log('🎯 startOnboarding function:', typeof startOnboarding);
-                  if (typeof startOnboarding === 'function') {
-                    startOnboarding();
-                  } else {
-                    console.error('❌ startOnboarding is not a function:', startOnboarding);
-                  }
-                }}
-                data-testid="button-start-tutorial"
-                title="Iniciar tutorial interativo"
-                className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 px-3 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-              >
-                <HelpCircle className="h-4 w-4 mr-1" />
-                <span className="hidden sm:inline">Tutorial</span>
-              </button>
-
               {user ? (
                 <>
                   {/* Subscription Button */}
@@ -219,10 +183,10 @@ export default function Header() {
                     <Button
                       variant="default"
                       size="sm"
+                      title="Fazer upgrade do plano"
                       className="hidden sm:flex bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white border-0 shadow-md"
                     >
-                      <Crown className="h-4 w-4 mr-2" />
-                      Upgrade
+                      <Crown className="h-4 w-4" />
                     </Button>
                   </Link>
 
@@ -238,21 +202,14 @@ export default function Header() {
                     </Button>
                   </Link>
 
-                  {/* Refresh User Data Button - Hidden on mobile */}
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={handleRefreshUser}
-                    disabled={refreshing}
-                    title="Atualizar dados do usuário"
-                    className="relative hidden sm:flex"
-                  >
-                    <RefreshCw className={`h-5 w-5 text-gray-600 ${refreshing ? 'animate-spin' : ''}`} />
-                  </Button>
-
                   {/* Message Notification Bell */}
                   <Link href="/messages">
-                    <Button variant="ghost" size="sm" className="relative">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      title="Ver mensagens"
+                      className="relative"
+                    >
                       <Bell className="h-5 w-5 text-gray-600" />
                       {unreadCount > 0 && (
                         <Badge 
