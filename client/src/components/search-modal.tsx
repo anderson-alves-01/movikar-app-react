@@ -14,6 +14,14 @@ interface SearchHistoryItem {
   query: string;
   category: string;
   timestamp: Date;
+  filters?: {
+    category?: string;
+    priceRange?: string;
+    fuelType?: string;
+    transmission?: string;
+    startDate?: string;
+    endDate?: string;
+  };
 }
 
 export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
@@ -36,22 +44,49 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     }
   }, []);
 
-  const handleSearch = (query: string) => {
-    if (query.trim()) {
-      // Add to search history
-      const newHistoryItem: SearchHistoryItem = {
-        id: Date.now().toString(),
-        query: query.trim(),
-        category: "Carros, vans e utilitários",
-        timestamp: new Date()
-      };
+  const handleSearch = (query: string, saveToHistory: boolean = true) => {
+    if (query.trim() || category || priceRange || fuelType || transmission || startDate || endDate) {
+      // Add to search history if requested
+      if (saveToHistory) {
+        const searchDescription = query.trim() || 'Busca com filtros';
+        const appliedFilters = [];
+        
+        if (category) appliedFilters.push(`Categoria: ${category}`);
+        if (priceRange) appliedFilters.push(`Preço: ${priceRange}`);
+        if (fuelType) appliedFilters.push(`Combustível: ${fuelType}`);
+        if (transmission) appliedFilters.push(`Transmissão: ${transmission}`);
+        if (startDate) appliedFilters.push(`Retirada: ${new Date(startDate).toLocaleDateString('pt-BR')}`);
+        if (endDate) appliedFilters.push(`Devolução: ${new Date(endDate).toLocaleDateString('pt-BR')}`);
+        
+        const categoryDisplay = appliedFilters.length > 0 ? appliedFilters.join(', ') : 'Carros, vans e utilitários';
+        
+        const newHistoryItem: SearchHistoryItem = {
+          id: Date.now().toString(),
+          query: searchDescription,
+          category: categoryDisplay,
+          timestamp: new Date(),
+          filters: {
+            category,
+            priceRange,
+            fuelType,
+            transmission,
+            startDate,
+            endDate
+          }
+        };
 
-      const updatedHistory = [newHistoryItem, ...searchHistory.filter(item => item.query !== query.trim()).slice(0, 9)];
-      setSearchHistory(updatedHistory);
-      localStorage.setItem('search-history', JSON.stringify(updatedHistory));
+        const updatedHistory = [newHistoryItem, ...searchHistory.filter(item => 
+          !(item.query === searchDescription && JSON.stringify(item.filters) === JSON.stringify(newHistoryItem.filters))
+        ).slice(0, 9)];
+        
+        setSearchHistory(updatedHistory);
+        localStorage.setItem('search-history', JSON.stringify(updatedHistory));
+      }
 
-      // Apply search filter - this will trigger the search
-      updateFilter('location', query.trim());
+      // Apply search filter
+      if (query.trim()) {
+        updateFilter('location', query.trim());
+      }
       
       // Navigate to vehicles page if not already there
       const currentPath = window.location.pathname;
@@ -259,18 +294,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
             <div className="mt-3 pt-3 border-t border-gray-200">
               <Button
                 onClick={() => {
-                  // Apply current query if there is one
-                  if (searchQuery.trim()) {
-                    handleSearch(searchQuery);
-                  } else {
-                    // Just close modal and let filters apply
-                    onClose();
-                    // Navigate to vehicles if needed
-                    const currentPath = window.location.pathname;
-                    if (currentPath === '/' || currentPath === '/home') {
-                      window.location.href = '/#resultados';
-                    }
-                  }
+                  handleSearch(searchQuery);
                 }}
                 className="w-full bg-red-500 hover:bg-red-600 text-white"
                 data-testid="button-apply-search"
@@ -301,7 +325,18 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                     <Clock className="h-4 w-4 text-gray-400 flex-shrink-0" />
                     <div 
                       className="flex-1 cursor-pointer"
-                      onClick={() => handleSearch(item.query)}
+                      onClick={() => {
+                        // Restore filters if they exist
+                        if (item.filters) {
+                          if (item.filters.category) updateFilter('category', item.filters.category);
+                          if (item.filters.priceRange) updateFilter('priceRange', item.filters.priceRange);
+                          if (item.filters.fuelType) updateFilter('fuelType', item.filters.fuelType);
+                          if (item.filters.transmission) updateFilter('transmission', item.filters.transmission);
+                          if (item.filters.startDate) updateFilter('startDate', new Date(item.filters.startDate));
+                          if (item.filters.endDate) updateFilter('endDate', new Date(item.filters.endDate));
+                        }
+                        handleSearch(item.query, false);
+                      }}
                     >
                       <div className="font-medium text-gray-900">{item.query}</div>
                       <div className="text-sm text-purple-600">{item.category}</div>
