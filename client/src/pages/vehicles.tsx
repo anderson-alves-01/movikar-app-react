@@ -366,19 +366,20 @@ export default function Vehicles() {
 
         {/* Vehicle Availability Manager Modal */}
         {selectedVehicleForAvailability && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-4 border-b flex justify-between items-center">
-                <h2 className="text-xl font-semibold">Gerenciar Disponibilidade</h2>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center p-2 sm:p-4 z-50">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto mt-4 sm:mt-0">
+              <div className="sticky top-0 bg-white p-3 sm:p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 rounded-t-lg">
+                <h2 className="text-lg sm:text-xl font-semibold">Gerenciar Disponibilidade</h2>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setSelectedVehicleForAvailability(null)}
+                  className="w-full sm:w-auto"
                 >
                   Fechar
                 </Button>
               </div>
-              <div className="p-6">
+              <div className="p-3 sm:p-6">
                 <VehicleAvailabilityManager vehicleId={selectedVehicleForAvailability} />
               </div>
             </div>

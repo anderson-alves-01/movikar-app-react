@@ -170,13 +170,13 @@ export default function VehicleAvailabilityManager({ vehicleId }: VehicleAvailab
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <CardTitle className="flex items-center">
           <Calendar className="w-5 h-5 mr-2" />
           Gerenciar Disponibilidade
         </CardTitle>
         {!isAdding && (
-          <Button onClick={() => setIsAdding(true)} size="sm">
+          <Button onClick={() => setIsAdding(true)} size="sm" className="w-full sm:w-auto">
             <Plus className="w-4 h-4 mr-2" />
             Adicionar Período
           </Button>
@@ -239,10 +239,11 @@ export default function VehicleAvailabilityManager({ vehicleId }: VehicleAvailab
                 />
               </div>
             </div>
-            <div className="flex gap-2 mt-4">
+            <div className="flex flex-col sm:flex-row gap-2 mt-4">
               <Button
                 onClick={handleAdd}
                 disabled={createMutation.isPending}
+                className="w-full sm:w-auto"
               >
                 <Check className="w-4 h-4 mr-2" />
                 Salvar
@@ -250,6 +251,7 @@ export default function VehicleAvailabilityManager({ vehicleId }: VehicleAvailab
               <Button
                 variant="outline"
                 onClick={() => setIsAdding(false)}
+                className="w-full sm:w-auto"
               >
                 <X className="w-4 h-4 mr-2" />
                 Cancelar
@@ -263,7 +265,7 @@ export default function VehicleAvailabilityManager({ vehicleId }: VehicleAvailab
             {availability.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center justify-between p-4 border rounded-lg"
+                className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-3"
               >
                 {editingId === item.id ? (
                   <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -298,8 +300,8 @@ export default function VehicleAvailabilityManager({ vehicleId }: VehicleAvailab
                   </div>
                 ) : (
                   <div className="flex-1">
-                    <div className="flex items-center gap-4">
-                      <span className="font-medium">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+                      <span className="font-medium text-sm sm:text-base">
                         {formatDate(item.startDate)} - {formatDate(item.endDate)}
                       </span>
                       <Badge className={getStatusColor(item.isAvailable)}>
@@ -309,14 +311,16 @@ export default function VehicleAvailabilityManager({ vehicleId }: VehicleAvailab
                   </div>
                 )}
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 w-full sm:w-auto justify-end">
                   {editingId === item.id ? (
                     <>
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" className="flex-1 sm:flex-initial">
                         <Check className="w-4 h-4" />
+                        <span className="ml-2 sm:hidden">Salvar</span>
                       </Button>
-                      <Button size="sm" variant="outline" onClick={cancelEdit}>
+                      <Button size="sm" variant="outline" onClick={cancelEdit} className="flex-1 sm:flex-initial">
                         <X className="w-4 h-4" />
+                        <span className="ml-2 sm:hidden">Cancelar</span>
                       </Button>
                     </>
                   ) : (
@@ -325,16 +329,20 @@ export default function VehicleAvailabilityManager({ vehicleId }: VehicleAvailab
                         size="sm"
                         variant="outline"
                         onClick={() => startEdit(item)}
+                        className="flex-1 sm:flex-initial"
                       >
                         <Edit3 className="w-4 h-4" />
+                        <span className="ml-2 sm:hidden">Editar</span>
                       </Button>
                       <Button
                         size="sm"
                         variant="destructive"
                         onClick={() => handleDelete(item.id)}
                         disabled={deleteMutation.isPending}
+                        className="flex-1 sm:flex-initial"
                       >
                         <Trash2 className="w-4 h-4" />
+                        <span className="ml-2 sm:hidden">Excluir</span>
                       </Button>
                     </>
                   )}
