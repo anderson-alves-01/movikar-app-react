@@ -27,6 +27,7 @@ export default function Header() {
   const [searchLocation, setSearchLocation] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
 
   const { user, token, clearAuth } = useAuthStore();
   const { updateFilter, clearFilters } = useSearch();
@@ -161,6 +162,16 @@ export default function Header() {
                 }}
               >
                 <Search className="h-4 w-4" />
+              </Button>
+              
+              {/* Advanced Filters Toggle */}
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="ml-2 text-gray-600 hover:text-gray-800"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                Filtros
               </Button>
               {(searchLocation || startDate || endDate) && (
                 <Button 
@@ -417,10 +428,109 @@ export default function Header() {
                   <Button 
                     size="sm" 
                     variant="outline"
+                    onClick={() => setShowFilters(!showFilters)}
+                  >
+                    Filtros
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
                     onClick={handleClearSearch}
                   >
                     <RotateCcw className="h-4 w-4" />
                   </Button>
+                </div>
+                
+                {/* Mobile Advanced Filters */}
+                {showFilters && (
+                  <div className="mt-4 space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Categoria</label>
+                        <select className="w-full p-2 border border-gray-300 rounded-md text-sm">
+                          <option>Todas</option>
+                          <option>Sedã</option>
+                          <option>SUV</option>
+                          <option>Hatch</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Preço/dia</label>
+                        <select className="w-full p-2 border border-gray-300 rounded-md text-sm">
+                          <option>Qualquer</option>
+                          <option>Até R$ 100</option>
+                          <option>R$ 100-200</option>
+                          <option>R$ 200+</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Combustível</label>
+                        <select className="w-full p-2 border border-gray-300 rounded-md text-sm">
+                          <option>Qualquer</option>
+                          <option>Flex</option>
+                          <option>Gasolina</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Transmissão</label>
+                        <select className="w-full p-2 border border-gray-300 rounded-md text-sm">
+                          <option>Qualquer</option>
+                          <option>Automático</option>
+                          <option>Manual</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Advanced Filters Panel (Desktop) */}
+          {showFilters && (
+            <div className="hidden md:block absolute top-full left-0 right-0 bg-white border-b border-gray-200 shadow-lg z-40">
+              <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                    <select className="w-full p-2 border border-gray-300 rounded-md text-sm">
+                      <option>Todas as categorias</option>
+                      <option>Sedã</option>
+                      <option>SUV</option>
+                      <option>Hatch</option>
+                      <option>Picape</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Preço por dia</label>
+                    <select className="w-full p-2 border border-gray-300 rounded-md text-sm">
+                      <option>Qualquer preço</option>
+                      <option>Até R$ 100</option>
+                      <option>R$ 100 - R$ 200</option>
+                      <option>R$ 200 - R$ 300</option>
+                      <option>Acima de R$ 300</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Combustível</label>
+                    <select className="w-full p-2 border border-gray-300 rounded-md text-sm">
+                      <option>Qualquer</option>
+                      <option>Flex</option>
+                      <option>Gasolina</option>
+                      <option>Etanol</option>
+                      <option>Diesel</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Transmissão</label>
+                    <select className="w-full p-2 border border-gray-300 rounded-md text-sm">
+                      <option>Qualquer</option>
+                      <option>Automático</option>
+                      <option>Manual</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
