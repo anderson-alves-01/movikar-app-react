@@ -198,6 +198,7 @@ export function OnboardingFlow({ page = "home", customSteps }: OnboardingFlowPro
 
   return (
     <InteractiveTooltip
+      key={`onboarding-${isOnboardingActive}`}
       steps={steps}
       isActive={isOnboardingActive}
       onComplete={completeOnboarding}
