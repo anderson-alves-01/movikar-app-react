@@ -210,8 +210,10 @@ export function OnboardingFlow({ page = "home", customSteps }: OnboardingFlowPro
 // Component to trigger onboarding manually
 export function OnboardingTrigger() {
   const { startOnboarding, hasSeenOnboarding } = useOnboarding();
+  const [location] = useLocation();
 
-  if (!hasSeenOnboarding) return null;
+  // Only show the trigger button on the home page
+  if (!hasSeenOnboarding || location !== "/") return null;
 
   return (
     <button
