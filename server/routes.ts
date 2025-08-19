@@ -1672,69 +1672,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user!.id;
 
-      console.log("Upload request received for user:", userId);
-      console.log("Request body:", req.body);
-      console.log("File:", req.file);
+      console.log("📄 Upload request received for user:", userId);
+      console.log("📝 Request body:", req.body);
+      console.log("📁 File:", req.file ? { 
+        name: req.file.originalname, 
+        size: req.file.size, 
+        type: req.file.mimetype 
+      } : null);
 
       const { documentType, documentNumber } = req.body;
 
       if (!documentType) {
+        console.log("❌ Document type is required");
         return res.status(400).json({ message: "Tipo de documento é obrigatório" });
       }
 
       if (!req.file) {
+        console.log("❌ File is required");
         return res.status(400).json({ message: "Arquivo é obrigatório" });
+      }
+
+      // Validar tipo de arquivo
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+      if (!allowedTypes.includes(req.file.mimetype)) {
+        console.log("❌ Invalid file type:", req.file.mimetype);
+        return res.status(400).json({ message: "Tipo de arquivo não permitido. Use JPG, PNG ou PDF." });
+      }
+
+      // Validar tamanho (máximo 10MB)
+      if (req.file.size > 10 * 1024 * 1024) {
+        console.log("❌ File too large:", req.file.size);
+        return res.status(400).json({ message: "Arquivo muito grande. Máximo 10MB." });
       }
 
       // Salvar arquivo em base64 para visualização no admin
       const fileBase64 = req.file.buffer.toString('base64');
-      const mockDocumentUrl = `data:${req.file.mimetype};base64,${fileBase64}`;
+      const documentUrl = `data:${req.file.mimetype};base64,${fileBase64}`;
 
-      const result = await pool.query(`
-        INSERT INTO user_documents (user_id, document_type, document_url, document_number, status)
-        VALUES ($1, $2, $3, $4, 'pending')
-        RETURNING *
-      `, [userId, documentType, mockDocumentUrl, documentNumber]);
+      console.log("💾 Saving document to database...");
+
+      // Use Drizzle ORM instead of direct pool query
+      const newDocument = await storage.createUserDocument({
+        userId,
+        documentType,
+        documentUrl,
+        documentNumber: documentNumber || null,
+        status: 'pending'
+      });
+
+      console.log("✅ Document saved:", newDocument.id);
 
       // Atualizar status do usuário
-      await pool.query(`
-        UPDATE users 
-        SET documents_submitted = true, documents_submitted_at = NOW()
-        WHERE id = $1
-      `, [userId]);
+      await storage.updateUser(userId, {
+        documentsSubmitted: true,
+        documentsSubmittedAt: new Date()
+      });
+
+      console.log("✅ User status updated");
 
       // Verificar se todos os documentos obrigatórios foram enviados
-      const docsResult = await pool.query(`
-        SELECT document_type FROM user_documents 
-        WHERE user_id = $1 AND status != 'rejected'
-      `, [userId]);
-
-      const submittedTypes = docsResult.rows.map((row: any) => row.document_type);
+      const userDocuments = await storage.getUserDocuments(userId);
+      const submittedTypes = userDocuments.map(doc => doc.documentType);
       const requiredTypes = ['cnh', 'comprovante_residencia'];
       const allSubmitted = requiredTypes.every(type => submittedTypes.includes(type));
 
       if (allSubmitted) {
-        await pool.query(`
-          UPDATE users 
-          SET verification_status = 'pending'
-          WHERE id = $1
-        `, [userId]);
+        await storage.updateUser(userId, {
+          verificationStatus: 'pending'
+        });
+        console.log("✅ User verification status set to pending");
       }
 
-      const document = {
-        id: result.rows[0].id,
-        userId: result.rows[0].user_id,
-        documentType: result.rows[0].document_type,
-        documentUrl: result.rows[0].document_url,
-        documentNumber: result.rows[0].document_number,
-        status: result.rows[0].status,
-        uploadedAt: result.rows[0].uploaded_at,
-      };
+      res.status(201).json({
+        id: newDocument.id,
+        userId: newDocument.userId,
+        documentType: newDocument.documentType,
+        documentUrl: newDocument.documentUrl,
+        documentNumber: newDocument.documentNumber,
+        status: newDocument.status,
+        uploadedAt: newDocument.uploadedAt,
+        message: "Documento enviado com sucesso!"
+      });
 
-      res.status(201).json(document);
     } catch (error) {
-      console.error("Upload document error:", error);
-      res.status(500).json({ message: "Falha ao enviar documento" });
+      console.error("❌ Upload document error:", error);
+      res.status(500).json({ 
+        message: "Falha ao enviar documento", 
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+      });
     }
   });
 

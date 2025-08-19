@@ -230,6 +230,10 @@ export interface IStorage {
   updateVehicleInspection(id: number, inspection: Partial<InsertVehicleInspection>): Promise<VehicleInspection | undefined>;
   approveInspection(id: number): Promise<VehicleInspection | undefined>;
   rejectInspection(id: number, reason: string, refundAmount?: string): Promise<VehicleInspection | undefined>;
+
+  // User Document methods
+  getUserDocuments(userId: number): Promise<any[]>;
+  createUserDocument(document: any): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3113,6 +3117,43 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // User Document methods
+  async getUserDocuments(userId: number): Promise<any[]> {
+    const documents = await db
+      .select()
+      .from(userDocuments)
+      .where(eq(userDocuments.userId, userId))
+      .orderBy(desc(userDocuments.uploadedAt));
+    
+    return documents.map(doc => ({
+      id: doc.id,
+      userId: doc.userId,
+      documentType: doc.documentType,
+      documentUrl: doc.documentUrl,
+      documentNumber: doc.documentNumber,
+      status: doc.status,
+      rejectionReason: doc.rejectionReason,
+      uploadedAt: doc.uploadedAt,
+      reviewedAt: doc.reviewedAt,
+      reviewedBy: doc.reviewedBy,
+    }));
+  }
+
+  async createUserDocument(document: any): Promise<any> {
+    const [newDocument] = await db
+      .insert(userDocuments)
+      .values({
+        userId: document.userId,
+        documentType: document.documentType,
+        documentUrl: document.documentUrl,
+        documentNumber: document.documentNumber,
+        status: document.status || 'pending'
+      })
+      .returning();
+    
+    return newDocument;
+  }
+
   async createInspection(data: any): Promise<any> {
     try {
       const result = await pool.query(`
@@ -3535,6 +3576,43 @@ export class DatabaseStorage implements IStorage {
       response: response.response,
       createdAt: new Date()
     };
+  }
+
+  // User Document methods
+  async getUserDocuments(userId: number): Promise<any[]> {
+    const documents = await db
+      .select()
+      .from(userDocuments)
+      .where(eq(userDocuments.userId, userId))
+      .orderBy(desc(userDocuments.uploadedAt));
+    
+    return documents.map(doc => ({
+      id: doc.id,
+      userId: doc.userId,
+      documentType: doc.documentType,
+      documentUrl: doc.documentUrl,
+      documentNumber: doc.documentNumber,
+      status: doc.status,
+      rejectionReason: doc.rejectionReason,
+      uploadedAt: doc.uploadedAt,
+      reviewedAt: doc.reviewedAt,
+      reviewedBy: doc.reviewedBy,
+    }));
+  }
+
+  async createUserDocument(document: any): Promise<any> {
+    const [newDocument] = await db
+      .insert(userDocuments)
+      .values({
+        userId: document.userId,
+        documentType: document.documentType,
+        documentUrl: document.documentUrl,
+        documentNumber: document.documentNumber,
+        status: document.status || 'pending'
+      })
+      .returning();
+    
+    return newDocument;
   }
 }
 
