@@ -507,11 +507,13 @@ export default function Reservations() {
                             {getInspectionBadge(booking)}
                           </div>
                         )}
-                        <div className="flex justify-between items-center pt-3 border-t">
-                          <span className="text-lg font-semibold text-green-600">
-                            {formatCurrency(booking.totalPrice)}
-                          </span>
-                          <div className="flex gap-2">
+                        <div className="pt-3 border-t space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-lg font-semibold text-green-600">
+                              {formatCurrency(booking.totalPrice)}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                             {shouldShowInspectionButton(booking) && (
                               <Button 
                                 size="sm" 
@@ -541,6 +543,7 @@ export default function Reservations() {
                               variant="outline"
                               onClick={() => handleViewDetails(booking.id)}
                               data-testid={`button-details-${booking.id}`}
+                              className="col-span-1 sm:col-span-2 lg:col-span-1"
                             >
                               Ver Detalhes
                             </Button>
@@ -617,11 +620,13 @@ export default function Reservations() {
                             {getInspectionBadge(booking)}
                           </div>
                         )}
-                        <div className="flex justify-between items-center pt-3 border-t">
-                          <span className="text-lg font-semibold text-green-600">
-                            {formatCurrency(booking.totalPrice)}
-                          </span>
-                          <div className="flex gap-2">
+                        <div className="pt-3 border-t space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-lg font-semibold text-green-600">
+                              {formatCurrency(booking.totalPrice)}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                             {booking.status === "pending" && (
                               <>
                                 <Button 
@@ -672,6 +677,7 @@ export default function Reservations() {
                               size="sm" 
                               variant="outline"
                               onClick={() => handleViewDetails(booking.id)}
+                              className="col-span-1 sm:col-span-2 lg:col-span-1"
                             >
                               Ver Detalhes
                             </Button>

@@ -366,7 +366,96 @@ export function InteractiveTooltip({
     </>
   );
 
-  return renderTooltip(tooltipContent);
+  return renderTooltip(
+    <div className="bg-white rounded-lg shadow-lg border p-6 max-w-md">
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center">
+          {currentStepData.icon && (
+            <div className="bg-blue-100 p-2 rounded-lg mr-3">
+              <currentStepData.icon className="h-5 w-5 text-blue-600" />
+            </div>
+          )}
+          <h3 className="text-lg font-semibold text-gray-900">
+            {currentStepData.title}
+          </h3>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleSkip}
+          className="text-gray-400 hover:text-gray-600"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Content */}
+      <p className="text-gray-600 mb-6 leading-relaxed">
+        {currentStepData.content}
+      </p>
+
+      {/* Progress */}
+      <div className="mb-4">
+        <div className="flex justify-between text-sm text-gray-500 mb-2">
+          <span>Passo {currentStep + 1} de {steps.length}</span>
+          <span>{Math.round(((currentStep + 1) / steps.length) * 100)}%</span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <motion.div
+            className="bg-blue-600 h-2 rounded-full"
+            initial={{ width: 0 }}
+            animate={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+            transition={{ duration: 0.3 }}
+          />
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex flex-col gap-3">
+        {/* Top row - Previous button (left aligned) */}
+        <div className="flex justify-start">
+          {currentStep > 0 && currentStepData.showPrev !== false && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePrev}
+              className="text-xs px-3 py-1.5"
+            >
+              <ChevronLeft className="h-3 w-3 mr-1" />
+              Anterior
+            </Button>
+          )}
+        </div>
+        
+        {/* Bottom row - Skip and Next/Complete buttons */}
+        <div className="flex justify-between gap-2">
+          {currentStepData.showSkip !== false && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSkip}
+              className="text-xs px-3 py-1.5 text-gray-500 hover:text-gray-700"
+            >
+              Pular tutorial
+            </Button>
+          )}
+          
+          {currentStepData.showNext !== false && (
+            <Button
+              size="sm"
+              onClick={handleNext}
+              className="bg-blue-600 hover:bg-blue-700 text-xs px-4 py-1.5 ml-auto"
+            >
+              {currentStep === steps.length - 1 ? 'Concluir' : 'Próximo'}
+              {currentStep < steps.length - 1 && (
+                <ChevronRight className="h-3 w-3 ml-1" />
+              )}
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // The onboarding hook is now in @/contexts/OnboardingContext
