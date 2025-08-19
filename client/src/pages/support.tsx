@@ -100,37 +100,108 @@ export default function Support() {
   };
 
   const faqItems = [
+    // Para Locatários
     {
-      question: "Como criar uma conta no alugae.mobi?",
-      answer: "Para criar uma conta, clique em 'Cadastrar' no aplicativo ou site, preencha seus dados pessoais, confirme seu e-mail e comece a usar a plataforma."
-    },
-    {
+      id: "como-alugar",
+      category: "Para Locatários",
       question: "Como alugar um veículo?",
-      answer: "Pesquise veículos disponíveis na sua região, selecione as datas, revise os detalhes do aluguel, efetue o pagamento e aguarde a confirmação do proprietário."
+      answer: "Pesquise veículos disponíveis na sua região, selecione as datas, revise os detalhes do aluguel, efetue o pagamento e aguarde a confirmação do proprietário. Após confirmação, você receberá instruções para retirada do veículo."
     },
     {
-      question: "Como anunciar meu veículo?",
-      answer: "Acesse seu perfil, clique em 'Cadastrar Veículo', preencha as informações, envie fotos e documentos. Após aprovação, seu veículo ficará disponível para aluguel."
-    },
-    {
-      question: "Quais documentos preciso para alugar?",
-      answer: "CNH válida, documento de identidade e cartão de crédito para caução. Alguns proprietários podem solicitar documentos adicionais."
-    },
-    {
+      id: "seguros",
+      category: "Para Locatários", 
       question: "Como funciona o seguro dos veículos?",
-      answer: "É recomendado que o proprietario possua seguro próprio para evitar transtornos."
+      answer: "É recomendado que o proprietario possua seguro próprio para evitar transtornos. Verifique sempre se o veículo possui seguro válido antes de confirmar o aluguel."
     },
     {
-      question: "Posso cancelar minha reserva?",
-      answer: "Sim, você pode cancelar conforme nossa política de cancelamento. Os termos variam dependendo do tempo de antecedência e do tipo de reserva."
+      id: "documentos-necessarios",
+      category: "Para Locatários",
+      question: "Quais documentos preciso para alugar?",
+      answer: "CNH válida, documento de identidade (RG ou CPF) e cartão de crédito para caução. Alguns proprietários podem solicitar documentos adicionais como comprovante de renda ou residência."
     },
     {
+      id: "faq-geral",
+      category: "Para Locatários",
+      question: "Perguntas frequentes sobre locação",
+      answer: "Tire suas principais dúvidas sobre como funciona o processo de locação, desde a busca até a devolução do veículo. Consulte nosso guia completo de locatários."
+    },
+    
+    // Para Proprietários
+    {
+      id: "como-anunciar",
+      category: "Para Proprietários",
+      question: "Como anunciar meu veículo?",
+      answer: "Acesse seu perfil, clique em 'Cadastrar Veículo', preencha as informações detalhadas, envie fotos de qualidade e documentos necessários. Após aprovação da nossa equipe, seu veículo ficará disponível para aluguel."
+    },
+    {
+      id: "precificacao",
+      category: "Para Proprietários",
+      question: "Como definir o preço do meu veículo?",
+      answer: "Nossa plataforma oferece sugestões de preços baseadas no mercado local, modelo do veículo e demanda. Você pode ajustar os valores conforme sua estratégia, considerando temporadas e eventos locais."
+    },
+    {
+      id: "protecao-total",
+      category: "Para Proprietários", 
+      question: "O que é a proteção total?",
+      answer: "A proteção total inclui cobertura para danos, roubo e outras situações imprevistas. É uma camada adicional de segurança para proprietários que desejam maior tranquilidade ao alugar seus veículos."
+    },
+    {
+      id: "suporte-24-7",
+      category: "Para Proprietários",
+      question: "Como funciona o suporte 24/7?",
+      answer: "Oferecemos suporte contínuo através de chat online, WhatsApp e e-mail. Nossa equipe está disponível para ajudar com emergências, dúvidas sobre reservas e questões técnicas da plataforma."
+    },
+    
+    // Suporte
+    {
+      id: "central-de-ajuda",
+      category: "Suporte",
+      question: "Como acessar a central de ajuda?",
+      answer: "Nossa central de ajuda está disponível 24/7 através do chat online, WhatsApp (+55 61 99509-8662) e e-mail (suporte@alugae.mobi). Escolha o canal que preferir para receber atendimento personalizado."
+    },
+    {
+      id: "contato",
+      category: "Suporte",
+      question: "Como entrar em contato conosco?",
+      answer: "Você pode nos contatar através de múltiplos canais: Chat online (24/7), WhatsApp (+55 61 99509-8662) em horário comercial, ou e-mail suporte@alugae.mobi com resposta em até 24h."
+    },
+    {
+      id: "termos-de-uso",
+      category: "Suporte",
+      question: "Onde encontro os termos de uso?",
+      answer: "Os termos de uso estão disponíveis no rodapé de todas as páginas e durante o cadastro. Eles contêm informações importantes sobre direitos, deveres e responsabilidades de usuários e proprietários."
+    },
+    {
+      id: "politica-privacidade",
+      category: "Suporte", 
+      question: "Como protegemos sua privacidade?",
+      answer: "Seguimos rigorosas políticas de proteção de dados pessoais, conforme LGPD. Seus dados são criptografados, nunca compartilhados com terceiros sem consentimento e você tem controle total sobre suas informações."
+    },
+    
+    // Gerais
+    {
+      id: "como-funciona-vistoria",
+      category: "Geral",
       question: "Como funciona a vistoria do veículo?",
-      answer: "Antes e após o aluguel, é recomendado que,  a vistoria seja realizada documentando o estado do veículo para proteger locatário e proprietário."
+      answer: "Antes e após o aluguel, é recomendado que a vistoria seja realizada documentando o estado do veículo para proteger locatário e proprietário. Use fotos e descreva qualquer dano existente."
     },
     {
+      id: "cancelamento-reserva",
+      category: "Geral",
+      question: "Posso cancelar minha reserva?",
+      answer: "Sim, você pode cancelar conforme nossa política de cancelamento. Os termos variam dependendo do tempo de antecedência: 24h+ (reembolso total), 12-24h (50% de reembolso), menos de 12h (sem reembolso)."
+    },
+    {
+      id: "problemas-pagamento",
+      category: "Geral",
       question: "Problemas com pagamento - o que fazer?",
-      answer: "Verifique os dados do cartão, limite disponível e entre em contato conosco se o problema persistir. Aceitamos diversos métodos de pagamento."
+      answer: "Verifique os dados do cartão, limite disponível e tente novamente. Se o problema persistir, entre em contato conosco. Aceitamos cartões de crédito, débito e PIX para maior conveniência."
+    },
+    {
+      id: "criar-conta",
+      category: "Geral",
+      question: "Como criar uma conta no alugae.mobi?",
+      answer: "Clique em 'Cadastrar', preencha seus dados pessoais, confirme seu e-mail e comece a usar a plataforma. O processo é rápido e seguro, levando apenas alguns minutos para completar."
     }
   ];
 
@@ -230,22 +301,47 @@ export default function Support() {
           <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
             Perguntas Frequentes
           </h2>
-          <Card>
-            <CardContent className="p-6">
-              <Accordion type="single" collapsible className="w-full">
-                {faqItems.map((item, index) => (
-                  <AccordionItem key={index} value={`item-${index}`}>
-                    <AccordionTrigger className="text-left">
-                      {item.question}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-gray-600">
-                      {item.answer}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </CardContent>
-          </Card>
+          
+          {/* FAQ Categories Navigation */}
+          <div className="flex flex-wrap justify-center gap-4 mb-8">
+            {["Para Locatários", "Para Proprietários", "Suporte", "Geral"].map((category) => (
+              <Button
+                key={category}
+                variant="outline"
+                onClick={() => document.getElementById(`category-${category.toLowerCase().replace(/\s+/g, '-')}`)?.scrollIntoView({ behavior: 'smooth' })}
+                className="text-sm"
+              >
+                {category}
+              </Button>
+            ))}
+          </div>
+
+          {/* FAQ by Categories */}
+          {["Para Locatários", "Para Proprietários", "Suporte", "Geral"].map((category) => (
+            <Card key={category} className="mb-6" id={`category-${category.toLowerCase().replace(/\s+/g, '-')}`}>
+              <CardHeader>
+                <CardTitle className="text-xl text-gray-900">{category}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Accordion type="single" collapsible className="w-full">
+                  {faqItems
+                    .filter((item) => item.category === category)
+                    .map((item) => (
+                      <AccordionItem key={item.id} value={item.id} id={item.id}>
+                        <AccordionTrigger className="text-left hover:text-red-600">
+                          {item.question}
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <p className="text-gray-600 leading-relaxed">
+                            {item.answer}
+                          </p>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                </Accordion>
+              </CardContent>
+            </Card>
+          ))}
         </section>
 
         {/* Status and Updates */}
