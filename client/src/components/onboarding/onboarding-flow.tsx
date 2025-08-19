@@ -1,5 +1,6 @@
 import React from "react";
-import { InteractiveTooltip, TooltipStep, useOnboarding } from "@/components/ui/tooltip-interactive";
+import { InteractiveTooltip, TooltipStep } from "@/components/ui/tooltip-interactive";
+import { useOnboarding } from "@/contexts/OnboardingContext";
 import { useAuthStore } from "@/lib/auth";
 import { useLocation } from "wouter";
 

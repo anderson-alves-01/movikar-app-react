@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SearchProvider } from "@/contexts/SearchContext";
+import { OnboardingProvider } from "@/contexts/OnboardingContext";
 import VehicleComparison from "@/components/vehicle-comparison";
 import AuthProvider from "@/components/AuthProvider";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -168,20 +169,22 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <SearchProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-            <VehicleComparison />
-            
-            {/* PWA Components */}
-            <InstallPrompt />
-            <IOSInstallPrompt />
-            <OfflineIndicator />
-          </TooltipProvider>
-        </SearchProvider>
-      </AuthProvider>
+      <OnboardingProvider>
+        <AuthProvider>
+          <SearchProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+              <VehicleComparison />
+              
+              {/* PWA Components */}
+              <InstallPrompt />
+              <IOSInstallPrompt />
+              <OfflineIndicator />
+            </TooltipProvider>
+          </SearchProvider>
+        </AuthProvider>
+      </OnboardingProvider>
     </QueryClientProvider>
   );
 }

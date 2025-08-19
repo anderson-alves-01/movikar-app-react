@@ -18,7 +18,7 @@ import { buildSearchParams } from "@/lib/searchUtils";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import type { AdminSettings } from "@shared/admin-settings";
-import { useOnboarding } from "@/components/ui/tooltip-interactive";
+import { useOnboarding } from "@/contexts/OnboardingContext";
 // import AddVehicleModal from "./add-vehicle-modal";
 
 export default function Header() {
