@@ -8,6 +8,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import { 
   MessageCircle, 
   Mail, 
@@ -22,10 +23,12 @@ import {
   AlertCircle,
   CheckCircle2,
   Globe,
-  Smartphone
+  Smartphone,
+  ArrowLeft
 } from "lucide-react";
 
 export default function Support() {
+  const [, navigate] = useLocation();
   const [contactForm, setContactForm] = useState({
     name: "",
     email: "",
@@ -133,11 +136,32 @@ export default function Support() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-blue-600 text-white py-16">
+      {/* Navigation Header */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            <Button
+              variant="ghost"
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+              data-testid="button-back"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Voltar
+            </Button>
+            
+            <h1 className="text-xl font-semibold text-gray-900">Central de Suporte</h1>
+            
+            <div className="w-20"></div> {/* Spacer for centering */}
+          </div>
+        </div>
+      </div>
+
+      {/* Hero Header */}
+      <div className="bg-gradient-to-r from-red-500 to-red-600 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h1 className="text-4xl font-bold mb-4">Central de Suporte</h1>
-          <p className="text-xl text-blue-100">
+          <h2 className="text-4xl font-bold mb-4">Como podemos ajudar?</h2>
+          <p className="text-xl text-red-100">
             Estamos aqui para ajudar você a ter a melhor experiência no alugae.mobi
           </p>
         </div>
