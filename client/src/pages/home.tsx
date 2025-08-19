@@ -342,9 +342,9 @@ export default function Home() {
             <div>
               <h4 className="text-lg font-semibold mb-4">Para Locatários</h4>
               <ul className="space-y-2 text-gray-300">
-                <li><a href="#" className="hover:text-white transition-colors">Como alugar</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Seguros</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Documentos necessários</a></li>
+                <li><a href="/support#como-alugar" className="hover:text-white transition-colors">Como alugar</a></li>
+                <li><a href="/support#seguros" className="hover:text-white transition-colors">Seguros</a></li>
+                <li><a href="/support#documentos-necessarios" className="hover:text-white transition-colors">Documentos necessários</a></li>
                 <li><a href="/support" className="hover:text-white transition-colors">FAQ</a></li>
               </ul>
             </div>
@@ -352,20 +352,20 @@ export default function Home() {
             <div>
               <h4 className="text-lg font-semibold mb-4">Para Proprietários</h4>
               <ul className="space-y-2 text-gray-300">
-                <li><a href="#" className="hover:text-white transition-colors">Como anunciar</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Precificação</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Proteção total</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Suporte 24/7</a></li>
+                <li><a href="/support#como-anunciar" className="hover:text-white transition-colors">Como anunciar</a></li>
+                <li><a href="/support#precificacao" className="hover:text-white transition-colors">Precificação</a></li>
+                <li><a href="/support#protecao-total" className="hover:text-white transition-colors">Proteção total</a></li>
+                <li><a href="/support#suporte-24-7" className="hover:text-white transition-colors">Suporte 24/7</a></li>
               </ul>
             </div>
 
             <div>
               <h4 className="text-lg font-semibold mb-4">Suporte</h4>
               <ul className="space-y-2 text-gray-300">
-                <li><a href="/support" className="hover:text-white transition-colors">Central de ajuda</a></li>
-                <li><a href="/support" className="hover:text-white transition-colors">Contato</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Termos de uso</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Política de privacidade</a></li>
+                <li><a href="/support#central-de-ajuda" className="hover:text-white transition-colors">Central de ajuda</a></li>
+                <li><a href="/support#contato" className="hover:text-white transition-colors">Contato</a></li>
+                <li><a href="/support#termos-de-uso" className="hover:text-white transition-colors">Termos de uso</a></li>
+                <li><a href="/support#politica-privacidade" className="hover:text-white transition-colors">Política de privacidade</a></li>
               </ul>
             </div>
           </div>

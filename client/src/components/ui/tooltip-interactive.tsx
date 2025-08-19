@@ -370,11 +370,6 @@ export function InteractiveTooltip({
     <div className="bg-white rounded-lg shadow-lg border p-6 max-w-md">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center">
-          {currentStepData.icon && (
-            <div className="bg-blue-100 p-2 rounded-lg mr-3">
-              <currentStepData.icon className="h-5 w-5 text-blue-600" />
-            </div>
-          )}
           <h3 className="text-lg font-semibold text-gray-900">
             {currentStepData.title}
           </h3>
