@@ -2103,8 +2103,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fuelType, 
         transmission,
         startDate,
-        endDate
+        endDate,
+        page = '1',
+        limit = '12'
       } = req.query;
+
+      const pageNum = parseInt(page as string, 10);
+      const limitNum = parseInt(limit as string, 10);
+      const offset = (pageNum - 1) * limitNum;
 
       // Parse price range if provided instead of minPrice/maxPrice
       let parsedMinPrice, parsedMaxPrice;
@@ -2142,9 +2148,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         endDate: endDate ? new Date(endDate as string) : undefined
       };
 
-      console.log('🔍 Vehicle search filters:', filters);
-      const vehiclesData = await storage.searchVehicles(filters);
-      res.json(vehiclesData);
+      console.log('🔍 Vehicle search filters with pagination:', {
+        ...filters,
+        page: pageNum,
+        limit: limitNum,
+        offset
+      });
+      
+      const allVehicles = await storage.searchVehicles(filters);
+      const totalCount = allVehicles.length;
+      const paginatedVehicles = allVehicles.slice(offset, offset + limitNum);
+      
+      const hasMore = offset + limitNum < totalCount;
+      
+      res.json({
+        vehicles: paginatedVehicles,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total: totalCount,
+          hasMore,
+          totalPages: Math.ceil(totalCount / limitNum)
+        }
+      });
     } catch (error) {
       console.error("Search vehicles error:", error);
       res.status(500).json({ message: "Erro ao buscar veículos" });

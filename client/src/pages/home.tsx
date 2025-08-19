@@ -3,9 +3,9 @@ import HeroSection from "@/components/hero-section";
 import VehicleCard from "@/components/vehicle-card";
 import VehicleFilters from "@/components/vehicle-filters";
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { SearchFilters } from "@/types";
 import { Loader2, Crown, Sparkles } from "lucide-react";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { useSearch } from "@/contexts/SearchContext";
@@ -64,10 +64,21 @@ export default function Home() {
   // Combine global filters from header with local filters
   const combinedFilters = { ...filters, ...localFilters };
 
-  const { data: vehicles, isLoading, error } = useQuery({
+  const { 
+    vehicles, 
+    totalCount, 
+    isLoading, 
+    error, 
+    isFetchingNextPage,
+    hasNextPage,
+    isNearBottom 
+  } = useInfiniteScroll({
     queryKey: ['/api/vehicles', combinedFilters],
-    queryFn: async () => {
+    queryFn: async ({ pageParam }) => {
       const params = new URLSearchParams();
+      params.append('page', pageParam.toString());
+      params.append('limit', '12');
+      
       Object.entries(combinedFilters).forEach(([key, value]) => {
         if (value !== undefined && value !== '') {
           if (Array.isArray(value)) {
@@ -84,7 +95,23 @@ export default function Home() {
       if (!response.ok) {
         throw new Error('Failed to fetch vehicles');
       }
-      return response.json();
+      const data = await response.json();
+      
+      // Handle both old format (array) and new format (object with pagination)
+      if (Array.isArray(data)) {
+        return {
+          vehicles: data,
+          pagination: {
+            page: pageParam,
+            limit: 12,
+            total: data.length,
+            hasMore: false,
+            totalPages: 1
+          }
+        };
+      }
+      
+      return data;
     },
   });
 
@@ -153,11 +180,21 @@ export default function Home() {
               Carros disponíveis perto de você
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Escolha entre centenas de veículos verificados na sua região
+              {totalCount > 0 && vehicles.length > 0 
+                ? `${vehicles.length} de ${totalCount} veículos disponíveis` 
+                : 'Escolha entre centenas de veículos verificados na sua região'}
             </p>
           </div>
 
-
+          {/* Performance indicator for scroll loading */}
+          {isNearBottom && hasNextPage && (
+            <div className="text-center mb-4">
+              <div className="inline-flex items-center px-4 py-2 rounded-full text-sm bg-blue-50 text-blue-600 border border-blue-200">
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Carregando mais veículos automaticamente...
+              </div>
+            </div>
+          )}
 
           {/* Loading State */}
           {isLoading && (
@@ -166,7 +203,7 @@ export default function Home() {
               
               {/* Loading skeletons */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8">
-                {Array.from({ length: 8 }).map((_, i) => (
+                {Array.from({ length: 12 }).map((_, i) => (
                   <VehicleCardSkeleton key={i} />
                 ))}
               </div>
@@ -185,14 +222,35 @@ export default function Home() {
 
           {/* Vehicle Grid */}
           {vehicles && vehicles.length > 0 && (
-            <div 
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 vehicle-grid"
-              data-testid="vehicle-grid"
-            >
-              {vehicles.map((vehicle: any) => (
-                <VehicleCard key={vehicle.id} vehicle={vehicle} />
-              ))}
-            </div>
+            <>
+              <div 
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 vehicle-grid"
+                data-testid="vehicle-grid"
+              >
+                {vehicles.map((vehicle: any) => (
+                  <VehicleCard key={vehicle.id} vehicle={vehicle} />
+                ))}
+              </div>
+              
+              {/* Loading more vehicles indicator */}
+              {isFetchingNextPage && (
+                <div className="flex justify-center mt-8">
+                  <div className="flex items-center space-x-2 px-4 py-2 bg-white rounded-lg shadow-sm border">
+                    <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                    <span className="text-gray-600">Carregando mais veículos...</span>
+                  </div>
+                </div>
+              )}
+              
+              {/* End of results indicator */}
+              {!hasNextPage && vehicles.length > 12 && (
+                <div className="text-center mt-8">
+                  <div className="inline-block px-4 py-2 bg-green-50 text-green-600 rounded-lg text-sm border border-green-200">
+                    ✓ Todos os {totalCount} veículos foram carregados
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {/* Empty State */}
