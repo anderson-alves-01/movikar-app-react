@@ -393,7 +393,8 @@ export class DatabaseStorage implements IStorage {
     seatsMax?: number;
   }): Promise<VehicleWithOwner[]> {
     try {
-      let whereConditions = ['v.is_available = true'];
+      // Only show vehicles from owners with verified documents
+      let whereConditions = ['v.is_available = true', 'u.verification_status = \'verified\''];
       const params: any[] = [];
       let paramIndex = 1;
 
@@ -453,7 +454,7 @@ export class DatabaseStorage implements IStorage {
           u.avatar as owner_profile_image,
           u.is_verified as owner_is_verified
         FROM vehicles v
-        LEFT JOIN users u ON v.owner_id = u.id
+        INNER JOIN users u ON v.owner_id = u.id
         WHERE ${whereConditions.join(' AND ')}
         ORDER BY 
           CASE 
