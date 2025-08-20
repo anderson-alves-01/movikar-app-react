@@ -193,35 +193,41 @@ export default function AdminCouponsPage() {
       <Header />
       <div className="py-8">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                <Ticket className="h-8 w-8 text-primary" />
-                Cupons de Desconto
-              </h1>
-              <p className="text-gray-600 mt-2">
-                Gerencie cupons de desconto para a plataforma
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Link href="/admin">
-                <Button variant="outline">
-                  ← Voltar ao Painel
-                </Button>
-              </Link>
-              <Dialog open={isCreateModalOpen || !!editingCoupon} onOpenChange={(open) => {
-                if (!open) {
-                  setIsCreateModalOpen(false);
-                  setEditingCoupon(null);
-                  resetForm();
-                }
-              }}>
-                <DialogTrigger asChild>
-                  <Button onClick={() => setIsCreateModalOpen(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Novo Cupom
+          {/* Header Section */}
+          <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="bg-gradient-to-br from-red-500 to-red-600 p-3 rounded-xl shadow-lg">
+                  <Ticket className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    Gestão de Cupons
+                  </h1>
+                  <p className="text-gray-600 mt-1">
+                    Crie e gerencie cupons de desconto para impulsionar suas vendas
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Link href="/admin">
+                  <Button variant="outline" className="gap-2">
+                    ← Voltar ao Painel
                   </Button>
-                </DialogTrigger>
+                </Link>
+                <Dialog open={isCreateModalOpen || !!editingCoupon} onOpenChange={(open) => {
+                  if (!open) {
+                    setIsCreateModalOpen(false);
+                    setEditingCoupon(null);
+                    resetForm();
+                  }
+                }}>
+                  <DialogTrigger asChild>
+                    <Button onClick={() => setIsCreateModalOpen(true)} className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white gap-2">
+                      <Plus className="h-4 w-4" />
+                      Criar Cupom
+                    </Button>
+                  </DialogTrigger>
                 <DialogContent className="max-w-md">
                   <DialogHeader>
                     <DialogTitle>
@@ -340,45 +346,111 @@ export default function AdminCouponsPage() {
                     </div>
                   </div>
                 </DialogContent>
-              </Dialog>
+                </Dialog>
+              </div>
             </div>
           </div>
 
-          {isLoading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-              <p className="text-gray-600">Carregando cupons...</p>
+          {/* Statistics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <Card className="border-l-4 border-l-blue-500">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Total de Cupons</p>
+                    <p className="text-2xl font-bold text-gray-900">{coupons?.length || 0}</p>
+                  </div>
+                  <Ticket className="h-8 w-8 text-blue-500" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-green-500">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Cupons Ativos</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {coupons?.filter(c => getCouponStatus(c).label === 'Ativo').length || 0}
+                    </p>
+                  </div>
+                  <DollarSign className="h-8 w-8 text-green-500" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-yellow-500">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Total de Usos</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {coupons?.reduce((total, c) => total + (c.usedCount || 0), 0) || 0}
+                    </p>
+                  </div>
+                  <Users className="h-8 w-8 text-yellow-500" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-red-500">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Expirados</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {coupons?.filter(c => getCouponStatus(c).label === 'Expirado').length || 0}
+                    </p>
+                  </div>
+                  <Calendar className="h-8 w-8 text-red-500" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Cupons List */}
+          <div className="bg-white rounded-lg shadow-sm border">
+            <div className="p-6 border-b">
+              <h2 className="text-xl font-semibold text-gray-900">Lista de Cupons</h2>
+              <p className="text-gray-600 text-sm mt-1">Gerencie todos os cupons de desconto da plataforma</p>
             </div>
-          ) : error ? (
-            <div className="text-center py-12">
-              <Ticket className="h-16 w-16 text-red-500 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                Erro ao carregar cupons
-              </h3>
-              <p className="text-gray-500 mb-4">
-                {error.message?.includes('401') || error.message?.includes('403') 
-                  ? "Você precisa estar logado como administrador para acessar esta página"
-                  : error.message || "Verifique sua conexão e permissões"}
-              </p>
-              {error.message?.includes('401') || error.message?.includes('403') ? (
-                <Button 
-                  onClick={() => window.location.href = '/auth'}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  Fazer Login
-                </Button>
-              ) : (
-                <Button 
-                  onClick={() => queryClient.invalidateQueries({ queryKey: ['/api/admin/coupons'] })}
-                  variant="outline"
-                >
-                  Tentar novamente
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.isArray(coupons) && coupons.map((coupon: Coupon) => {
+
+            {isLoading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                <p className="text-gray-600">Carregando cupons...</p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <Ticket className="h-16 w-16 text-red-500 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                  Erro ao carregar cupons
+                </h3>
+                <p className="text-gray-500 mb-4">
+                  {error.message?.includes('401') || error.message?.includes('403') 
+                    ? "Você precisa estar logado como administrador para acessar esta página"
+                    : error.message || "Verifique sua conexão e permissões"}
+                </p>
+                {error.message?.includes('401') || error.message?.includes('403') ? (
+                  <Button 
+                    onClick={() => window.location.href = '/auth'}
+                    className="bg-red-600 hover:bg-red-700"
+                  >
+                    Fazer Login
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={() => queryClient.invalidateQueries({ queryKey: ['/api/admin/coupons'] })}
+                    variant="outline"
+                  >
+                    Tentar novamente
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {Array.isArray(coupons) && coupons.map((coupon: Coupon) => {
                 const status = getCouponStatus(coupon);
                 return (
                   <Card key={coupon.id} className="hover:shadow-lg transition-shadow">
@@ -469,18 +541,20 @@ export default function AdminCouponsPage() {
                       </div>
                     </CardContent>
                   </Card>
-                );
-              })}
+                  );
+                  })}
 
-              {Array.isArray(coupons) && coupons.length === 0 && (
-                <div className="col-span-full text-center py-12">
-                  <Ticket className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Nenhum cupom criado</h3>
-                  <p className="text-gray-600">Crie seu primeiro cupom de desconto para começar.</p>
+                  {Array.isArray(coupons) && coupons.length === 0 && (
+                    <div className="col-span-full text-center py-12">
+                      <Ticket className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Nenhum cupom criado</h3>
+                      <p className="text-gray-600">Crie seu primeiro cupom de desconto para começar.</p>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
