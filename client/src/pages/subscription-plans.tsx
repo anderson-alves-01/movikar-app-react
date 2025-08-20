@@ -71,17 +71,18 @@ export default function SubscriptionPlans() {
         orderValue: Math.round(orderValue * 100), // Convert to cents
       });
       
-      if (response.isValid) {
+      const data = await response.json();
+      if (data.isValid) {
         setAppliedCoupon({
           isValid: true,
-          coupon: response.coupon,
-          discountAmount: response.discountAmount,
-          finalAmount: response.finalAmount,
-          message: response.message,
+          coupon: data.coupon,
+          discountAmount: data.discountAmount,
+          finalAmount: data.finalAmount,
+          message: data.message,
         });
         toast({
           title: "Cupom Aplicado!",
-          description: response.message,
+          description: data.message,
         });
       }
     } catch (error: any) {

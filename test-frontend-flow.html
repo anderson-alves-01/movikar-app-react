@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Frontend Flow</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h2>Test Frontend Subscription Flow with 100% Coupon</h2>
+    
+    <button id="loginBtn">1. Login</button>
+    <button id="testCouponBtn" disabled>2. Test Coupon Validation</button>
+    <button id="createSubscriptionBtn" disabled>3. Create Subscription with 100% Coupon</button>
+    
+    <div id="results"></div>
+
+    <script>
+        let authToken = null;
+        
+        // Login function
+        $('#loginBtn').click(async function() {
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'teste@teste.com',
+                        password: 'teste123'
+                    }),
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                if (data.token) {
+                    $('#results').append('<p>✅ Login successful</p>');
+                    $('#testCouponBtn').prop('disabled', false);
+                    authToken = data.token;
+                } else {
+                    $('#results').append('<p>❌ Login failed</p>');
+                }
+            } catch (error) {
+                $('#results').append('<p>❌ Login error: ' + error.message + '</p>');
+            }
+        });
+        
+        // Test coupon validation
+        $('#testCouponBtn').click(async function() {
+            try {
+                const response = await fetch('/api/validate-coupon', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        code: 'SAVE100',
+                        orderValue: 5990 // 59.90 in cents
+                    }),
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                $('#results').append('<p>🎫 Coupon validation: ' + JSON.stringify(data, null, 2) + '</p>');
+                $('#createSubscriptionBtn').prop('disabled', false);
+            } catch (error) {
+                $('#results').append('<p>❌ Coupon validation error: ' + error.message + '</p>');
+            }
+        });
+        
+        // Create subscription with 100% discount
+        $('#createSubscriptionBtn').click(async function() {
+            try {
+                const response = await fetch('/api/create-subscription', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        planName: 'plus',
+                        paymentMethod: 'monthly',
+                        vehicleCount: 2,
+                        couponCode: 'SAVE100',
+                        discountAmount: 6989
+                    }),
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                $('#results').append('<h3>🎯 Subscription Creation Result:</h3>');
+                $('#results').append('<pre>' + JSON.stringify(data, null, 2) + '</pre>');
+                
+                if (data.isFreeSubscription) {
+                    $('#results').append('<p style="color: green; font-weight: bold;">✅ SUCCESS: Free subscription activated!</p>');
+                } else if (data.clientSecret) {
+                    $('#results').append('<p style="color: orange;">⚠️ Would redirect to checkout (paid subscription)</p>');
+                } else {
+                    $('#results').append('<p style="color: red;">❌ ERROR: Unexpected response</p>');
+                }
+            } catch (error) {
+                $('#results').append('<p style="color: red;">❌ Subscription creation error: ' + error.message + '</p>');
+            }
+        });
+    </script>
+</body>
+</html>
