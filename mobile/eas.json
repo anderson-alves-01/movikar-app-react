@@ -1,0 +1,40 @@
+{
+  "cli": {
+    "version": ">= 8.0.0"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "android": {
+        "buildType": "aab"
+      },
+      "ios": {
+        "buildConfiguration": "Release"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account.json",
+        "track": "internal"
+      },
+      "ios": {
+        "ascAppId": "your-app-store-connect-app-id",
+        "appleId": "your-apple-id@email.com",
+        "ascApiKeyPath": "./AuthKey_XXXXXXXXX.p8",
+        "ascApiKeyId": "XXXXXXXXX",
+        "ascApiKeyIssuerId": "your-issuer-id"
+      }
+    }
+  }
+}
