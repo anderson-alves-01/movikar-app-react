@@ -20,24 +20,8 @@ export default function AdminCouponsPage() {
   const { user } = useAuthStore();
   const { toast } = useToast();
   
-  // Debug authentication state
-  console.log("Admin Coupons Page - User:", user);
-  console.log("Admin Coupons Page - Auth Storage:", localStorage.getItem('auth-storage'));
-  
-  const getAuthToken = () => {
-    try {
-      const authStorage = localStorage.getItem('auth-storage');
-      if (authStorage) {
-        const authData = JSON.parse(authStorage);
-        return authData.state?.token || authData.token;
-      }
-    } catch (error) {
-      console.error('Error parsing auth token:', error);
-    }
-    return null;
-  };
-  
-  console.log("Admin Coupons Page - Token:", getAuthToken());
+  // Verificar autenticação
+  const isAuthenticated = !!user && user.role === 'admin';
   const queryClient = useQueryClient();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
@@ -52,7 +36,7 @@ export default function AdminCouponsPage() {
   });
 
   // Verificar se é admin
-  if (!user || user.role !== 'admin') {
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
@@ -72,13 +56,10 @@ export default function AdminCouponsPage() {
   const { data: couponsData, isLoading, error } = useQuery({
     queryKey: ['/api/admin/coupons'],
     retry: false,
-    enabled: !!user && user.role === 'admin', // Only run query if user is admin
+    enabled: isAuthenticated,
   });
 
   const coupons = Array.isArray(couponsData) ? couponsData : [];
-  
-  console.log("🎫 Final coupons array:", coupons);
-  console.log("🎫 Coupons length:", coupons.length);
 
   const createCouponMutation = useMutation({
     mutationFn: async (couponData: InsertCoupon) => {
@@ -194,25 +175,25 @@ export default function AdminCouponsPage() {
       <div className="py-8">
         <div className="max-w-6xl mx-auto px-4">
           {/* Header Section */}
-          <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="bg-gradient-to-br from-red-500 to-red-600 p-3 rounded-xl shadow-lg">
-                  <Ticket className="h-8 w-8 text-white" />
+          <div className="bg-white rounded-lg shadow-sm border p-4 md:p-6 mb-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="bg-gradient-to-br from-red-500 to-red-600 p-2 md:p-3 rounded-xl shadow-lg">
+                  <Ticket className="h-6 w-6 md:h-8 md:w-8 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">
+                  <h1 className="text-xl md:text-3xl font-bold text-gray-900">
                     Gestão de Cupons
                   </h1>
-                  <p className="text-gray-600 mt-1">
+                  <p className="text-sm md:text-base text-gray-600 mt-1">
                     Crie e gerencie cupons de desconto para impulsionar suas vendas
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 md:gap-3 flex-wrap">
                 <Link href="/admin">
-                  <Button variant="outline" className="gap-2">
-                    ← Voltar ao Painel
+                  <Button variant="outline" className="gap-2 text-sm md:text-base">
+                    ← Voltar
                   </Button>
                 </Link>
                 <Dialog open={isCreateModalOpen || !!editingCoupon} onOpenChange={(open) => {
@@ -223,12 +204,13 @@ export default function AdminCouponsPage() {
                   }
                 }}>
                   <DialogTrigger asChild>
-                    <Button onClick={() => setIsCreateModalOpen(true)} className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white gap-2">
+                    <Button onClick={() => setIsCreateModalOpen(true)} className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white gap-2 text-sm md:text-base">
                       <Plus className="h-4 w-4" />
-                      Criar Cupom
+                      <span className="hidden sm:inline">Criar Cupom</span>
+                      <span className="sm:hidden">Criar</span>
                     </Button>
                   </DialogTrigger>
-                <DialogContent className="max-w-md">
+                <DialogContent className="max-w-md mx-4 max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>
                       {editingCoupon ? "Editar Cupom" : "Criar Novo Cupom"}
@@ -260,7 +242,7 @@ export default function AdminCouponsPage() {
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label>Tipo de Desconto</Label>
                         <Select
@@ -292,7 +274,7 @@ export default function AdminCouponsPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label>Valor Mínimo (centavos)</Label>
                         <Input
@@ -326,7 +308,7 @@ export default function AdminCouponsPage() {
                       />
                     </div>
 
-                    <div className="flex justify-end gap-2 pt-4">
+                    <div className="flex flex-col md:flex-row justify-end gap-2 pt-4">
                       <Button
                         variant="outline"
                         onClick={() => {
@@ -334,12 +316,14 @@ export default function AdminCouponsPage() {
                           setEditingCoupon(null);
                           resetForm();
                         }}
+                        className="w-full md:w-auto"
                       >
                         Cancelar
                       </Button>
                       <Button
                         onClick={handleSubmit}
                         disabled={createCouponMutation.isPending || updateCouponMutation.isPending}
+                        className="w-full md:w-auto bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
                       >
                         {editingCoupon ? "Atualizar" : "Criar"} Cupom
                       </Button>
@@ -352,57 +336,57 @@ export default function AdminCouponsPage() {
           </div>
 
           {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
             <Card className="border-l-4 border-l-blue-500">
-              <CardContent className="p-4">
+              <CardContent className="p-3 md:p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Total de Cupons</p>
-                    <p className="text-2xl font-bold text-gray-900">{coupons?.length || 0}</p>
+                    <p className="text-xs md:text-sm font-medium text-gray-600">Total</p>
+                    <p className="text-lg md:text-2xl font-bold text-gray-900">{coupons?.length || 0}</p>
                   </div>
-                  <Ticket className="h-8 w-8 text-blue-500" />
+                  <Ticket className="h-6 w-6 md:h-8 md:w-8 text-blue-500" />
                 </div>
               </CardContent>
             </Card>
 
             <Card className="border-l-4 border-l-green-500">
-              <CardContent className="p-4">
+              <CardContent className="p-3 md:p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Cupons Ativos</p>
-                    <p className="text-2xl font-bold text-gray-900">
+                    <p className="text-xs md:text-sm font-medium text-gray-600">Ativos</p>
+                    <p className="text-lg md:text-2xl font-bold text-gray-900">
                       {coupons?.filter(c => getCouponStatus(c).label === 'Ativo').length || 0}
                     </p>
                   </div>
-                  <DollarSign className="h-8 w-8 text-green-500" />
+                  <DollarSign className="h-6 w-6 md:h-8 md:w-8 text-green-500" />
                 </div>
               </CardContent>
             </Card>
 
             <Card className="border-l-4 border-l-yellow-500">
-              <CardContent className="p-4">
+              <CardContent className="p-3 md:p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Total de Usos</p>
-                    <p className="text-2xl font-bold text-gray-900">
+                    <p className="text-xs md:text-sm font-medium text-gray-600">Usos</p>
+                    <p className="text-lg md:text-2xl font-bold text-gray-900">
                       {coupons?.reduce((total, c) => total + (c.usedCount || 0), 0) || 0}
                     </p>
                   </div>
-                  <Users className="h-8 w-8 text-yellow-500" />
+                  <Users className="h-6 w-6 md:h-8 md:w-8 text-yellow-500" />
                 </div>
               </CardContent>
             </Card>
 
             <Card className="border-l-4 border-l-red-500">
-              <CardContent className="p-4">
+              <CardContent className="p-3 md:p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Expirados</p>
-                    <p className="text-2xl font-bold text-gray-900">
+                    <p className="text-xs md:text-sm font-medium text-gray-600">Expirados</p>
+                    <p className="text-lg md:text-2xl font-bold text-gray-900">
                       {coupons?.filter(c => getCouponStatus(c).label === 'Expirado').length || 0}
                     </p>
                   </div>
-                  <Calendar className="h-8 w-8 text-red-500" />
+                  <Calendar className="h-6 w-6 md:h-8 md:w-8 text-red-500" />
                 </div>
               </CardContent>
             </Card>
@@ -410,9 +394,9 @@ export default function AdminCouponsPage() {
 
           {/* Cupons List */}
           <div className="bg-white rounded-lg shadow-sm border">
-            <div className="p-6 border-b">
-              <h2 className="text-xl font-semibold text-gray-900">Lista de Cupons</h2>
-              <p className="text-gray-600 text-sm mt-1">Gerencie todos os cupons de desconto da plataforma</p>
+            <div className="p-4 md:p-6 border-b">
+              <h2 className="text-lg md:text-xl font-semibold text-gray-900">Lista de Cupons</h2>
+              <p className="text-gray-600 text-xs md:text-sm mt-1">Gerencie todos os cupons de desconto da plataforma</p>
             </div>
 
             {isLoading ? (
@@ -448,8 +432,8 @@ export default function AdminCouponsPage() {
                 )}
               </div>
             ) : (
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="p-4 md:p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                   {Array.isArray(coupons) && coupons.map((coupon: Coupon) => {
                 const status = getCouponStatus(coupon);
                 return (
@@ -524,17 +508,18 @@ export default function AdminCouponsPage() {
                               validUntil: new Date(coupon.validUntil),
                             });
                           }}
-                          className="flex-1"
+                          className="flex-1 text-xs md:text-sm"
                         >
                           <Edit className="h-3 w-3 mr-1" />
-                          Editar
+                          <span className="hidden sm:inline">Editar</span>
+                          <span className="sm:hidden">Ed.</span>
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => deleteCouponMutation.mutate(coupon.id)}
                           disabled={deleteCouponMutation.isPending}
-                          className="text-red-600 hover:bg-red-50"
+                          className="text-red-600 hover:bg-red-50 text-xs md:text-sm"
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
