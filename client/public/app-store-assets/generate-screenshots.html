@@ -1,0 +1,383 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALUGAE - Gerador de Screenshots</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #20B2AA, #48CAE4);
+            min-height: 100vh;
+        }
+
+        .screenshot-container {
+            width: 375px;
+            height: 812px;
+            background: white;
+            margin: 20px auto;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .status-bar {
+            height: 44px;
+            background: #000;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .header {
+            background: #20B2AA;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .hero-section {
+            padding: 30px 20px;
+            text-align: center;
+            background: linear-gradient(135deg, #20B2AA, #48CAE4);
+            color: white;
+        }
+
+        .hero-title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .hero-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 25px;
+        }
+
+        .search-box {
+            background: white;
+            border-radius: 25px;
+            padding: 15px 20px;
+            margin: 0 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .search-input {
+            width: 100%;
+            border: none;
+            font-size: 16px;
+            color: #333;
+            outline: none;
+        }
+
+        .features-grid {
+            padding: 30px 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            background: #20B2AA;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .feature-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .feature-desc {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .vehicle-list {
+            padding: 0 20px 20px;
+        }
+
+        .vehicle-card {
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .vehicle-image {
+            width: 100%;
+            height: 120px;
+            background: linear-gradient(45deg, #ddd, #f0f0f0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: #999;
+        }
+
+        .vehicle-info {
+            padding: 15px;
+        }
+
+        .vehicle-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .vehicle-price {
+            color: #20B2AA;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .screenshot-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .screenshot-btn {
+            background: #20B2AA;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 10px;
+            display: block;
+            width: 100%;
+        }
+
+        .screenshot-btn:hover {
+            background: #1a9a92;
+        }
+
+        #home-screen { display: block; }
+        #vehicle-list-screen { display: none; }
+        #booking-screen { display: none; }
+    </style>
+</head>
+<body>
+    <div class="screenshot-controls">
+        <button class="screenshot-btn" onclick="showScreen('home')">Tela Inicial</button>
+        <button class="screenshot-btn" onclick="showScreen('vehicles')">Lista de Veículos</button>
+        <button class="screenshot-btn" onclick="showScreen('booking')">Reserva</button>
+        <button class="screenshot-btn" onclick="captureScreenshot()">📸 Capturar</button>
+    </div>
+
+    <!-- Tela Inicial -->
+    <div class="screenshot-container" id="home-screen">
+        <div class="status-bar">
+            <span>9:41</span>
+            <span>••••• ⚡ 100%</span>
+        </div>
+        
+        <div class="header">
+            <div class="logo">ALUGAE</div>
+            <div>👤</div>
+        </div>
+
+        <div class="hero-section">
+            <h1 class="hero-title">Alugue seu carro ideal</h1>
+            <p class="hero-subtitle">Milhares de veículos disponíveis</p>
+        </div>
+
+        <div class="search-box">
+            <input type="text" class="search-input" placeholder="🔍 Buscar veículos, cidade..." />
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🚗</div>
+                <div class="feature-title">2000+ Carros</div>
+                <div class="feature-desc">Ampla variedade</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <div class="feature-title">Reserva Rápida</div>
+                <div class="feature-desc">Em poucos cliques</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <div class="feature-title">100% Seguro</div>
+                <div class="feature-desc">Contratos digitais</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💳</div>
+                <div class="feature-title">Pague com PIX</div>
+                <div class="feature-desc">Rápido e fácil</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Lista de Veículos -->
+    <div class="screenshot-container" id="vehicle-list-screen">
+        <div class="status-bar">
+            <span>9:41</span>
+            <span>••••• ⚡ 100%</span>
+        </div>
+        
+        <div class="header">
+            <div class="logo">ALUGAE</div>
+            <div>🔍 📍</div>
+        </div>
+
+        <div style="padding: 20px; background: #f8f9fa;">
+            <div style="font-size: 18px; font-weight: 600; color: #333; margin-bottom: 5px;">
+                São Paulo, SP
+            </div>
+            <div style="color: #666; font-size: 14px;">
+                47 veículos encontrados
+            </div>
+        </div>
+
+        <div class="vehicle-list">
+            <div class="vehicle-card">
+                <div class="vehicle-image">🚗</div>
+                <div class="vehicle-info">
+                    <div class="vehicle-name">Honda Civic 2022</div>
+                    <div style="color: #666; font-size: 12px; margin: 5px 0;">Automático • Sedan • 5 lugares</div>
+                    <div class="vehicle-price">R$ 89/dia</div>
+                </div>
+            </div>
+
+            <div class="vehicle-card">
+                <div class="vehicle-image">🚙</div>
+                <div class="vehicle-info">
+                    <div class="vehicle-name">Toyota Corolla Cross</div>
+                    <div style="color: #666; font-size: 12px; margin: 5px 0;">Automático • SUV • 5 lugares</div>
+                    <div class="vehicle-price">R$ 95/dia</div>
+                </div>
+            </div>
+
+            <div class="vehicle-card">
+                <div class="vehicle-image">🏎️</div>
+                <div class="vehicle-info">
+                    <div class="vehicle-name">BMW X1 2023</div>
+                    <div style="color: #666; font-size: 12px; margin: 5px 0;">Automático • SUV Premium • 5 lugares</div>
+                    <div class="vehicle-price">R$ 150/dia</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Reserva -->
+    <div class="screenshot-container" id="booking-screen">
+        <div class="status-bar">
+            <span>9:41</span>
+            <span>••••• ⚡ 100%</span>
+        </div>
+        
+        <div class="header">
+            <div style="display: flex; align-items: center;">
+                <span style="margin-right: 10px;">←</span>
+                <span>Finalizar Reserva</span>
+            </div>
+        </div>
+
+        <div style="padding: 20px;">
+            <div class="vehicle-card" style="margin-bottom: 20px;">
+                <div class="vehicle-image">🚗</div>
+                <div class="vehicle-info">
+                    <div class="vehicle-name">Honda Civic 2022</div>
+                    <div style="color: #20B2AA; font-weight: 600;">R$ 89/dia</div>
+                </div>
+            </div>
+
+            <div style="background: white; border-radius: 15px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                <h3 style="margin-bottom: 15px; color: #333;">Período da Locação</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                    <div>
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Retirada</div>
+                        <div style="font-weight: 600;">15/01/2024</div>
+                        <div style="color: #666; font-size: 14px;">14:00</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Devolução</div>
+                        <div style="font-weight: 600;">18/01/2024</div>
+                        <div style="color: #666; font-size: 14px;">10:00</div>
+                    </div>
+                </div>
+                <div style="border-top: 1px solid #eee; padding-top: 15px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>3 diárias</span>
+                        <span>R$ 267,00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>Taxa de serviço</span>
+                        <span>R$ 13,35</span>
+                    </div>
+                    <div style="border-top: 1px solid #eee; padding-top: 10px; display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; color: #20B2AA;">
+                        <span>Total</span>
+                        <span>R$ 280,35</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: #20B2AA; color: white; padding: 15px; border-radius: 12px; text-align: center; font-weight: 600; margin-top: 20px;">
+                💳 Pagar com PIX
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showScreen(screen) {
+            document.getElementById('home-screen').style.display = 'none';
+            document.getElementById('vehicle-list-screen').style.display = 'none';
+            document.getElementById('booking-screen').style.display = 'none';
+            
+            if (screen === 'home') {
+                document.getElementById('home-screen').style.display = 'block';
+            } else if (screen === 'vehicles') {
+                document.getElementById('vehicle-list-screen').style.display = 'block';
+            } else if (screen === 'booking') {
+                document.getElementById('booking-screen').style.display = 'block';
+            }
+        }
+
+        function captureScreenshot() {
+            alert('Use as ferramentas de desenvolvedor do navegador (F12) ou uma ferramenta de captura para salvar esta tela como PNG nas dimensões 1320×2868px para iPhone 6.7".');
+        }
+    </script>
+</body>
+</html>
