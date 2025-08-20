@@ -3510,7 +3510,7 @@ export class DatabaseStorage implements IStorage {
         .where(
           and(
             or(eq(bookings.renterId, userId), eq(bookings.ownerId, userId)),
-            eq(bookings.status, 'completed')
+            or(eq(bookings.status, 'completed'), eq(bookings.status, 'approved'))
           )
         )
         .orderBy(desc(bookings.endDate));
