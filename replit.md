@@ -20,6 +20,7 @@ Preferred communication style: Simple, everyday language.
 - **State Management**: Zustand (authentication), TanStack Query (server state)
 - **UI**: Tailwind CSS with shadcn/ui components, custom loading components and skeletons
 - **Build Tool**: Vite
+- **UI/UX Decisions**: Custom components (AnimatedButton, AnimatedCard, AnimatedNav, AnimatedInput, FloatingActionButton, PulsingDot), InteractiveTooltip system for onboarding, brand-consistent animated loading skeletons (shimmer, wave, pulse effects with alugae.mobi color scheme), smooth page transitions.
 
 ### Backend
 - **Runtime**: Node.js with Express.js
@@ -37,111 +38,19 @@ Preferred communication style: Simple, everyday language.
 - **Authentication**: JWT-based cookie authentication, role-based access, protected routes, using httpOnly cookies.
 - **Vehicle Management**: Comprehensive listings with images, location-based search, dynamic pricing, availability calendar, waiting queue, automatic vehicle release, vehicle approval workflow with CRLV document upload and administrative review, vehicle validation for models, license plates, and RENAVAM.
 - **Booking System**: Real-time availability, status workflow, payment tracking, booking history, automatic date blocking upon contract signing, intelligent date blocking, visual conflict warnings, dual inspection system for renters and owners.
-- **Search & Filtering**: Location, category, price, features, transmission, date-based availability.
+- **Search & Filtering**: Location, category, price, features, transmission, date-based availability, advanced search modal with history and filters, infinite scroll pagination.
 - **Messaging**: Real-time, booking-specific threads, read/unread status.
 - **Digital Contracts**: DocuSign integration for digital signatures (real API and mock fallback), automatic contract creation, PDF generation, professional Brazilian contract template, multi-platform support (Autentique, D4Sign, ClickSign).
 - **Payments**: Stripe integration ("Alugar Agora" workflow), secure checkout, payment intent creation, post-payment redirection to contract, security deposit management.
-- **Subscription System**: Complete subscription management with tiered plans, secure Stripe checkout, and robust redirect protection.
+- **Subscription System**: Complete subscription management with tiered plans, secure Stripe checkout, robust redirect protection, dynamic values tracking actual paid amounts, vehicle counts, payment intent IDs, and metadata.
 - **Vehicle Highlight System**: Subscription-based vehicle highlighting with visual differentiation (Diamante/Prata badges), intelligent ordering, and usage tracking.
 - **Admin Panel**: Comprehensive CRUD operations for users, vehicles, bookings, admin settings. Features include vehicle approval, document validation, performance dashboard, and configurable service/insurance fees with feature toggles.
-- **User Experience**: Portuguese error messages, simplified document verification, personalized vehicle suggestions, friend referral system, comprehensive loading states.
+- **User Experience**: Portuguese error messages, simplified document verification, personalized vehicle suggestions, friend referral system, comprehensive loading states, enhanced modal scrolling.
 - **Referral System**: Generates shareable links, detects URL parameters for automatic registration, auto-applies referral codes post-registration, and includes comprehensive security validation.
 - **Points Usage System**: Allows points to be used for discounts during vehicle rental and subscription checkouts (1 point = R$ 0.01). Includes real-time discount preview, visual confirmation, transaction tracking, and cache invalidation.
-- **Dynamic Subscription Values**: Tracks actual paid amounts, vehicle counts, payment intent IDs, and metadata for user subscriptions.
 - **Checkout URL Optimization**: Implemented temporary server-side data storage to resolve HTTP 431 errors caused by long URLs, reducing URL length significantly.
-
-## Recent Changes
-
-### August 20, 2025 - Mobile App Real API Integration Complete
-- **All mobile screens connected**: HomeScreen, SearchScreen, VehicleDetailScreen, BookingsScreen, and ProfileScreen now use real API data
-- **Authentication service**: Complete JWT token management with automatic refresh and secure storage
-- **API service layer**: Comprehensive service handling all backend communication with proper error handling
-- **Data transformation**: Backend response handling to match mobile app interfaces with proper fallbacks
-- **Image URL handling**: Smart image URL construction for vehicle photos with placeholder fallbacks
-- **Search integration**: Real-time search functionality connected to backend vehicle search API
-- **TypeScript fixes**: Resolved all compilation errors and type mismatches in mobile app
-- **Storage abstraction**: Custom storage service replacing expo-secure-store for broader compatibility
-
-### August 18, 2025 - Authentication & UI Fixes
-- **Email validation fix**: Removed automatic dot removal from email addresses - emails now preserve all characters including periods
-- **Phone number system overhaul**: Replaced automatic formatting with separate DDI field (+55 Brazil default) and clean phone number input
-- **Database schema update**: Extended phone field length to accommodate international numbers with country codes
-- **Form validation improvements**: Simplified phone validation to require minimum 10 digits without complex formatting rules
-- **User experience enhancement**: DDI field auto-formats with + prefix, phone field accepts only numbers for cleaner data storage
-
-### August 18, 2025 - Micro-Interactions & Dynamic Onboarding Implementation
-- **Comprehensive micro-interactions system**: Implemented AnimatedButton, AnimatedCard, AnimatedNav, and AnimatedInput components with hover effects, scaling, and ripple animations
-- **Dynamic onboarding tutorial**: Created InteractiveTooltip system with automatic step progression, spotlight highlighting, and viewport boundary detection
-- **OnboardingFlow component**: Developed guided tutorial for new users covering search, login, features, and navigation
-- **Tooltip positioning fixes**: Resolved issue where onboarding tooltips appeared outside screen layout by implementing viewport boundary detection and responsive positioning
-- **CSS animation library**: Added custom keyframes for slideIn, fadeIn, scaleIn, shimmer, and pulse effects
-- **Page transitions**: Implemented smooth navigation transitions between pages
-- **User experience enhancements**: Loading states, focus animations, and interactive feedback throughout the platform
-
-### August 19, 2025 - Enhanced Search Modal & On-Demand Loading Implementation
-- **Complete search modal redesign**: Implemented modern search interface based on user-provided design reference with tabs for "Recentes" and "Buscas Salvas"
-- **Real search history**: Removed fake data, implemented functional search history that saves actual user searches to localStorage with applied filters
-- **Advanced filters integration**: Connected search modal filters with existing backend filter system including category, price, fuel type, transmission
-- **Date picker functionality**: Added retirada (pickup) and devolução (return) date fields to advanced filters
-- **Search button implementation**: Added search buttons in text field (magnifying glass icon) and main "Buscar" button for advanced filters
-- **Platform color scheme**: Updated security banner to use official red gradient (from-red-500 to-red-600) matching platform branding
-- **Responsive design**: Mobile-optimized modal with proper scrolling, viewport detection, and touch-friendly interface
-- **Real-time filtering**: Filters apply automatically as users select options, with proper state management through SearchContext
-- **On-demand loading performance**: Implemented infinite scroll pagination with 12 vehicles per page, automatic loading 200px from bottom, visual indicators
-- **Search history with filters**: History now captures and restores both text searches and applied advanced filters (dates, category, price, etc.)
-- **Performance optimization**: Added loading states, skeleton placeholders, and smart pagination to improve user experience with large result sets
-
-### August 19, 2025 - Brand-Consistent Animated Loading Skeletons & Micro-Interactions
-- **Advanced skeleton animations**: Implemented brand-consistent shimmer, wave, and pulse effects with alugae.mobi color scheme
-- **Staggered loading animations**: Vehicle cards load with progressive delays creating smooth visual flow
-- **Micro-interactions library**: Created AnimatedButton, AnimatedCard, FloatingActionButton, and PulsingDot components
-- **Brand-specific effects**: Custom gradient shifts using primary/red colors, hover acceleration, and ripple effects
-- **Enhanced skeleton components**: SearchModalSkeleton, HeaderSkeleton, FormSkeleton, StatCardSkeleton with realistic placeholders
-- **Performance-focused animations**: CSS-based animations for better performance, hover state optimizations
-- **Interactive feedback**: Loading dots, progress bars, toast notifications with brand-consistent styling
-
-### August 19, 2025 - Critical API & TypeScript Fixes
-- **Fixed 500 errors in booking API**: Resolved TypeScript compilation errors related to ownerInspection property access
-- **Updated BookingWithDetails type**: Added optional ownerInspection and inspection properties to prevent type mismatches
-- **Enhanced error handling**: Added type guards and conditional checks for optional inspection data
-- **Authentication flow working**: Users need to log in first before accessing booking endpoints (403/401 errors are expected when not authenticated)
-- **Server stability**: All TypeScript errors resolved, application running without compilation issues
-- **Type safety improvements**: Added proper type annotations and fallbacks for dynamic properties
-
-### August 20, 2025 - Coupon System Integration & Subscription Fixes
-- **Complete coupon system integration**: Successfully integrated coupon functionality into subscription plans page with real-time validation and discount application
-- **Backend coupon validation**: Created validate-coupon API endpoint with proper discount calculation and business logic
-- **Frontend coupon interface**: Added coupon input field with real-time validation, visual feedback, and price updates
-- **Subscription creation fixes**: Resolved 500 error in create-subscription endpoint by implementing Stripe customer validation and recreation
-- **Customer ID management**: Added automatic detection and replacement of invalid Stripe customer IDs from different environments
-- **Test infrastructure**: Created test user (teste@teste.com) and test coupon (TESTE10) for system validation
-- **Production compatibility**: Fixed cross-environment Stripe customer issues that were causing subscription failures
-- **Complete workflow validation**: Confirmed end-to-end functionality from coupon entry to subscription creation with proper discount application
-
-### August 20, 2025 - Complete React Native Mobile App Implementation with Real API Integration
-- **Complete mobile app structure**: Developed full React Native application with Expo SDK 50 for iOS and Android deployment
-- **6 main screens implemented**: HomeScreen (featured vehicles), SearchScreen (filters), BookingsScreen (reservations), ProfileScreen (user settings), VehicleDetailScreen (car details), LoginScreen (authentication)
-- **Navigation system**: React Navigation 6 with bottom tab navigator and stack navigation between screens
-- **TypeScript configuration**: Full TypeScript support with proper type definitions for all components
-- **Real API integration**: Successfully connected all screens to https://alugae.mobi/api backend with proper authentication
-- **Authentication system**: Implemented JWT token management with secure storage and automatic token refresh
-- **API service architecture**: Created comprehensive apiService with error handling, authentication, and data transformation
-- **Storage management**: Custom storage abstraction using AsyncStorage for persistent data across app restarts
-- **Real data display**: All screens now display actual vehicle data, user information, and booking details from production API
-- **Image handling**: Proper URL construction for vehicle images with fallback placeholders
-- **Search functionality**: Advanced search with filters connected to real backend search endpoints
-- **EAS Build setup**: Production-ready build configuration for App Store and Play Store deployment
-- **Comprehensive documentation**: Created MOBILE_BUILD_GUIDE.md, MOBILE_TESTING_GUIDE.md, and app store preparation guides
-- **Asset structure**: Prepared folder structure for app icons, splash screens, and screenshots
-- **Store configurations**: Bundle identifiers (com.alugae.mobile), permissions, and deployment settings configured
-- **Testing strategies**: Multiple testing approaches from Expo Go development testing to production builds and beta testing
-
-### August 18, 2025 - Registration Flow & Modal Improvements  
-- **Fixed "Star is not defined" production error**: Added missing Star import to header.tsx component that was causing crashes after user registration
-- **Enhanced modal scrolling**: Added proper scroll bars to Terms of Use and Privacy Policy modals with max-height constraints
-- **Fixed TypeScript errors**: Corrected checkbox type handling in privacy policy modal
-- **Registration flow validation**: Comprehensive testing of user registration, authentication, and redirect flows
-- **Build verification**: Confirmed successful production build without any Star reference errors
+- **Coupon System**: Integration into subscription plans page with real-time validation and discount application.
+- **Mobile App (React Native)**: Full React Native application with Expo SDK 50, 6 main screens (Home, Search, Bookings, Profile, VehicleDetail, Login), React Navigation 6, full TypeScript support, real API integration, JWT token management with secure storage and automatic token refresh, custom API service architecture, custom storage abstraction, EAS Build setup.
 
 ## External Dependencies
 
