@@ -5737,9 +5737,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         priceInCents = Math.max(0, priceInCents - discountAmount);
       }
 
-      // Create or get Stripe customer
+      // Create or get Stripe customer - always create new if missing
       let customerId = user.stripeCustomerId;
+      
+      // Validate existing customer ID
+      if (customerId) {
+        try {
+          await stripe.customers.retrieve(customerId);
+        } catch (error: any) {
+          console.log(`🔄 Invalid customer ID ${customerId}, creating new customer`);
+          customerId = null;
+          await storage.updateUser(userId, { stripeCustomerId: null });
+        }
+      }
+      
       if (!customerId) {
+        console.log(`🆕 Creating new Stripe customer for user ${userId}`);
         const customer = await stripe.customers.create({
           email: user.email,
           name: user.name,
@@ -5749,6 +5762,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         customerId = customer.id;
         await storage.updateUser(userId, { stripeCustomerId: customerId });
+        console.log(`✅ Created customer: ${customerId}`);
       }
 
       // Create payment intent for subscription

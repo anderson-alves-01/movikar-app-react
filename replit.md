@@ -98,6 +98,16 @@ Preferred communication style: Simple, everyday language.
 - **Server stability**: All TypeScript errors resolved, application running without compilation issues
 - **Type safety improvements**: Added proper type annotations and fallbacks for dynamic properties
 
+### August 20, 2025 - Coupon System Integration & Subscription Fixes
+- **Complete coupon system integration**: Successfully integrated coupon functionality into subscription plans page with real-time validation and discount application
+- **Backend coupon validation**: Created validate-coupon API endpoint with proper discount calculation and business logic
+- **Frontend coupon interface**: Added coupon input field with real-time validation, visual feedback, and price updates
+- **Subscription creation fixes**: Resolved 500 error in create-subscription endpoint by implementing Stripe customer validation and recreation
+- **Customer ID management**: Added automatic detection and replacement of invalid Stripe customer IDs from different environments
+- **Test infrastructure**: Created test user (teste@teste.com) and test coupon (TESTE10) for system validation
+- **Production compatibility**: Fixed cross-environment Stripe customer issues that were causing subscription failures
+- **Complete workflow validation**: Confirmed end-to-end functionality from coupon entry to subscription creation with proper discount application
+
 ### August 20, 2025 - Complete Review System Rebuild & Production Fix
 - **Complete system rebuild**: Removed all existing review code causing persistent production errors and rebuilt from scratch
 - **New database schema**: Created clean reviews table with proper relations to bookings, users, and vehicles
