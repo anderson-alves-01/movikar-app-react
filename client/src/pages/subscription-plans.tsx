@@ -636,6 +636,41 @@ export default function SubscriptionPlans() {
             </Label>
           </div>
 
+          {/* Vehicle Count Selector */}
+          <div className="flex flex-col items-center justify-center space-y-3 mb-8">
+            <Label htmlFor="vehicle-count" className="text-sm font-medium">
+              Quantidade de anúncios:
+            </Label>
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setVehicleCount(Math.max(3, vehicleCount - 1))}
+                disabled={vehicleCount <= 3}
+                className="h-8 w-8 p-0"
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <div className="flex items-center justify-center min-w-[120px] px-4 py-2 border rounded-md bg-white dark:bg-gray-800">
+                <span className="text-lg font-semibold">{vehicleCount}</span>
+                <span className="text-sm text-gray-500 ml-1">anúncios</span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setVehicleCount(Math.min(50, vehicleCount + 1))}
+                disabled={vehicleCount >= 50}
+                className="h-8 w-8 p-0"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="text-xs text-gray-500 text-center">
+              O preço é calculado conforme a quantidade selecionada<br/>
+              Mínimo: 3 anúncios | Máximo: 50 anúncios
+            </div>
+          </div>
+
           {/* Coupon Section */}
           <div className="max-w-md mx-auto mb-8">
             <Card className="bg-white/80 backdrop-blur-sm border-dashed border-2 border-gray-300">
@@ -697,41 +732,6 @@ export default function SubscriptionPlans() {
                 </p>
               </CardContent>
             </Card>
-          </div>
-
-          {/* Vehicle Count Selector */}
-          <div className="flex flex-col items-center justify-center space-y-3 mb-8">
-            <Label htmlFor="vehicle-count" className="text-sm font-medium">
-              Quantidade de anúncios:
-            </Label>
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setVehicleCount(Math.max(3, vehicleCount - 1))}
-                disabled={vehicleCount <= 3}
-                className="h-8 w-8 p-0"
-              >
-                <Minus className="h-4 w-4" />
-              </Button>
-              <div className="flex items-center justify-center min-w-[120px] px-4 py-2 border rounded-md bg-white dark:bg-gray-800">
-                <span className="text-lg font-semibold">{vehicleCount}</span>
-                <span className="text-sm text-gray-500 ml-1">anúncios</span>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setVehicleCount(Math.min(50, vehicleCount + 1))}
-                disabled={vehicleCount >= 50}
-                className="h-8 w-8 p-0"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="text-xs text-gray-500 text-center">
-              O preço é calculado conforme a quantidade selecionada<br/>
-              Mínimo: 3 anúncios | Máximo: 50 anúncios
-            </div>
           </div>
         </div>
 
