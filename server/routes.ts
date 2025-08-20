@@ -5375,6 +5375,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Webhook secret não configurado" });
       }
 
+      if (!stripe) {
+        console.error("❌ Stripe não está configurado");
+        return res.status(500).json({ error: "Stripe não está configurado" });
+      }
+
       let event: Stripe.Event;
       try {
         event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
@@ -5772,9 +5777,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         discountAmount: discountAmount || 0
       });
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating subscription:", error);
-      res.status(500).json({ message: "Erro ao criar assinatura" });
+      res.status(500).json({ message: "Erro ao criar assinatura", details: error.message });
     }
   });
 
