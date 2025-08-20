@@ -1,104 +1,71 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  View,
-  Text,
   StyleSheet,
+  Text,
+  View,
   ScrollView,
   TouchableOpacity,
   Image,
   Alert,
+  Switch,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  ddi: string;
+  profileImage?: string;
+  role: string;
+}
+
+interface ProfileOption {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  subtitle?: string;
+  onPress: () => void;
+  hasSwitch?: boolean;
+  switchValue?: boolean;
+  onSwitchChange?: (value: boolean) => void;
+}
+
 export default function ProfileScreen() {
   const navigation = useNavigation();
-  const [user, setUser] = useState({
-    name: 'João Silva',
-    email: 'joao@email.com',
-    phone: '(11) 99999-9999',
-    subscriptionPlan: 'free',
-    vehicleListings: 1,
-    maxVehicleListings: 1,
-    rating: 4.8,
-    totalRentals: 12,
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [locationEnabled, setLocationEnabled] = useState(true);
 
-  const menuItems = [
-    {
-      id: 'vehicles',
-      title: 'Meus Veículos',
-      subtitle: `${user.vehicleListings}/${user.maxVehicleListings} anúncios`,
-      icon: 'car',
-      onPress: () => {
-        // Navigate to vehicles screen
-      },
-    },
-    {
-      id: 'subscription',
-      title: 'Plano de Assinatura',
-      subtitle: user.subscriptionPlan === 'free' ? 'Plano Gratuito' : 'Plano Premium',
-      icon: 'card',
-      onPress: () => {
-        // Navigate to subscription screen
-      },
-    },
-    {
-      id: 'documents',
-      title: 'Documentos',
-      subtitle: 'CNH e documentos do veículo',
-      icon: 'document-text',
-      onPress: () => {
-        // Navigate to documents screen
-      },
-    },
-    {
-      id: 'payment',
-      title: 'Métodos de Pagamento',
-      subtitle: 'Cartões e formas de pagamento',
-      icon: 'wallet',
-      onPress: () => {
-        // Navigate to payment screen
-      },
-    },
-    {
-      id: 'reviews',
-      title: 'Avaliações',
-      subtitle: `${user.rating} estrelas`,
-      icon: 'star',
-      onPress: () => {
-        // Navigate to reviews screen
-      },
-    },
-    {
-      id: 'history',
-      title: 'Histórico de Locações',
-      subtitle: `${user.totalRentals} locações realizadas`,
-      icon: 'time',
-      onPress: () => {
-        // Navigate to history screen
-      },
-    },
-    {
-      id: 'settings',
-      title: 'Configurações',
-      subtitle: 'Preferências do aplicativo',
-      icon: 'settings',
-      onPress: () => {
-        // Navigate to settings screen
-      },
-    },
-    {
-      id: 'help',
-      title: 'Ajuda e Suporte',
-      subtitle: 'Central de ajuda',
-      icon: 'help-circle',
-      onPress: () => {
-        // Navigate to help screen
-      },
-    },
-  ];
+  useEffect(() => {
+    loadUserProfile();
+  }, []);
+
+  const loadUserProfile = async () => {
+    try {
+      setLoading(true);
+      // Simulate loading user data - replace with real API call
+      setTimeout(() => {
+        setUser({
+          id: 1,
+          name: 'Usuário Teste',
+          email: 'usuario@teste.com',
+          phone: '11999999999',
+          ddi: '+55',
+          role: 'user',
+          profileImage: undefined,
+        });
+        setLoading(false);
+      }, 1000);
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+      setLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -110,93 +77,197 @@ export default function ProfileScreen() {
           text: 'Sair',
           style: 'destructive',
           onPress: () => {
-            // Handle logout
-            navigation.navigate('Login');
-          },
-        },
+            // TODO: Implement logout
+            Alert.alert('Em Desenvolvimento', 'Funcionalidade de logout será implementada em breve');
+          }
+        }
       ]
     );
   };
 
+  const handleEditProfile = () => {
+    Alert.alert('Em Desenvolvimento', 'Edição de perfil será implementada em breve');
+  };
+
+  const handleChangePassword = () => {
+    Alert.alert('Em Desenvolvimento', 'Alteração de senha será implementada em breve');
+  };
+
+  const handleMyVehicles = () => {
+    Alert.alert('Em Desenvolvimento', 'Gerenciamento de veículos será implementado em breve');
+  };
+
+  const handlePaymentMethods = () => {
+    Alert.alert('Em Desenvolvimento', 'Métodos de pagamento serão implementados em breve');
+  };
+
+  const handleSupport = () => {
+    Alert.alert('Em Desenvolvimento', 'Suporte será implementado em breve');
+  };
+
+  const handlePrivacyPolicy = () => {
+    Alert.alert('Em Desenvolvimento', 'Política de privacidade será implementada em breve');
+  };
+
+  const handleTermsOfService = () => {
+    Alert.alert('Em Desenvolvimento', 'Termos de serviço serão implementados em breve');
+  };
+
+  const profileOptions: ProfileOption[] = [
+    {
+      icon: 'person-outline',
+      title: 'Editar Perfil',
+      subtitle: 'Nome, foto, informações pessoais',
+      onPress: handleEditProfile,
+    },
+    {
+      icon: 'lock-closed-outline',
+      title: 'Alterar Senha',
+      subtitle: 'Mantenha sua conta segura',
+      onPress: handleChangePassword,
+    },
+    {
+      icon: 'car-sport-outline',
+      title: 'Meus Veículos',
+      subtitle: 'Gerenciar veículos cadastrados',
+      onPress: handleMyVehicles,
+    },
+    {
+      icon: 'card-outline',
+      title: 'Métodos de Pagamento',
+      subtitle: 'Cartões e formas de pagamento',
+      onPress: handlePaymentMethods,
+    },
+    {
+      icon: 'notifications-outline',
+      title: 'Notificações',
+      subtitle: 'Receber alertas sobre reservas',
+      onPress: () => {},
+      hasSwitch: true,
+      switchValue: notificationsEnabled,
+      onSwitchChange: setNotificationsEnabled,
+    },
+    {
+      icon: 'location-outline',
+      title: 'Localização',
+      subtitle: 'Permitir acesso à localização',
+      onPress: () => {},
+      hasSwitch: true,
+      switchValue: locationEnabled,
+      onSwitchChange: setLocationEnabled,
+    },
+    {
+      icon: 'help-circle-outline',
+      title: 'Suporte',
+      subtitle: 'Central de ajuda e contato',
+      onPress: handleSupport,
+    },
+    {
+      icon: 'shield-outline',
+      title: 'Política de Privacidade',
+      onPress: handlePrivacyPolicy,
+    },
+    {
+      icon: 'document-text-outline',
+      title: 'Termos de Serviço',
+      onPress: handleTermsOfService,
+    },
+  ];
+
+  const renderProfileOption = (option: ProfileOption, index: number) => (
+    <TouchableOpacity
+      key={index}
+      style={styles.optionItem}
+      onPress={option.onPress}
+      disabled={option.hasSwitch}
+    >
+      <View style={styles.optionLeft}>
+        <View style={styles.optionIcon}>
+          <Ionicons name={option.icon} size={24} color="#20B2AA" />
+        </View>
+        <View style={styles.optionText}>
+          <Text style={styles.optionTitle}>{option.title}</Text>
+          {option.subtitle && (
+            <Text style={styles.optionSubtitle}>{option.subtitle}</Text>
+          )}
+        </View>
+      </View>
+      <View style={styles.optionRight}>
+        {option.hasSwitch ? (
+          <Switch
+            value={option.switchValue}
+            onValueChange={option.onSwitchChange}
+            trackColor={{ false: '#ccc', true: '#20B2AA' }}
+            thumbColor="#fff"
+          />
+        ) : (
+          <Ionicons name="chevron-forward" size={20} color="#ccc" />
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#20B2AA" />
+          <Text style={styles.loadingText}>Carregando perfil...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
-        {/* Profile Header */}
-        <View style={styles.profileHeader}>
-          <View style={styles.avatarContainer}>
-            <Image
-              source={{
-                uri: 'https://via.placeholder.com/80x80/20B2AA/ffffff?text=JS',
-              }}
-              style={styles.avatar}
-            />
-            <TouchableOpacity style={styles.cameraButton}>
-              <Ionicons name="camera" size={16} color="#fff" />
+        {/* User Profile Header */}
+        {user && (
+          <View style={styles.profileHeader}>
+            <View style={styles.profileImageContainer}>
+              {user.profileImage ? (
+                <Image source={{ uri: user.profileImage }} style={styles.profileImage} />
+              ) : (
+                <View style={[styles.profileImage, styles.profileImagePlaceholder]}>
+                  <Ionicons name="person-outline" size={40} color="#666" />
+                </View>
+              )}
+              <TouchableOpacity style={styles.editImageButton} onPress={handleEditProfile}>
+                <Ionicons name="camera-outline" size={16} color="#fff" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.profileInfo}>
+              <Text style={styles.userName}>{user.name}</Text>
+              <Text style={styles.userEmail}>{user.email}</Text>
+              <Text style={styles.userPhone}>
+                {user.ddi} {user.phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')}
+              </Text>
+            </View>
+
+            <TouchableOpacity style={styles.editProfileButton} onPress={handleEditProfile}>
+              <Ionicons name="pencil-outline" size={16} color="#20B2AA" />
+              <Text style={styles.editProfileText}>Editar</Text>
             </TouchableOpacity>
           </View>
-          <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{user.name}</Text>
-            <Text style={styles.profileEmail}>{user.email}</Text>
-            <Text style={styles.profilePhone}>{user.phone}</Text>
-          </View>
-          <TouchableOpacity style={styles.editButton}>
-            <Ionicons name="pencil" size={16} color="#20B2AA" />
-          </TouchableOpacity>
+        )}
+
+        {/* Profile Options */}
+        <View style={styles.optionsContainer}>
+          {profileOptions.map((option, index) => renderProfileOption(option, index))}
         </View>
 
-        {/* Stats */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{user.rating}</Text>
-            <Text style={styles.statLabel}>Avaliação</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{user.totalRentals}</Text>
-            <Text style={styles.statLabel}>Locações</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{user.vehicleListings}</Text>
-            <Text style={styles.statLabel}>Veículos</Text>
-          </View>
-        </View>
-
-        {/* Menu Items */}
-        <View style={styles.menuContainer}>
-          {menuItems.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.menuItem}
-              onPress={item.onPress}
-            >
-              <View style={styles.menuIconContainer}>
-                <Ionicons
-                  name={item.icon as keyof typeof Ionicons.glyphMap}
-                  size={24}
-                  color="#20B2AA"
-                />
-              </View>
-              <View style={styles.menuContent}>
-                <Text style={styles.menuTitle}>{item.title}</Text>
-                <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#ccc" />
-            </TouchableOpacity>
-          ))}
+        {/* App Info */}
+        <View style={styles.appInfo}>
+          <Text style={styles.appName}>alugae</Text>
+          <Text style={styles.appVersion}>Versão 1.0.0</Text>
         </View>
 
         {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Ionicons name="log-out" size={20} color="#FF3B30" />
+          <Ionicons name="log-out-outline" size={20} color="#FF6347" />
           <Text style={styles.logoutText}>Sair da Conta</Text>
         </TouchableOpacity>
-
-        {/* App Info */}
-        <View style={styles.appInfo}>
-          <Text style={styles.appInfoText}>alugae v1.0.0</Text>
-          <Text style={styles.appInfoText}>© 2025 alugae.mobi</Text>
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -207,139 +278,159 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666',
+  },
   scrollView: {
     flex: 1,
   },
   profileHeader: {
     backgroundColor: '#fff',
     padding: 20,
-    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
   },
-  avatarContainer: {
+  profileImageContainer: {
     position: 'relative',
-    marginRight: 15,
+    marginBottom: 15,
   },
-  avatar: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+  profileImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
-  cameraButton: {
+  profileImagePlaceholder: {
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  editImageButton: {
     position: 'absolute',
     bottom: 0,
     right: 0,
     backgroundColor: '#20B2AA',
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    borderRadius: 15,
+    width: 30,
+    height: 30,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#fff',
   },
   profileInfo: {
-    flex: 1,
+    alignItems: 'center',
+    marginBottom: 15,
   },
-  profileName: {
-    fontSize: 18,
+  userName: {
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 2,
+    marginBottom: 5,
   },
-  profileEmail: {
-    fontSize: 14,
+  userEmail: {
+    fontSize: 16,
     color: '#666',
-    marginBottom: 2,
+    marginBottom: 5,
   },
-  profilePhone: {
-    fontSize: 14,
+  userPhone: {
+    fontSize: 16,
     color: '#666',
   },
-  editButton: {
-    padding: 8,
-  },
-  statsContainer: {
-    backgroundColor: '#fff',
+  editProfileButton: {
     flexDirection: 'row',
-    paddingVertical: 20,
-    marginBottom: 10,
-  },
-  statItem: {
-    flex: 1,
     alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#20B2AA',
   },
-  statValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
+  editProfileText: {
     color: '#20B2AA',
-    marginBottom: 4,
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginLeft: 5,
   },
-  statLabel: {
-    fontSize: 12,
-    color: '#666',
-  },
-  statDivider: {
-    width: 1,
-    backgroundColor: '#f0f0f0',
-    marginHorizontal: 10,
-  },
-  menuContainer: {
+  optionsContainer: {
     backgroundColor: '#fff',
-    marginBottom: 10,
+    marginTop: 20,
   },
-  menuItem: {
+  optionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
+    justifyContent: 'space-between',
+    padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#f5f5f5',
+    borderBottomColor: '#f0f0f0',
   },
-  menuIconContainer: {
+  optionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  optionIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f0f9ff',
+    backgroundColor: '#f0f0f0',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 15,
   },
-  menuContent: {
+  optionText: {
     flex: 1,
   },
-  menuTitle: {
+  optionTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: 'bold',
     color: '#333',
-    marginBottom: 2,
   },
-  menuSubtitle: {
+  optionSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 2,
+  },
+  optionRight: {
+    marginLeft: 10,
+  },
+  appInfo: {
+    alignItems: 'center',
+    padding: 20,
+  },
+  appName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#20B2AA',
+    marginBottom: 5,
+  },
+  appVersion: {
     fontSize: 14,
     color: '#666',
   },
   logoutButton: {
-    backgroundColor: '#fff',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 15,
+    backgroundColor: '#fff',
+    marginHorizontal: 20,
     marginBottom: 20,
+    padding: 15,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#FFE5E5',
   },
   logoutText: {
+    color: '#FF6347',
     fontSize: 16,
-    fontWeight: '600',
-    color: '#FF3B30',
+    fontWeight: 'bold',
     marginLeft: 8,
-  },
-  appInfo: {
-    alignItems: 'center',
-    paddingBottom: 20,
-  },
-  appInfoText: {
-    fontSize: 12,
-    color: '#999',
-    marginBottom: 2,
   },
 });

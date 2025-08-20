@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View,
-  Text,
   StyleSheet,
+  Text,
+  View,
   ScrollView,
   TouchableOpacity,
   Image,
-  Dimensions,
+  Alert,
   ActivityIndicator,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import apiService from '../services/apiService';
 
 const { width } = Dimensions.get('window');
 
@@ -20,114 +22,143 @@ interface Vehicle {
   brand: string;
   model: string;
   year: number;
-  pricePerDay: string;
-  images: string[];
+  pricePerDay: number;
   location: string;
+  images: string[];
   category: string;
-  rating: number;
-  description: string;
-  features: string[];
   transmission: string;
-  fuel: string;
-  seats: number;
-  owner: {
+  fuelType: string;
+  features: string[];
+  description?: string;
+  isHighlighted?: boolean;
+  owner?: {
+    id: number;
     name: string;
-    avatar: string;
-    rating: number;
+    profileImage?: string;
   };
+}
+
+interface RouteParams {
+  vehicleId: number;
 }
 
 export default function VehicleDetailScreen() {
   const navigation = useNavigation();
   const route = useRoute();
-  const { vehicleId } = route.params as { vehicleId: number };
+  const { vehicleId } = route.params as RouteParams;
   
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
-    loadVehicle();
+    loadVehicleDetails();
   }, [vehicleId]);
 
-  const loadVehicle = async () => {
+  const loadVehicleDetails = async () => {
     try {
-      // Simulação de API call - substituir pela URL real da API
-      const response = await fetch(`https://alugae.mobi/api/vehicles/${vehicleId}`);
-      const data = await response.json();
-      setVehicle(data);
+      setLoading(true);
+      const response = await apiService.getVehicle(vehicleId);
+      setVehicle(response);
     } catch (error) {
-      console.error('Erro ao carregar veículo:', error);
-      // Dados mock para demonstração
-      setVehicle({
-        id: vehicleId,
-        brand: 'Toyota',
-        model: 'Corolla',
-        year: 2023,
-        pricePerDay: '180.00',
-        images: [
-          'https://via.placeholder.com/400x250/20B2AA/ffffff?text=Toyota+Corolla+1',
-          'https://via.placeholder.com/400x250/20B2AA/ffffff?text=Toyota+Corolla+2',
-          'https://via.placeholder.com/400x250/20B2AA/ffffff?text=Toyota+Corolla+3',
-        ],
-        location: 'São Paulo, SP',
-        category: 'sedan',
-        rating: 4.8,
-        description: 'Toyota Corolla 2023 em excelente estado de conservação. Veículo completo com todos os opcionais. Ideal para viagens longas ou uso urbano.',
-        features: [
-          'Ar condicionado',
-          'Direção hidráulica',
-          'Vidros elétricos',
-          'Trava elétrica',
-          'Bluetooth',
-          'GPS',
-          'Câmera de ré',
-          'Sensor de estacionamento',
-        ],
-        transmission: 'Automático',
-        fuel: 'Flex',
-        seats: 5,
-        owner: {
-          name: 'Carlos Oliveira',
-          avatar: 'https://via.placeholder.com/50x50/20B2AA/ffffff?text=CO',
-          rating: 4.9,
-        },
-      });
+      console.error('Error loading vehicle details:', error);
+      Alert.alert(
+        'Erro',
+        'Não foi possível carregar os detalhes do veículo',
+        [
+          {
+            text: 'Voltar',
+            onPress: () => navigation.goBack(),
+          }
+        ]
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRentNow = () => {
-    // Navigate to booking screen
-    console.log('Rent now for vehicle:', vehicleId);
+  const handleBookVehicle = () => {
+    if (vehicle) {
+      // Navigate to booking screen or modal
+      Alert.alert(
+        'Reservar Veículo',
+        `Deseja reservar o ${vehicle.brand} ${vehicle.model}?`,
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Reservar',
+            onPress: () => {
+              // TODO: Implement booking flow
+              Alert.alert('Em Desenvolvimento', 'Funcionalidade de reserva será implementada em breve');
+            }
+          }
+        ]
+      );
+    }
   };
 
   const handleContactOwner = () => {
-    // Navigate to chat or contact screen
-    console.log('Contact owner for vehicle:', vehicleId);
+    if (vehicle?.owner) {
+      Alert.alert(
+        'Entrar em Contato',
+        `Deseja enviar uma mensagem para ${vehicle.owner.name}?`,
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Enviar Mensagem',
+            onPress: () => {
+              // TODO: Implement messaging
+              Alert.alert('Em Desenvolvimento', 'Sistema de mensagens será implementado em breve');
+            }
+          }
+        ]
+      );
+    }
+  };
+
+  const formatPrice = (price: number) => {
+    return `R$ ${price.toFixed(2).replace('.', ',')}/dia`;
+  };
+
+  const renderImagePagination = () => {
+    if (!vehicle?.images || vehicle.images.length <= 1) return null;
+
+    return (
+      <View style={styles.imagePagination}>
+        {vehicle.images.map((_, index) => (
+          <View
+            key={index}
+            style={[
+              styles.paginationDot,
+              index === currentImageIndex && styles.paginationDotActive
+            ]}
+          />
+        ))}
+      </View>
+    );
   };
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#20B2AA" />
-        <Text style={styles.loadingText}>Carregando veículo...</Text>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#20B2AA" />
+          <Text style={styles.loadingText}>Carregando detalhes...</Text>
+        </View>
       </SafeAreaView>
     );
   }
 
   if (!vehicle) {
     return (
-      <SafeAreaView style={styles.errorContainer}>
-        <Ionicons name="alert-circle" size={64} color="#FF3B30" />
-        <Text style={styles.errorText}>Veículo não encontrado</Text>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backButtonText}>Voltar</Text>
-        </TouchableOpacity>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle-outline" size={80} color="#ccc" />
+          <Text style={styles.errorText}>Veículo não encontrado</Text>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Text style={styles.backButtonText}>Voltar</Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     );
   }
@@ -137,125 +168,138 @@ export default function VehicleDetailScreen() {
       <ScrollView style={styles.scrollView}>
         {/* Image Gallery */}
         <View style={styles.imageGallery}>
-          <ScrollView
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onScroll={(event) => {
-              const slideSize = event.nativeEvent.layoutMeasurement.width;
-              const index = Math.round(event.nativeEvent.contentOffset.x / slideSize);
-              setCurrentImageIndex(index);
-            }}
-          >
-            {vehicle.images.map((image, index) => (
-              <Image key={index} source={{ uri: image }} style={styles.vehicleImage} />
-            ))}
-          </ScrollView>
+          {vehicle.images && vehicle.images.length > 0 ? (
+            <ScrollView
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={(event) => {
+                const newIndex = Math.round(event.nativeEvent.contentOffset.x / width);
+                setCurrentImageIndex(newIndex);
+              }}
+            >
+              {vehicle.images.map((imageUrl, index) => {
+                const imageUri = imageUrl.startsWith('http') 
+                  ? imageUrl 
+                  : `https://alugae.mobi${imageUrl}`;
+                
+                return (
+                  <Image
+                    key={index}
+                    source={{ uri: imageUri }}
+                    style={styles.vehicleImage}
+                  />
+                );
+              })}
+            </ScrollView>
+          ) : (
+            <View style={[styles.vehicleImage, styles.placeholderImage]}>
+              <Ionicons name="car-outline" size={80} color="#ccc" />
+            </View>
+          )}
           
-          {/* Image Indicators */}
-          <View style={styles.imageIndicators}>
-            {vehicle.images.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.indicator,
-                  index === currentImageIndex && styles.activeIndicator,
-                ]}
-              />
-            ))}
-          </View>
-
-          {/* Rating Badge */}
-          <View style={styles.ratingBadge}>
-            <Ionicons name="star" size={12} color="#FFD700" />
-            <Text style={styles.ratingText}>{vehicle.rating}</Text>
-          </View>
+          {vehicle.isHighlighted && (
+            <View style={styles.highlightBadge}>
+              <Ionicons name="star" size={16} color="#FFD700" />
+              <Text style={styles.highlightText}>Destaque</Text>
+            </View>
+          )}
+          
+          {renderImagePagination()}
         </View>
 
         {/* Vehicle Info */}
         <View style={styles.vehicleInfo}>
-          <Text style={styles.vehicleTitle}>
-            {vehicle.brand} {vehicle.model} {vehicle.year}
-          </Text>
-          <View style={styles.locationContainer}>
-            <Ionicons name="location-outline" size={16} color="#666" />
+          <View style={styles.titleSection}>
+            <Text style={styles.vehicleTitle}>
+              {vehicle.brand} {vehicle.model}
+            </Text>
+            <Text style={styles.vehicleYear}>{vehicle.year}</Text>
+            <Text style={styles.vehiclePrice}>{formatPrice(vehicle.pricePerDay)}</Text>
+          </View>
+
+          <View style={styles.locationSection}>
+            <Ionicons name="location-outline" size={20} color="#666" />
             <Text style={styles.locationText}>{vehicle.location}</Text>
           </View>
-          <View style={styles.priceContainer}>
-            <Text style={styles.priceText}>R$ {vehicle.pricePerDay}</Text>
-            <Text style={styles.priceLabel}>/dia</Text>
-          </View>
-        </View>
 
-        {/* Vehicle Specs */}
-        <View style={styles.specsContainer}>
-          <View style={styles.specItem}>
-            <Ionicons name="settings-outline" size={20} color="#20B2AA" />
-            <Text style={styles.specText}>{vehicle.transmission}</Text>
-          </View>
-          <View style={styles.specItem}>
-            <Ionicons name="car-outline" size={20} color="#20B2AA" />
-            <Text style={styles.specText}>{vehicle.fuel}</Text>
-          </View>
-          <View style={styles.specItem}>
-            <Ionicons name="people-outline" size={20} color="#20B2AA" />
-            <Text style={styles.specText}>{vehicle.seats} lugares</Text>
-          </View>
-          <View style={styles.specItem}>
-            <Ionicons name="pricetag-outline" size={20} color="#20B2AA" />
-            <Text style={styles.specText}>{vehicle.category}</Text>
-          </View>
-        </View>
-
-        {/* Description */}
-        <View style={styles.descriptionContainer}>
-          <Text style={styles.sectionTitle}>Descrição</Text>
-          <Text style={styles.descriptionText}>{vehicle.description}</Text>
-        </View>
-
-        {/* Features */}
-        <View style={styles.featuresContainer}>
-          <Text style={styles.sectionTitle}>Recursos Inclusos</Text>
-          <View style={styles.featuresList}>
-            {vehicle.features.map((feature, index) => (
-              <View key={index} style={styles.featureItem}>
-                <Ionicons name="checkmark-circle" size={16} color="#34C759" />
-                <Text style={styles.featureText}>{feature}</Text>
+          {/* Specs */}
+          <View style={styles.specsSection}>
+            <Text style={styles.sectionTitle}>Especificações</Text>
+            <View style={styles.specsGrid}>
+              <View style={styles.specItem}>
+                <Ionicons name="car-outline" size={24} color="#20B2AA" />
+                <Text style={styles.specLabel}>Categoria</Text>
+                <Text style={styles.specValue}>{vehicle.category}</Text>
               </View>
-            ))}
-          </View>
-        </View>
-
-        {/* Owner Info */}
-        <View style={styles.ownerContainer}>
-          <Text style={styles.sectionTitle}>Proprietário</Text>
-          <View style={styles.ownerInfo}>
-            <Image source={{ uri: vehicle.owner.avatar }} style={styles.ownerAvatar} />
-            <View style={styles.ownerDetails}>
-              <Text style={styles.ownerName}>{vehicle.owner.name}</Text>
-              <View style={styles.ownerRating}>
-                <Ionicons name="star" size={14} color="#FFD700" />
-                <Text style={styles.ownerRatingText}>{vehicle.owner.rating}</Text>
+              <View style={styles.specItem}>
+                <Ionicons name="settings-outline" size={24} color="#20B2AA" />
+                <Text style={styles.specLabel}>Transmissão</Text>
+                <Text style={styles.specValue}>{vehicle.transmission}</Text>
+              </View>
+              <View style={styles.specItem}>
+                <Ionicons name="water-outline" size={24} color="#20B2AA" />
+                <Text style={styles.specLabel}>Combustível</Text>
+                <Text style={styles.specValue}>{vehicle.fuelType}</Text>
               </View>
             </View>
-            <TouchableOpacity
-              style={styles.contactButton}
-              onPress={handleContactOwner}
-            >
-              <Ionicons name="chatbubble-outline" size={20} color="#20B2AA" />
-            </TouchableOpacity>
           </View>
+
+          {/* Features */}
+          {vehicle.features && vehicle.features.length > 0 && (
+            <View style={styles.featuresSection}>
+              <Text style={styles.sectionTitle}>Recursos</Text>
+              <View style={styles.featuresList}>
+                {vehicle.features.map((feature, index) => (
+                  <View key={index} style={styles.featureItem}>
+                    <Ionicons name="checkmark-circle" size={16} color="#20B2AA" />
+                    <Text style={styles.featureText}>{feature}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* Description */}
+          {vehicle.description && (
+            <View style={styles.descriptionSection}>
+              <Text style={styles.sectionTitle}>Descrição</Text>
+              <Text style={styles.descriptionText}>{vehicle.description}</Text>
+            </View>
+          )}
+
+          {/* Owner Info */}
+          {vehicle.owner && (
+            <View style={styles.ownerSection}>
+              <Text style={styles.sectionTitle}>Proprietário</Text>
+              <View style={styles.ownerInfo}>
+                {vehicle.owner.profileImage ? (
+                  <Image
+                    source={{ uri: vehicle.owner.profileImage }}
+                    style={styles.ownerImage}
+                  />
+                ) : (
+                  <View style={[styles.ownerImage, styles.ownerImagePlaceholder]}>
+                    <Ionicons name="person-outline" size={20} color="#666" />
+                  </View>
+                )}
+                <View style={styles.ownerDetails}>
+                  <Text style={styles.ownerName}>{vehicle.owner.name}</Text>
+                  <TouchableOpacity style={styles.contactButton} onPress={handleContactOwner}>
+                    <Ionicons name="chatbubble-outline" size={16} color="#20B2AA" />
+                    <Text style={styles.contactButtonText}>Enviar mensagem</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          )}
         </View>
       </ScrollView>
 
-      {/* Bottom Action Bar */}
-      <View style={styles.bottomBar}>
-        <View style={styles.priceInfo}>
-          <Text style={styles.bottomPriceText}>R$ {vehicle.pricePerDay}</Text>
-          <Text style={styles.bottomPriceLabel}>por dia</Text>
-        </View>
-        <TouchableOpacity style={styles.rentButton} onPress={handleRentNow}>
-          <Text style={styles.rentButtonText}>Alugar Agora</Text>
+      {/* Bottom Actions */}
+      <View style={styles.bottomActions}>
+        <TouchableOpacity style={styles.bookButton} onPress={handleBookVehicle}>
+          <Text style={styles.bookButtonText}>Reservar Agora</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -265,7 +309,7 @@ export default function VehicleDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
   },
   loadingContainer: {
     flex: 1,
@@ -274,8 +318,8 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 10,
-    color: '#666',
     fontSize: 16,
+    color: '#666',
   },
   errorContainer: {
     flex: 1,
@@ -285,10 +329,9 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 18,
-    color: '#FF3B30',
-    fontWeight: 'bold',
-    marginTop: 15,
-    marginBottom: 20,
+    color: '#666',
+    marginTop: 20,
+    marginBottom: 30,
   },
   backButton: {
     backgroundColor: '#20B2AA',
@@ -299,19 +342,42 @@ const styles = StyleSheet.create({
   backButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
   scrollView: {
     flex: 1,
   },
   imageGallery: {
+    height: 250,
     position: 'relative',
   },
   vehicleImage: {
     width: width,
     height: 250,
   },
-  imageIndicators: {
+  placeholderImage: {
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  highlightBadge: {
+    position: 'absolute',
+    top: 15,
+    right: 15,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    borderRadius: 15,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  highlightText: {
+    color: '#FFD700',
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginLeft: 4,
+  },
+  imagePagination: {
     position: 'absolute',
     bottom: 15,
     left: 0,
@@ -320,192 +386,154 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  indicator: {
+  paginationDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-    marginHorizontal: 4,
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    marginHorizontal: 2,
   },
-  activeIndicator: {
+  paginationDotActive: {
     backgroundColor: '#fff',
   },
-  ratingBadge: {
-    position: 'absolute',
-    top: 15,
-    right: 15,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  ratingText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginLeft: 2,
-  },
   vehicleInfo: {
+    backgroundColor: '#fff',
     padding: 20,
+  },
+  titleSection: {
     borderBottomWidth: 1,
-    borderBottomColor: '#f5f5f5',
+    borderBottomColor: '#e0e0e0',
+    paddingBottom: 15,
+    marginBottom: 20,
   },
   vehicleTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  locationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  locationText: {
-    color: '#666',
-    fontSize: 16,
-    marginLeft: 4,
-  },
-  priceContainer: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-  },
-  priceText: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#20B2AA',
+    color: '#333',
   },
-  priceLabel: {
-    fontSize: 16,
-    color: '#666',
-    marginLeft: 4,
-  },
-  specsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f5f5f5',
-  },
-  specItem: {
-    alignItems: 'center',
-  },
-  specText: {
-    fontSize: 12,
+  vehicleYear: {
+    fontSize: 18,
     color: '#666',
     marginTop: 4,
-    fontWeight: '500',
   },
-  descriptionContainer: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f5f5f5',
+  vehiclePrice: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#20B2AA',
+    marginTop: 8,
+  },
+  locationSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  locationText: {
+    fontSize: 16,
+    color: '#666',
+    marginLeft: 8,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 10,
+    marginBottom: 15,
+  },
+  specsSection: {
+    marginBottom: 25,
+  },
+  specsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  specItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  specLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 8,
+  },
+  specValue: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 4,
+  },
+  featuresSection: {
+    marginBottom: 25,
+  },
+  featuresList: {
+    gap: 10,
+  },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  featureText: {
+    fontSize: 16,
+    color: '#333',
+    marginLeft: 8,
+  },
+  descriptionSection: {
+    marginBottom: 25,
   },
   descriptionText: {
     fontSize: 16,
     color: '#666',
     lineHeight: 24,
   },
-  featuresContainer: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f5f5f5',
-  },
-  featuresList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  featureItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '50%',
-    marginBottom: 8,
-  },
-  featureText: {
-    fontSize: 14,
-    color: '#666',
-    marginLeft: 6,
-  },
-  ownerContainer: {
-    padding: 20,
-    paddingBottom: 100,
+  ownerSection: {
+    marginBottom: 20,
   },
   ownerInfo: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  ownerAvatar: {
+  ownerImage: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    marginRight: 12,
+    marginRight: 15,
+  },
+  ownerImagePlaceholder: {
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   ownerDetails: {
     flex: 1,
   },
   ownerName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: 'bold',
     color: '#333',
-    marginBottom: 4,
-  },
-  ownerRating: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  ownerRatingText: {
-    fontSize: 14,
-    color: '#666',
-    marginLeft: 4,
+    marginBottom: 5,
   },
   contactButton: {
-    backgroundColor: '#f0f9ff',
-    padding: 10,
-    borderRadius: 20,
-  },
-  bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#fff',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderTopWidth: 1,
-    borderTopColor: '#f5f5f5',
-    paddingBottom: 30,
   },
-  priceInfo: {
-    flex: 1,
-  },
-  bottomPriceText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#20B2AA',
-  },
-  bottomPriceLabel: {
+  contactButtonText: {
     fontSize: 14,
-    color: '#666',
+    color: '#20B2AA',
+    marginLeft: 4,
   },
-  rentButton: {
+  bottomActions: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
+  bookButton: {
     backgroundColor: '#20B2AA',
-    paddingHorizontal: 30,
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: 'center',
   },
-  rentButtonText: {
+  bookButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
   },
 });

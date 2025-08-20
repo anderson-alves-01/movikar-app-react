@@ -1,138 +1,186 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View,
-  Text,
   StyleSheet,
+  Text,
+  View,
   ScrollView,
   TouchableOpacity,
   Image,
-  Dimensions,
+  FlatList,
   RefreshControl,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-
-const { width } = Dimensions.get('window');
+import apiService from '../services/apiService';
 
 interface Vehicle {
   id: number;
   brand: string;
   model: string;
   year: number;
-  pricePerDay: string;
-  images: string[];
+  pricePerDay: number;
   location: string;
+  images: string[];
   category: string;
-  rating: number;
-  isHighlighted: boolean;
+  transmission: string;
+  fuelType: string;
+  features: string[];
+  isHighlighted?: boolean;
 }
 
 export default function HomeScreen() {
   const navigation = useNavigation();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [featuredVehicles, setFeaturedVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadVehicles = async () => {
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  const loadInitialData = async () => {
     try {
-      // Simulação de API call - substituir pela URL real da API
-      const response = await fetch('https://alugae.mobi/api/vehicles?limit=10');
-      const data = await response.json();
-      setVehicles(data);
-    } catch (error) {
-      console.error('Erro ao carregar veículos:', error);
-      // Dados mock para demonstração
-      setVehicles([
-        {
-          id: 1,
-          brand: 'Toyota',
-          model: 'Corolla',
-          year: 2023,
-          pricePerDay: '180.00',
-          images: ['https://via.placeholder.com/300x200/20B2AA/ffffff?text=Toyota+Corolla'],
-          location: 'São Paulo, SP',
-          category: 'sedan',
-          rating: 4.8,
-          isHighlighted: true,
-        },
-        {
-          id: 2,
-          brand: 'Honda',
-          model: 'Civic',
-          year: 2022,
-          pricePerDay: '165.00',
-          images: ['https://via.placeholder.com/300x200/20B2AA/ffffff?text=Honda+Civic'],
-          location: 'Rio de Janeiro, RJ',
-          category: 'sedan',
-          rating: 4.6,
-          isHighlighted: false,
-        },
+      setLoading(true);
+      await Promise.all([
+        loadFeaturedVehicles(),
+        loadRecentVehicles()
       ]);
+    } catch (error) {
+      console.error('Error loading initial data:', error);
+      Alert.alert('Erro', 'Não foi possível carregar os veículos');
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
-  useEffect(() => {
-    loadVehicles();
-  }, []);
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadVehicles();
+  const loadFeaturedVehicles = async () => {
+    try {
+      const response = await apiService.getFeaturedVehicles();
+      setFeaturedVehicles(response || []);
+    } catch (error) {
+      console.error('Error loading featured vehicles:', error);
+    }
   };
 
-  const renderVehicleCard = (vehicle: Vehicle) => (
-    <TouchableOpacity
-      key={vehicle.id}
-      style={[
-        styles.vehicleCard,
-        vehicle.isHighlighted && styles.highlightedCard
-      ]}
-      onPress={() => navigation.navigate('VehicleDetail', { vehicleId: vehicle.id })}
-    >
-      <View style={styles.imageContainer}>
-        <Image
-          source={{ uri: vehicle.images[0] }}
-          style={styles.vehicleImage}
-          resizeMode="cover"
-        />
-        {vehicle.isHighlighted && (
+  const loadRecentVehicles = async () => {
+    try {
+      const response = await apiService.getVehicles({ limit: 10 });
+      setVehicles(response || []);
+    } catch (error) {
+      console.error('Error loading vehicles:', error);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadInitialData();
+    setRefreshing(false);
+  };
+
+  const navigateToVehicleDetail = (vehicle: Vehicle) => {
+    navigation.navigate('VehicleDetail' as never, { vehicleId: vehicle.id } as never);
+  };
+
+  const navigateToSearch = () => {
+    navigation.navigate('Search' as never);
+  };
+
+  const formatPrice = (price: number) => {
+    return `R$ ${price.toFixed(2).replace('.', ',')}/dia`;
+  };
+
+  const renderVehicleCard = ({ item }: { item: Vehicle }) => {
+    const imageUri = item.images && item.images.length > 0 
+      ? (item.images[0].startsWith('http') 
+          ? item.images[0] 
+          : `https://alugae.mobi${item.images[0]}`)
+      : null;
+
+    return (
+      <TouchableOpacity 
+        style={[
+          styles.vehicleCard,
+          item.isHighlighted && styles.highlightedCard
+        ]} 
+        onPress={() => navigateToVehicleDetail(item)}
+      >
+        {imageUri ? (
+          <Image source={{ uri: imageUri }} style={styles.vehicleImage} />
+        ) : (
+          <View style={[styles.vehicleImage, styles.placeholderImage]}>
+            <Ionicons name="car-outline" size={40} color="#ccc" />
+          </View>
+        )}
+        
+        {item.isHighlighted && (
           <View style={styles.highlightBadge}>
             <Ionicons name="star" size={12} color="#FFD700" />
             <Text style={styles.highlightText}>Destaque</Text>
           </View>
         )}
-        <View style={styles.ratingBadge}>
-          <Ionicons name="star" size={12} color="#FFD700" />
-          <Text style={styles.ratingText}>{vehicle.rating}</Text>
+
+        <View style={styles.vehicleInfo}>
+          <Text style={styles.vehicleName}>
+            {item.brand} {item.model}
+          </Text>
+          <Text style={styles.vehicleYear}>{item.year}</Text>
+          <Text style={styles.vehicleLocation}>
+            <Ionicons name="location-outline" size={14} color="#666" />
+            {item.location}
+          </Text>
+          <View style={styles.vehicleDetails}>
+            <Text style={styles.vehicleCategory}>{item.category}</Text>
+            <Text style={styles.vehicleTransmission}>{item.transmission}</Text>
+          </View>
+          <Text style={styles.vehiclePrice}>{formatPrice(item.pricePerDay)}</Text>
         </View>
-      </View>
-      
-      <View style={styles.vehicleInfo}>
-        <Text style={styles.vehicleTitle}>
-          {vehicle.brand} {vehicle.model} {vehicle.year}
-        </Text>
-        <View style={styles.locationContainer}>
-          <Ionicons name="location-outline" size={14} color="#666" />
-          <Text style={styles.locationText}>{vehicle.location}</Text>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderFeaturedVehicle = ({ item }: { item: Vehicle }) => {
+    const imageUri = item.images && item.images.length > 0 
+      ? (item.images[0].startsWith('http') 
+          ? item.images[0] 
+          : `https://alugae.mobi${item.images[0]}`)
+      : null;
+
+    return (
+      <TouchableOpacity 
+        style={styles.featuredCard} 
+        onPress={() => navigateToVehicleDetail(item)}
+      >
+        {imageUri ? (
+          <Image source={{ uri: imageUri }} style={styles.featuredImage} />
+        ) : (
+          <View style={[styles.featuredImage, styles.placeholderImage]}>
+            <Ionicons name="car-outline" size={50} color="#ccc" />
+          </View>
+        )}
+        <View style={styles.featuredOverlay}>
+          <Text style={styles.featuredName}>
+            {item.brand} {item.model}
+          </Text>
+          <Text style={styles.featuredPrice}>{formatPrice(item.pricePerDay)}</Text>
         </View>
-        <View style={styles.priceContainer}>
-          <Text style={styles.priceText}>R$ {vehicle.pricePerDay}</Text>
-          <Text style={styles.priceLabel}>/dia</Text>
+        <View style={styles.featuredBadge}>
+          <Ionicons name="star" size={16} color="#FFD700" />
         </View>
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#20B2AA" />
-        <Text style={styles.loadingText}>Carregando veículos...</Text>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#20B2AA" />
+          <Text style={styles.loadingText}>Carregando veículos...</Text>
+        </View>
       </SafeAreaView>
     );
   }
@@ -147,57 +195,49 @@ export default function HomeScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.welcomeText}>Bem-vindo ao</Text>
-          <Text style={styles.brandText}>alugae</Text>
-          <Text style={styles.subtitleText}>Encontre o carro perfeito para você</Text>
+          <Text style={styles.welcomeText}>Bem-vindo ao alugae</Text>
+          <Text style={styles.subtitleText}>Encontre o carro perfeito</Text>
         </View>
 
-        {/* Quick Actions */}
-        <View style={styles.quickActions}>
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={() => navigation.navigate('Search')}
-          >
-            <Ionicons name="search" size={24} color="#20B2AA" />
-            <Text style={styles.actionText}>Buscar</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.actionButton}>
-            <Ionicons name="location" size={24} color="#20B2AA" />
-            <Text style={styles.actionText}>Próximos</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.actionButton}>
-            <Ionicons name="heart" size={24} color="#20B2AA" />
-            <Text style={styles.actionText}>Favoritos</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.actionButton}>
-            <Ionicons name="filter" size={24} color="#20B2AA" />
-            <Text style={styles.actionText}>Filtros</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Search Bar */}
+        <TouchableOpacity style={styles.searchBar} onPress={navigateToSearch}>
+          <Ionicons name="search-outline" size={20} color="#666" />
+          <Text style={styles.searchText}>Buscar veículos...</Text>
+        </TouchableOpacity>
 
         {/* Featured Vehicles */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Veículos em Destaque</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {vehicles
-              .filter(v => v.isHighlighted)
-              .map(vehicle => (
-                <View key={vehicle.id} style={styles.featuredCard}>
-                  {renderVehicleCard(vehicle)}
-                </View>
-              ))}
-          </ScrollView>
-        </View>
-
-        {/* All Vehicles */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Todos os Veículos</Text>
-          <View style={styles.vehicleGrid}>
-            {vehicles.map(vehicle => renderVehicleCard(vehicle))}
+        {featuredVehicles.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Veículos em Destaque</Text>
+            <FlatList
+              horizontal
+              data={featuredVehicles}
+              renderItem={renderFeaturedVehicle}
+              keyExtractor={(item) => `featured-${item.id}`}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.featuredList}
+            />
           </View>
+        )}
+
+        {/* Recent Vehicles */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Veículos Recentes</Text>
+          {vehicles.length > 0 ? (
+            <FlatList
+              data={vehicles}
+              renderItem={renderVehicleCard}
+              keyExtractor={(item) => `vehicle-${item.id}`}
+              numColumns={2}
+              columnWrapperStyle={styles.row}
+              scrollEnabled={false}
+            />
+          ) : (
+            <View style={styles.emptyState}>
+              <Ionicons name="car-outline" size={50} color="#ccc" />
+              <Text style={styles.emptyText}>Nenhum veículo encontrado</Text>
+            </View>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -213,162 +253,195 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
   },
   loadingText: {
     marginTop: 10,
-    color: '#666',
     fontSize: 16,
+    color: '#666',
   },
   scrollView: {
     flex: 1,
   },
   header: {
-    backgroundColor: '#20B2AA',
     padding: 20,
-    alignItems: 'center',
+    backgroundColor: '#fff',
   },
   welcomeText: {
-    color: '#fff',
-    fontSize: 16,
-    opacity: 0.9,
-  },
-  brandText: {
-    color: '#fff',
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: 'bold',
-    marginVertical: 5,
+    color: '#333',
   },
   subtitleText: {
-    color: '#fff',
-    fontSize: 14,
-    opacity: 0.8,
-  },
-  quickActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 20,
-    backgroundColor: '#fff',
-    marginBottom: 10,
-  },
-  actionButton: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  actionText: {
-    color: '#20B2AA',
-    fontSize: 12,
+    fontSize: 16,
+    color: '#666',
     marginTop: 5,
-    fontWeight: '500',
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    margin: 20,
+    padding: 15,
+    borderRadius: 10,
+    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  searchText: {
+    marginLeft: 10,
+    fontSize: 16,
+    color: '#666',
   },
   section: {
     marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 15,
-    paddingHorizontal: 20,
     color: '#333',
+    marginHorizontal: 20,
+    marginBottom: 15,
+  },
+  featuredList: {
+    paddingHorizontal: 15,
   },
   featuredCard: {
-    marginLeft: 20,
-    width: width * 0.8,
-  },
-  vehicleGrid: {
-    paddingHorizontal: 20,
-  },
-  vehicleCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  highlightedCard: {
-    borderWidth: 2,
-    borderColor: '#FFD700',
-  },
-  imageContainer: {
+    width: 250,
+    height: 150,
+    marginHorizontal: 5,
+    borderRadius: 10,
+    overflow: 'hidden',
     position: 'relative',
   },
-  vehicleImage: {
+  featuredImage: {
     width: '100%',
-    height: 200,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
+    height: '100%',
   },
-  highlightBadge: {
+  featuredOverlay: {
     position: 'absolute',
-    top: 10,
-    left: 10,
-    backgroundColor: '#FFD700',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    padding: 10,
   },
-  highlightText: {
-    color: '#000',
-    fontSize: 10,
+  featuredName: {
+    color: '#fff',
+    fontSize: 16,
     fontWeight: 'bold',
-    marginLeft: 2,
   },
-  ratingBadge: {
+  featuredPrice: {
+    color: '#20B2AA',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  featuredBadge: {
     position: 'absolute',
     top: 10,
     right: 10,
     backgroundColor: 'rgba(0,0,0,0.7)',
+    borderRadius: 15,
+    padding: 5,
+  },
+  row: {
+    justifyContent: 'space-around',
+    marginBottom: 15,
+  },
+  vehicleCard: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    width: '45%',
+    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    position: 'relative',
+  },
+  highlightedCard: {
+    borderColor: '#FFD700',
+    borderWidth: 2,
+  },
+  vehicleImage: {
+    width: '100%',
+    height: 120,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+  },
+  placeholderImage: {
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  highlightBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
   },
-  ratingText: {
-    color: '#fff',
-    fontSize: 12,
+  highlightText: {
+    color: '#FFD700',
+    fontSize: 10,
     fontWeight: 'bold',
     marginLeft: 2,
   },
   vehicleInfo: {
-    padding: 15,
+    padding: 12,
   },
-  vehicleTitle: {
+  vehicleName: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 5,
   },
-  locationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  locationText: {
-    color: '#666',
+  vehicleYear: {
     fontSize: 14,
-    marginLeft: 4,
+    color: '#666',
+    marginTop: 2,
   },
-  priceContainer: {
+  vehicleLocation: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+  },
+  vehicleDetails: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    marginTop: 6,
   },
-  priceText: {
-    fontSize: 20,
+  vehicleCategory: {
+    fontSize: 11,
+    backgroundColor: '#e0e0e0',
+    color: '#666',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginRight: 4,
+  },
+  vehicleTransmission: {
+    fontSize: 11,
+    backgroundColor: '#e0e0e0',
+    color: '#666',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  vehiclePrice: {
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#20B2AA',
+    marginTop: 8,
   },
-  priceLabel: {
-    fontSize: 14,
+  emptyState: {
+    alignItems: 'center',
+    padding: 40,
+  },
+  emptyText: {
+    fontSize: 16,
     color: '#666',
-    marginLeft: 2,
+    marginTop: 10,
   },
 });
