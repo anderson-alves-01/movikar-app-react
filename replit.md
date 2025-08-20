@@ -98,14 +98,16 @@ Preferred communication style: Simple, everyday language.
 - **Server stability**: All TypeScript errors resolved, application running without compilation issues
 - **Type safety improvements**: Added proper type annotations and fallbacks for dynamic properties
 
-### August 20, 2025 - Complete Review System Rebuild
+### August 20, 2025 - Complete Review System Rebuild & Production Fix
 - **Complete system rebuild**: Removed all existing review code causing persistent production errors and rebuilt from scratch
 - **New database schema**: Created clean reviews table with proper relations to bookings, users, and vehicles
 - **Modern React interface**: Built star rating system with modal dialogs for review submission
 - **Comprehensive API endpoints**: Created /api/reviews/completed-bookings, POST /api/reviews, and review retrieval endpoints
 - **Multiple review types**: Support for renter-to-owner, owner-to-renter, and renter-to-vehicle reviews
 - **Smart filtering**: Automatically filters out already-reviewed bookings and shows only pending reviews
-- **Production tested**: System working correctly with authentication, data validation, and error handling
+- **Production fix**: Updated booking status validation to allow reviews for both 'completed' AND 'approved' bookings
+- **Expanded booking eligibility**: Modified getCompletedBookingsForReviews to include approved bookings alongside completed ones
+- **Development tested**: System working correctly with authentication, data validation, and error handling
 - **Review modal**: Interactive modal with star ratings, comment fields, and review type selection for renters
 
 ### August 18, 2025 - Registration Flow & Modal Improvements  

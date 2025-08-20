@@ -2429,9 +2429,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Você não pode avaliar esta reserva" });
       }
 
-      // Check if booking is completed
-      if (booking.status !== 'completed') {
-        return res.status(400).json({ message: "Só é possível avaliar reservas concluídas" });
+      // Check if booking is completed or approved (both can be reviewed)
+      if (booking.status !== 'completed' && booking.status !== 'approved') {
+        return res.status(400).json({ message: "Só é possível avaliar reservas concluídas ou aprovadas" });
       }
 
       // Check if user has already reviewed this booking with this type
