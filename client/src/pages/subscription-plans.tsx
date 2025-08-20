@@ -607,7 +607,7 @@ export default function SubscriptionPlans() {
                     />
                     <Button
                       onClick={handleApplyCoupon}
-                      disabled={isCouponLoading || !couponCode.trim() || !selectedPlan}
+                      disabled={isCouponLoading || !couponCode.trim()}
                       className="bg-red-500 hover:bg-red-600 text-white"
                     >
                       {isCouponLoading ? "Validando..." : "Aplicar"}
@@ -639,11 +639,9 @@ export default function SubscriptionPlans() {
                     )}
                   </div>
                 )}
-                {!selectedPlan && (
-                  <p className="text-sm text-gray-500 text-center">
-                    Selecione um plano abaixo para aplicar o cupom
-                  </p>
-                )}
+                <p className="text-sm text-gray-500 text-center">
+                  O cupom será aplicado automaticamente ao plano selecionado
+                </p>
               </CardContent>
             </Card>
           </div>
