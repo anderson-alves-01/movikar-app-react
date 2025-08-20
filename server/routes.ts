@@ -5096,62 +5096,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Código do cupom e valor do pedido são obrigatórios" });
       }
 
-      // Sample validation logic (would use database in production)
-      const sampleCoupons = [
-        {
-          id: 1,
-          code: "DESCONTO10",
-          discountType: "percentage",
-          discountValue: 10,
-          minOrderValue: 5000,
-          maxUses: 100,
-          usedCount: 15,
-          isActive: true,
-          validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        }
-      ];
-
-      const coupon = sampleCoupons.find(c => c.code === code.toUpperCase());
+      // Get coupon from database
+      const coupon = await storage.getCouponByCode(code.toUpperCase());
 
       if (!coupon) {
         return res.status(404).json({ message: "Cupom não encontrado" });
       }
 
-      if (!coupon.isActive) {
-        return res.status(400).json({ message: "Cupom inativo" });
-      }
+      // Validate coupon using storage method
+      const validationResult = await storage.validateCoupon(code, orderValue);
 
-      if (new Date() > coupon.validUntil) {
-        return res.status(400).json({ message: "Cupom expirado" });
+      if (!validationResult.isValid) {
+        return res.status(400).json({ message: validationResult.error || "Cupom inválido" });
       }
-
-      if (coupon.usedCount >= coupon.maxUses) {
-        return res.status(400).json({ message: "Cupom esgotado" });
-      }
-
-      if (orderValue < coupon.minOrderValue) {
-        const minValue = (coupon.minOrderValue / 100).toFixed(2);
-        return res.status(400).json({ message: `Valor mínimo do pedido: R$ ${minValue}` });
-      }
-
-      // Calculate discount
-      let discountAmount = 0;
-      if (coupon.discountType === "percentage") {
-        discountAmount = Math.round((orderValue * coupon.discountValue) / 100);
-      } else {
-        discountAmount = coupon.discountValue;
-      }
-
-      discountAmount = Math.min(discountAmount, orderValue);
-      const finalAmount = orderValue - discountAmount;
 
       res.json({
         isValid: true,
-        coupon,
-        discountAmount,
-        finalAmount,
+        coupon: validationResult.coupon,
+        discountAmount: validationResult.discountAmount,
+        finalAmount: (orderValue - (validationResult.discountAmount || 0)),
         message: "Cupom válido aplicado com sucesso!"
       });
+
+
     } catch (error) {
       console.error("Error validating coupon:", error);
       res.status(500).json({ message: "Erro ao validar cupom" });
@@ -5720,9 +5687,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const userId = req.user!.id;
-      const { planName, paymentMethod = 'monthly', vehicleCount = 3 } = req.body;
+      const { planName, paymentMethod = 'monthly', vehicleCount = 3, couponCode, discountAmount } = req.body;
 
-      console.log('🎯 Create subscription - userId:', userId, 'planName:', planName);
+      console.log('🎯 Create subscription - userId:', userId, 'planName:', planName, 'couponCode:', couponCode);
 
       // Get user and admin settings
       const user = await storage.getUser(userId);
@@ -5757,6 +5724,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           : Math.round(monthlyPrice * 100);
       } else {
         return res.status(400).json({ message: "Plano inválido" });
+      }
+
+      // Apply coupon discount if provided
+      if (couponCode && discountAmount) {
+        console.log(`🎫 Applying coupon ${couponCode} with discount: ${discountAmount} cents`);
+        priceInCents = Math.max(0, priceInCents - discountAmount);
       }
 
       // Create or get Stripe customer
@@ -5794,7 +5767,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         clientSecret: paymentIntent.client_secret,
         amount: priceInCents,
         planName,
-        paymentMethod
+        paymentMethod,
+        couponApplied: couponCode || null,
+        discountAmount: discountAmount || 0
       });
 
     } catch (error) {

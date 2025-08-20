@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Crown, Star, Sparkles, Check, X, Plus, Minus, ArrowLeft } from "lucide-react";
+import { Crown, Star, Sparkles, Check, X, Plus, Minus, ArrowLeft, Tag, Percent } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import Header from "@/components/header";
 
@@ -40,15 +41,105 @@ interface UserSubscription {
   paymentMethod: string;
 }
 
+interface CouponValidation {
+  isValid: boolean;
+  coupon?: any;
+  discountAmount?: number;
+  finalAmount?: number;
+  message?: string;
+}
+
 export default function SubscriptionPlans() {
   const [isAnnual, setIsAnnual] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [vehicleCount, setVehicleCount] = useState<number>(3); // Default 3 vehicles (minimum)
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<CouponValidation | null>(null);
+  const [isCouponLoading, setIsCouponLoading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   const { user: storeUser } = useAuthStore();
   const [, setLocation] = useLocation();
+
+  // Function to validate coupon
+  const validateCoupon = async (code: string, orderValue: number) => {
+    setIsCouponLoading(true);
+    try {
+      const response = await apiRequest('POST', '/api/validate-coupon', {
+        code: code.toUpperCase(),
+        orderValue: Math.round(orderValue * 100), // Convert to cents
+      });
+      
+      if (response.isValid) {
+        setAppliedCoupon({
+          isValid: true,
+          coupon: response.coupon,
+          discountAmount: response.discountAmount,
+          finalAmount: response.finalAmount,
+          message: response.message,
+        });
+        toast({
+          title: "Cupom Aplicado!",
+          description: response.message,
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erro no Cupom",
+        description: error.message || "Cupom inválido ou expirado",
+        variant: "destructive",
+      });
+      setAppliedCoupon(null);
+    } finally {
+      setIsCouponLoading(false);
+    }
+  };
+
+  // Function to apply coupon
+  const handleApplyCoupon = () => {
+    if (!couponCode.trim()) {
+      toast({
+        title: "Código Necessário",
+        description: "Digite um código de cupom",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Use the first non-free plan for validation if none selected
+    let planToUse = selectedPlan;
+    if (!planToUse) {
+      const availablePlans = displayPlans.filter(p => p.name !== 'free');
+      if (availablePlans.length > 0) {
+        planToUse = availablePlans[0].name;
+      } else {
+        toast({
+          title: "Nenhum Plano Disponível",
+          description: "Não há planos disponíveis para aplicar o cupom",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    const plan = displayPlans.find(p => p.name === planToUse);
+    if (plan) {
+      const orderValue = getPrice(plan);
+      setSelectedPlan(planToUse); // Set the plan so discount shows
+      validateCoupon(couponCode, orderValue);
+    }
+  };
+
+  // Function to remove coupon
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    toast({
+      title: "Cupom Removido",
+      description: "O desconto foi removido do pedido",
+    });
+  };
 
   // Clear any previous checkout state when component loads
   useEffect(() => {
@@ -246,11 +337,20 @@ export default function SubscriptionPlans() {
     // Proceder com assinatura
     console.log('✅ User authenticated, proceeding with subscription');
     setSelectedPlan(planName);
-    createSubscriptionMutation.mutate({
+    
+    // Include coupon data if applied
+    const subscriptionData: any = {
       planName,
       paymentMethod: isAnnual ? 'annual' : 'monthly',
       vehicleCount,
-    });
+    };
+
+    if (appliedCoupon && appliedCoupon.isValid) {
+      subscriptionData.couponCode = couponCode;
+      subscriptionData.discountAmount = appliedCoupon.discountAmount;
+    }
+
+    createSubscriptionMutation.mutate(subscriptionData);
   };
 
   if (authLoading || plansLoading || subscriptionLoading) {
@@ -402,6 +502,24 @@ export default function SubscriptionPlans() {
     const price = getPrice(plan);
     if (plan.name === 'free') return 'Gratuito';
 
+    // Apply coupon discount if available and plan is selected
+    let finalPrice = price;
+    if (appliedCoupon && appliedCoupon.isValid && selectedPlan === plan.name) {
+      finalPrice = appliedCoupon.finalAmount ? appliedCoupon.finalAmount / 100 : price;
+    }
+
+    if (isAnnual) {
+      const monthlyEquivalent = finalPrice / 12;
+      return `R$ ${monthlyEquivalent.toFixed(2)}/mês`;
+    }
+
+    return `R$ ${finalPrice.toFixed(2)}/mês`;
+  };
+
+  const getOriginalPrice = (plan: SubscriptionPlan) => {
+    const price = getPrice(plan);
+    if (plan.name === 'free') return null;
+
     if (isAnnual) {
       const monthlyEquivalent = price / 12;
       return `R$ ${monthlyEquivalent.toFixed(2)}/mês`;
@@ -463,6 +581,71 @@ export default function SubscriptionPlans() {
                 Economize 20%
               </Badge>
             </Label>
+          </div>
+
+          {/* Coupon Section */}
+          <div className="max-w-md mx-auto mb-8">
+            <Card className="bg-white/80 backdrop-blur-sm border-dashed border-2 border-gray-300">
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-2">
+                  <Tag className="h-5 w-5 text-red-500" />
+                  <CardTitle className="text-lg">Cupom de Desconto</CardTitle>
+                </div>
+                <CardDescription>
+                  Tem um cupom? Digite o código para aplicar o desconto
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {!appliedCoupon ? (
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Digite o código do cupom"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      className="flex-1"
+                      onKeyPress={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                    />
+                    <Button
+                      onClick={handleApplyCoupon}
+                      disabled={isCouponLoading || !couponCode.trim() || !selectedPlan}
+                      className="bg-red-500 hover:bg-red-600 text-white"
+                    >
+                      {isCouponLoading ? "Validando..." : "Aplicar"}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Percent className="h-4 w-4 text-green-600" />
+                        <span className="font-medium text-green-800">{couponCode}</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRemoveCoupon}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="mt-2 text-sm text-green-700">
+                      {appliedCoupon.message}
+                    </div>
+                    {appliedCoupon.discountAmount && (
+                      <div className="mt-1 text-sm font-semibold text-green-800">
+                        Desconto: R$ {(appliedCoupon.discountAmount / 100).toFixed(2)}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {!selectedPlan && (
+                  <p className="text-sm text-gray-500 text-center">
+                    Selecione um plano abaixo para aplicar o cupom
+                  </p>
+                )}
+              </CardContent>
+            </Card>
           </div>
 
           {/* Vehicle Count Selector */}
@@ -536,15 +719,29 @@ export default function SubscriptionPlans() {
 
                   <CardContent className="text-center pb-6">
                     <div className="mb-6">
-                      <div className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                        {getDisplayPrice(plan)}
-                      </div>
+                      {appliedCoupon && appliedCoupon.isValid && selectedPlan === plan.name ? (
+                        <div className="space-y-2">
+                          <div className="text-2xl text-gray-500 line-through">
+                            {getOriginalPrice(plan)}
+                          </div>
+                          <div className="text-4xl font-bold text-green-600 mb-2">
+                            {getDisplayPrice(plan)}
+                          </div>
+                          <div className="text-sm text-green-600 font-medium">
+                            Desconto: R$ {((appliedCoupon.discountAmount || 0) / 100).toFixed(2)}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                          {getDisplayPrice(plan)}
+                        </div>
+                      )}
                       {isAnnual && savings && savings > 0 && (
                         <div className="text-sm text-green-600 font-medium">
                           Economize R$ {savings.toFixed(2)}/ano
                         </div>
                       )}
-                      {plan.name !== 'free' && !isAnnual && (
+                      {plan.name !== 'free' && !isAnnual && !appliedCoupon && (
                         <div className="text-sm text-gray-500">
                           ou R$ {(parseFloat(plan.annualPrice) / 12).toFixed(2)}/mês anual
                         </div>
