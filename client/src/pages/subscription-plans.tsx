@@ -250,9 +250,12 @@ export default function SubscriptionPlans() {
     },
     onSuccess: (data) => {
       console.log('✅ Subscription creation successful:', data);
+      console.log('🔍 Checking isFreeSubscription:', data.isFreeSubscription);
+      console.log('🔍 Full response data:', JSON.stringify(data, null, 2));
       
       // Check if it's a free subscription (100% discount)
-      if (data.isFreeSubscription) {
+      if (data.isFreeSubscription === true) {
+        console.log('🎁 Processing free subscription - showing success toast');
         toast({
           title: "🎉 Assinatura Ativada!",
           description: data.message || "Assinatura ativada com sucesso! Cupom aplicado com 100% de desconto.",
@@ -266,12 +269,16 @@ export default function SubscriptionPlans() {
         queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
         queryClient.invalidateQueries({ queryKey: ['/api/subscription'] });
         
+        console.log('⏰ Setting redirect timer for 2 seconds');
         // Redirect to home page after a delay
         setTimeout(() => {
+          console.log('🏠 Redirecting to home page');
           window.location.href = '/';
         }, 2000);
         return;
       }
+      
+      console.log('💳 Processing paid subscription - proceeding to checkout');
       
       if (!data.clientSecret) {
         toast({
