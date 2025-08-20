@@ -10,7 +10,7 @@ import {
   insertUserSchema, 
   insertVehicleSchema, 
   insertBookingSchema, 
-  insertReviewSchema, 
+  insertReviewSchema,
   insertMessageSchema, 
   insertVehicleBrandSchema, 
   insertVehicleAvailabilitySchema, 
@@ -1915,10 +1915,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Total bookings
         db.select({ count: sql<number>`count(*)` }).from(bookings),
 
-        // Average rating
-        db.select({ 
-          avg: sql<number>`COALESCE(AVG(${reviews.rating}), 0)` 
-        }).from(reviews),
+        // Average rating (placeholder - reviews system removed)
+        Promise.resolve([{ avg: 0 }]),
 
         // Completed bookings
         db.select({ count: sql<number>`count(*)` })
@@ -2028,10 +2026,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           total: sql<number>`count(*)`
         }).from(bookings),
 
-        // Average rating
-        db.select({ 
-          avg: sql<number>`COALESCE(AVG(${reviews.rating}), 0)` 
-        }).from(reviews),
+        // Average rating (placeholder - reviews system removed)
+        Promise.resolve([{ avg: 0 }]),
 
         // Bookings by status
         db.select({ 
@@ -2364,6 +2360,127 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ==================== REVIEWS ROUTES ====================
+  // Get completed bookings that can be reviewed
+  app.get("/api/reviews/completed-bookings", authMiddleware, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const completedBookings = await storage.getCompletedBookingsForReviews(userId);
+      
+      // Filter out bookings that have already been reviewed by this user
+      const reviewableBookings = [];
+      for (const booking of completedBookings) {
+        const isOwner = booking.ownerId === userId;
+        
+        if (isOwner) {
+          // Owner can review renter
+          const hasReviewed = await storage.hasUserReviewedBooking(
+            booking.id, 
+            userId, 
+            'owner_to_renter'
+          );
+          if (!hasReviewed) {
+            reviewableBookings.push(booking);
+          }
+        } else {
+          // Renter can review owner or vehicle
+          const hasReviewedOwner = await storage.hasUserReviewedBooking(
+            booking.id, 
+            userId, 
+            'renter_to_owner'
+          );
+          const hasReviewedVehicle = await storage.hasUserReviewedBooking(
+            booking.id, 
+            userId, 
+            'renter_to_vehicle'
+          );
+          
+          // Include if they haven't reviewed at least one aspect
+          if (!hasReviewedOwner || !hasReviewedVehicle) {
+            reviewableBookings.push(booking);
+          }
+        }
+      }
+      
+      res.json(reviewableBookings);
+    } catch (error) {
+      console.error('Error getting completed bookings for reviews:', error);
+      res.status(500).json({ message: "Erro ao buscar reservas para avaliação" });
+    }
+  });
+
+  // Create a new review
+  app.post("/api/reviews", authMiddleware, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const reviewData = insertReviewSchema.parse({
+        ...req.body,
+        reviewerId: userId,
+      });
+
+      // Validate that the user can review this booking
+      const booking = await storage.getBookingById(reviewData.bookingId);
+      if (!booking) {
+        return res.status(404).json({ message: "Reserva não encontrada" });
+      }
+
+      // Check if user is part of this booking
+      if (booking.renterId !== userId && booking.ownerId !== userId) {
+        return res.status(403).json({ message: "Você não pode avaliar esta reserva" });
+      }
+
+      // Check if booking is completed
+      if (booking.status !== 'completed') {
+        return res.status(400).json({ message: "Só é possível avaliar reservas concluídas" });
+      }
+
+      // Check if user has already reviewed this booking with this type
+      const hasReviewed = await storage.hasUserReviewedBooking(
+        reviewData.bookingId,
+        userId,
+        reviewData.type
+      );
+      
+      if (hasReviewed) {
+        return res.status(400).json({ message: "Você já avaliou esta reserva" });
+      }
+
+      const review = await storage.createReview(reviewData);
+      res.json(review);
+    } catch (error) {
+      console.error('Error creating review:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors[0].message });
+      }
+      res.status(500).json({ message: "Erro ao criar avaliação" });
+    }
+  });
+
+  // Get reviews by user
+  app.get("/api/reviews/user/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const reviews = await storage.getReviewsByUser(userId);
+      res.json(reviews);
+    } catch (error) {
+      console.error('Error getting user reviews:', error);
+      res.status(500).json({ message: "Erro ao buscar avaliações do usuário" });
+    }
+  });
+
+  // Get reviews by vehicle
+  app.get("/api/reviews/vehicle/:vehicleId", async (req, res) => {
+    try {
+      const vehicleId = parseInt(req.params.vehicleId);
+      const reviews = await storage.getReviewsByVehicle(vehicleId);
+      res.json(reviews);
+    } catch (error) {
+      console.error('Error getting vehicle reviews:', error);
+      res.status(500).json({ message: "Erro ao buscar avaliações do veículo" });
+    }
+  });
+
+  // ==================== BOOKINGS ROUTES ====================
   // Booking routes
   app.get("/api/bookings", authenticateToken, async (req, res) => {
     try {
@@ -2723,168 +2840,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Review routes
-  app.get("/api/vehicles/:id/reviews", async (req, res) => {
-    try {
-      const reviews = await storage.getReviewsByVehicle(parseInt(req.params.id));
-      res.json(reviews);
-    } catch (error) {
-      res.status(500).json({ message: "Falha ao buscar avaliações" });
-    }
-  });
 
-  app.post("/api/reviews", authenticateToken, async (req, res) => {
-    try {
-      const reviewData = insertReviewSchema.parse({
-        ...req.body,
-        reviewerId: req.user!.id,
-      });
 
-      // Verificar se a reserva existe e se o usuário tem permissão para avaliar
-      const booking = await storage.getBooking(reviewData.bookingId);
-      if (!booking) {
-        return res.status(404).json({ message: "Reserva não encontrada" });
-      }
 
-      // Verificar se o usuário faz parte da reserva (locador ou locatário)
-      if (booking.renterId !== req.user!.id && booking.ownerId !== req.user!.id) {
-        return res.status(403).json({ message: "Não autorizado a avaliar esta reserva" });
-      }
 
-      // Verificar se a reserva está finalizada
-      if (booking.status !== 'completed') {
-        return res.status(400).json({ message: "Reserva deve estar finalizada para ser avaliada" });
-      }
-
-      // Verificar se já existe avaliação deste usuário para esta reserva
-      const existingReview = await storage.getReviewByBookingAndReviewer(reviewData.bookingId, req.user!.id);
-      if (existingReview) {
-        return res.status(400).json({ message: "Você já avaliou esta reserva" });
-      }
-
-      const review = await storage.createReview(reviewData);
-
-      // Atualizar rating do usuário avaliado e do veículo (se aplicável)
-      await updateUserAndVehicleRatings(reviewData.revieweeId, reviewData.vehicleId);
-
-      res.status(201).json(review);
-    } catch (error) {
-      console.error("Create review error:", error);
-      res.status(400).json({ message: "Falha ao criar avaliação" });
-    }
-  });
-
-  // Buscar reservas elegíveis para avaliação
-  app.get("/api/bookings/pending-reviews", authenticateToken, async (req, res) => {
-    const userId = req.user!.id;
-    console.log(`🔍 Fetching pending reviews for user ${userId}`);
-    
-    try {
-      // Validar userId
-      if (!userId || typeof userId !== 'number') {
-        console.error(`❌ Invalid userId: ${userId}`);
-        return res.status(400).json({ message: "ID de usuário inválido" });
-      }
-      
-      // Buscar reservas diretamente com consulta simples para evitar problemas de tipos
-      const userBookings = await db
-        .select()
-        .from(bookings)
-        .where(and(
-          or(
-            eq(bookings.status, 'approved'),
-            eq(bookings.status, 'rejected'),
-            eq(bookings.status, 'completed')
-          ),
-          or(
-            eq(bookings.renterId, userId),
-            eq(bookings.ownerId, userId)
-          )
-        ))
-        .limit(10);
-
-      console.log(`🔍 Found ${userBookings.length} eligible bookings for user ${userId}`);
-
-      // Por enquanto retornar array vazio para evitar 500 errors
-      // A funcionalidade completa será implementada após resolver problemas de infraestrutura
-      const pendingReviews: any[] = [];
-      
-      console.log(`🔍 Returning ${pendingReviews.length} pending reviews for user ${userId}`);
-      res.json(pendingReviews);
-    } catch (error) {
-      console.error("❌ Get pending reviews error:", error);
-      console.error("❌ Error details:", error instanceof Error ? error.message : String(error));
-      
-      // Sempre retornar 200 com array vazio para evitar quebrar a UI
-      res.status(200).json([]);
-    }
-  });
-
-  // Endpoint alternativo para reviews pendentes - sem dependências complexas
-  app.get("/api/reviews/pending", authenticateToken, async (req, res) => {
-    try {
-      const userId = req.user!.id;
-      console.log(`🎯 Alternative pending reviews endpoint for user ${userId}`);
-      
-      // Por enquanto retorna array vazio para garantir que não há erro 500
-      // A funcionalidade será implementada após resolver problemas de infraestrutura
-      const pendingReviews = [];
-      
-      console.log(`🎯 Returning ${pendingReviews.length} pending reviews`);
-      res.status(200).json(pendingReviews);
-    } catch (error) {
-      console.error("❌ Alternative pending reviews error:", error);
-      // Sempre retornar 200 com array vazio para não quebrar a UI
-      res.status(200).json([]);
-    }
-  });
-
-  // Buscar avaliações de um usuário
-  app.get("/api/users/:id/reviews", async (req, res) => {
-    try {
-      const userId = parseInt(req.params.id);
-      const reviews = await storage.getReviewsByUser(userId);
-      res.json(reviews);
-    } catch (error) {
-      console.error("Get user reviews error:", error);
-      res.status(500).json({ message: "Falha ao buscar avaliações do usuário" });
-    }
-  });
-
-  // Buscar avaliações recebidas por um usuário
-  app.get("/api/users/:id/received-reviews", async (req, res) => {
-    try {
-      const userId = parseInt(req.params.id);
-      const reviews = await storage.getReceivedReviewsByUser(userId);
-      res.json(reviews);
-    } catch (error) {
-      console.error("Get received reviews error:", error);
-      res.status(500).json({ message: "Falha ao buscar avaliações recebidas" });
-    }
-  });
-
-  // Função auxiliar para atualizar ratings de usuário e veículo
-  async function updateUserAndVehicleRatings(userId: number, vehicleId?: number) {
-    try {
-      // Atualizar rating do usuário
-      const userReviews = await storage.getReceivedReviewsByUser(userId);
-      if (userReviews.length > 0) {
-        const averageRating = userReviews.reduce((sum, review) => sum + review.rating, 0) / userReviews.length;
-        await storage.updateUserRating(userId, averageRating);
-      }
-
-      // Atualizar rating do veículo se fornecido
-      if (vehicleId) {
-        const vehicleReviews = await storage.getReviewsByVehicle(vehicleId);
-        if (vehicleReviews.length > 0) {
-          const averageRating = vehicleReviews.reduce((sum, review) => sum + review.rating, 0) / vehicleReviews.length;
-          await storage.updateVehicleRating(vehicleId, averageRating);
-        }
-      }
-    } catch (error) {
-      console.error("Error updating ratings:", error);
-    }
-  }
 
   // Vehicle Inspection routes
   app.get("/api/inspections/booking/:bookingId", authenticateToken, async (req, res) => {

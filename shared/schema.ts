@@ -161,7 +161,7 @@ export const bookings = pgTable("bookings", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Reviews table
+// Reviews table - Novo sistema de avaliações
 export const reviews = pgTable("reviews", {
   id: serial("id").primaryKey(),
   bookingId: integer("booking_id").references(() => bookings.id).notNull(),
@@ -170,9 +170,11 @@ export const reviews = pgTable("reviews", {
   vehicleId: integer("vehicle_id").references(() => vehicles.id),
   rating: integer("rating").notNull(),
   comment: text("comment"),
-  type: varchar("type", { length: 20 }).notNull(),
+  type: varchar("type", { length: 30 }).notNull(), // 'renter_to_owner', 'owner_to_renter', 'renter_to_vehicle'
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
+
 
 // Messages table
 export const messages = pgTable("messages", {
@@ -447,6 +449,9 @@ export const bookingsRelations = relations(bookings, ({ one, many }) => ({
   }),
 }));
 
+
+
+// Reviews relations
 export const reviewsRelations = relations(reviews, ({ one }) => ({
   booking: one(bookings, {
     fields: [reviews.bookingId],
@@ -455,12 +460,10 @@ export const reviewsRelations = relations(reviews, ({ one }) => ({
   reviewer: one(users, {
     fields: [reviews.reviewerId],
     references: [users.id],
-    relationName: "givenReviews",
   }),
   reviewee: one(users, {
     fields: [reviews.revieweeId],
     references: [users.id],
-    relationName: "receivedReviews",
   }),
   vehicle: one(vehicles, {
     fields: [reviews.vehicleId],
@@ -654,9 +657,13 @@ export const insertBookingSchema = createInsertSchema(bookings).omit({
   updatedAt: true,
 });
 
+
+
+// Review schemas
 export const insertReviewSchema = createInsertSchema(reviews).omit({
   id: true,
   createdAt: true,
+  updatedAt: true,
 });
 
 export const insertMessageSchema = createInsertSchema(messages).omit({

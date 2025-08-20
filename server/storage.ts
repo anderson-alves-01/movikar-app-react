@@ -85,17 +85,12 @@ export interface IStorage {
   getBookingsWithDetails(filters: BookingFilters): Promise<BookingWithDetails[]>;
 
   // Reviews
-  getReviewsByVehicle(vehicleId: number): Promise<Review[]>;
-  getReviewsByUser(userId: number, type: 'given' | 'received'): Promise<Review[]>;
-  getReceivedReviewsByUser(userId: number): Promise<Review[]>;
-  getReviewByBookingAndReviewer(bookingId: number, reviewerId: number): Promise<Review | undefined>;
-  getBookingsPendingReview(userId: number): Promise<BookingWithDetails[]>;
-  getReviewsByBooking(bookingId: number): Promise<Review[]>;
-  getAllReviews(): Promise<Review[]>;
   createReview(review: InsertReview): Promise<Review>;
-  createReviewResponse(response: any): Promise<any>;
-  updateUserRating(userId: number, rating: number): Promise<void>;
-  updateVehicleRating(vehicleId: number, rating: number): Promise<void>;
+  getCompletedBookingsForReviews(userId: number): Promise<BookingWithDetails[]>;
+  getReviewsByUser(userId: number): Promise<Review[]>;
+  getReviewsByVehicle(vehicleId: number): Promise<Review[]>;
+  hasUserReviewedBooking(bookingId: number, reviewerId: number, type: string): Promise<boolean>;
+
 
   // Car Models (New Feature)
   getCarModels(): Promise<any[]>;
@@ -960,85 +955,7 @@ export class DatabaseStorage implements IStorage {
     return conflictingBookings.length === 0;
   }
 
-  // Reviews
-  async getReviewsByVehicle(vehicleId: number): Promise<Review[]> {
-    return await db
-      .select()
-      .from(reviews)
-      .where(eq(reviews.vehicleId, vehicleId))
-      .orderBy(desc(reviews.createdAt));
-  }
 
-  async getReviewsByUser(userId: number, type: 'given' | 'received'): Promise<Review[]> {
-    const field = type === 'given' ? reviews.reviewerId : reviews.revieweeId;
-    return await db
-      .select()
-      .from(reviews)
-      .where(eq(field, userId))
-      .orderBy(desc(reviews.createdAt));
-  }
-
-  async getReceivedReviewsByUser(userId: number): Promise<Review[]> {
-    return await db
-      .select()
-      .from(reviews)
-      .where(eq(reviews.revieweeId, userId))
-      .orderBy(desc(reviews.createdAt));
-  }
-
-  async getReviewByBookingAndReviewer(bookingId: number, reviewerId: number): Promise<Review | undefined> {
-    const [review] = await db
-      .select()
-      .from(reviews)
-      .where(and(
-        eq(reviews.bookingId, bookingId),
-        eq(reviews.reviewerId, reviewerId)
-      ));
-    return review;
-  }
-
-  async getBookingsPendingReview(userId: number): Promise<BookingWithDetails[]> {
-    console.log(`📋 Getting pending reviews for user ${userId} - SIMPLIFIED VERSION`);
-    
-    try {
-      // Estratégia: retornar array vazio para evitar 500 errors
-      // A funcionalidade será implementada gradualmente após resolver problemas de infraestrutura
-      console.log(`📋 Returning empty array to prevent 500 errors`);
-      return [];
-      
-    } catch (error) {
-      console.error('📋 Critical error in getBookingsPendingReview:', error);
-      return [];
-    }
-  }
-
-  async createReview(insertReview: InsertReview): Promise<Review> {
-    const [review] = await db
-      .insert(reviews)
-      .values(insertReview)
-      .returning();
-    return review;
-  }
-
-  async updateUserRating(userId: number, rating: number): Promise<void> {
-    await db
-      .update(users)
-      .set({ 
-        rating: rating.toFixed(2),
-        updatedAt: new Date()
-      })
-      .where(eq(users.id, userId));
-  }
-
-  async updateVehicleRating(vehicleId: number, rating: number): Promise<void> {
-    await db
-      .update(vehicles)
-      .set({ 
-        rating: rating.toFixed(2),
-        updatedAt: new Date()
-      })
-      .where(eq(vehicles.id, vehicleId));
-  }
 
   // Messages
   async getMessagesBetweenUsers(userId1: number, userId2: number, bookingId?: number): Promise<Message[]> {
@@ -3551,33 +3468,124 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Reviews (Feature 5 - additional methods)
-  async getReviewsByBooking(bookingId: number): Promise<Review[]> {
+  // Reviews - Novo sistema completo
+  async createReview(insertReview: InsertReview): Promise<Review> {
+    const [review] = await db
+      .insert(reviews)
+      .values(insertReview)
+      .returning();
+    return review;
+  }
+
+  async getCompletedBookingsForReviews(userId: number): Promise<BookingWithDetails[]> {
+    console.log(`📋 Getting completed bookings for reviews - User ${userId}`);
+    
+    try {
+      const bookingsQuery = db
+        .select({
+          id: bookings.id,
+          vehicleId: bookings.vehicleId,
+          renterId: bookings.renterId,
+          ownerId: bookings.ownerId,
+          startDate: bookings.startDate,
+          endDate: bookings.endDate,
+          totalPrice: bookings.totalPrice,
+          status: bookings.status,
+          createdAt: bookings.createdAt,
+          updatedAt: bookings.updatedAt,
+          vehicleBrand: vehicles.brand,
+          vehicleModel: vehicles.model,
+          vehicleYear: vehicles.year,
+          vehicleImages: vehicles.images,
+          vehicleLicensePlate: vehicles.licensePlate,
+          renterName: sql`renter.name`.as('renterName'),
+          renterEmail: sql`renter.email`.as('renterEmail'),
+          ownerName: sql`owner.name`.as('ownerName'),
+          ownerEmail: sql`owner.email`.as('ownerEmail'),
+        })
+        .from(bookings)
+        .innerJoin(vehicles, eq(bookings.vehicleId, vehicles.id))
+        .innerJoin(sql`users AS renter`, sql`${bookings.renterId} = renter.id`)
+        .innerJoin(sql`users AS owner`, sql`${bookings.ownerId} = owner.id`)
+        .where(
+          and(
+            or(eq(bookings.renterId, userId), eq(bookings.ownerId, userId)),
+            eq(bookings.status, 'completed')
+          )
+        )
+        .orderBy(desc(bookings.endDate));
+
+      const rawBookings = await bookingsQuery;
+      
+      // Transform raw data to BookingWithDetails format
+      const completedBookings: BookingWithDetails[] = rawBookings.map(booking => ({
+        id: booking.id,
+        vehicleId: booking.vehicleId,
+        renterId: booking.renterId,
+        ownerId: booking.ownerId,
+        startDate: booking.startDate,
+        endDate: booking.endDate,
+        totalPrice: booking.totalPrice,
+        status: booking.status,
+        createdAt: booking.createdAt,
+        updatedAt: booking.updatedAt,
+        vehicle: {
+          id: booking.vehicleId,
+          brand: booking.vehicleBrand,
+          model: booking.vehicleModel,
+          year: booking.vehicleYear,
+          images: booking.vehicleImages || [],
+          licensePlate: booking.vehicleLicensePlate,
+        },
+        renter: {
+          id: booking.renterId,
+          name: booking.renterName,
+          email: booking.renterEmail,
+        },
+        owner: {
+          id: booking.ownerId,
+          name: booking.ownerName,
+          email: booking.ownerEmail,
+        },
+      }));
+
+      console.log(`📋 Found ${completedBookings.length} completed bookings for user ${userId}`);
+      return completedBookings;
+
+    } catch (error) {
+      console.error('📋 Error getting completed bookings for reviews:', error);
+      return [];
+    }
+  }
+
+  async getReviewsByUser(userId: number): Promise<Review[]> {
     return await db
       .select()
       .from(reviews)
-      .where(eq(reviews.bookingId, bookingId))
+      .where(or(eq(reviews.reviewerId, userId), eq(reviews.revieweeId, userId)))
       .orderBy(desc(reviews.createdAt));
   }
 
-  async getAllReviews(): Promise<Review[]> {
+  async getReviewsByVehicle(vehicleId: number): Promise<Review[]> {
     return await db
       .select()
       .from(reviews)
+      .where(eq(reviews.vehicleId, vehicleId))
       .orderBy(desc(reviews.createdAt));
   }
 
-  async createReviewResponse(response: any): Promise<any> {
-    // For now, return mock response as the reviews table doesn't have a responses relation
-    // In a real implementation, you would have a separate reviewResponses table
-    return {
-      id: Date.now(),
-      reviewId: response.reviewId,
-      responderId: response.responderId,
-      response: response.response,
-      createdAt: new Date()
-    };
+  async hasUserReviewedBooking(bookingId: number, reviewerId: number, type: string): Promise<boolean> {
+    const [review] = await db
+      .select()
+      .from(reviews)
+      .where(and(
+        eq(reviews.bookingId, bookingId),
+        eq(reviews.reviewerId, reviewerId),
+        eq(reviews.type, type)
+      ));
+    return !!review;
   }
+
 }
 
 export const storage = new DatabaseStorage();
