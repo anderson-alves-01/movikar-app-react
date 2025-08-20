@@ -7,10 +7,10 @@ export const MONETIZATION_CONFIG = {
       displayName: 'Básico (Gratuito)',
       monthlyPrice: 0,
       annualPrice: 0,
-      maxVehicleListings: 3,
+      maxVehicleListings: 1,
       highlightType: null,
       features: [
-        'Até 3 anúncios ativos',
+        'Até 1 anúncio ativo',
         'Cálculo básico de diárias',
         'Calendário de disponibilidade simples',
         'Aparece em buscas orgânicas'

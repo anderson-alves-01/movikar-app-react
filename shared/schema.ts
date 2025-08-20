@@ -56,7 +56,7 @@ export const users = pgTable("users", {
   subscriptionStripeId: varchar("subscription_stripe_id", { length: 255 }),
   stripeCustomerId: varchar("stripe_customer_id", { length: 255 }),
   subscriptionPaymentMethod: varchar("subscription_payment_method", { length: 20 }).default("monthly"), // monthly, annual
-  maxVehicleListings: integer("max_vehicle_listings").default(2).notNull(),
+  maxVehicleListings: integer("max_vehicle_listings").default(1).notNull(),
   highlightsUsed: integer("highlights_used").default(0).notNull(),
   highlightsAvailable: integer("highlights_available").default(0).notNull(),
   // Aceite de Termos de Uso
