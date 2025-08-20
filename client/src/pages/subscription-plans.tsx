@@ -216,15 +216,29 @@ export default function SubscriptionPlans() {
 
   // Create subscription mutation
   const createSubscriptionMutation = useMutation({
-    mutationFn: async ({ planName, paymentMethod, vehicleCount }: { planName: string; paymentMethod: string; vehicleCount: number }) => {
-      console.log('📡 Sending subscription request:', { planName, paymentMethod, vehicleCount, isAuthenticated, user: !!user });
+    mutationFn: async ({ planName, paymentMethod, vehicleCount, couponCode, discountAmount }: { 
+      planName: string; 
+      paymentMethod: string; 
+      vehicleCount: number;
+      couponCode?: string;
+      discountAmount?: number;
+    }) => {
+      console.log('📡 Sending subscription request:', { planName, paymentMethod, vehicleCount, couponCode, discountAmount, isAuthenticated, user: !!user });
       
       try {
-        const response = await apiRequest("POST", "/api/create-subscription", {
+        const requestData: any = {
           planName,
           paymentMethod,
           vehicleCount,
-        });
+        };
+        
+        // Include coupon data if provided
+        if (couponCode && discountAmount) {
+          requestData.couponCode = couponCode;
+          requestData.discountAmount = discountAmount;
+        }
+        
+        const response = await apiRequest("POST", "/api/create-subscription", requestData);
         console.log('📡 Response status:', response.status);
         const data = await response.json();
         console.log('📡 Response data:', data);
@@ -258,6 +272,8 @@ export default function SubscriptionPlans() {
         planName: data.planName,
         paymentMethod: data.paymentMethod,
         amount: data.amount,
+        couponApplied: data.couponApplied || null,
+        discountAmount: data.discountAmount || 0,
         timestamp: Date.now()
       };
       
@@ -271,6 +287,12 @@ export default function SubscriptionPlans() {
         paymentMethod: data.paymentMethod,
         amount: data.amount.toString()
       });
+      
+      // Add coupon data to URL if present
+      if (data.couponApplied) {
+        searchParams.set('couponApplied', data.couponApplied);
+        searchParams.set('discountAmount', (data.discountAmount || 0).toString());
+      }
       
       const checkoutUrl = `/subscription-checkout?${searchParams.toString()}`;
       console.log('🔗 Redirecting to:', checkoutUrl);
@@ -350,6 +372,7 @@ export default function SubscriptionPlans() {
       subscriptionData.discountAmount = appliedCoupon.discountAmount;
     }
 
+    console.log('🎯 Final subscription data with coupon:', subscriptionData);
     createSubscriptionMutation.mutate(subscriptionData);
   };
 

@@ -23,9 +23,11 @@ interface CheckoutFormProps {
   planName: string;
   paymentMethod: string;
   amount: number;
+  couponApplied?: string | null;
+  couponDiscountAmount?: number;
 }
 
-const CheckoutForm = ({ clientSecret, planName, paymentMethod, amount }: CheckoutFormProps) => {
+const CheckoutForm = ({ clientSecret, planName, paymentMethod, amount, couponApplied, couponDiscountAmount = 0 }: CheckoutFormProps) => {
   const stripe = useStripe();
   const elements = useElements();
   const [isLoading, setIsLoading] = useState(false);
@@ -181,11 +183,13 @@ const CheckoutForm = ({ clientSecret, planName, paymentMethod, amount }: Checkou
         </CardHeader>
         <CardContent className="text-center">
           <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            {formatAmount(appliedDiscount > 0 ? finalAmount : amount)}
+            {formatAmount(amount)}
           </div>
-          {appliedDiscount > 0 && (
-            <div className="text-lg text-gray-500 line-through mb-2">
-              {formatAmount(amount)}
+          {couponApplied && couponDiscountAmount > 0 && (
+            <div className="mb-4">
+              <Badge variant="default" className="bg-green-600 text-white">
+                Cupom {couponApplied} aplicado: -{formatAmount(couponDiscountAmount)}
+              </Badge>
             </div>
           )}
           {paymentMethod === 'annual' && (
@@ -194,8 +198,8 @@ const CheckoutForm = ({ clientSecret, planName, paymentMethod, amount }: Checkou
             </Badge>
           )}
           {appliedDiscount > 0 && (
-            <Badge variant="default" className="bg-green-600 mb-4">
-              Desconto de R$ {appliedDiscount.toFixed(2)} aplicado
+            <Badge variant="default" className="bg-blue-600 mb-4">
+              Desconto adicional de pontos: R$ {appliedDiscount.toFixed(2)}
             </Badge>
           )}
         </CardContent>
@@ -322,6 +326,8 @@ export default function SubscriptionCheckout() {
   const planName = searchParams.get('planName');
   const paymentMethod = searchParams.get('paymentMethod') || 'monthly';
   const amount = parseInt(searchParams.get('amount') || '0');
+  const couponApplied = searchParams.get('couponApplied');
+  const couponDiscountAmount = parseInt(searchParams.get('discountAmount') || '0');
 
   useEffect(() => {
     // Verify checkout data integrity
@@ -448,6 +454,8 @@ export default function SubscriptionCheckout() {
             planName={finalPlanName}
             paymentMethod={finalPaymentMethod}
             amount={finalAmount}
+            couponApplied={couponApplied}
+            couponDiscountAmount={couponDiscountAmount}
           />
         </Elements>
       </div>
