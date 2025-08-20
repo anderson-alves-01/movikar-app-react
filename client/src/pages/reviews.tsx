@@ -85,37 +85,56 @@ function ReviewModal({
   booking: CompletedBooking; 
   isOwner: boolean; 
   onClose: () => void;
-  onSubmit: (data: ReviewForm) => void;
+  onSubmit: (data: ReviewForm | ReviewForm[]) => void;
 }) {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
-  const [reviewType, setReviewType] = useState<'person' | 'vehicle'>('person');
+  const [reviewType, setReviewType] = useState<'person' | 'vehicle' | 'both'>('person');
 
   const handleSubmit = () => {
-    let reviewData: ReviewForm;
-    
     if (isOwner) {
       // Proprietário avalia o locatário
-      reviewData = {
+      const reviewData: ReviewForm = {
         bookingId: booking.id,
         revieweeId: booking.renterId,
         rating,
         comment,
         type: 'owner_to_renter'
       };
-    } else {
-      // Locatário pode avaliar proprietário ou veículo
-      reviewData = {
+      onSubmit(reviewData);
+    } else if (reviewType === 'both') {
+      // Avaliação dupla - proprietário e veículo
+      const ownerReview: ReviewForm = {
         bookingId: booking.id,
-        revieweeId: reviewType === 'person' ? booking.ownerId : booking.ownerId,
+        revieweeId: booking.ownerId,
+        rating,
+        comment,
+        type: 'renter_to_owner'
+      };
+      
+      const vehicleReview: ReviewForm = {
+        bookingId: booking.id,
+        revieweeId: booking.ownerId,
+        vehicleId: booking.vehicleId,
+        rating,
+        comment,
+        type: 'renter_to_vehicle'
+      };
+      
+      // Enviar as duas avaliações como array
+      onSubmit([ownerReview, vehicleReview]);
+    } else {
+      // Avaliação simples - proprietário ou veículo
+      const reviewData: ReviewForm = {
+        bookingId: booking.id,
+        revieweeId: booking.ownerId,
         vehicleId: reviewType === 'vehicle' ? booking.vehicleId : undefined,
         rating,
         comment,
         type: reviewType === 'person' ? 'renter_to_owner' : 'renter_to_vehicle'
       };
+      onSubmit(reviewData);
     }
-    
-    onSubmit(reviewData);
   };
 
   const vehicleInfo = `${booking.vehicle.brand} ${booking.vehicle.model} ${booking.vehicle.year}`;
@@ -147,7 +166,7 @@ function ReviewModal({
           {!isOwner && (
             <div className="space-y-2">
               <label className="block text-sm font-medium">Avaliar:</label>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <Button
                   variant={reviewType === 'person' ? 'default' : 'outline'}
                   size="sm"
@@ -166,6 +185,19 @@ function ReviewModal({
                   <Car className="h-4 w-4 mr-1" />
                   Veículo
                 </Button>
+                <Button
+                  variant={reviewType === 'both' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setReviewType('both')}
+                  data-testid="review-type-both"
+                  className={reviewType === 'both' 
+                    ? "bg-gradient-to-r from-blue-500 to-green-500 text-white border-0 hover:from-blue-600 hover:to-green-600" 
+                    : "hover:bg-gradient-to-r hover:from-blue-50 hover:to-green-50"
+                  }
+                >
+                  <Star className="h-4 w-4 mr-1" />
+                  Ambos
+                </Button>
               </div>
             </div>
           )}
@@ -177,7 +209,9 @@ function ReviewModal({
                   ? `Como foi sua experiência com ${booking.renter.name}?`
                   : reviewType === 'person'
                     ? `Como foi sua experiência com ${revieweeName}?`
-                    : `Como foi sua experiência com este veículo?`
+                    : reviewType === 'vehicle'
+                      ? `Como foi sua experiência com este veículo?`
+                      : `Como foi sua experiência geral?`
                 }
               </label>
               <StarRating rating={rating} onRatingChange={setRating} />
@@ -226,13 +260,27 @@ export default function Reviews() {
   });
 
   const createReviewMutation = useMutation({
-    mutationFn: async (reviewData: ReviewForm) => {
-      return apiRequest("POST", "/api/reviews", reviewData);
+    mutationFn: async (reviewData: ReviewForm | ReviewForm[]) => {
+      // Se for array (avaliação dupla), envia as duas separadamente
+      if (Array.isArray(reviewData)) {
+        const results = [];
+        for (const review of reviewData) {
+          const result = await apiRequest("POST", "/api/reviews", review);
+          results.push(result);
+        }
+        return results;
+      } else {
+        // Avaliação simples
+        return apiRequest("POST", "/api/reviews", reviewData);
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      const count = Array.isArray(data) ? data.length : 1;
       toast({
-        title: "Avaliação enviada",
-        description: "Sua avaliação foi registrada com sucesso!",
+        title: count > 1 ? "Avaliações enviadas" : "Avaliação enviada",
+        description: count > 1 
+          ? "Suas avaliações do proprietário e veículo foram registradas com sucesso!"
+          : "Sua avaliação foi registrada com sucesso!",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/reviews/completed-bookings"] });
       setSelectedBooking(null);
@@ -246,7 +294,7 @@ export default function Reviews() {
     },
   });
 
-  const handleSubmitReview = (reviewData: ReviewForm) => {
+  const handleSubmitReview = (reviewData: ReviewForm | ReviewForm[]) => {
     createReviewMutation.mutate(reviewData);
   };
 
