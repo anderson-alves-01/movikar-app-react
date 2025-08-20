@@ -251,6 +251,28 @@ export default function SubscriptionPlans() {
     onSuccess: (data) => {
       console.log('✅ Subscription creation successful:', data);
       
+      // Check if it's a free subscription (100% discount)
+      if (data.isFreeSubscription) {
+        toast({
+          title: "🎉 Assinatura Ativada!",
+          description: data.message || "Assinatura ativada com sucesso! Cupom aplicado com 100% de desconto.",
+          duration: 5000,
+        });
+        
+        // Clear any stored checkout data
+        localStorage.removeItem('checkoutPlan');
+        
+        // Invalidate auth and subscription queries to refresh user data
+        queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/subscription'] });
+        
+        // Redirect to home page after a delay
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 2000);
+        return;
+      }
+      
       if (!data.clientSecret) {
         toast({
           title: "Erro",
@@ -260,7 +282,7 @@ export default function SubscriptionPlans() {
         return;
       }
       
-      // Show success message
+      // Show success message for paid subscriptions
       toast({
         title: "Assinatura Criada!",
         description: "Redirecionando para pagamento...",

@@ -5731,11 +5731,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Plano inválido" });
       }
 
+      console.log(`💰 Original price: ${priceInCents} cents for ${planName} (${vehicleCount} vehicles)`);
+
       // Apply coupon discount if provided
+      let finalPriceAfterDiscount = priceInCents;
       if (couponCode && discountAmount) {
         console.log(`🎫 Applying coupon ${couponCode} with discount: ${discountAmount} cents`);
-        priceInCents = Math.max(0, priceInCents - discountAmount);
+        finalPriceAfterDiscount = Math.max(0, priceInCents - discountAmount);
+        console.log(`💸 Final price after discount: ${finalPriceAfterDiscount} cents`);
       }
+
+
+
+      // Check if discount results in free subscription (100% off)
+      if (finalPriceAfterDiscount === 0) {
+        console.log('🎁 100% discount applied - processing free subscription');
+        
+        // Update user subscription directly without payment
+        await storage.updateUser(userId, {
+          subscriptionPlan: planName,
+          subscriptionStatus: 'active',
+          subscriptionStartDate: new Date(),
+          subscriptionEndDate: paymentMethod === 'annual' 
+            ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year
+            : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 1 month
+          subscriptionPaymentMethod: paymentMethod,
+          maxVehicleListings: vehicleCount,
+          subscriptionStripeId: `free_${Date.now()}_${userId}`, // Unique identifier for free subscription
+        });
+
+        // Mark coupon as used if applicable
+        if (couponCode) {
+          try {
+            await storage.incrementCouponUsage(couponCode);
+          } catch (error) {
+            console.error('Failed to increment coupon usage:', error);
+          }
+        }
+
+        return res.json({
+          success: true,
+          isFreeSubscription: true,
+          planName,
+          paymentMethod,
+          message: "Assinatura ativada com sucesso! Cupom aplicado com 100% de desconto.",
+          subscriptionStatus: 'active',
+          couponApplied: couponCode,
+          discountAmount: discountAmount
+        });
+      }
+
+      // Continue with paid subscription flow
+      priceInCents = finalPriceAfterDiscount;
 
       // Create or get Stripe customer - always create new if missing
       let customerId = user.stripeCustomerId;

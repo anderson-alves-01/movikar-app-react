@@ -2529,6 +2529,28 @@ export class DatabaseStorage implements IStorage {
     return { coupon, discountAmount: 0 }; // Discount amount would be calculated during validation
   }
 
+  async incrementCouponUsage(couponCode: string): Promise<boolean> {
+    try {
+      const coupon = await this.getCouponByCode(couponCode);
+      if (!coupon) {
+        return false;
+      }
+
+      await db
+        .update(coupons)
+        .set({ 
+          usedCount: (coupon.usedCount || 0) + 1,
+          updatedAt: new Date()
+        })
+        .where(eq(coupons.id, coupon.id));
+
+      return true;
+    } catch (error) {
+      console.error("Error incrementing coupon usage:", error);
+      return false;
+    }
+  }
+
   // Subscription Plans methods
   async getAllSubscriptionPlans(): Promise<SubscriptionPlan[]> {
     return await db
