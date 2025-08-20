@@ -2362,7 +2362,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ==================== REVIEWS ROUTES ====================
   // Get completed bookings that can be reviewed
-  app.get("/api/reviews/completed-bookings", authMiddleware, async (req, res) => {
+  app.get("/api/reviews/completed-bookings", authenticateToken, async (req, res) => {
     try {
       const userId = req.user!.id;
       const completedBookings = await storage.getCompletedBookingsForReviews(userId);
@@ -2410,7 +2410,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create a new review
-  app.post("/api/reviews", authMiddleware, async (req, res) => {
+  app.post("/api/reviews", authenticateToken, async (req, res) => {
     try {
       const userId = req.user!.id;
       const reviewData = insertReviewSchema.parse({
@@ -2449,7 +2449,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(review);
     } catch (error) {
       console.error('Error creating review:', error);
-      if (error instanceof z.ZodError) {
+      if (error instanceof ZodError) {
         return res.status(400).json({ message: error.errors[0].message });
       }
       res.status(500).json({ message: "Erro ao criar avaliação" });
