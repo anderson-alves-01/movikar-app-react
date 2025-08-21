@@ -67,9 +67,24 @@ export default function AdminMessagesPage() {
       return response.json();
     },
     onSuccess: (data) => {
+      // Build detailed success message
+      let description = `Total de usuários: ${data.recipientCount}`;
+      
+      if (data.pushNotifications) {
+        description += `\n📱 Push: ${data.pushNotifications.sent}/${data.pushNotifications.total} enviadas`;
+      }
+      
+      if (data.emails) {
+        description += `\n📧 Email: ${data.emails.sent}/${data.emails.total} enviados`;
+      }
+      
+      if (data.errors && data.errors.length > 0) {
+        description += `\n⚠️ ${data.errors.length} erros encontrados`;
+      }
+
       toast({
         title: "Mensagem enviada!",
-        description: `Mensagem enviada para ${data.recipientCount} usuários com sucesso.`,
+        description: description,
       });
       setMessageTitle("");
       setMessageContent("");

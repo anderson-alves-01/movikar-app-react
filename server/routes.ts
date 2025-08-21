@@ -3806,10 +3806,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // TODO: Send emails if enabled
+      // Send emails if enabled
+      let emailSuccessCount = 0;
       if (sendEmail) {
-        // Email implementation would go here
-        console.log("Email sending not implemented yet");
+        const emailService = (await import('./services/emailService')).default;
+        const emailRecipients = targetUsers
+          .filter(user => user.email)
+          .map(user => ({ 
+            email: user.email!, 
+            name: user.name || 'Usuário' 
+          }));
+
+        if (emailRecipients.length > 0) {
+          const emailResult = await emailService.sendBulkNotificationEmails(
+            emailRecipients,
+            {
+              title: title,
+              body: content,
+              data: {
+                type: 'admin_message',
+                messageId: Date.now().toString(),
+              }
+            }
+          );
+          
+          emailSuccessCount = emailResult.successCount;
+          if (emailResult.errors.length > 0) {
+            errors.push(...emailResult.errors.map(err => `Email - ${err}`));
+          }
+        }
       }
 
       // Store message in history
@@ -3824,9 +3849,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         success: true,
         recipientCount: targetUsers.length,
-        successCount,
+        pushNotifications: {
+          sent: successCount,
+          total: sendPushNotification ? targetUsers.length : 0
+        },
+        emails: {
+          sent: emailSuccessCount,
+          total: sendEmail ? targetUsers.filter(u => u.email).length : 0
+        },
         errors: errors.length > 0 ? errors : undefined,
-        message: `Mensagem enviada para ${successCount} de ${targetUsers.length} usuários`
+        message: `Mensagem enviada - Push: ${successCount} usuários, Email: ${emailSuccessCount} usuários`
       });
 
     } catch (error) {
