@@ -20,6 +20,7 @@ import AdminVehicleApproval from "@/pages/admin-vehicle-approval";
 import AdminDocumentVerification from "@/pages/admin-document-verification";
 import AdminUsers from "@/pages/admin-users";
 import AdminBookings from "@/pages/admin-bookings";
+import AdminMessages from "@/pages/admin-messages";
 import AdminDocuments from "@/pages/admin-documents";
 import Reservations from "@/pages/reservations";
 import Vehicles from "@/pages/vehicles";
@@ -100,6 +101,7 @@ function Router() {
         <Route path="/admin/document-verification" component={AdminDocumentVerification} />
         <Route path="/admin/users" component={AdminUsers} />
         <Route path="/admin/bookings" component={AdminBookings} />
+        <Route path="/admin/messages" component={AdminMessages} />
         <Route path="/admin/documents" component={AdminDocuments} />
         <Route path="/reservations" component={Reservations} />
         <Route path="/vehicles" component={Vehicles} />

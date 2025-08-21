@@ -118,6 +118,24 @@ export interface IStorage {
   updateUserPushToken(userId: number, pushToken: string, platform?: string): Promise<void>;
   getUserWithPushToken(userId: number): Promise<(User & { pushToken?: string }) | undefined>;
   getUsersWithPushTokens(userIds: number[]): Promise<(User & { pushToken?: string })[]>;
+  
+  // Admin messaging
+  getUsersByRole(role: string): Promise<User[]>;
+  getUserStats(): Promise<{
+    totalUsers: number;
+    ownersCount: number;
+    rentersCount: number;
+    bothCount: number;
+    verifiedCount: number;
+  }>;
+  createAdminMessage(messageData: {
+    title: string;
+    content: string;
+    targetAudience: string;
+    recipientCount: number;
+    status: string;
+  }): Promise<any>;
+  getAdminMessageHistory(): Promise<any[]>;
 
   // Contracts
   getContract(id: number): Promise<Contract | undefined>;
@@ -997,7 +1015,7 @@ export class DatabaseStorage implements IStorage {
 
   async getUserWithPushToken(userId: number): Promise<(User & { pushToken?: string }) | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, userId));
-    return user || undefined;
+    return user ? { ...user, pushToken: user.pushToken || undefined } : undefined;
   }
 
   async getUsersWithPushTokens(userIds: number[]): Promise<(User & { pushToken?: string })[]> {
@@ -1009,7 +1027,97 @@ export class DatabaseStorage implements IStorage {
         isNotNull(users.pushToken)
       ));
     
-    return usersList;
+    return usersList.map(user => ({ ...user, pushToken: user.pushToken || undefined }));
+  }
+
+  // Admin messaging methods
+  async getUsersByRole(role: string): Promise<User[]> {
+    let whereCondition;
+    
+    switch (role) {
+      case 'owners':
+        whereCondition = or(eq(users.role, 'owner'), eq(users.role, 'both'));
+        break;
+      case 'renters':
+        whereCondition = or(eq(users.role, 'renter'), eq(users.role, 'both'));
+        break;
+      case 'both':
+        whereCondition = eq(users.role, 'both');
+        break;
+      case 'all':
+      default:
+        whereCondition = undefined;
+        break;
+    }
+
+    const query = db.select().from(users);
+    if (whereCondition) {
+      query.where(whereCondition);
+    }
+    
+    return await query;
+  }
+
+  async getUserStats(): Promise<{
+    totalUsers: number;
+    ownersCount: number;
+    rentersCount: number;
+    bothCount: number;
+    verifiedCount: number;
+  }> {
+    const [totalResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users);
+
+    const [ownersResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users)
+      .where(or(eq(users.role, 'owner'), eq(users.role, 'both')));
+
+    const [rentersResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users)
+      .where(or(eq(users.role, 'renter'), eq(users.role, 'both')));
+
+    const [bothResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users)
+      .where(eq(users.role, 'both'));
+
+    const [verifiedResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users)
+      .where(eq(users.isVerified, true));
+
+    return {
+      totalUsers: totalResult.count || 0,
+      ownersCount: ownersResult.count || 0,
+      rentersCount: rentersResult.count || 0,
+      bothCount: bothResult.count || 0,
+      verifiedCount: verifiedResult.count || 0,
+    };
+  }
+
+  async createAdminMessage(messageData: {
+    title: string;
+    content: string;
+    targetAudience: string;
+    recipientCount: number;
+    status: string;
+  }): Promise<any> {
+    // For now, we'll store this in a simple way
+    // In a real implementation, you might want a dedicated table for admin messages
+    return {
+      id: Date.now(),
+      ...messageData,
+      sentAt: new Date().toISOString(),
+    };
+  }
+
+  async getAdminMessageHistory(): Promise<any[]> {
+    // In a real implementation, this would fetch from a dedicated admin_messages table
+    // For now, return empty array as this is just the structure
+    return [];
   }
 
   // Contracts
