@@ -73,26 +73,40 @@ export default function MessageCenter({
     if (!user) return;
 
     // Connect to WebSocket when component mounts
-    websocketService.connect().catch(console.error);
+    websocketService.connect().then(() => {
+      console.log('🔌 WebSocket connected for user:', user.id);
+    }).catch(console.error);
 
     // Listen for new messages
     const unsubscribe = websocketService.onMessage('new_message', (data) => {
+      console.log('📨 Real-time message data received:', data);
+      
       // Check if the message is for this conversation
       if (data.message && 
           ((data.message.senderId === otherUserId && data.message.receiverId === user.id) ||
            (data.message.senderId === user.id && data.message.receiverId === otherUserId))) {
-        console.log('🔄 Real-time message received, updating conversation');
-        // Invalidate and refetch messages to show the new message
+        console.log('🔄 Real-time message for this conversation, updating UI');
+        // Invalidate and refetch messages to show the new message immediately
         queryClient.invalidateQueries({ queryKey: ['/api/messages', { userId: otherUserId }] });
         // Also invalidate conversations list to update unread counts
         queryClient.invalidateQueries({ queryKey: ['/api/conversations'] });
+        // Force an immediate refetch to show the new message
+        refetch();
+      } else {
+        console.log('📨 Message not for this conversation', {
+          messageExists: !!data.message,
+          senderId: data.message?.senderId,
+          receiverId: data.message?.receiverId,
+          expectedOtherUserId: otherUserId,
+          currentUserId: user.id
+        });
       }
     });
 
     return () => {
       unsubscribe();
     };
-  }, [user, otherUserId, queryClient]);
+  }, [user, otherUserId, queryClient, refetch]);
 
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
@@ -103,9 +117,17 @@ export default function MessageCenter({
       });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (newMessage) => {
       setNewMessage('');
-      // Force immediate refetch
+      console.log('📤 Message sent successfully, forcing UI update');
+      // Immediate cache update with optimistic UI
+      queryClient.setQueryData(['/api/messages', { userId: otherUserId }], (oldData: any) => {
+        if (oldData && Array.isArray(oldData)) {
+          return [...oldData, newMessage];
+        }
+        return oldData;
+      });
+      // Also force refetch
       refetch();
     },
     onError: (error: any) => {

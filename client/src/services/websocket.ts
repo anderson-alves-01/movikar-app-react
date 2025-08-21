@@ -73,10 +73,24 @@ class WebSocketService {
               console.log('✅ WebSocket authenticated for user:', message.userId);
             }
             
+            // Special handling for new messages
+            if (message.type === 'new_message') {
+              console.log('🔔 NEW MESSAGE EVENT detected:', message);
+            }
+            
             // Call registered handlers for this message type
             const handlers = this.messageHandlers.get(message.type);
-            if (handlers) {
-              handlers.forEach(handler => handler(message));
+            if (handlers && handlers.size > 0) {
+              console.log(`📢 Calling ${handlers.size} handlers for message type: ${message.type}`);
+              handlers.forEach(handler => {
+                try {
+                  handler(message);
+                } catch (handlerError) {
+                  console.error('Error in message handler:', handlerError);
+                }
+              });
+            } else {
+              console.log(`⚠️ No handlers registered for message type: ${message.type}`);
             }
           } catch (error) {
             console.error('Error parsing WebSocket message:', error);

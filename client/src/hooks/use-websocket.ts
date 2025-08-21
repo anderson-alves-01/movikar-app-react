@@ -25,11 +25,29 @@ export function useWebSocketMessages() {
     if (!user) return;
 
     const unsubscribe = websocketService.onMessage('new_message', (data) => {
-      console.log('🔄 New message received via WebSocket:', data);
+      console.log('🔄 Global WebSocket message handler - New message received:', data);
       
-      // Invalidate all message-related queries to refresh the UI
-      queryClient.invalidateQueries({ queryKey: ['/api/messages'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/conversations'] });
+      if (data.message) {
+        // Invalidate specific message queries
+        queryClient.invalidateQueries({ 
+          queryKey: ['/api/messages'],
+          exact: false
+        });
+        
+        // Invalidate conversations list
+        queryClient.invalidateQueries({ 
+          queryKey: ['/api/conversations'],
+          exact: true
+        });
+
+        // Force refetch all active queries
+        queryClient.refetchQueries({ 
+          queryKey: ['/api/messages'],
+          type: 'active'
+        });
+
+        console.log('✅ Cache invalidated and queries refetched for new message');
+      }
     });
 
     return unsubscribe;
