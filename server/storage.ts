@@ -16,7 +16,7 @@ import {
   type OwnerInspection, type InsertOwnerInspection
 } from "@shared/schema";
 import { db, pool } from "./db";
-import { eq, and, gte, lte, desc, asc, or, like, ilike, sql, lt, ne, inArray, not, isNull } from "drizzle-orm";
+import { eq, and, gte, lte, desc, asc, or, like, ilike, sql, lt, ne, inArray, not, isNull, isNotNull } from "drizzle-orm";
 import { getTableColumns } from "drizzle-orm";
 
 export interface BookingFilters {
@@ -113,6 +113,11 @@ export interface IStorage {
   createMessage(message: InsertMessage): Promise<Message>;
   markMessagesAsRead(receiverId: number, senderId: number): Promise<void>;
   getUnreadMessageCount(userId: number): Promise<number>;
+  
+  // Push notifications
+  updateUserPushToken(userId: number, pushToken: string, platform?: string): Promise<void>;
+  getUserWithPushToken(userId: number): Promise<(User & { pushToken?: string }) | undefined>;
+  getUsersWithPushTokens(userIds: number[]): Promise<(User & { pushToken?: string })[]>;
 
   // Contracts
   getContract(id: number): Promise<Contract | undefined>;
@@ -976,6 +981,35 @@ export class DatabaseStorage implements IStorage {
       );
 
     return result[0]?.count || 0;
+  }
+
+  // Push notification methods
+  async updateUserPushToken(userId: number, pushToken: string, platform?: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ 
+        pushToken: pushToken,
+        pushPlatform: platform || null,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+  }
+
+  async getUserWithPushToken(userId: number): Promise<(User & { pushToken?: string }) | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    return user || undefined;
+  }
+
+  async getUsersWithPushTokens(userIds: number[]): Promise<(User & { pushToken?: string })[]> {
+    const usersList = await db
+      .select()
+      .from(users)
+      .where(and(
+        inArray(users.id, userIds),
+        isNotNull(users.pushToken)
+      ));
+    
+    return usersList;
   }
 
   // Contracts

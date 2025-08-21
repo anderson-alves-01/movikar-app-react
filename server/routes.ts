@@ -3623,6 +3623,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       const message = await storage.createMessage(messageData);
+
+      // Send push notification to receiver
+      try {
+        const receiver = await storage.getUserWithPushToken(receiverIdNumber);
+        const sender = await storage.getUser(req.user!.id);
+        
+        if (receiver?.pushToken && sender) {
+          const notification = {
+            to: receiver.pushToken,
+            title: `Nova mensagem de ${sender.name}`,
+            body: content.length > 50 ? content.substring(0, 50) + '...' : content,
+            data: {
+              type: 'new_message',
+              senderId: req.user!.id,
+              senderName: sender.name,
+              bookingId: bookingId || null,
+              messageId: message.id
+            },
+            sound: 'default',
+            priority: 'high',
+            channelId: 'messages'
+          };
+
+          // Send push notification
+          const response = await fetch('https://exp.host/--/api/v2/push/send', {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Accept-encoding': 'gzip, deflate',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify([notification]),
+          });
+
+          const result = await response.json();
+          console.log(`📱 Message push notification sent to ${receiver.name}:`, result);
+        }
+      } catch (pushError) {
+        console.error("Push notification error:", pushError);
+        // Don't fail the message creation if push notification fails
+      }
+
       res.status(201).json(message);
     } catch (error) {
       console.error("Send message error:", error);
@@ -3655,6 +3697,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get unread message count error:", error);
       res.json({ count: 0 }); // Return 0 on error instead of 500
+    }
+  });
+
+  // Push notification endpoints
+  app.post("/api/notifications/register-token", authenticateToken, async (req, res) => {
+    try {
+      const { expoPushToken, platform } = req.body;
+      const userId = req.user!.id;
+
+      if (!expoPushToken) {
+        return res.status(400).json({ message: "expoPushToken is required" });
+      }
+
+      // Store the push token for the user
+      await storage.updateUserPushToken(userId, expoPushToken, platform);
+      
+      console.log(`📱 Push token registered for user ${userId}: ${expoPushToken.substring(0, 20)}...`);
+      res.json({ success: true, message: "Push token registered successfully" });
+    } catch (error) {
+      console.error("Register push token error:", error);
+      res.status(500).json({ message: "Falha ao registrar token de push" });
+    }
+  });
+
+  app.post("/api/notifications/send", authenticateToken, async (req, res) => {
+    try {
+      const { userIds, title, body, data } = req.body;
+
+      if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+        return res.status(400).json({ message: "userIds array is required" });
+      }
+
+      if (!title || !body) {
+        return res.status(400).json({ message: "title and body are required" });
+      }
+
+      // Get push tokens for the specified users
+      const users = await storage.getUsersWithPushTokens(userIds);
+      const notifications = [];
+
+      for (const user of users) {
+        if (user.pushToken) {
+          notifications.push({
+            to: user.pushToken,
+            title,
+            body,
+            data: data || {},
+            sound: 'default',
+            priority: 'high',
+          });
+        }
+      }
+
+      if (notifications.length === 0) {
+        return res.json({ success: true, sent: 0, message: "No users with push tokens found" });
+      }
+
+      // Send notifications using Expo's push notification service
+      const response = await fetch('https://exp.host/--/api/v2/push/send', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Accept-encoding': 'gzip, deflate',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(notifications),
+      });
+
+      const result = await response.json();
+      console.log(`📱 Push notifications sent: ${notifications.length} notifications`);
+      
+      res.json({ 
+        success: true, 
+        sent: notifications.length, 
+        details: result 
+      });
+    } catch (error) {
+      console.error("Send push notifications error:", error);
+      res.status(500).json({ message: "Falha ao enviar notificações push" });
     }
   });
 

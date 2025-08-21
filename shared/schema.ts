@@ -62,6 +62,9 @@ export const users = pgTable("users", {
   // Aceite de Termos de Uso
   acceptedTermsAt: timestamp("accepted_terms_at"),
   acceptedTermsVersion: varchar("accepted_terms_version", { length: 10 }).default("1.0"),
+  // Push notification fields
+  pushToken: text("push_token"),
+  pushPlatform: varchar("push_platform", { length: 10 }), // ios, android
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
