@@ -17,7 +17,7 @@ import { formatPhoneNumber, validatePhoneNumber, filterCities } from "@/utils/ph
 import { cn } from "@/lib/utils";
 import TermsOfUseModal from "@/components/terms-of-use-modal";
 import PrivacyPolicyModal from "@/components/privacy-policy-modal";
-import logoPath from "@assets/logo.png";
+// Use the logo from public directory
 
 export default function Auth() {
   const [, setLocation] = useLocation();
@@ -302,7 +302,7 @@ export default function Auth() {
         <div className="text-center">
           <div className="flex justify-center mb-4">
             <img 
-              src={logoPath} 
+              src="/logo.png" 
               alt="alugae" 
               className="h-16 w-auto object-contain"
               data-testid="logo-image"

@@ -6775,7 +6775,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create payment intent for lead purchase
       const paymentIntent = await stripe!.paymentIntents.create({
-        amount: Math.round(lead.purchasedPrice || 5000), // Default R$ 50.00
+        amount: Math.round(parseFloat(lead.purchasedPrice || '50.00') * 100), // Convert to cents
         currency: 'brl',
         metadata: {
           type: 'qualified_lead',
@@ -7357,7 +7357,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     ws.on('close', () => {
       // Remove connection from active connections
-      for (const [userId, connection] of activeConnections.entries()) {
+      for (const [userId, connection] of Array.from(activeConnections.entries())) {
         if (connection === ws) {
           activeConnections.delete(userId);
           console.log(`❌ User ${userId} disconnected from WebSocket`);
