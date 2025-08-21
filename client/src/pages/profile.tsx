@@ -168,6 +168,25 @@ export default function Profile() {
     return new Date(dateString).toLocaleDateString("pt-BR");
   };
 
+  // Handle starting a chat with the other party (owner/renter)
+  const handleStartChat = (booking: any) => {
+    // Determine who to chat with based on user role in the booking
+    const otherUserId = booking.renter?.id === user?.id ? booking.owner?.id : booking.renter?.id;
+    const otherUserName = booking.renter?.id === user?.id ? booking.owner?.name : booking.renter?.name;
+    
+    if (!otherUserId) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível iniciar a conversa. Dados do usuário não encontrados.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Navigate to messages page with the other user
+    window.location.href = `/messages?userId=${otherUserId}&bookingId=${booking.id}&userName=${encodeURIComponent(otherUserName || 'Usuário')}`;
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
@@ -520,7 +539,12 @@ export default function Profile() {
                                   Ver veículo
                                 </Link>
                               </Button>
-                              <Button variant="outline" size="sm">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleStartChat(booking)}
+                                data-testid={`button-chat-${booking.id}`}
+                              >
                                 <MessageCircle className="h-4 w-4 mr-2" />
                                 Conversar
                               </Button>
@@ -680,7 +704,13 @@ export default function Profile() {
                                     Ver veículo
                                   </Link>
                                 </Button>
-                                <Button variant="outline" size="sm" className="text-xs sm:text-sm">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="text-xs sm:text-sm"
+                                  onClick={() => handleStartChat(booking)}
+                                  data-testid={`button-chat-${booking.id}`}
+                                >
                                   <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                                   Conversar
                                 </Button>

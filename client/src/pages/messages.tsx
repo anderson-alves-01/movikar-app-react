@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,10 +38,42 @@ export default function Messages() {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Check for URL parameters to start a conversation
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlUserId = urlParams.get('userId');
+  const urlBookingId = urlParams.get('bookingId');
+  const urlUserName = urlParams.get('userName');
+
+  // If URL params exist, set up the conversation
+  const directConversation = urlUserId ? {
+    id: parseInt(urlUserId),
+    otherUser: {
+      id: parseInt(urlUserId),
+      name: urlUserName || 'Usuário',
+    },
+    lastMessage: {
+      content: 'Nova conversa iniciada',
+      createdAt: new Date().toISOString(),
+      isFromUser: false,
+    },
+    unreadCount: 0,
+    booking: urlBookingId ? {
+      id: parseInt(urlBookingId),
+      vehicle: { brand: '', model: '', year: 0 }
+    } : undefined
+  } : null;
+
   const { data: conversations, isLoading } = useQuery<Conversation[]>({
     queryKey: ["/api/conversations"],
-    enabled: false, // Disable to prevent auth loops
+    enabled: !!user && !directConversation, // Enable only if user exists and no direct conversation
   });
+
+  // Auto-select direct conversation if coming from URL params
+  useEffect(() => {
+    if (directConversation && !selectedConversation) {
+      setSelectedConversation(directConversation);
+    }
+  }, [directConversation, selectedConversation]);
 
   const filteredConversations = conversations?.filter(conv =>
     conv.otherUser.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -185,7 +217,7 @@ export default function Messages() {
                   otherUserId={selectedConversation.otherUser.id}
                   otherUserName={selectedConversation.otherUser.name}
                   otherUserAvatar={selectedConversation.otherUser.avatar}
-                  bookingId={undefined}
+                  bookingId={selectedConversation.booking?.id || (urlBookingId ? parseInt(urlBookingId) : undefined)}
                 />
               ) : (
                 <Card className="h-full flex items-center justify-center">
