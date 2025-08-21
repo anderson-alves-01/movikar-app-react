@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Send, User, MessageCircle } from "lucide-react";
 import { useAuthStore } from "@/lib/auth";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { websocketService } from "@/services/websocket";
 
 interface MessageCenterProps {
   otherUserId: number;
@@ -66,6 +67,32 @@ export default function MessageCenter({
     staleTime: 0, // Always consider data stale for messages
     gcTime: 0, // Don't cache messages
   });
+
+  // Setup WebSocket for real-time message updates
+  useEffect(() => {
+    if (!user) return;
+
+    // Connect to WebSocket when component mounts
+    websocketService.connect().catch(console.error);
+
+    // Listen for new messages
+    const unsubscribe = websocketService.onMessage('new_message', (data) => {
+      // Check if the message is for this conversation
+      if (data.message && 
+          ((data.message.senderId === otherUserId && data.message.receiverId === user.id) ||
+           (data.message.senderId === user.id && data.message.receiverId === otherUserId))) {
+        console.log('🔄 Real-time message received, updating conversation');
+        // Invalidate and refetch messages to show the new message
+        queryClient.invalidateQueries({ queryKey: ['/api/messages', { userId: otherUserId }] });
+        // Also invalidate conversations list to update unread counts
+        queryClient.invalidateQueries({ queryKey: ['/api/conversations'] });
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [user, otherUserId, queryClient]);
 
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {

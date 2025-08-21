@@ -17,7 +17,7 @@ import { formatPhoneNumber, validatePhoneNumber, filterCities } from "@/utils/ph
 import { cn } from "@/lib/utils";
 import TermsOfUseModal from "@/components/terms-of-use-modal";
 import PrivacyPolicyModal from "@/components/privacy-policy-modal";
-import logoPath from "@assets/image_1755798990922.png";
+import logoPath from "@assets/logo.png";
 
 export default function Auth() {
   const [, setLocation] = useLocation();

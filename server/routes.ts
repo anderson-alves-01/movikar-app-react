@@ -1,4 +1,5 @@
 import type { Express, Request, Response, NextFunction } from "express";
+import { WebSocketServer, WebSocket } from 'ws';
 
 interface AuthRequest extends Request {
   user?: User;
@@ -3607,10 +3608,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const message = await storage.createMessage(messageData);
 
+      // Get sender and receiver info for real-time notifications
+      const sender = await storage.getUser(req.user!.id);
+      const receiver = await storage.getUser(receiverIdNumber);
+
+      // Send real-time WebSocket notification to receiver
+      if (sender && receiver) {
+        const realtimeMessage = {
+          type: 'new_message',
+          message: {
+            id: message.id,
+            content: message.content,
+            senderId: message.senderId,
+            receiverId: message.receiverId,
+            createdAt: message.createdAt,
+            isRead: message.isRead,
+            sender: {
+              id: sender.id,
+              name: sender.name,
+              avatar: sender.avatar
+            }
+          }
+        };
+
+        // Broadcast to receiver via WebSocket
+        const broadcasted = (req.app as any).broadcastToUser(receiverIdNumber, realtimeMessage);
+        console.log(`🔄 Real-time message ${broadcasted ? 'sent' : 'failed'} to user ${receiverIdNumber}`);
+      }
+
       // Send push notification to receiver
       try {
         const receiver = await storage.getUserWithPushToken(receiverIdNumber);
-        const sender = await storage.getUser(req.user!.id);
         
         if (receiver?.pushToken && sender) {
           const notification = {
@@ -7279,5 +7307,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // Setup WebSocket server for real-time messaging
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  // Store active connections
+  const activeConnections = new Map<number, WebSocket>();
+  
+  wss.on('connection', (ws: WebSocket, req) => {
+    console.log('🔌 New WebSocket connection');
+    
+    // Handle authentication
+    ws.on('message', (message: Buffer) => {
+      try {
+        const data = JSON.parse(message.toString());
+        
+        if (data.type === 'authenticate') {
+          // Verify JWT token
+          const token = data.token;
+          if (token) {
+            try {
+              const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+              const userId = decoded.userId;
+              
+              // Store authenticated connection
+              activeConnections.set(userId, ws);
+              console.log(`✅ User ${userId} authenticated via WebSocket`);
+              
+              ws.send(JSON.stringify({
+                type: 'authenticated',
+                userId: userId
+              }));
+            } catch (error) {
+              console.error('WebSocket authentication failed:', error);
+              ws.send(JSON.stringify({
+                type: 'error',
+                message: 'Authentication failed'
+              }));
+            }
+          }
+        } else if (data.type === 'ping') {
+          // Respond to ping to keep connection alive
+          ws.send(JSON.stringify({ type: 'pong' }));
+        }
+      } catch (error) {
+        console.error('WebSocket message error:', error);
+      }
+    });
+    
+    ws.on('close', () => {
+      // Remove connection from active connections
+      for (const [userId, connection] of activeConnections.entries()) {
+        if (connection === ws) {
+          activeConnections.delete(userId);
+          console.log(`❌ User ${userId} disconnected from WebSocket`);
+          break;
+        }
+      }
+    });
+    
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
+    });
+  });
+  
+  // Add broadcast function to app for sending real-time notifications
+  (app as any).broadcastToUser = (userId: number, message: any) => {
+    const connection = activeConnections.get(userId);
+    if (connection && connection.readyState === WebSocket.OPEN) {
+      connection.send(JSON.stringify(message));
+      return true;
+    }
+    return false;
+  };
+  
   return httpServer;
 }

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { MessageSquare, Search, User, Clock, Car } from "lucide-react";
 import Header from "@/components/header";
 import MessageCenter from "@/components/message-center";
+import { useWebSocketConnection, useWebSocketMessages } from "@/hooks/use-websocket";
 
 interface Conversation {
   id: number;
@@ -37,6 +38,10 @@ export default function Messages() {
   const { user } = useAuthStore();
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Setup WebSocket connection and real-time message handling
+  useWebSocketConnection();
+  useWebSocketMessages();
 
   // Check for URL parameters to start a conversation
   const urlParams = new URLSearchParams(window.location.search);
