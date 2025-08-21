@@ -1,28 +1,25 @@
 import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
+// import * as Device from 'expo-device'; // Package not available
 import { Platform } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import authService from './authService';
+import apiService from './apiService';
 
-const PUSH_TOKEN_KEY = 'push_token';
-const NOTIFICATION_SETTINGS_KEY = 'notification_settings';
-
-export interface NotificationSettings {
-  bookingUpdates: boolean;
-  messageAlerts: boolean;
-  returnReminders: boolean;
-  promotions: boolean;
-  systemUpdates: boolean;
-}
-
-export interface PushNotification {
-  id: string;
+export interface NotificationData {
   title: string;
   body: string;
-  data?: any;
-  channelId?: string;
-  categoryId?: string;
-  badge?: number;
+  data?: Record<string, any>;
+  sound?: boolean;
+  priority?: 'low' | 'normal' | 'high' | 'max';
+}
+
+export interface BookingNotification extends NotificationData {
+  bookingId: number;
+  type: 'booking_confirmed' | 'booking_cancelled' | 'payment_due' | 'rental_started' | 'rental_ended' | 'inspection_required';
+}
+
+export interface MessageNotification extends NotificationData {
+  senderId: number;
+  bookingId: number;
+  messagePreview: string;
 }
 
 // Configure notification behavior
@@ -35,274 +32,187 @@ Notifications.setNotificationHandler({
 });
 
 class NotificationService {
-  private pushToken: string | null = null;
+  private expoPushToken: string | null = null;
   private notificationListener: any = null;
   private responseListener: any = null;
 
-  // Initialize notification service
-  async initialize(): Promise<void> {
+  async initialize(): Promise<boolean> {
     try {
-      // Set up notification channels for Android
-      if (Platform.OS === 'android') {
-        await this.setupNotificationChannels();
-      }
+      // Check if device supports notifications (placeholder for Device.isDevice)
+      // This check would normally use expo-device but package is not available
+      // if (!Device.isDevice) {
+      //   console.warn('Push notifications require a physical device');
+      //   return false;
+      // }
 
-      // Register for push notifications
-      await this.registerForPushNotifications();
-
-      // Set up notification listeners
-      this.setupNotificationListeners();
-
-      // Load stored notification settings
-      await this.loadNotificationSettings();
-
-      // Send token to backend
-      if (this.pushToken) {
-        await this.sendTokenToBackend(this.pushToken);
-      }
-    } catch (error) {
-      console.error('Error initializing notification service:', error);
-    }
-  }
-
-  // Setup notification channels (Android)
-  private async setupNotificationChannels(): Promise<void> {
-    try {
-      // Booking updates channel
-      await Notifications.setNotificationChannelAsync('booking-updates', {
-        name: 'Atualizações de Reserva',
-        description: 'Notificações sobre suas reservas',
-        importance: Notifications.AndroidImportance.HIGH,
-        vibrationPattern: [0, 250, 250, 250],
-        sound: true,
-      });
-
-      // Message alerts channel
-      await Notifications.setNotificationChannelAsync('message-alerts', {
-        name: 'Alertas de Mensagem',
-        description: 'Novas mensagens no chat',
-        importance: Notifications.AndroidImportance.HIGH,
-        vibrationPattern: [0, 250, 250, 250],
-        sound: true,
-      });
-
-      // Return reminders channel
-      await Notifications.setNotificationChannelAsync('return-reminders', {
-        name: 'Lembretes de Devolução',
-        description: 'Lembretes para devolver veículos',
-        importance: Notifications.AndroidImportance.HIGH,
-        vibrationPattern: [0, 250, 250, 250],
-        sound: true,
-      });
-
-      // Promotions channel
-      await Notifications.setNotificationChannelAsync('promotions', {
-        name: 'Promoções',
-        description: 'Ofertas e promoções especiais',
-        importance: Notifications.AndroidImportance.DEFAULT,
-        sound: true,
-      });
-
-      // System updates channel
-      await Notifications.setNotificationChannelAsync('system-updates', {
-        name: 'Atualizações do Sistema',
-        description: 'Informações importantes do sistema',
-        importance: Notifications.AndroidImportance.DEFAULT,
-        sound: true,
-      });
-    } catch (error) {
-      console.error('Error setting up notification channels:', error);
-    }
-  }
-
-  // Register for push notifications
-  async registerForPushNotifications(): Promise<string | null> {
-    try {
-      if (!Device.isDevice) {
-        console.warn('Push notifications only work on physical devices');
-        return null;
-      }
-
-      // Check if we already have permission
+      // Request permissions
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
-
-      // Request permission if not granted
+      
       if (existingStatus !== 'granted') {
         const { status } = await Notifications.requestPermissionsAsync();
         finalStatus = status;
       }
-
+      
       if (finalStatus !== 'granted') {
-        console.warn('Push notification permission not granted');
-        return null;
+        console.warn('Failed to get push token for push notification!');
+        return false;
       }
 
-      // Get the push token
+      // Get push token
       const token = await Notifications.getExpoPushTokenAsync({
-        projectId: 'your-expo-project-id', // Replace with your actual project ID
+        projectId: 'alugae-mobile-app',
+      });
+      
+      this.expoPushToken = token.data;
+      console.log('Expo push token:', token.data);
+
+      // Configure Android notification channel
+      if (Platform.OS === 'android') {
+        await Notifications.setNotificationChannelAsync('default', {
+          name: 'default',
+          importance: Notifications.AndroidImportance.MAX,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: '#FF231F7C',
+        });
+
+        // Booking notifications channel
+        await Notifications.setNotificationChannelAsync('bookings', {
+          name: 'Reservas',
+          description: 'Notificações sobre suas reservas',
+          importance: Notifications.AndroidImportance.HIGH,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: '#FF231F7C',
+        });
+
+        // Message notifications channel
+        await Notifications.setNotificationChannelAsync('messages', {
+          name: 'Mensagens',
+          description: 'Novas mensagens de chat',
+          importance: Notifications.AndroidImportance.DEFAULT,
+          vibrationPattern: [0, 250],
+          lightColor: '#FF231F7C',
+        });
+      }
+
+      // Set up notification listeners
+      this.setupNotificationListeners();
+
+      // Register token with backend
+      await this.registerTokenWithBackend();
+
+      return true;
+    } catch (error) {
+      console.error('Error initializing notification service:', error);
+      return false;
+    }
+  }
+
+  private setupNotificationListeners(): void {
+    // Listener for notifications that are received while the app is foregrounded
+    this.notificationListener = Notifications.addNotificationReceivedListener(notification => {
+      console.log('Notification received:', notification);
+      this.handleNotificationReceived(notification);
+    });
+
+    // Listener for notifications that are tapped/clicked
+    this.responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log('Notification response:', response);
+      this.handleNotificationResponse(response);
+    });
+  }
+
+  private async handleNotificationReceived(notification: Notifications.Notification): Promise<void> {
+    const { data } = notification.request.content;
+    
+    // Handle different notification types
+    if (data?.type === 'new_message') {
+      // Update message badge, refresh chat, etc.
+      console.log('New message notification received');
+    } else if (data?.type === 'booking_update') {
+      // Refresh booking data
+      console.log('Booking update notification received');
+    }
+  }
+
+  private async handleNotificationResponse(response: Notifications.NotificationResponse): Promise<void> {
+    const { data } = response.notification.request.content;
+    
+    // Navigate to appropriate screen based on notification type
+    if (data?.type === 'new_message' && data?.bookingId) {
+      // Navigate to chat screen for specific booking
+      console.log(`Navigate to chat for booking ${data.bookingId}`);
+    } else if (data?.type === 'booking_update' && data?.bookingId) {
+      // Navigate to booking details
+      console.log(`Navigate to booking details for booking ${data.bookingId}`);
+    }
+  }
+
+  async scheduleLocalNotification(notificationData: NotificationData, triggerSeconds?: number): Promise<string | null> {
+    try {
+      const identifier = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: notificationData.title,
+          body: notificationData.body,
+          data: notificationData.data || {},
+          sound: notificationData.sound !== false,
+          priority: this.convertPriority(notificationData.priority || 'normal'),
+        },
+        trigger: triggerSeconds ? { seconds: triggerSeconds } : null,
       });
 
-      this.pushToken = token.data;
-      await AsyncStorage.setItem(PUSH_TOKEN_KEY, this.pushToken);
-
-      return this.pushToken;
+      return identifier;
     } catch (error) {
-      console.error('Error registering for push notifications:', error);
+      console.error('Error scheduling local notification:', error);
       return null;
     }
   }
 
-  // Setup notification listeners
-  private setupNotificationListeners(): void {
-    // Listener for notifications received while app is running
-    this.notificationListener = Notifications.addNotificationReceivedListener(
-      (notification) => {
-        console.log('Notification received:', notification);
-        // Handle notification received while app is active
-        this.handleNotificationReceived(notification);
-      }
-    );
-
-    // Listener for user tapping on notifications
-    this.responseListener = Notifications.addNotificationResponseReceivedListener(
-      (response) => {
-        console.log('Notification response:', response);
-        // Handle notification tap
-        this.handleNotificationResponse(response);
-      }
-    );
-  }
-
-  // Handle notification received while app is active
-  private handleNotificationReceived(notification: Notifications.Notification): void {
-    const { title, body, data } = notification.request.content;
-    
-    // You can customize behavior based on notification type
-    if (data?.type === 'message') {
-      // Handle message notification
-      console.log('New message notification:', { title, body, data });
-    } else if (data?.type === 'booking') {
-      // Handle booking notification
-      console.log('Booking notification:', { title, body, data });
-    }
-  }
-
-  // Handle notification tap
-  private handleNotificationResponse(response: Notifications.NotificationResponse): void {
-    const { data } = response.notification.request.content;
-    
-    // Navigate based on notification type
-    if (data?.type === 'message' && data?.chatId) {
-      // Navigate to chat screen
-      console.log('Navigate to chat:', data.chatId);
-    } else if (data?.type === 'booking' && data?.bookingId) {
-      // Navigate to booking details
-      console.log('Navigate to booking:', data.bookingId);
-    } else if (data?.type === 'vehicle' && data?.vehicleId) {
-      // Navigate to vehicle details
-      console.log('Navigate to vehicle:', data.vehicleId);
-    }
-  }
-
-  // Send push token to backend
-  async sendTokenToBackend(token: string): Promise<void> {
+  async scheduleBookingReminder(
+    bookingId: number,
+    reminderType: 'pickup' | 'return',
+    scheduledTime: Date
+  ): Promise<boolean> {
     try {
-      const authToken = authService.getToken();
-      if (!authToken) {
-        console.warn('User not authenticated, cannot send push token');
-        return;
+      const now = new Date();
+      const triggerTime = new Date(scheduledTime.getTime() - (30 * 60 * 1000)); // 30 minutes before
+      
+      if (triggerTime <= now) {
+        return false; // Can't schedule in the past
       }
 
-      const response = await fetch('https://alugae.mobi/api/notifications/register-token', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${authToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          token,
-          platform: Platform.OS,
-          deviceInfo: {
-            model: Device.modelName,
-            osVersion: Device.osVersion,
-          },
-        }),
-      });
+      const title = reminderType === 'pickup' 
+        ? 'Lembrete: Retirada do Veículo'
+        : 'Lembrete: Devolução do Veículo';
+      
+      const body = reminderType === 'pickup'
+        ? 'Sua reserva está chegando! Prepare-se para retirar o veículo.'
+        : 'Não esqueça de devolver o veículo no horário combinado.';
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Erro ao registrar token de push');
-      }
-
-      console.log('Push token registered successfully');
-    } catch (error) {
-      console.error('Error sending token to backend:', error);
-    }
-  }
-
-  // Remove push token from backend
-  async removeTokenFromBackend(): Promise<void> {
-    try {
-      const authToken = authService.getToken();
-      if (!authToken || !this.pushToken) {
-        return;
-      }
-
-      const response = await fetch('https://alugae.mobi/api/notifications/remove-token', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${authToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          token: this.pushToken,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Erro ao remover token de push');
-      }
-
-      console.log('Push token removed successfully');
-    } catch (error) {
-      console.error('Error removing token from backend:', error);
-    }
-  }
-
-  // Schedule local notification
-  async scheduleLocalNotification(
-    title: string,
-    body: string,
-    data: any = {},
-    triggerDate?: Date,
-    channelId: string = 'default'
-  ): Promise<string> {
-    try {
-      const notificationId = await Notifications.scheduleNotificationAsync({
+      await Notifications.scheduleNotificationAsync({
         content: {
           title,
           body,
-          data,
+          data: { 
+            type: 'booking_reminder',
+            bookingId,
+            reminderType 
+          },
           sound: true,
-          priority: Notifications.AndroidNotificationPriority.HIGH,
         },
-        trigger: triggerDate 
-          ? { date: triggerDate }
-          : null, // null means immediate
-        ...(Platform.OS === 'android' && { channelId }),
+        trigger: {
+          date: triggerTime,
+        },
       });
 
-      return notificationId;
+      return true;
     } catch (error) {
-      console.error('Error scheduling local notification:', error);
-      throw error;
+      console.error('Error scheduling booking reminder:', error);
+      return false;
     }
   }
 
-  // Cancel local notification
-  async cancelLocalNotification(notificationId: string): Promise<void> {
+  async cancelNotification(notificationId: string): Promise<void> {
     try {
       await Notifications.cancelScheduledNotificationAsync(notificationId);
     } catch (error) {
@@ -310,8 +220,7 @@ class NotificationService {
     }
   }
 
-  // Cancel all local notifications
-  async cancelAllLocalNotifications(): Promise<void> {
+  async cancelAllNotifications(): Promise<void> {
     try {
       await Notifications.cancelAllScheduledNotificationsAsync();
     } catch (error) {
@@ -319,69 +228,6 @@ class NotificationService {
     }
   }
 
-  // Get notification settings
-  async getNotificationSettings(): Promise<NotificationSettings> {
-    try {
-      const settings = await AsyncStorage.getItem(NOTIFICATION_SETTINGS_KEY);
-      if (settings) {
-        return JSON.parse(settings);
-      }
-
-      // Default settings
-      const defaultSettings: NotificationSettings = {
-        bookingUpdates: true,
-        messageAlerts: true,
-        returnReminders: true,
-        promotions: false,
-        systemUpdates: true,
-      };
-
-      await this.saveNotificationSettings(defaultSettings);
-      return defaultSettings;
-    } catch (error) {
-      console.error('Error getting notification settings:', error);
-      return {
-        bookingUpdates: true,
-        messageAlerts: true,
-        returnReminders: true,
-        promotions: false,
-        systemUpdates: true,
-      };
-    }
-  }
-
-  // Save notification settings
-  async saveNotificationSettings(settings: NotificationSettings): Promise<void> {
-    try {
-      await AsyncStorage.setItem(NOTIFICATION_SETTINGS_KEY, JSON.stringify(settings));
-      
-      // Send settings to backend
-      const authToken = authService.getToken();
-      if (authToken) {
-        await fetch('https://alugae.mobi/api/notifications/settings', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${authToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(settings),
-        });
-      }
-    } catch (error) {
-      console.error('Error saving notification settings:', error);
-    }
-  }
-
-  // Load notification settings
-  private async loadNotificationSettings(): Promise<void> {
-    try {
-      await this.getNotificationSettings();
-    } catch (error) {
-      console.error('Error loading notification settings:', error);
-    }
-  }
-
-  // Get badge count
   async getBadgeCount(): Promise<number> {
     try {
       return await Notifications.getBadgeCountAsync();
@@ -391,7 +237,6 @@ class NotificationService {
     }
   }
 
-  // Set badge count
   async setBadgeCount(count: number): Promise<void> {
     try {
       await Notifications.setBadgeCountAsync(count);
@@ -400,16 +245,47 @@ class NotificationService {
     }
   }
 
-  // Clear badge count
-  async clearBadgeCount(): Promise<void> {
+  async clearBadge(): Promise<void> {
+    await this.setBadgeCount(0);
+  }
+
+  private async registerTokenWithBackend(): Promise<void> {
     try {
-      await Notifications.setBadgeCountAsync(0);
+      if (!this.expoPushToken) {
+        return;
+      }
+
+      await apiService.makeRequest('/notifications/register-token', {
+        method: 'POST',
+        body: JSON.stringify({
+          expoPushToken: this.expoPushToken,
+          platform: Platform.OS,
+        })
+      });
+
+      console.log('Push token registered with backend');
     } catch (error) {
-      console.error('Error clearing badge count:', error);
+      console.error('Error registering token with backend:', error);
     }
   }
 
-  // Cleanup listeners
+  private convertPriority(priority: string): Notifications.AndroidNotificationPriority {
+    switch (priority) {
+      case 'low':
+        return Notifications.AndroidNotificationPriority.LOW;
+      case 'high':
+        return Notifications.AndroidNotificationPriority.HIGH;
+      case 'max':
+        return Notifications.AndroidNotificationPriority.MAX;
+      default:
+        return Notifications.AndroidNotificationPriority.DEFAULT;
+    }
+  }
+
+  getExpoPushToken(): string | null {
+    return this.expoPushToken;
+  }
+
   cleanup(): void {
     if (this.notificationListener) {
       Notifications.removeNotificationSubscription(this.notificationListener);
@@ -417,11 +293,6 @@ class NotificationService {
     if (this.responseListener) {
       Notifications.removeNotificationSubscription(this.responseListener);
     }
-  }
-
-  // Get push token
-  getPushToken(): string | null {
-    return this.pushToken;
   }
 }
 

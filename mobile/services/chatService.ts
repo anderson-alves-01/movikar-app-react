@@ -1,4 +1,4 @@
-// import { io, Socket } from 'socket.io-client';
+import { io, Socket } from 'socket.io-client';
 import apiService from './apiService';
 
 export interface ChatMessage {
@@ -26,52 +26,60 @@ export interface ChatRoom {
 }
 
 class ChatService {
-  // private socket: Socket | null = null;
+  private socket: Socket | null = null;
   private isConnected = false;
   private messageCallbacks: ((message: ChatMessage) => void)[] = [];
 
   async connect(authToken: string): Promise<void> {
     try {
-      // Placeholder for socket connection
-      // this.socket = io('wss://alugae.mobi', {
-      //   auth: {
-      //     token: authToken
-      //   },
-      //   transports: ['websocket']
-      // });
+      this.socket = io('wss://alugae.mobi', {
+        auth: {
+          token: authToken
+        },
+        transports: ['websocket'],
+        autoConnect: true,
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+      });
 
-      // this.socket.on('connect', () => {
-      //   console.log('Connected to chat server');
-      //   this.isConnected = true;
-      // });
+      this.socket.on('connect', () => {
+        console.log('Connected to chat server');
+        this.isConnected = true;
+      });
 
-      // this.socket.on('disconnect', () => {
-      //   console.log('Disconnected from chat server');
-      //   this.isConnected = false;
-      // });
+      this.socket.on('disconnect', () => {
+        console.log('Disconnected from chat server');
+        this.isConnected = false;
+      });
 
-      // this.socket.on('newMessage', (message: ChatMessage) => {
-      //   this.messageCallbacks.forEach(callback => callback(message));
-      // });
+      this.socket.on('newMessage', (message: ChatMessage) => {
+        this.messageCallbacks.forEach(callback => callback(message));
+      });
 
-      console.log('Chat service initialized (placeholder)');
+      this.socket.on('connect_error', (error) => {
+        console.error('Socket connection error:', error);
+        this.isConnected = false;
+      });
+
+      console.log('Chat service initialized with real WebSocket connection');
     } catch (error) {
       console.error('Error connecting to chat server:', error);
     }
   }
 
   disconnect(): void {
-    // if (this.socket) {
-    //   this.socket.disconnect();
-    //   this.socket = null;
-    // }
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
+    }
     this.isConnected = false;
   }
 
   async getChatRooms(): Promise<ChatRoom[]> {
     try {
-      const response = await apiService.get('/chat/rooms');
-      return response.data || [];
+      const response = await apiService.makeRequest<ChatRoom[]>('/chat/rooms');
+      return Array.isArray(response) ? response : [];
     } catch (error) {
       console.error('Error fetching chat rooms:', error);
       return [];
@@ -80,8 +88,8 @@ class ChatService {
 
   async getMessages(bookingId: number, page = 1, limit = 50): Promise<ChatMessage[]> {
     try {
-      const response = await apiService.get(`/chat/messages/${bookingId}?page=${page}&limit=${limit}`);
-      return response.data || [];
+      const response = await apiService.makeRequest<ChatMessage[]>(`/chat/messages/${bookingId}?page=${page}&limit=${limit}`);
+      return Array.isArray(response) ? response : [];
     } catch (error) {
       console.error('Error fetching messages:', error);
       return [];
@@ -90,11 +98,14 @@ class ChatService {
 
   async sendMessage(bookingId: number, text: string): Promise<ChatMessage | null> {
     try {
-      const response = await apiService.post('/chat/messages', {
-        bookingId,
-        text
+      const response = await apiService.makeRequest<ChatMessage>('/chat/messages', {
+        method: 'POST',
+        body: JSON.stringify({
+          bookingId,
+          text
+        })
       });
-      return response.data;
+      return response;
     } catch (error) {
       console.error('Error sending message:', error);
       return null;
@@ -102,17 +113,17 @@ class ChatService {
   }
 
   joinRoom(bookingId: number): void {
-    // if (this.socket && this.isConnected) {
-    //   this.socket.emit('joinRoom', { bookingId });
-    // }
-    console.log(`Joined room for booking ${bookingId} (placeholder)`);
+    if (this.socket && this.isConnected) {
+      this.socket.emit('joinRoom', { bookingId });
+      console.log(`Joined room for booking ${bookingId}`);
+    }
   }
 
   leaveRoom(bookingId: number): void {
-    // if (this.socket && this.isConnected) {
-    //   this.socket.emit('leaveRoom', { bookingId });
-    // }
-    console.log(`Left room for booking ${bookingId} (placeholder)`);
+    if (this.socket && this.isConnected) {
+      this.socket.emit('leaveRoom', { bookingId });
+      console.log(`Left room for booking ${bookingId}`);
+    }
   }
 
   onMessage(callback: (message: ChatMessage) => void): void {
@@ -128,7 +139,9 @@ class ChatService {
 
   async markAsRead(bookingId: number): Promise<void> {
     try {
-      await apiService.post(`/chat/mark-read/${bookingId}`);
+      await apiService.makeRequest(`/chat/mark-read/${bookingId}`, {
+        method: 'POST'
+      });
     } catch (error) {
       console.error('Error marking messages as read:', error);
     }

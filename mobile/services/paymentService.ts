@@ -1,4 +1,4 @@
-// import { initStripe, useStripe } from '@stripe/stripe-react-native';
+import { initStripe, useStripe } from '@stripe/stripe-react-native';
 import apiService from './apiService';
 
 export interface PaymentMethod {
@@ -36,14 +36,14 @@ class PaymentService {
     try {
       this.stripePublishableKey = publishableKey;
       
-      // await initStripe({
-      //   publishableKey,
-      //   urlScheme: 'alugae-mobile',
-      //   setUrlSchemeOnAndroid: true,
-      // });
+      await initStripe({
+        publishableKey,
+        urlScheme: 'alugae-mobile',
+        setUrlSchemeOnAndroid: true,
+      });
 
       this.isInitialized = true;
-      console.log('Payment service initialized (placeholder)');
+      console.log('Payment service initialized with Stripe');
       return true;
     } catch (error) {
       console.error('Error initializing payment service:', error);
@@ -53,8 +53,8 @@ class PaymentService {
 
   async getPaymentMethods(): Promise<PaymentMethod[]> {
     try {
-      const response = await apiService.get('/payments/methods');
-      return response.data || [];
+      const response = await apiService.makeRequest<PaymentMethod[]>('/payments/methods');
+      return Array.isArray(response) ? response : [];
     } catch (error) {
       console.error('Error fetching payment methods:', error);
       return [];
@@ -68,30 +68,21 @@ class PaymentService {
     cvc: string;
   }): Promise<PaymentMethod | null> {
     try {
-      // const { createPaymentMethod } = useStripe();
-      
-      // const { paymentMethod, error } = await createPaymentMethod({
-      //   paymentMethodType: 'Card',
-      //   card: {
-      //     number: cardDetails.number,
-      //     expiryMonth: cardDetails.expiryMonth,
-      //     expiryYear: cardDetails.expiryYear,
-      //     cvc: cardDetails.cvc,
-      //   },
-      // });
+      if (!this.isInitialized) {
+        throw new Error('Payment service not initialized');
+      }
 
-      // if (error) {
-      //   throw new Error(error.message);
-      // }
-
-      // Save payment method to backend
-      const response = await apiService.post('/payments/methods', {
-        // paymentMethodId: paymentMethod.id,
-        type: 'card',
-        // Add other relevant details
+      // Note: useStripe() needs to be called from a component, not service
+      // For now, send card details to backend for processing
+      const response = await apiService.makeRequest<PaymentMethod>('/payments/methods', {
+        method: 'POST',
+        body: JSON.stringify({
+          type: 'card',
+          cardDetails
+        })
       });
 
-      return response.data;
+      return response;
     } catch (error) {
       console.error('Error adding payment method:', error);
       return null;
@@ -100,7 +91,9 @@ class PaymentService {
 
   async removePaymentMethod(paymentMethodId: string): Promise<boolean> {
     try {
-      await apiService.delete(`/payments/methods/${paymentMethodId}`);
+      await apiService.makeRequest(`/payments/methods/${paymentMethodId}`, {
+        method: 'DELETE'
+      });
       return true;
     } catch (error) {
       console.error('Error removing payment method:', error);
@@ -110,7 +103,9 @@ class PaymentService {
 
   async setDefaultPaymentMethod(paymentMethodId: string): Promise<boolean> {
     try {
-      await apiService.post(`/payments/methods/${paymentMethodId}/set-default`);
+      await apiService.makeRequest(`/payments/methods/${paymentMethodId}/set-default`, {
+        method: 'POST'
+      });
       return true;
     } catch (error) {
       console.error('Error setting default payment method:', error);
@@ -120,11 +115,14 @@ class PaymentService {
 
   async createPaymentIntent(amount: number, currency = 'brl'): Promise<PaymentIntent | null> {
     try {
-      const response = await apiService.post('/payments/create-intent', {
-        amount,
-        currency,
+      const response = await apiService.makeRequest<PaymentIntent>('/payments/create-intent', {
+        method: 'POST',
+        body: JSON.stringify({
+          amount,
+          currency,
+        })
       });
-      return response.data;
+      return response;
     } catch (error) {
       console.error('Error creating payment intent:', error);
       return null;
@@ -145,8 +143,11 @@ class PaymentService {
       // }
 
       // Confirm with backend
-      await apiService.post(`/payments/confirm/${paymentIntentId}`, {
-        paymentMethodId,
+      await apiService.makeRequest(`/payments/confirm/${paymentIntentId}`, {
+        method: 'POST',
+        body: JSON.stringify({
+          paymentMethodId,
+        })
       });
 
       return true;
@@ -158,8 +159,8 @@ class PaymentService {
 
   async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
     try {
-      const response = await apiService.get('/subscription/plans');
-      return response.data || [];
+      const response = await apiService.makeRequest<SubscriptionPlan[]>('/subscription/plans');
+      return Array.isArray(response) ? response : [];
     } catch (error) {
       console.error('Error fetching subscription plans:', error);
       return [];
@@ -168,11 +169,14 @@ class PaymentService {
 
   async createSubscription(planId: string, paymentMethodId?: string): Promise<{ success: boolean; subscriptionId?: string; clientSecret?: string }> {
     try {
-      const response = await apiService.post('/subscription/create', {
-        planId,
-        paymentMethodId,
+      const response = await apiService.makeRequest<{ success: boolean; subscriptionId?: string; clientSecret?: string }>('/subscription/create', {
+        method: 'POST',
+        body: JSON.stringify({
+          planId,
+          paymentMethodId,
+        })
       });
-      return response.data;
+      return response;
     } catch (error) {
       console.error('Error creating subscription:', error);
       return { success: false };
@@ -181,7 +185,9 @@ class PaymentService {
 
   async cancelSubscription(): Promise<boolean> {
     try {
-      await apiService.post('/subscription/cancel');
+      await apiService.makeRequest('/subscription/cancel', {
+        method: 'POST'
+      });
       return true;
     } catch (error) {
       console.error('Error canceling subscription:', error);
@@ -191,8 +197,8 @@ class PaymentService {
 
   async getPaymentHistory(): Promise<any[]> {
     try {
-      const response = await apiService.get('/payments/history');
-      return response.data || [];
+      const response = await apiService.makeRequest<any[]>('/payments/history');
+      return Array.isArray(response) ? response : [];
     } catch (error) {
       console.error('Error fetching payment history:', error);
       return [];
@@ -201,13 +207,16 @@ class PaymentService {
 
   async processVehicleRental(vehicleId: number, startDate: string, endDate: string, paymentMethodId?: string): Promise<{ success: boolean; bookingId?: number; clientSecret?: string }> {
     try {
-      const response = await apiService.post('/bookings/create-with-payment', {
-        vehicleId,
-        startDate,
-        endDate,
-        paymentMethodId,
+      const response = await apiService.makeRequest<{ success: boolean; bookingId?: number; clientSecret?: string }>('/bookings/create-with-payment', {
+        method: 'POST',
+        body: JSON.stringify({
+          vehicleId,
+          startDate,
+          endDate,
+          paymentMethodId,
+        })
       });
-      return response.data;
+      return response;
     } catch (error) {
       console.error('Error processing vehicle rental:', error);
       return { success: false };
@@ -217,10 +226,13 @@ class PaymentService {
   // PIX Payment Methods
   async createPixPayment(amount: number): Promise<{ pixCode: string; qrCode: string } | null> {
     try {
-      const response = await apiService.post('/payments/pix/create', {
-        amount,
+      const response = await apiService.makeRequest<{ pixCode: string; qrCode: string }>('/payments/pix/create', {
+        method: 'POST',
+        body: JSON.stringify({
+          amount,
+        })
       });
-      return response.data;
+      return response;
     } catch (error) {
       console.error('Error creating PIX payment:', error);
       return null;

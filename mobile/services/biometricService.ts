@@ -1,19 +1,24 @@
-// import * as LocalAuthentication from 'expo-local-authentication';
-// import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as LocalAuthentication from 'expo-local-authentication';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Temporary service until dependencies are resolved
 class BiometricService {
-  private isEnabled = false;
-
   async isBiometricAvailable(): Promise<boolean> {
     try {
-      // const hasHardware = await LocalAuthentication.hasHardwareAsync();
-      // const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-      // return hasHardware && isEnrolled;
-      return false; // Placeholder
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+      return hasHardware && isEnrolled;
     } catch (error) {
       console.error('Error checking biometric availability:', error);
       return false;
+    }
+  }
+
+  async getSupportedBiometricTypes(): Promise<LocalAuthentication.AuthenticationType[]> {
+    try {
+      return await LocalAuthentication.supportedAuthenticationTypesAsync();
+    } catch (error) {
+      console.error('Error getting supported biometric types:', error);
+      return [];
     }
   }
 
@@ -23,14 +28,14 @@ class BiometricService {
         return false;
       }
 
-      // const result = await LocalAuthentication.authenticateAsync({
-      //   promptMessage: 'Autentique-se para acessar o app',
-      //   fallbackLabel: 'Usar senha',
-      //   cancelLabel: 'Cancelar',
-      // });
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: 'Autentique-se para acessar o app',
+        fallbackLabel: 'Usar senha',
+        cancelLabel: 'Cancelar',
+        disableDeviceFallback: false,
+      });
 
-      // return result.success;
-      return false; // Placeholder
+      return result.success;
     } catch (error) {
       console.error('Biometric authentication error:', error);
       return false;
@@ -45,8 +50,7 @@ class BiometricService {
 
       const isAuthenticated = await this.authenticateWithBiometrics();
       if (isAuthenticated) {
-        // await AsyncStorage.setItem('biometric_enabled', 'true');
-        this.isEnabled = true;
+        await AsyncStorage.setItem('biometric_enabled', 'true');
         return true;
       }
       return false;
@@ -58,8 +62,7 @@ class BiometricService {
 
   async disableBiometricAuth(): Promise<void> {
     try {
-      // await AsyncStorage.removeItem('biometric_enabled');
-      this.isEnabled = false;
+      await AsyncStorage.removeItem('biometric_enabled');
     } catch (error) {
       console.error('Error disabling biometric auth:', error);
     }
@@ -67,9 +70,8 @@ class BiometricService {
 
   async isBiometricEnabled(): Promise<boolean> {
     try {
-      // const enabled = await AsyncStorage.getItem('biometric_enabled');
-      // return enabled === 'true';
-      return this.isEnabled; // Placeholder
+      const enabled = await AsyncStorage.getItem('biometric_enabled');
+      return enabled === 'true';
     } catch (error) {
       console.error('Error checking biometric enabled status:', error);
       return false;

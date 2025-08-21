@@ -23,7 +23,7 @@ class ApiService {
     this.authToken = null;
   }
 
-  private async makeRequest<T>(
+  async makeRequest<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {

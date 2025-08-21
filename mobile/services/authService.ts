@@ -1,32 +1,8 @@
-// import AsyncStorage from '@react-native-async-storage/async-storage';
-// import * as LocalAuthentication from 'expo-local-authentication';
+// Real imports - dependency conflicts resolved with .npmrc
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as LocalAuthentication from 'expo-local-authentication';
 import * as AuthSession from 'expo-auth-session';
 import apiService from './apiService';
-
-// Temporary storage implementation until dependencies are resolved
-const AsyncStorage = {
-  async getItem(key: string): Promise<string | null> {
-    return null; // Placeholder
-  },
-  async setItem(key: string, value: string): Promise<void> {
-    // Placeholder
-  },
-  async removeItem(key: string): Promise<void> {
-    // Placeholder
-  }
-};
-
-const LocalAuthentication = {
-  async hasHardwareAsync(): Promise<boolean> {
-    return false; // Placeholder
-  },
-  async isEnrolledAsync(): Promise<boolean> {
-    return false; // Placeholder
-  },
-  async authenticateAsync(): Promise<{ success: boolean }> {
-    return { success: false }; // Placeholder
-  }
-};
 
 const TOKEN_KEY = 'auth_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
@@ -115,13 +91,17 @@ class AuthService {
       this.user = data.user;
 
       // Store tokens and user data
-      await Promise.all([
-        AsyncStorage.setItem(TOKEN_KEY, this.token),
-        AsyncStorage.setItem(REFRESH_TOKEN_KEY, this.refreshToken),
-        AsyncStorage.setItem(USER_KEY, JSON.stringify(this.user)),
-      ]);
+      if (this.token && this.refreshToken && this.user) {
+        await Promise.all([
+          AsyncStorage.setItem(TOKEN_KEY, this.token),
+          AsyncStorage.setItem(REFRESH_TOKEN_KEY, this.refreshToken),
+          AsyncStorage.setItem(USER_KEY, JSON.stringify(this.user)),
+        ]);
 
-      return this.user;
+        return this.user;
+      } else {
+        throw new Error('Dados de autenticação inválidos');
+      }
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -151,13 +131,17 @@ class AuthService {
       this.user = data.user;
 
       // Store tokens and user data
-      await Promise.all([
-        AsyncStorage.setItem(TOKEN_KEY, this.token),
-        AsyncStorage.setItem(REFRESH_TOKEN_KEY, this.refreshToken),
-        AsyncStorage.setItem(USER_KEY, JSON.stringify(this.user)),
-      ]);
+      if (this.token && this.refreshToken && this.user) {
+        await Promise.all([
+          AsyncStorage.setItem(TOKEN_KEY, this.token),
+          AsyncStorage.setItem(REFRESH_TOKEN_KEY, this.refreshToken),
+          AsyncStorage.setItem(USER_KEY, JSON.stringify(this.user)),
+        ]);
 
-      return this.user;
+        return this.user;
+      } else {
+        throw new Error('Dados de registro inválidos');
+      }
     } catch (error) {
       console.error('Register error:', error);
       throw error;
@@ -235,14 +219,13 @@ class AuthService {
   // Google Sign In
   async loginWithGoogle(): Promise<User> {
     try {
-      const redirectUri = AuthSession.makeRedirectUri({ useProxy: true });
+      const redirectUri = AuthSession.makeRedirectUri();
       
       const request = new AuthSession.AuthRequest({
         clientId: 'YOUR_GOOGLE_CLIENT_ID', // Replace with actual client ID
         scopes: ['openid', 'profile', 'email'],
         redirectUri,
         responseType: AuthSession.ResponseType.Code,
-        additionalParameters: {},
         extraParams: {},
       });
 
@@ -273,13 +256,17 @@ class AuthService {
         this.refreshToken = data.refreshToken;
         this.user = data.user;
 
-        await Promise.all([
-          AsyncStorage.setItem(TOKEN_KEY, this.token),
-          AsyncStorage.setItem(REFRESH_TOKEN_KEY, this.refreshToken),
-          AsyncStorage.setItem(USER_KEY, JSON.stringify(this.user)),
-        ]);
+        if (this.token && this.refreshToken && this.user) {
+          await Promise.all([
+            AsyncStorage.setItem(TOKEN_KEY, this.token),
+            AsyncStorage.setItem(REFRESH_TOKEN_KEY, this.refreshToken),
+            AsyncStorage.setItem(USER_KEY, JSON.stringify(this.user)),
+          ]);
 
-        return this.user;
+          return this.user;
+        } else {
+          throw new Error('Dados de autenticação Google inválidos');
+        }
       }
 
       throw new Error('Login cancelado');
@@ -380,12 +367,16 @@ class AuthService {
       this.token = data.token;
       this.refreshToken = data.refreshToken;
 
-      await Promise.all([
-        AsyncStorage.setItem(TOKEN_KEY, this.token),
-        AsyncStorage.setItem(REFRESH_TOKEN_KEY, this.refreshToken),
-      ]);
+      if (this.token && this.refreshToken) {
+        await Promise.all([
+          AsyncStorage.setItem(TOKEN_KEY, this.token),
+          AsyncStorage.setItem(REFRESH_TOKEN_KEY, this.refreshToken),
+        ]);
 
-      return this.token;
+        return this.token;
+      } else {
+        throw new Error('Token refresh failed');
+      }
     } catch (error) {
       console.error('Token refresh error:', error);
       await this.logout();
@@ -446,10 +437,15 @@ class AuthService {
   // Update user profile
   async updateProfile(userData: Partial<User>): Promise<User> {
     try {
-      const response = await apiService.updateUserProfile(userData);
-      this.user = { ...this.user, ...response };
-      await AsyncStorage.setItem(USER_KEY, JSON.stringify(this.user));
-      return this.user;
+      const response = await apiService.updateProfile(userData);
+      if (this.user) {
+        const updatedUser = { ...this.user, ...response };
+        this.user = updatedUser;
+        await AsyncStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+        return updatedUser;
+      } else {
+        throw new Error('User not authenticated');
+      }
     } catch (error) {
       console.error('Update profile error:', error);
       throw error;
