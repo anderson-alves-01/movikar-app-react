@@ -56,8 +56,27 @@ export default function Header() {
     retry: false
   });
 
-  // Disable unread message count to prevent auth loops
-  const unreadCount = 0;
+  // Fetch unread message count for authenticated users
+  const { data: unreadData } = useQuery({
+    queryKey: ['/api/messages/unread-count'],
+    queryFn: async () => {
+      if (!user) return { count: 0 };
+      
+      const response = await fetch('/api/messages/unread-count', {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        return { count: 0 };
+      }
+      return response.json();
+    },
+    enabled: !!user,
+    staleTime: 30000, // Cache for 30 seconds
+    refetchInterval: 60000, // Refetch every minute
+    retry: false
+  });
+
+  const unreadCount = unreadData?.count || 0;
 
   const handleLogout = async () => {
     try {
