@@ -58,7 +58,7 @@ import docusign from 'docusign-esign';
 import { getFeatureFlags } from "@shared/feature-flags";
 import type { AdminSettings } from "@shared/admin-settings";
 import { registerHealthRoutes } from "./routes/health";
-import { emailService, type BookingEmailData } from "./services/emailService";
+import emailService, { type BookingEmailData } from "./services/emailService";
 
 // In-memory storage for admin settings
 let currentAdminSettings: AdminSettings = {
@@ -1016,8 +1016,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send emails asynchronously (don't block the response)
       console.log('📧 Iniciando envio de e-mails:', emailData);
       Promise.all([
-        emailService.sendBookingConfirmationToRenter(emailData),
-        emailService.sendBookingNotificationToOwner(emailData)
+        emailService.sendBookingConfirmationToRenter(emailData.renterEmail!, emailData.renterName!, emailData),
+        emailService.sendBookingNotificationToOwner(emailData.ownerEmail!, emailData.ownerName!, emailData)
       ]).then(() => {
         console.log('✅ Todos os e-mails foram enviados com sucesso');
       }).catch(error => {
@@ -2605,8 +2605,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Send emails asynchronously (don't block response)
           Promise.all([
-            emailService.sendBookingConfirmationToRenter(emailData),
-            emailService.sendBookingNotificationToOwner(emailData)
+            emailService.sendBookingConfirmationToRenter(emailData.renterEmail!, emailData.renterName!, emailData),
+            emailService.sendBookingNotificationToOwner(emailData.ownerEmail!, emailData.ownerName!, emailData)
           ]).catch(error => {
             console.error('Erro ao enviar e-mails de confirmação:', error);
           });
@@ -2692,8 +2692,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Send emails (don't block the response)
       Promise.all([
-        emailService.sendBookingConfirmationToRenter(emailData),
-        emailService.sendBookingNotificationToOwner(emailData)
+        emailService.sendBookingConfirmationToRenter(emailData.renterEmail!, emailData.renterName!, emailData),
+        emailService.sendBookingNotificationToOwner(emailData.ownerEmail!, emailData.ownerName!, emailData)
       ]).catch(error => {
         console.error('Erro ao enviar e-mails de confirmação:', error);
       });

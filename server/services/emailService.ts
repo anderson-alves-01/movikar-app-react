@@ -6,6 +6,21 @@ interface EmailNotificationData {
   data?: any;
 }
 
+export interface BookingEmailData {
+  vehicleBrand: string;
+  vehicleModel: string;
+  vehicleYear?: number;
+  startDate: string;
+  endDate: string;
+  totalPrice: number;
+  bookingId: string;
+  ownerName?: string;
+  renterName?: string;
+  renterEmail?: string;
+  ownerEmail?: string;
+  vehiclePlate?: string;
+}
+
 class EmailService {
   private resend: Resend | null = null;
   private fromEmail: string;
@@ -239,6 +254,34 @@ Para não receber mais emails, acesse suas configurações no app.
 
 © ${new Date().getFullYear()} alugae.mobi - Plataforma de Aluguel de Carros
 `;
+  }
+
+  async sendBookingConfirmationToRenter(
+    renterEmail: string,
+    renterName: string,
+    bookingData: BookingEmailData
+  ): Promise<boolean> {
+    const emailData: EmailNotificationData = {
+      title: `Reserva Confirmada - ${bookingData.vehicleBrand} ${bookingData.vehicleModel}`,
+      body: `Olá ${renterName}!\n\nSua reserva foi confirmada com sucesso!\n\nDetalhes da reserva:\n• Veículo: ${bookingData.vehicleBrand} ${bookingData.vehicleModel}${bookingData.vehicleYear ? ' ' + bookingData.vehicleYear : ''}\n• Período: ${bookingData.startDate} até ${bookingData.endDate}\n• Valor total: R$ ${bookingData.totalPrice.toFixed(2)}\n• ID da reserva: #${bookingData.bookingId}\n\nEm breve o proprietário entrará em contato para combinar os detalhes da retirada.`,
+      data: bookingData
+    };
+
+    return this.sendNotificationEmail(renterEmail, renterName, emailData);
+  }
+
+  async sendBookingNotificationToOwner(
+    ownerEmail: string,
+    ownerName: string,
+    bookingData: BookingEmailData
+  ): Promise<boolean> {
+    const emailData: EmailNotificationData = {
+      title: `Nova Reserva - ${bookingData.vehicleBrand} ${bookingData.vehicleModel}`,
+      body: `Olá ${ownerName}!\n\nVocê recebeu uma nova reserva!\n\nDetalhes da reserva:\n• Veículo: ${bookingData.vehicleBrand} ${bookingData.vehicleModel}${bookingData.vehicleYear ? ' ' + bookingData.vehicleYear : ''}\n• Locatário: ${bookingData.renterName || 'Nome não informado'}\n• Período: ${bookingData.startDate} até ${bookingData.endDate}\n• Valor total: R$ ${bookingData.totalPrice.toFixed(2)}\n• ID da reserva: #${bookingData.bookingId}\n\nAcesse o app para confirmar a reserva e combinar os detalhes com o locatário.`,
+      data: bookingData
+    };
+
+    return this.sendNotificationEmail(ownerEmail, ownerName, emailData);
   }
 }
 
