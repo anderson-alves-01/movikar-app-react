@@ -3545,31 +3545,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Message and Conversation routes
   app.get("/api/conversations", authenticateToken, async (req, res) => {
     try {
-      // Return mock conversations for now since we don't have a full messaging system implemented
-      const conversations = [
-        {
-          id: 1,
-          otherUser: {
-            id: 2,
-            name: "Maria Silva",
-            avatar: undefined
-          },
-          lastMessage: {
-            content: "Obrigado pela reserva! Quando você vai buscar o carro?",
-            createdAt: new Date().toISOString(),
-            isFromUser: false
-          },
-          unreadCount: 2,
-          booking: {
-            id: 1,
-            vehicle: {
-              brand: "Honda",
-              model: "Civic",
-              year: 2023
-            }
-          }
-        }
-      ];
+      console.log(`Fetching conversations for user ${req.user!.id}`);
+      const conversations = await storage.getUserConversations(req.user!.id);
+      console.log(`Found ${conversations.length} conversations:`, conversations);
       res.json(conversations);
     } catch (error) {
       console.error("Get conversations error:", error);
@@ -3589,6 +3567,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Fetching messages between user ${req.user!.id} and user ${otherUserId}`);
 
       const messages = await storage.getMessagesBetweenUsers(req.user!.id, otherUserId, bookingId ? parseInt(bookingId as string) : undefined);
+
+      // Mark messages from the other user as read
+      if (messages.length > 0) {
+        await storage.markMessagesAsRead(req.user!.id, otherUserId);
+      }
 
       console.log(`Found ${messages.length} messages:`, messages);
       res.json(messages);

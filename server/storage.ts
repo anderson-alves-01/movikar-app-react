@@ -113,6 +113,7 @@ export interface IStorage {
   createMessage(message: InsertMessage): Promise<Message>;
   markMessagesAsRead(receiverId: number, senderId: number): Promise<void>;
   getUnreadMessageCount(userId: number): Promise<number>;
+  getUserConversations(userId: number): Promise<any[]>;
   
   // Push notifications
   updateUserPushToken(userId: number, pushToken: string, platform?: string): Promise<void>;
@@ -999,6 +1000,95 @@ export class DatabaseStorage implements IStorage {
       );
 
     return result[0]?.count || 0;
+  }
+
+  async getUserConversations(userId: number): Promise<any[]> {
+    try {
+      // Get all messages where user is either sender or receiver
+      const userMessages = await db
+        .select({
+          id: messages.id,
+          content: messages.content,
+          createdAt: messages.createdAt,
+          senderId: messages.senderId,
+          receiverId: messages.receiverId,
+          isRead: messages.isRead,
+          bookingId: messages.bookingId,
+        })
+        .from(messages)
+        .where(
+          or(
+            eq(messages.senderId, userId),
+            eq(messages.receiverId, userId)
+          )
+        )
+        .orderBy(desc(messages.createdAt));
+
+      // Get unique user IDs that have conversations with current user
+      const otherUserIds = new Set<number>();
+      for (const message of userMessages) {
+        const otherUserId = message.senderId === userId ? message.receiverId : message.senderId;
+        otherUserIds.add(otherUserId);
+      }
+
+      // Get user details for all other users
+      const otherUsers = await db
+        .select({
+          id: users.id,
+          name: users.name,
+          email: users.email,
+          avatar: users.avatar
+        })
+        .from(users)
+        .where(inArray(users.id, Array.from(otherUserIds)));
+
+      // Create user map for quick lookup
+      const userMap = new Map();
+      for (const user of otherUsers) {
+        userMap.set(user.id, user);
+      }
+
+      // Group messages by conversation (other user)
+      const conversationMap = new Map();
+      
+      for (const message of userMessages) {
+        const otherUserId = message.senderId === userId ? message.receiverId : message.senderId;
+        const otherUser = userMap.get(otherUserId);
+        
+        if (!conversationMap.has(otherUserId) && otherUser) {
+          // Count unread messages from this user
+          const unreadCount = userMessages.filter(m => 
+            m.senderId === otherUserId && 
+            m.receiverId === userId && 
+            !m.isRead
+          ).length;
+
+          conversationMap.set(otherUserId, {
+            id: otherUserId,
+            otherUser: {
+              id: otherUserId,
+              name: otherUser.name || otherUser.email,
+              avatar: otherUser.avatar
+            },
+            lastMessage: {
+              content: message.content,
+              createdAt: message.createdAt?.toISOString() || new Date().toISOString(),
+              isFromUser: message.senderId === userId
+            },
+            unreadCount,
+            booking: message.bookingId ? {
+              id: message.bookingId,
+              vehicle: { brand: '', model: '', year: 0 }
+            } : undefined
+          });
+        }
+      }
+
+      return Array.from(conversationMap.values());
+    } catch (error) {
+      console.error('Error getting user conversations:', error);
+      return [];
+    }
   }
 
   // Push notification methods
