@@ -1,0 +1,65 @@
+📡 apiRequest - Response: 201 
+index-Cxx5-jg_.js:547 WebSocket connection to 'wss://alugae.mobi/ws' failed: 
+(anonymous) @ index-Cxx5-jg_.js:547
+connect @ index-Cxx5-jg_.js:547
+(anonymous) @ index-Cxx5-jg_.js:547Understand this error
+index-Cxx5-jg_.js:547 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.onerror @ index-Cxx5-jg_.js:547Understand this error
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+Promise.catch
+(anonymous) @ index-Cxx5-jg_.js:547
+setTimeout
+ws.onclose @ index-Cxx5-jg_.js:547Understand this error
+index-Cxx5-jg_.js:547 ❌ WebSocket disconnected
+index-Cxx5-jg_.js:547 🔄 Attempting to reconnect WebSocket...
+index-Cxx5-jg_.js:547 WebSocket connection to 'wss://alugae.mobi/ws' failed: 
+(anonymous) @ index-Cxx5-jg_.js:547
+connect @ index-Cxx5-jg_.js:547
+(anonymous) @ index-Cxx5-jg_.js:547Understand this error
+index-Cxx5-jg_.js:547 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.onerror @ index-Cxx5-jg_.js:547Understand this error
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+Promise.catch
+(anonymous) @ index-Cxx5-jg_.js:547
+setTimeout
+ws.onclose @ index-Cxx5-jg_.js:547Understand this error
+index-Cxx5-jg_.js:547 ❌ WebSocket disconnected
+index-Cxx5-jg_.js:547 🔄 Attempting to reconnect WebSocket...
+index-Cxx5-jg_.js:547 WebSocket connection to 'wss://alugae.mobi/ws' failed: 
+(anonymous) @ index-Cxx5-jg_.js:547
+connect @ index-Cxx5-jg_.js:547
+(anonymous) @ index-Cxx5-jg_.js:547Understand this error
+index-Cxx5-jg_.js:547 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.onerror @ index-Cxx5-jg_.js:547Understand this error
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+Promise.catch
+(anonymous) @ index-Cxx5-jg_.js:547
+setTimeout
+ws.onclose @ index-Cxx5-jg_.js:547Understand this error
+index-Cxx5-jg_.js:547 ❌ WebSocket disconnected
+index-Cxx5-jg_.js:547 🔄 Attempting to reconnect WebSocket...
+index-Cxx5-jg_.js:547 WebSocket connection to 'wss://alugae.mobi/ws' failed: 
+(anonymous) @ index-Cxx5-jg_.js:547
+connect @ index-Cxx5-jg_.js:547
+(anonymous) @ index-Cxx5-jg_.js:547Understand this error
+index-Cxx5-jg_.js:547 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.onerror @ index-Cxx5-jg_.js:547Understand this error
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+Promise.catch
+(anonymous) @ index-Cxx5-jg_.js:547
+setTimeout
+ws.onclose @ index-Cxx5-jg_.js:547Understand this error
+index-Cxx5-jg_.js:547 ❌ WebSocket disconnected
+index-Cxx5-jg_.js:547 🔄 Attempting to reconnect WebSocket...
+index-Cxx5-jg_.js:547 WebSocket connection to 'wss://alugae.mobi/ws' failed: 
+(anonymous) @ index-Cxx5-jg_.js:547
+connect @ index-Cxx5-jg_.js:547
+(anonymous) @ index-Cxx5-jg_.js:547Understand this error
+index-Cxx5-jg_.js:547 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.onerror @ index-Cxx5-jg_.js:547Understand this error
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+Promise.catch
+(anonymous) @ index-Cxx5-jg_.js:547
+setTimeout
+ws.onclose @ index-Cxx5-jg_.js:547Understand this error
+index-Cxx5-jg_.js:547 ❌ WebSocket disconnected

@@ -157,7 +157,7 @@ app.use((req, res, next) => {
     
     const routesModule = await import("./routes");
     registerRoutes = routesModule.registerRoutes;
-    await registerRoutes(app);
+    server = await registerRoutes(app);
     log('Routes registered successfully');
   } catch (error) {
     log(`Warning: Route registration failed, continuing with limited functionality: ${error}`, "error");

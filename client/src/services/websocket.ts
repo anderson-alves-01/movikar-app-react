@@ -36,9 +36,12 @@ class WebSocketService {
       this.isConnecting = true;
 
       try {
+        // For development, always use the current host
         const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-        const wsUrl = `${protocol}//${window.location.host}/ws`;
+        const host = window.location.host;
+        const wsUrl = `${protocol}//${host}/ws`;
         
+        console.log('🔌 Attempting WebSocket connection to:', wsUrl);
         this.ws = new WebSocket(wsUrl);
 
         this.ws.onopen = () => {
