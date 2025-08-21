@@ -17,6 +17,7 @@ import { formatPhoneNumber, validatePhoneNumber, filterCities } from "@/utils/ph
 import { cn } from "@/lib/utils";
 import TermsOfUseModal from "@/components/terms-of-use-modal";
 import PrivacyPolicyModal from "@/components/privacy-policy-modal";
+import logoPath from "@assets/image_1755798990922.png";
 
 export default function Auth() {
   const [, setLocation] = useLocation();
@@ -299,7 +300,14 @@ export default function Auth() {
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-primary mb-2">alugae</h1>
+          <div className="flex justify-center mb-4">
+            <img 
+              src={logoPath} 
+              alt="alugae" 
+              className="h-16 w-auto object-contain"
+              data-testid="logo-image"
+            />
+          </div>
           <h2 className="text-2xl font-bold text-gray-900">
             {authMode === 'login' ? 'Entrar na sua conta' : 'Criar nova conta'}
           </h2>
