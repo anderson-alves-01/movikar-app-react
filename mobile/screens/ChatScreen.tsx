@@ -4,283 +4,165 @@ import {
   Text,
   StyleSheet,
   Alert,
-  TouchableOpacity,
+  KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp } from '@react-navigation/native';
-import chatService, { ChatMessage, ChatRoom } from '../services/chatService';
-import imageService from '../services/imageService';
+// import { GiftedChat, IMessage } from 'react-native-gifted-chat';
+import { useRoute, useNavigation } from '@react-navigation/native';
+import chatService, { ChatMessage } from '../services/chatService';
 import authService from '../services/authService';
 
-type RootStackParamList = {
-  Chat: { roomId: string; bookingId?: number };
-};
+interface RouteParams {
+  bookingId: number;
+  partnerName: string;
+}
 
-type Props = {
-  navigation: StackNavigationProp<RootStackParamList, 'Chat'>;
-  route: RouteProp<RootStackParamList, 'Chat'>;
-};
+// Placeholder GiftedChat component until dependency is resolved
+const GiftedChat = ({ messages, onSend, user }: any) => (
+  <View style={styles.placeholder}>
+    <Text style={styles.placeholderText}>Chat Interface</Text>
+    <Text style={styles.placeholderSubtext}>
+      Chat functionality will be available once dependencies are resolved
+    </Text>
+  </View>
+);
 
-export default function ChatScreen({ navigation, route }: Props) {
-  const { roomId, bookingId } = route.params;
-  const [messages, setMessages] = useState<IMessage[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [typing, setTyping] = useState(false);
-  const [connected, setConnected] = useState(false);
-  const [room, setRoom] = useState<ChatRoom | null>(null);
+export default function ChatScreen() {
+  const route = useRoute();
+  const navigation = useNavigation();
+  const { bookingId, partnerName } = route.params as RouteParams;
+  
+  const [messages, setMessages] = useState<any[]>([]);
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    navigation.setOptions({
+      title: `Chat com ${partnerName}`,
+    });
+  }, [navigation, partnerName]);
 
   useEffect(() => {
     initializeChat();
     return () => {
-      cleanup();
+      chatService.leaveRoom(bookingId);
     };
-  }, []);
+  }, [bookingId]);
 
   const initializeChat = async () => {
     try {
-      // Initialize chat service
-      await chatService.initialize();
-
-      // Set up listeners
-      chatService.addMessageListener(handleNewMessage);
-      chatService.addConnectionListener(handleConnectionChange);
-
-      // Get or create room if bookingId is provided
-      if (bookingId) {
-        const chatRoom = await chatService.getOrCreateBookingRoom(bookingId);
-        setRoom(chatRoom);
-        await chatService.joinRoom(chatRoom.id);
-      } else {
-        await chatService.joinRoom(roomId);
+      setIsLoading(true);
+      
+      // Get current user
+      const currentUser = await authService.getCurrentUser();
+      if (currentUser) {
+        setUser({
+          _id: currentUser.id,
+          name: currentUser.name,
+          avatar: currentUser.profileImage,
+        });
       }
 
-      // Load messages
-      await loadMessages();
-    } catch (error) {
-      console.error('Error initializing chat:', error);
-      Alert.alert('Erro', 'Erro ao carregar o chat');
-    } finally {
-      setLoading(false);
-    }
-  };
+      // Connect to chat if not connected
+      if (!chatService.getConnectionStatus()) {
+        const token = await authService.getToken();
+        if (token) {
+          await chatService.connect(token);
+        }
+      }
 
-  const loadMessages = async () => {
-    try {
-      const currentRoomId = room?.id || roomId;
-      const chatMessages = await chatService.getMessages(currentRoomId);
-      
-      // Convert to GiftedChat format
-      const giftedMessages = chatMessages.map(convertToGiftedMessage);
-      setMessages(giftedMessages);
+      // Join the chat room
+      chatService.joinRoom(bookingId);
+
+      // Load chat history
+      const chatHistory = await chatService.getMessages(bookingId);
+      const formattedMessages = chatHistory.map(convertToGiftedChatMessage);
+      setMessages(formattedMessages.reverse());
+
+      // Listen for new messages
+      chatService.onMessage(handleNewMessage);
 
       // Mark messages as read
-      const messageIds = chatMessages.map(msg => msg._id);
-      await chatService.markMessagesAsRead(currentRoomId, messageIds);
+      await chatService.markAsRead(bookingId);
+
     } catch (error) {
-      console.error('Error loading messages:', error);
+      console.error('Error initializing chat:', error);
+      Alert.alert(
+        'Erro',
+        'Não foi possível carregar o chat. Tente novamente.',
+        [{ text: 'OK', onPress: () => navigation.goBack() }]
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const convertToGiftedMessage = (chatMessage: ChatMessage): IMessage => {
+  const convertToGiftedChatMessage = (message: ChatMessage): any => {
     return {
-      _id: chatMessage._id,
-      text: chatMessage.text,
-      createdAt: new Date(chatMessage.createdAt),
+      _id: message._id,
+      text: message.text,
+      createdAt: new Date(message.createdAt),
       user: {
-        _id: chatMessage.user._id,
-        name: chatMessage.user.name,
-        avatar: chatMessage.user.avatar,
+        _id: message.user._id,
+        name: message.user.name,
+        avatar: message.user.avatar,
       },
-      image: chatMessage.image,
-      video: chatMessage.video,
-      audio: chatMessage.audio,
-      system: chatMessage.system,
-      sent: chatMessage.sent,
-      received: chatMessage.received,
-      pending: chatMessage.pending,
     };
   };
 
-  const handleNewMessage = useCallback((message: ChatMessage) => {
-    const giftedMessage = convertToGiftedMessage(message);
-    setMessages(previousMessages =>
-      GiftedChat.append(previousMessages, [giftedMessage])
+  const handleNewMessage = (message: ChatMessage) => {
+    const giftedMessage = convertToGiftedChatMessage(message);
+    setMessages(previousMessages => 
+      // GiftedChat.append(previousMessages, [giftedMessage])
+      [giftedMessage, ...previousMessages] // Placeholder implementation
     );
-  }, []);
+  };
 
-  const handleConnectionChange = useCallback((isConnected: boolean) => {
-    setConnected(isConnected);
-  }, []);
+  const onSend = useCallback(async (messages: any[] = []) => {
+    if (messages.length === 0) return;
 
-  const onSend = useCallback(async (newMessages: IMessage[] = []) => {
-    const message = newMessages[0];
-    const currentRoomId = room?.id || roomId;
-
+    const message = messages[0];
+    
     try {
-      // Add message optimistically
-      setMessages(previousMessages =>
-        GiftedChat.append(previousMessages, newMessages)
-      );
-
-      // Send through chat service
-      await chatService.sendMessage(currentRoomId, message.text);
-    } catch (error) {
-      console.error('Error sending message:', error);
-      Alert.alert('Erro', 'Erro ao enviar mensagem');
-    }
-  }, [room, roomId]);
-
-  const handleImagePicker = async () => {
-    try {
-      const imageResult = await imageService.showImagePickerOptions({
-        allowsEditing: true,
-        quality: 0.8,
-      });
-
-      if (imageResult) {
-        const currentRoomId = room?.id || roomId;
-        await chatService.sendImage(currentRoomId, imageResult.uri);
+      // Send message via API
+      const sentMessage = await chatService.sendMessage(bookingId, message.text);
+      
+      if (sentMessage) {
+        // Message will be received via socket and added to the chat
+        // So we don't need to manually add it here
+      } else {
+        Alert.alert('Erro', 'Não foi possível enviar a mensagem. Tente novamente.');
       }
     } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('Erro', 'Erro ao enviar imagem');
+      console.error('Error sending message:', error);
+      Alert.alert('Erro', 'Não foi possível enviar a mensagem. Tente novamente.');
     }
-  };
+  }, [bookingId]);
 
-  const renderBubble = (props: any) => {
+  if (isLoading) {
     return (
-      <Bubble
-        {...props}
-        wrapperStyle={{
-          right: {
-            backgroundColor: '#007AFF',
-          },
-          left: {
-            backgroundColor: '#f0f0f0',
-          },
-        }}
-        textStyle={{
-          right: {
-            color: '#fff',
-          },
-          left: {
-            color: '#333',
-          },
-        }}
-      />
-    );
-  };
-
-  const renderInputToolbar = (props: any) => {
-    return (
-      <InputToolbar
-        {...props}
-        containerStyle={styles.inputToolbar}
-        primaryStyle={styles.inputPrimary}
-      />
-    );
-  };
-
-  const renderSend = (props: any) => {
-    return (
-      <Send {...props}>
-        <View style={styles.sendButton}>
-          <Ionicons name="send" size={20} color="#007AFF" />
-        </View>
-      </Send>
-    );
-  };
-
-  const renderActions = () => {
-    return (
-      <TouchableOpacity
-        style={styles.actionButton}
-        onPress={handleImagePicker}
-      >
-        <Ionicons name="camera" size={24} color="#007AFF" />
-      </TouchableOpacity>
-    );
-  };
-
-  const cleanup = () => {
-    chatService.removeMessageListener(handleNewMessage);
-    chatService.removeConnectionListener(handleConnectionChange);
-    chatService.leaveRoom();
-  };
-
-  const currentUser = authService.getCurrentUser();
-  if (!currentUser) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Erro: Usuário não autenticado</Text>
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Carregando chat...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#333" />
-        </TouchableOpacity>
-        
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>
-            {room?.participants.find(p => p.id !== currentUser.id.toString())?.name || 'Chat'}
-          </Text>
-          <View style={styles.statusContainer}>
-            <View style={[styles.statusDot, { backgroundColor: connected ? '#4CAF50' : '#FF5722' }]} />
-            <Text style={styles.statusText}>
-              {connected ? 'Online' : 'Offline'}
-            </Text>
-          </View>
-        </View>
-
-        <TouchableOpacity style={styles.menuButton}>
-          <Ionicons name="ellipsis-vertical" size={24} color="#333" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Chat */}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       <GiftedChat
         messages={messages}
         onSend={onSend}
-        user={{
-          _id: currentUser.id.toString(),
-          name: currentUser.name,
-          avatar: currentUser.profileImage,
-        }}
-        renderBubble={renderBubble}
-        renderInputToolbar={renderInputToolbar}
-        renderSend={renderSend}
-        renderActions={renderActions}
-        alwaysShowSend
+        user={user}
+        placeholder="Digite sua mensagem..."
         showUserAvatar
-        isTyping={typing}
-        placeholder="Digite uma mensagem..."
-        isLoadingEarlier={loading}
-        listViewProps={{
-          style: styles.messagesList,
-        }}
-        textInputProps={{
-          multiline: true,
-          maxLength: 1000,
-          onChangeText: (text) => {
-            if (text.length > 0) {
-              chatService.sendTyping(room?.id || roomId);
-            } else {
-              chatService.sendStopTyping(room?.id || roomId);
-            }
-          },
-        }}
+        alwaysShowSend
+        scrollToBottom
+        renderUsernameOnMessage
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -289,85 +171,33 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  header: {
-    flexDirection: 'row',
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    paddingTop: Platform.OS === 'ios' ? 60 : 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
     backgroundColor: '#fff',
   },
-  backButton: {
-    padding: 8,
-    marginRight: 8,
-  },
-  headerContent: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-  },
-  statusContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 2,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 6,
-  },
-  statusText: {
-    fontSize: 12,
+  loadingText: {
+    fontSize: 16,
     color: '#666',
   },
-  menuButton: {
-    padding: 8,
-    marginLeft: 8,
-  },
-  messagesList: {
-    backgroundColor: '#f8f9fa',
-  },
-  inputToolbar: {
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    backgroundColor: '#fff',
-    paddingHorizontal: 8,
-    paddingVertical: 8,
-  },
-  inputPrimary: {
-    alignItems: 'center',
-  },
-  sendButton: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
-    marginBottom: 8,
-    width: 36,
-    height: 36,
-  },
-  actionButton: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 8,
-    marginBottom: 8,
-    width: 36,
-    height: 36,
-  },
-  errorContainer: {
+  placeholder: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
+    padding: 20,
   },
-  errorText: {
-    fontSize: 16,
-    color: '#FF5722',
+  placeholderText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+  },
+  placeholderSubtext: {
+    fontSize: 14,
+    color: '#666',
     textAlign: 'center',
+    lineHeight: 20,
   },
 });

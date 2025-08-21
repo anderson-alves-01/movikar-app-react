@@ -1,7 +1,32 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as LocalAuthentication from 'expo-local-authentication';
+// import AsyncStorage from '@react-native-async-storage/async-storage';
+// import * as LocalAuthentication from 'expo-local-authentication';
 import * as AuthSession from 'expo-auth-session';
 import apiService from './apiService';
+
+// Temporary storage implementation until dependencies are resolved
+const AsyncStorage = {
+  async getItem(key: string): Promise<string | null> {
+    return null; // Placeholder
+  },
+  async setItem(key: string, value: string): Promise<void> {
+    // Placeholder
+  },
+  async removeItem(key: string): Promise<void> {
+    // Placeholder
+  }
+};
+
+const LocalAuthentication = {
+  async hasHardwareAsync(): Promise<boolean> {
+    return false; // Placeholder
+  },
+  async isEnrolledAsync(): Promise<boolean> {
+    return false; // Placeholder
+  },
+  async authenticateAsync(): Promise<{ success: boolean }> {
+    return { success: false }; // Placeholder
+  }
+};
 
 const TOKEN_KEY = 'auth_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';

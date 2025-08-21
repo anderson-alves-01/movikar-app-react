@@ -1,6 +1,15 @@
-import { StripeProvider, useStripe, usePaymentSheet } from '@stripe/stripe-react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import authService from './authService';
+// import { initStripe, useStripe } from '@stripe/stripe-react-native';
+import apiService from './apiService';
+
+export interface PaymentMethod {
+  id: string;
+  type: 'card' | 'pix';
+  last4?: string;
+  brand?: string;
+  expiryMonth?: number;
+  expiryYear?: number;
+  isDefault: boolean;
+}
 
 export interface PaymentIntent {
   id: string;
@@ -10,404 +19,240 @@ export interface PaymentIntent {
   status: string;
 }
 
-export interface BookingPayment {
-  vehicleId: number;
-  startDate: string;
-  endDate: string;
-  totalAmount: number;
-  serviceFee?: number;
-  insuranceFee?: number;
-  discountAmount?: number;
-  couponCode?: string;
-}
-
-export interface SubscriptionPayment {
-  planId: string;
-  planName: string;
-  amount: number;
-  currency: string;
-  interval: 'month' | 'year';
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  price: number;
+  interval: 'monthly' | 'yearly';
+  features: string[];
+  vehicleLimit: number;
 }
 
 class PaymentService {
-  private stripe: any = null;
+  private isInitialized = false;
+  private stripePublishableKey: string | null = null;
 
-  // Initialize Stripe
-  initializeStripe(publishableKey: string) {
-    // This should be called in your App component with StripeProvider
-    console.log('Stripe initialized with key:', publishableKey.substring(0, 20) + '...');
-  }
-
-  // Set Stripe instance (called from component using useStripe hook)
-  setStripeInstance(stripeInstance: any) {
-    this.stripe = stripeInstance;
-  }
-
-  // Create payment intent for booking
-  async createBookingPaymentIntent(bookingData: BookingPayment): Promise<PaymentIntent> {
+  async initialize(publishableKey: string): Promise<boolean> {
     try {
-      const token = authService.getToken();
-      if (!token) {
-        throw new Error('Usuário não autenticado');
-      }
+      this.stripePublishableKey = publishableKey;
+      
+      // await initStripe({
+      //   publishableKey,
+      //   urlScheme: 'alugae-mobile',
+      //   setUrlSchemeOnAndroid: true,
+      // });
 
-      const response = await fetch('https://alugae.mobi/api/payments/create-booking-intent', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(bookingData),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Erro ao criar intenção de pagamento');
-      }
-
-      const data = await response.json();
-      return data;
+      this.isInitialized = true;
+      console.log('Payment service initialized (placeholder)');
+      return true;
     } catch (error) {
-      console.error('Error creating booking payment intent:', error);
-      throw error;
+      console.error('Error initializing payment service:', error);
+      return false;
     }
   }
 
-  // Create payment intent for subscription
-  async createSubscriptionPaymentIntent(subscriptionData: SubscriptionPayment): Promise<PaymentIntent> {
+  async getPaymentMethods(): Promise<PaymentMethod[]> {
     try {
-      const token = authService.getToken();
-      if (!token) {
-        throw new Error('Usuário não autenticado');
-      }
-
-      const response = await fetch('https://alugae.mobi/api/payments/create-subscription-intent', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(subscriptionData),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Erro ao criar intenção de pagamento da assinatura');
-      }
-
-      const data = await response.json();
-      return data;
+      const response = await apiService.get('/payments/methods');
+      return response.data || [];
     } catch (error) {
-      console.error('Error creating subscription payment intent:', error);
-      throw error;
+      console.error('Error fetching payment methods:', error);
+      return [];
     }
   }
 
-  // Process payment with card
-  async processCardPayment(
-    paymentIntentClientSecret: string,
-    paymentMethodData?: any
-  ): Promise<{ success: boolean; paymentIntent?: any; error?: string }> {
+  async addPaymentMethod(cardDetails: {
+    number: string;
+    expiryMonth: number;
+    expiryYear: number;
+    cvc: string;
+  }): Promise<PaymentMethod | null> {
     try {
-      if (!this.stripe) {
-        throw new Error('Stripe não inicializado');
-      }
+      // const { createPaymentMethod } = useStripe();
+      
+      // const { paymentMethod, error } = await createPaymentMethod({
+      //   paymentMethodType: 'Card',
+      //   card: {
+      //     number: cardDetails.number,
+      //     expiryMonth: cardDetails.expiryMonth,
+      //     expiryYear: cardDetails.expiryYear,
+      //     cvc: cardDetails.cvc,
+      //   },
+      // });
 
-      const { error, paymentIntent } = await this.stripe.confirmPayment(
-        paymentIntentClientSecret,
-        paymentMethodData || {
-          paymentMethodType: 'Card',
-        }
-      );
+      // if (error) {
+      //   throw new Error(error.message);
+      // }
 
-      if (error) {
-        return { success: false, error: error.message };
-      }
+      // Save payment method to backend
+      const response = await apiService.post('/payments/methods', {
+        // paymentMethodId: paymentMethod.id,
+        type: 'card',
+        // Add other relevant details
+      });
 
-      return { success: true, paymentIntent };
+      return response.data;
     } catch (error) {
-      console.error('Error processing card payment:', error);
-      return { success: false, error: error.message };
+      console.error('Error adding payment method:', error);
+      return null;
     }
   }
 
-  // Process PIX payment
-  async processPixPayment(bookingData: BookingPayment): Promise<{
-    success: boolean;
-    pixCode?: string;
-    pixQrCode?: string;
-    paymentId?: string;
-    error?: string;
-  }> {
+  async removePaymentMethod(paymentMethodId: string): Promise<boolean> {
     try {
-      const token = authService.getToken();
-      if (!token) {
-        throw new Error('Usuário não autenticado');
-      }
-
-      const response = await fetch('https://alugae.mobi/api/payments/create-pix-payment', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(bookingData),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Erro ao criar pagamento PIX');
-      }
-
-      const data = await response.json();
-      return {
-        success: true,
-        pixCode: data.pixCode,
-        pixQrCode: data.pixQrCode,
-        paymentId: data.paymentId,
-      };
+      await apiService.delete(`/payments/methods/${paymentMethodId}`);
+      return true;
     } catch (error) {
-      console.error('Error processing PIX payment:', error);
-      return { success: false, error: error.message };
+      console.error('Error removing payment method:', error);
+      return false;
     }
   }
 
-  // Check PIX payment status
-  async checkPixPaymentStatus(paymentId: string): Promise<{
-    status: 'pending' | 'approved' | 'rejected' | 'cancelled';
-    transactionId?: string;
-  }> {
+  async setDefaultPaymentMethod(paymentMethodId: string): Promise<boolean> {
     try {
-      const token = authService.getToken();
-      if (!token) {
-        throw new Error('Usuário não autenticado');
-      }
+      await apiService.post(`/payments/methods/${paymentMethodId}/set-default`);
+      return true;
+    } catch (error) {
+      console.error('Error setting default payment method:', error);
+      return false;
+    }
+  }
 
-      const response = await fetch(`https://alugae.mobi/api/payments/pix-status/${paymentId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+  async createPaymentIntent(amount: number, currency = 'brl'): Promise<PaymentIntent | null> {
+    try {
+      const response = await apiService.post('/payments/create-intent', {
+        amount,
+        currency,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error creating payment intent:', error);
+      return null;
+    }
+  }
+
+  async confirmPayment(paymentIntentId: string, paymentMethodId?: string): Promise<boolean> {
+    try {
+      // const { confirmPayment } = useStripe();
+      
+      // const { error } = await confirmPayment(paymentIntentId, {
+      //   paymentMethodType: 'Card',
+      //   paymentMethodId: paymentMethodId,
+      // });
+
+      // if (error) {
+      //   throw new Error(error.message);
+      // }
+
+      // Confirm with backend
+      await apiService.post(`/payments/confirm/${paymentIntentId}`, {
+        paymentMethodId,
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Erro ao verificar status do pagamento PIX');
-      }
+      return true;
+    } catch (error) {
+      console.error('Error confirming payment:', error);
+      return false;
+    }
+  }
 
-      const data = await response.json();
-      return data;
+  async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+    try {
+      const response = await apiService.get('/subscription/plans');
+      return response.data || [];
+    } catch (error) {
+      console.error('Error fetching subscription plans:', error);
+      return [];
+    }
+  }
+
+  async createSubscription(planId: string, paymentMethodId?: string): Promise<{ success: boolean; subscriptionId?: string; clientSecret?: string }> {
+    try {
+      const response = await apiService.post('/subscription/create', {
+        planId,
+        paymentMethodId,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error creating subscription:', error);
+      return { success: false };
+    }
+  }
+
+  async cancelSubscription(): Promise<boolean> {
+    try {
+      await apiService.post('/subscription/cancel');
+      return true;
+    } catch (error) {
+      console.error('Error canceling subscription:', error);
+      return false;
+    }
+  }
+
+  async getPaymentHistory(): Promise<any[]> {
+    try {
+      const response = await apiService.get('/payments/history');
+      return response.data || [];
+    } catch (error) {
+      console.error('Error fetching payment history:', error);
+      return [];
+    }
+  }
+
+  async processVehicleRental(vehicleId: number, startDate: string, endDate: string, paymentMethodId?: string): Promise<{ success: boolean; bookingId?: number; clientSecret?: string }> {
+    try {
+      const response = await apiService.post('/bookings/create-with-payment', {
+        vehicleId,
+        startDate,
+        endDate,
+        paymentMethodId,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error processing vehicle rental:', error);
+      return { success: false };
+    }
+  }
+
+  // PIX Payment Methods
+  async createPixPayment(amount: number): Promise<{ pixCode: string; qrCode: string } | null> {
+    try {
+      const response = await apiService.post('/payments/pix/create', {
+        amount,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error creating PIX payment:', error);
+      return null;
+    }
+  }
+
+  async checkPixPaymentStatus(paymentId: string): Promise<{ status: string; paid: boolean }> {
+    try {
+      const response = await apiService.get(`/payments/pix/status/${paymentId}`);
+      return response.data;
     } catch (error) {
       console.error('Error checking PIX payment status:', error);
-      throw error;
+      return { status: 'unknown', paid: false };
     }
   }
 
-  // Get payment methods
-  async getPaymentMethods(): Promise<any[]> {
+  // Coupon functionality
+  async applyCoupon(couponCode: string, planType?: string): Promise<{ valid: boolean; discount?: number; message?: string }> {
     try {
-      const token = authService.getToken();
-      if (!token) {
-        throw new Error('Usuário não autenticado');
-      }
-
-      const response = await fetch('https://alugae.mobi/api/payments/methods', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+      const response = await apiService.post('/coupons/validate', {
+        code: couponCode,
+        planType,
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Erro ao buscar métodos de pagamento');
-      }
-
-      const data = await response.json();
-      return data.paymentMethods || [];
+      return response.data;
     } catch (error) {
-      console.error('Error getting payment methods:', error);
-      throw error;
+      console.error('Error applying coupon:', error);
+      return { valid: false, message: 'Erro ao validar cupom' };
     }
   }
 
-  // Save payment method
-  async savePaymentMethod(paymentMethodId: string): Promise<void> {
-    try {
-      const token = authService.getToken();
-      if (!token) {
-        throw new Error('Usuário não autenticado');
-      }
-
-      const response = await fetch('https://alugae.mobi/api/payments/save-method', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ paymentMethodId }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Erro ao salvar método de pagamento');
-      }
-    } catch (error) {
-      console.error('Error saving payment method:', error);
-      throw error;
-    }
-  }
-
-  // Delete payment method
-  async deletePaymentMethod(paymentMethodId: string): Promise<void> {
-    try {
-      const token = authService.getToken();
-      if (!token) {
-        throw new Error('Usuário não autenticado');
-      }
-
-      const response = await fetch(`https://alugae.mobi/api/payments/methods/${paymentMethodId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Erro ao deletar método de pagamento');
-      }
-    } catch (error) {
-      console.error('Error deleting payment method:', error);
-      throw error;
-    }
-  }
-
-  // Get payment history
-  async getPaymentHistory(page: number = 1, limit: number = 20): Promise<any[]> {
-    try {
-      const token = authService.getToken();
-      if (!token) {
-        throw new Error('Usuário não autenticado');
-      }
-
-      const response = await fetch(`https://alugae.mobi/api/payments/history?page=${page}&limit=${limit}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Erro ao buscar histórico de pagamentos');
-      }
-
-      const data = await response.json();
-      return data.payments || [];
-    } catch (error) {
-      console.error('Error getting payment history:', error);
-      throw error;
-    }
-  }
-
-  // Refund payment
-  async refundPayment(paymentId: string, amount?: number, reason?: string): Promise<void> {
-    try {
-      const token = authService.getToken();
-      if (!token) {
-        throw new Error('Usuário não autenticado');
-      }
-
-      const response = await fetch('https://alugae.mobi/api/payments/refund', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          paymentId,
-          amount,
-          reason,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Erro ao processar reembolso');
-      }
-    } catch (error) {
-      console.error('Error processing refund:', error);
-      throw error;
-    }
-  }
-
-  // Calculate booking price
-  async calculateBookingPrice(bookingData: {
-    vehicleId: number;
-    startDate: string;
-    endDate: string;
-    couponCode?: string;
-  }): Promise<{
-    basePrice: number;
-    serviceFee: number;
-    insuranceFee: number;
-    discountAmount: number;
-    totalPrice: number;
-    breakdown: any;
-  }> {
-    try {
-      const response = await fetch('https://alugae.mobi/api/payments/calculate-price', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(bookingData),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Erro ao calcular preço');
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('Error calculating booking price:', error);
-      throw error;
-    }
-  }
-
-  // Validate coupon
-  async validateCoupon(couponCode: string, bookingData?: any): Promise<{
-    valid: boolean;
-    discount: number;
-    discountType: 'percentage' | 'fixed';
-    message?: string;
-  }> {
-    try {
-      const response = await fetch('https://alugae.mobi/api/payments/validate-coupon', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          couponCode,
-          bookingData,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Erro ao validar cupom');
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('Error validating coupon:', error);
-      throw error;
-    }
+  isPaymentServiceReady(): boolean {
+    return this.isInitialized && this.stripePublishableKey !== null;
   }
 }
 

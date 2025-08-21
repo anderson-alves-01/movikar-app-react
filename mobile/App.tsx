@@ -14,7 +14,7 @@ import ProfileScreen from './screens/ProfileScreen';
 import VehicleDetailScreen from './screens/VehicleDetailScreen';
 import LoginScreen from './screens/LoginScreen';
 import ChatScreen from './screens/ChatScreen';
-import PaymentScreen from './screens/PaymentScreen';
+import BiometricSetupScreen from './screens/BiometricSetupScreen';
 
 // Services
 import authService from './services/authService';
