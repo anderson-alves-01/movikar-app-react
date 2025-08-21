@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
@@ -13,6 +13,13 @@ import BookingsScreen from './screens/BookingsScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import VehicleDetailScreen from './screens/VehicleDetailScreen';
 import LoginScreen from './screens/LoginScreen';
+import ChatScreen from './screens/ChatScreen';
+import PaymentScreen from './screens/PaymentScreen';
+
+// Services
+import authService from './services/authService';
+import notificationService from './services/notificationService';
+import chatService from './services/chatService';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -79,10 +86,10 @@ function TabNavigator() {
 }
 
 // Main Stack Navigator
-function AppNavigator() {
+function AppNavigator({ isAuthenticated }: { isAuthenticated: boolean }) {
   return (
     <Stack.Navigator 
-      initialRouteName="Main"
+      initialRouteName={isAuthenticated ? "Main" : "Login"}
       screenOptions={{
         headerStyle: {
           backgroundColor: '#20B2AA',
@@ -94,6 +101,11 @@ function AppNavigator() {
       }}
     >
       <Stack.Screen 
+        name="Login" 
+        component={LoginScreen} 
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen 
         name="Main" 
         component={TabNavigator} 
         options={{ headerShown: false }}
@@ -104,19 +116,52 @@ function AppNavigator() {
         options={{ title: 'Detalhes do Veículo' }}
       />
       <Stack.Screen 
-        name="Login" 
-        component={LoginScreen} 
-        options={{ title: 'Entrar' }}
+        name="Chat" 
+        component={ChatScreen} 
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="Payment" 
+        component={PaymentScreen} 
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );
 }
 
 export default function App() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    initializeApp();
+  }, []);
+
+  const initializeApp = async () => {
+    try {
+      // Initialize services
+      await authService.initialize();
+      await notificationService.initialize();
+      await chatService.initialize();
+
+      // Check authentication status
+      const authenticated = authService.isAuthenticated();
+      setIsAuthenticated(authenticated);
+    } catch (error) {
+      console.error('Error initializing app:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return null; // You can add a loading screen here
+  }
+
   return (
     <SafeAreaProvider>
       <NavigationContainer>
-        <AppNavigator />
+        <AppNavigator isAuthenticated={isAuthenticated} />
         <StatusBar style="light" backgroundColor="#20B2AA" />
       </NavigationContainer>
     </SafeAreaProvider>

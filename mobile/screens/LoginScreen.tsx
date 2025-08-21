@@ -1,151 +1,214 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TextInput,
   TouchableOpacity,
-  Image,
+  StyleSheet,
   Alert,
+  ScrollView,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
+  Image,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import authService, { LoginCredentials, RegisterData } from '../services/authService';
+import { StackNavigationProp } from '@react-navigation/stack';
 
-export default function LoginScreen() {
-  const navigation = useNavigation();
+type Props = {
+  navigation: StackNavigationProp<any>;
+};
+
+export default function LoginScreen({ navigation }: Props) {
+  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [ddi, setDdi] = useState('+55');
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isBiometricAvailable, setIsBiometricAvailable] = useState(false);
+
+  useEffect(() => {
+    initializeAuth();
+  }, []);
+
+  const initializeAuth = async () => {
+    try {
+      await authService.initialize();
+      
+      // Check if user is already authenticated
+      if (authService.isAuthenticated()) {
+        navigation.replace('Home');
+        return;
+      }
+
+      // Check if biometric authentication is available and enabled
+      const biometricEnabled = await authService.isBiometricEnabled();
+      if (biometricEnabled) {
+        setIsBiometricAvailable(true);
+        // Auto-trigger biometric auth if enabled
+        handleBiometricLogin();
+      }
+    } catch (error) {
+      console.error('Auth initialization error:', error);
+    }
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos');
+      Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios');
       return;
     }
 
-    setIsLoading(true);
+    setLoading(true);
     try {
-      // Simulação de API call - substituir pela URL real da API
-      const response = await fetch('https://alugae.mobi/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        // Store token and user data
-        navigation.navigate('Main');
-      } else {
-        Alert.alert('Erro', 'E-mail ou senha incorretos');
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      // Para demonstração, fazer login mock
-      navigation.navigate('Main');
+      const credentials: LoginCredentials = { email, password };
+      await authService.login(credentials);
+      navigation.replace('Home');
+    } catch (error: any) {
+      Alert.alert('Erro no Login', error.message || 'Erro ao fazer login');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   const handleRegister = async () => {
-    if (!name || !email || !phone || !password) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos');
+    if (!name || !email || !password || !phone) {
+      Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios');
       return;
     }
 
-    setIsLoading(true);
-    try {
-      // Simulação de API call - substituir pela URL real da API
-      const response = await fetch('https://alugae.mobi/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, email, phone, password }),
-      });
+    if (password !== confirmPassword) {
+      Alert.alert('Erro', 'As senhas não coincidem');
+      return;
+    }
 
-      if (response.ok) {
-        const data = await response.json();
-        Alert.alert('Sucesso', 'Conta criada com sucesso!', [
-          { text: 'OK', onPress: () => setIsRegisterMode(false) }
-        ]);
-      } else {
-        Alert.alert('Erro', 'Não foi possível criar a conta');
-      }
-    } catch (error) {
-      console.error('Register error:', error);
-      Alert.alert('Sucesso', 'Conta criada com sucesso!', [
-        { text: 'OK', onPress: () => setIsRegisterMode(false) }
-      ]);
+    if (password.length < 6) {
+      Alert.alert('Erro', 'A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const userData: RegisterData = {
+        name,
+        email,
+        password,
+        phone,
+        ddi,
+      };
+      await authService.register(userData);
+      navigation.replace('Home');
+    } catch (error: any) {
+      Alert.alert('Erro no Cadastro', error.message || 'Erro ao criar conta');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleSocialLogin = (provider: string) => {
-    Alert.alert('Login Social', `Login com ${provider} em desenvolvimento`);
+  const handleBiometricLogin = async () => {
+    try {
+      const success = await authService.authenticateWithBiometrics();
+      if (success) {
+        navigation.replace('Home');
+      }
+    } catch (error: any) {
+      Alert.alert('Erro', error.message || 'Erro na autenticação biométrica');
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    try {
+      await authService.loginWithGoogle();
+      navigation.replace('Home');
+    } catch (error: any) {
+      Alert.alert('Erro', error.message || 'Erro no login com Google');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = () => {
+    Alert.prompt(
+      'Recuperar Senha',
+      'Digite seu email para receber as instruções de recuperação:',
+      async (email) => {
+        if (email) {
+          try {
+            await authService.requestPasswordReset(email);
+            Alert.alert('Sucesso', 'Instruções enviadas para seu email');
+          } catch (error: any) {
+            Alert.alert('Erro', error.message || 'Erro ao solicitar recuperação');
+          }
+        }
+      },
+      'plain-text',
+      email
+    );
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          {/* Logo */}
-          <View style={styles.logoContainer}>
-            <Image
-              source={{ uri: 'https://via.placeholder.com/120x60/20B2AA/ffffff?text=alugae' }}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-            <Text style={styles.tagline}>
-              {isRegisterMode ? 'Criar sua conta' : 'Bem-vindo de volta'}
-            </Text>
-          </View>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {/* Logo */}
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('../assets/logo.png')} // Add your logo
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.title}>alugae.mobi</Text>
+          <Text style={styles.subtitle}>
+            {isLogin ? 'Entre na sua conta' : 'Crie sua conta'}
+          </Text>
+        </View>
 
-          {/* Form */}
-          <View style={styles.formContainer}>
-            {isRegisterMode && (
-              <View style={styles.inputContainer}>
-                <Ionicons name="person-outline" size={20} color="#666" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Nome completo"
-                  value={name}
-                  onChangeText={setName}
-                  autoCapitalize="words"
-                />
-              </View>
-            )}
-
+        {/* Form */}
+        <View style={styles.formContainer}>
+          {!isLogin && (
             <View style={styles.inputContainer}>
-              <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
+              <Ionicons name="person-outline" size={20} color="#666" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="E-mail"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
+                placeholder="Nome completo"
+                value={name}
+                onChangeText={setName}
+                autoCapitalize="words"
               />
             </View>
+          )}
 
-            {isRegisterMode && (
-              <View style={styles.inputContainer}>
+          <View style={styles.inputContainer}>
+            <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+          </View>
+
+          {!isLogin && (
+            <View style={styles.phoneContainer}>
+              <View style={styles.ddiContainer}>
+                <TextInput
+                  style={styles.ddiInput}
+                  value={ddi}
+                  onChangeText={setDdi}
+                  placeholder="+55"
+                />
+              </View>
+              <View style={styles.phoneInputContainer}>
                 <Ionicons name="call-outline" size={20} color="#666" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
@@ -155,101 +218,125 @@ export default function LoginScreen() {
                   keyboardType="phone-pad"
                 />
               </View>
-            )}
+            </View>
+          )}
 
+          <View style={styles.inputContainer}>
+            <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Senha"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+            />
+            <TouchableOpacity
+              onPress={() => setShowPassword(!showPassword)}
+              style={styles.eyeIcon}
+            >
+              <Ionicons
+                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                size={20}
+                color="#666"
+              />
+            </TouchableOpacity>
+          </View>
+
+          {!isLogin && (
             <View style={styles.inputContainer}>
               <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Senha"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                autoCapitalize="none"
+                placeholder="Confirmar senha"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={!showConfirmPassword}
               />
               <TouchableOpacity
-                style={styles.eyeButton}
-                onPress={() => setShowPassword(!showPassword)}
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                style={styles.eyeIcon}
               >
                 <Ionicons
-                  name={showPassword ? 'eye-outline' : 'eye-off-outline'}
+                  name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
                   size={20}
                   color="#666"
                 />
               </TouchableOpacity>
             </View>
+          )}
 
-            {!isRegisterMode && (
-              <TouchableOpacity style={styles.forgotPassword}>
-                <Text style={styles.forgotPasswordText}>Esqueceu sua senha?</Text>
-              </TouchableOpacity>
-            )}
+          {/* Forgot Password */}
+          {isLogin && (
+            <TouchableOpacity onPress={handleForgotPassword} style={styles.forgotPassword}>
+              <Text style={styles.forgotPasswordText}>Esqueceu a senha?</Text>
+            </TouchableOpacity>
+          )}
 
+          {/* Main Action Button */}
+          <TouchableOpacity
+            style={[styles.mainButton, loading && styles.disabledButton]}
+            onPress={isLogin ? handleLogin : handleRegister}
+            disabled={loading}
+          >
+            <Text style={styles.mainButtonText}>
+              {loading ? 'Aguarde...' : isLogin ? 'Entrar' : 'Criar Conta'}
+            </Text>
+          </TouchableOpacity>
+
+          {/* Biometric Login */}
+          {isLogin && isBiometricAvailable && (
             <TouchableOpacity
-              style={[styles.primaryButton, isLoading && styles.disabledButton]}
-              onPress={isRegisterMode ? handleRegister : handleLogin}
-              disabled={isLoading}
+              style={styles.biometricButton}
+              onPress={handleBiometricLogin}
             >
-              <Text style={styles.primaryButtonText}>
-                {isLoading 
-                  ? (isRegisterMode ? 'Criando...' : 'Entrando...')
-                  : (isRegisterMode ? 'Criar Conta' : 'Entrar')
-                }
+              <Ionicons name="finger-print" size={24} color="#007AFF" />
+              <Text style={styles.biometricButtonText}>Entrar com biometria</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Social Login */}
+          {isLogin && (
+            <View style={styles.socialContainer}>
+              <View style={styles.dividerContainer}>
+                <View style={styles.divider} />
+                <Text style={styles.dividerText}>ou</Text>
+                <View style={styles.divider} />
+              </View>
+
+              <TouchableOpacity
+                style={styles.socialButton}
+                onPress={handleGoogleLogin}
+                disabled={loading}
+              >
+                <Ionicons name="logo-google" size={20} color="#4285F4" />
+                <Text style={styles.socialButtonText}>Continuar com Google</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Switch Mode */}
+          <View style={styles.switchContainer}>
+            <Text style={styles.switchText}>
+              {isLogin ? 'Não tem uma conta?' : 'Já tem uma conta?'}
+            </Text>
+            <TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
+              <Text style={styles.switchButtonText}>
+                {isLogin ? 'Criar conta' : 'Fazer login'}
               </Text>
             </TouchableOpacity>
-
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>ou</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            {/* Social Login */}
-            <View style={styles.socialContainer}>
-              <TouchableOpacity
-                style={styles.socialButton}
-                onPress={() => handleSocialLogin('Google')}
-              >
-                <Ionicons name="logo-google" size={20} color="#DB4437" />
-                <Text style={styles.socialButtonText}>Google</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.socialButton}
-                onPress={() => handleSocialLogin('Facebook')}
-              >
-                <Ionicons name="logo-facebook" size={20} color="#4267B2" />
-                <Text style={styles.socialButtonText}>Facebook</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Toggle Mode */}
-            <View style={styles.toggleContainer}>
-              <Text style={styles.toggleText}>
-                {isRegisterMode ? 'Já tem uma conta?' : 'Não tem uma conta?'}
-              </Text>
-              <TouchableOpacity onPress={() => setIsRegisterMode(!isRegisterMode)}>
-                <Text style={styles.toggleLink}>
-                  {isRegisterMode ? 'Fazer login' : 'Criar conta'}
-                </Text>
-              </TouchableOpacity>
-            </View>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#fff',
   },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollContent: {
+  scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
     padding: 20,
@@ -259,27 +346,22 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   logo: {
-    width: 120,
-    height: 60,
+    width: 80,
+    height: 80,
     marginBottom: 10,
   },
-  tagline: {
-    fontSize: 18,
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
     color: '#333',
-    fontWeight: '500',
+    marginBottom: 5,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
   },
   formContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    width: '100%',
   },
   inputContainer: {
     flexDirection: 'row',
@@ -287,96 +369,133 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
+    marginBottom: 16,
     paddingHorizontal: 12,
-    marginBottom: 15,
-    backgroundColor: '#f8f8f8',
+    height: 50,
   },
   inputIcon: {
     marginRight: 10,
   },
   input: {
     flex: 1,
-    paddingVertical: 12,
     fontSize: 16,
     color: '#333',
   },
-  eyeButton: {
+  eyeIcon: {
     padding: 5,
   },
+  phoneContainer: {
+    flexDirection: 'row',
+    marginBottom: 16,
+  },
+  ddiContainer: {
+    width: 80,
+    marginRight: 10,
+  },
+  ddiInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    height: 50,
+    paddingHorizontal: 12,
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  phoneInputContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    height: 50,
+  },
   forgotPassword: {
-    alignSelf: 'flex-end',
+    alignItems: 'flex-end',
     marginBottom: 20,
   },
   forgotPasswordText: {
-    color: '#20B2AA',
+    color: '#007AFF',
     fontSize: 14,
   },
-  primaryButton: {
-    backgroundColor: '#20B2AA',
+  mainButton: {
+    backgroundColor: '#007AFF',
     borderRadius: 8,
-    paddingVertical: 15,
+    height: 50,
+    justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
   },
   disabledButton: {
     backgroundColor: '#ccc',
   },
-  primaryButtonText: {
+  mainButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
-  divider: {
+  biometricButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#007AFF',
+    borderRadius: 8,
+    height: 50,
+    marginBottom: 20,
+  },
+  biometricButtonText: {
+    color: '#007AFF',
+    fontSize: 16,
+    marginLeft: 8,
+  },
+  socialContainer: {
+    marginBottom: 20,
+  },
+  dividerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 20,
   },
-  dividerLine: {
+  divider: {
     flex: 1,
     height: 1,
     backgroundColor: '#ddd',
   },
   dividerText: {
-    marginHorizontal: 10,
+    marginHorizontal: 16,
     color: '#666',
     fontSize: 14,
   },
-  socialContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 30,
-  },
   socialButton: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
-    paddingVertical: 12,
-    marginHorizontal: 5,
+    height: 50,
     backgroundColor: '#fff',
   },
   socialButtonText: {
-    marginLeft: 8,
-    fontSize: 14,
-    fontWeight: '500',
     color: '#333',
+    fontSize: 16,
+    marginLeft: 8,
   },
-  toggleContainer: {
+  switchContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  toggleText: {
+  switchText: {
     color: '#666',
     fontSize: 14,
   },
-  toggleLink: {
-    color: '#20B2AA',
+  switchButtonText: {
+    color: '#007AFF',
     fontSize: 14,
     fontWeight: '600',
-    marginLeft: 5,
+    marginLeft: 4,
   },
 });
