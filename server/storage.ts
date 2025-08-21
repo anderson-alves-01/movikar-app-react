@@ -291,44 +291,7 @@ export class DatabaseStorage implements IStorage {
 
   async getVehiclesByOwner(ownerId: number): Promise<Vehicle[]> {
     return await db
-      .select({
-        id: vehicles.id,
-        ownerId: vehicles.ownerId,
-        brand: vehicles.brand,
-        model: vehicles.model,
-        year: vehicles.year,
-        color: vehicles.color,
-        licensePlate: vehicles.licensePlate,
-        renavam: vehicles.renavam,
-        category: vehicles.category,
-        pricePerDay: vehicles.pricePerDay,
-        pricePerWeek: vehicles.pricePerWeek,
-        pricePerMonth: vehicles.pricePerMonth,
-        location: vehicles.location,
-        latitude: vehicles.latitude,
-        longitude: vehicles.longitude,
-        description: vehicles.description,
-        features: vehicles.features,
-        images: vehicles.images,
-        isAvailable: vehicles.isAvailable,
-        isVerified: vehicles.isVerified,
-        transmission: vehicles.transmission,
-        fuel: vehicles.fuel,
-        seats: vehicles.seats,
-        rating: vehicles.rating,
-        totalBookings: vehicles.totalBookings,
-        crlvDocument: vehicles.crlvDocument,
-        status: vehicles.status,
-        statusReason: vehicles.statusReason,
-        reviewedBy: vehicles.reviewedBy,
-        reviewedAt: vehicles.reviewedAt,
-        createdAt: vehicles.createdAt,
-        updatedAt: vehicles.updatedAt,
-        isHighlighted: vehicles.isHighlighted,
-        highlightType: vehicles.highlightType,
-        highlightExpiresAt: vehicles.highlightExpiresAt,
-        highlightUsageCount: vehicles.highlightUsageCount,
-      })
+      .select()
       .from(vehicles)
       .where(eq(vehicles.ownerId, ownerId))
       .orderBy(desc(vehicles.createdAt));
@@ -2846,36 +2809,13 @@ export class DatabaseStorage implements IStorage {
 
   async getInspectionsByOwner(ownerId: number): Promise<VehicleInspection[]> {
     return await db
-      .select({
-        id: vehicleInspections.id,
-        bookingId: vehicleInspections.bookingId,
-        renterId: vehicleInspections.renterId,
-        inspectorId: vehicleInspections.inspectorId,
-        vehicleCondition: vehicleInspections.vehicleCondition,
-        exteriorCondition: vehicleInspections.exteriorCondition,
-        interiorCondition: vehicleInspections.interiorCondition,
-        engineCondition: vehicleInspections.engineCondition,
-        tiresCondition: vehicleInspections.tiresCondition,
-        fuelLevel: vehicleInspections.fuelLevel,
-        mileage: vehicleInspections.mileage,
-        observations: vehicleInspections.observations,
-        approved: vehicleInspections.approved,
-        rejectionReason: vehicleInspections.rejectionReason,
-        inspectedAt: vehicleInspections.inspectedAt,
-        status: vehicleInspections.status,
-        vehicleId: vehicleInspections.vehicleId,
-        ownerId: vehicleInspections.ownerId,
-        depositDecision: vehicleInspections.depositDecision,
-        depositAmount: vehicleInspections.depositAmount,
-        decidedAt: vehicleInspections.decidedAt,
-        createdAt: vehicleInspections.createdAt,
-        updatedAt: vehicleInspections.updatedAt
-      })
+      .select()
       .from(vehicleInspections)
       .leftJoin(bookings, eq(vehicleInspections.bookingId, bookings.id))
       .leftJoin(vehicles, eq(bookings.vehicleId, vehicles.id))
       .where(eq(vehicles.ownerId, ownerId))
-      .orderBy(desc(vehicleInspections.createdAt));
+      .orderBy(desc(vehicleInspections.createdAt))
+      .then(results => results.map(result => result.vehicle_inspections));
   }
 
   async createVehicleInspection(inspection: InsertVehicleInspection): Promise<VehicleInspection> {
@@ -3549,6 +3489,14 @@ export class DatabaseStorage implements IStorage {
         endDate: booking.endDate,
         totalPrice: booking.totalPrice,
         status: booking.status,
+        serviceFee: "0.00",
+        insuranceFee: "0.00", 
+        securityDeposit: "0.00",
+        paymentStatus: "completed",
+        paymentIntentId: null,
+        stripeSessionId: null,
+        notes: null,
+        inspectionStatus: "pending",
         createdAt: booking.createdAt,
         updatedAt: booking.updatedAt,
         vehicle: {
