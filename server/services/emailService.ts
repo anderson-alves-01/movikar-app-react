@@ -1,4 +1,4 @@
-import { MailService } from '@sendgrid/mail';
+import { Resend } from 'resend';
 
 interface EmailNotificationData {
   title: string;
@@ -7,15 +7,16 @@ interface EmailNotificationData {
 }
 
 class EmailService {
-  private mailService: MailService;
+  private resend: Resend | null = null;
   private fromEmail: string;
 
   constructor() {
-    this.mailService = new MailService();
     this.fromEmail = process.env.FROM_EMAIL || 'noreply@alugae.mobi';
     
-    if (process.env.SENDGRID_API_KEY) {
-      this.mailService.setApiKey(process.env.SENDGRID_API_KEY);
+    if (process.env.RESEND_API_KEY) {
+      this.resend = new Resend(process.env.RESEND_API_KEY);
+    } else {
+      console.log('⚠️ RESEND_API_KEY não encontrada - serviço de email desabilitado');
     }
   }
 
@@ -24,17 +25,17 @@ class EmailService {
     userName: string,
     notificationData: EmailNotificationData
   ): Promise<boolean> {
-    if (!process.env.SENDGRID_API_KEY) {
-      console.log('📧 SendGrid não configurado - email não enviado');
+    if (!this.resend) {
+      console.log('📧 Resend não configurado - email não enviado');
       return false;
     }
 
     try {
       const emailContent = this.generateEmailTemplate(userName, notificationData);
       
-      await this.mailService.send({
-        to: userEmail,
+      await this.resend.emails.send({
         from: this.fromEmail,
+        to: userEmail,
         subject: notificationData.title,
         html: emailContent,
         text: this.generateTextContent(notificationData),
@@ -52,9 +53,9 @@ class EmailService {
     recipients: Array<{ email: string; name: string }>,
     notificationData: EmailNotificationData
   ): Promise<{ successCount: number; errors: string[] }> {
-    if (!process.env.SENDGRID_API_KEY) {
-      console.log('📧 SendGrid não configurado - emails não enviados');
-      return { successCount: 0, errors: ['SendGrid não configurado'] };
+    if (!this.resend) {
+      console.log('📧 Resend não configurado - emails não enviados');
+      return { successCount: 0, errors: ['Resend não configurado'] };
     }
 
     let successCount = 0;

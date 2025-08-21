@@ -383,6 +383,22 @@ export const waitingQueue = pgTable("waiting_queue", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Admin Messages table for bulk messaging
+export const adminMessages = pgTable("admin_messages", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 200 }).notNull(),
+  content: text("content").notNull(),
+  targetAudience: varchar("target_audience", { length: 20 }).notNull(), // all, renters, owners
+  recipientCount: integer("recipient_count").notNull(),
+  status: varchar("status", { length: 20 }).default("sent").notNull(), // sent, partial, failed
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Types for admin messages
+export type AdminMessage = typeof adminMessages.$inferSelect;
+export type InsertAdminMessage = typeof adminMessages.$inferInsert;
+
 // Relations
 export const usersRelations = relations(users, ({ many, one }) => ({
   ownedVehicles: many(vehicles),

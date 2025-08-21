@@ -3809,7 +3809,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send emails if enabled
       let emailSuccessCount = 0;
       if (sendEmail) {
-        const emailService = (await import('./services/emailService')).default;
+        const { default: emailService } = await import('./services/emailService.js');
         const emailRecipients = targetUsers
           .filter(user => user.email)
           .map(user => ({ 
