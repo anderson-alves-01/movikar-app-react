@@ -280,6 +280,160 @@ export class StripeProductionService {
       console.error("❌ Erro ao configurar produtos:", error);
     }
   }
+
+  // ✅ NOVOS HANDLERS: Webhook event processors for recurring subscriptions
+  
+  async handleSubscriptionCreated(subscription: Stripe.Subscription): Promise<void> {
+    console.log('🎯 Processing subscription.created:', subscription.id);
+    // This is already handled in the confirm endpoint, so just log
+  }
+
+  async handleSubscriptionUpdated(subscription: Stripe.Subscription): Promise<void> {
+    try {
+      console.log('🔄 Processing subscription.updated:', subscription.id, 'status:', subscription.status);
+      
+      const { storage } = await import('../storage.js');
+      
+      // Find user subscription by Stripe ID
+      const userSubscriptions = await storage.getUserSubscriptions();
+      const userSubscription = userSubscriptions.find((sub: any) => sub.stripeSubscriptionId === subscription.id);
+      
+      if (!userSubscription) {
+        console.error('❌ User subscription not found for Stripe subscription:', subscription.id);
+        return;
+      }
+
+      // Update subscription status based on Stripe status
+      let newStatus = 'active';
+      if (subscription.status === 'past_due') {
+        newStatus = 'past_due';
+      } else if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
+        newStatus = 'cancelled';
+      }
+
+      await storage.updateUserSubscription(userSubscription.id, {
+        status: newStatus,
+        cancelAtPeriodEnd: subscription.cancel_at_period_end || false,
+      });
+
+      console.log('✅ Updated user subscription status to:', newStatus);
+      
+    } catch (error) {
+      console.error('❌ Error handling subscription updated:', error);
+    }
+  }
+
+  async handleSubscriptionDeleted(subscription: Stripe.Subscription): Promise<void> {
+    try {
+      console.log('❌ Processing subscription.deleted:', subscription.id);
+      
+      const { storage } = await import('../storage.js');
+      
+      // Find user subscription by Stripe ID
+      const userSubscriptions = await storage.getUserSubscriptions();
+      const userSubscription = userSubscriptions.find((sub: any) => sub.stripeSubscriptionId === subscription.id);
+      
+      if (!userSubscription) {
+        console.error('❌ User subscription not found for Stripe subscription:', subscription.id);
+        return;
+      }
+
+      // Cancel user subscription
+      await storage.updateUserSubscription(userSubscription.id, {
+        status: 'cancelled',
+        cancelledAt: new Date(),
+      });
+
+      // Update user to free plan
+      await storage.updateUser(userSubscription.userId, {
+        subscriptionPlan: 'free',
+        subscriptionStatus: 'cancelled',
+        maxVehicleListings: 1,
+        highlightsAvailable: 0
+      });
+
+      console.log('✅ User subscription cancelled and downgraded to free plan');
+      
+    } catch (error) {
+      console.error('❌ Error handling subscription deleted:', error);
+    }
+  }
+
+  async handleInvoicePaymentSucceeded(invoice: any): Promise<void> {
+    try {
+      console.log('💰 Processing invoice.payment_succeeded:', invoice.id);
+      
+      if (!invoice.subscription) {
+        console.log('ℹ️ Invoice not related to subscription, skipping');
+        return;
+      }
+
+      const { storage } = await import('../storage.js');
+      
+      // Find user subscription by Stripe ID
+      const userSubscriptions = await storage.getUserSubscriptions();
+      const userSubscription = userSubscriptions.find((sub: any) => sub.stripeSubscriptionId === invoice.subscription as string);
+      
+      if (!userSubscription) {
+        console.error('❌ User subscription not found for invoice:', invoice.id);
+        return;
+      }
+
+      // Update subscription period based on Stripe subscription
+      const stripeSubscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
+      
+      const startDate = new Date((stripeSubscription as any).current_period_start * 1000);
+      const endDate = new Date((stripeSubscription as any).current_period_end * 1000);
+
+      await storage.updateUserSubscription(userSubscription.id, {
+        status: 'active',
+        currentPeriodStart: startDate,
+        currentPeriodEnd: endDate,
+        paidAmount: ((invoice.amount_paid || 0) / 100).toString(),
+      });
+
+      console.log('✅ Subscription renewed successfully:', {
+        subscriptionId: invoice.subscription,
+        amount: invoice.amount_paid,
+        period: `${startDate.toISOString()} to ${endDate.toISOString()}`
+      });
+      
+    } catch (error) {
+      console.error('❌ Error handling invoice payment succeeded:', error);
+    }
+  }
+
+  async handleInvoicePaymentFailed(invoice: any): Promise<void> {
+    try {
+      console.log('❌ Processing invoice.payment_failed:', invoice.id);
+      
+      if (!invoice.subscription) {
+        console.log('ℹ️ Invoice not related to subscription, skipping');
+        return;
+      }
+
+      const { storage } = await import('../storage.js');
+      
+      // Find user subscription by Stripe ID
+      const userSubscriptions = await storage.getUserSubscriptions();
+      const userSubscription = userSubscriptions.find((sub: any) => sub.stripeSubscriptionId === invoice.subscription as string);
+      
+      if (!userSubscription) {
+        console.error('❌ User subscription not found for invoice:', invoice.id);
+        return;
+      }
+
+      // Update subscription to past_due status
+      await storage.updateUserSubscription(userSubscription.id, {
+        status: 'past_due',
+      });
+
+      console.log('⚠️ Subscription marked as past_due:', invoice.subscription);
+      
+    } catch (error) {
+      console.error('❌ Error handling invoice payment failed:', error);
+    }
+  }
 }
 
 export const stripeProductionService = new StripeProductionService();

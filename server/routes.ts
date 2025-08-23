@@ -5654,12 +5654,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
           break;
 
         case 'customer.subscription.created':
+          console.log("✅ Assinatura criada:", event.data.object.id);
+          await stripeService.handleSubscriptionCreated(event.data.object as Stripe.Subscription);
+          break;
+
         case 'customer.subscription.updated':
           console.log("📋 Assinatura atualizada:", event.data.object.id);
+          await stripeService.handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
           break;
 
         case 'customer.subscription.deleted':
           console.log("❌ Assinatura cancelada:", event.data.object.id);
+          await stripeService.handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
+          break;
+
+        case 'invoice.payment_succeeded':
+          console.log("💰 Renovação automática bem-sucedida:", event.data.object.id);
+          await stripeService.handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
+          break;
+
+        case 'invoice.payment_failed':
+          console.log("❌ Falha na renovação automática:", event.data.object.id);
+          await stripeService.handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
           break;
 
         default:
@@ -6053,11 +6069,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`✅ Created customer: ${customerId}`);
       }
 
-      // Create payment intent for subscription
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: priceInCents,
+      // ✅ NOVA IMPLEMENTAÇÃO: Criar Subscription recorrente no Stripe
+      console.log('🔄 Creating Stripe Subscription for recurring payments...');
+      
+      // First, create a price object for this specific subscription
+      const priceObject = await stripe.prices.create({
+        unit_amount: priceInCents,
         currency: 'brl',
+        recurring: {
+          interval: paymentMethod === 'annual' ? 'year' : 'month'
+        },
+        product_data: {
+          name: `ALUGAE - ${planName === 'essencial' ? 'Plano Essencial' : 'Plano Plus'}`,
+          description: `${planName === 'essencial' ? 'Plano Essencial' : 'Plano Plus'} - ${vehicleCount} veículos`,
+          metadata: {
+            planName,
+            vehicleCount: vehicleCount.toString()
+          }
+        },
+      });
+
+      // Create recurring subscription instead of one-time payment intent
+      const subscription = await stripe.subscriptions.create({
         customer: customerId,
+        items: [
+          {
+            price: priceObject.id,
+          },
+        ],
+        payment_behavior: 'default_incomplete',
+        payment_settings: { 
+          save_default_payment_method: 'on_subscription' 
+        },
+        expand: ['latest_invoice.payment_intent'],
         metadata: {
           userId: userId.toString(),
           planName,
@@ -6065,10 +6109,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           vehicleCount: vehicleCount.toString(),
           type: 'subscription'
         },
-        automatic_payment_methods: {
-          enabled: true,
-        },
       });
+
+      console.log('✅ Stripe Subscription created:', subscription.id);
+      
+      // Get the payment intent from the subscription
+      const paymentIntent = subscription.latest_invoice?.payment_intent;
+      if (!paymentIntent || typeof paymentIntent === 'string') {
+        throw new Error('Failed to get payment intent from subscription');
+      }
 
       res.json({
         clientSecret: paymentIntent.client_secret,
@@ -6076,7 +6125,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         planName,
         paymentMethod,
         couponApplied: couponCode || null,
-        discountAmount: discountAmount || 0
+        discountAmount: discountAmount || 0,
+        subscriptionId: subscription.id // ✅ CRÍTICO: Include Stripe Subscription ID
       });
 
     } catch (error: any) {
@@ -6101,6 +6151,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (paymentIntent.status !== 'succeeded') {
         return res.status(400).json({ message: "Pagamento não foi confirmado" });
+      }
+
+      // ✅ VERIFICAÇÃO CRÍTICA: Find the Stripe Subscription associated with this payment
+      let stripeSubscriptionId: string | null = null;
+      
+      // Get subscription from invoice
+      if (paymentIntent.invoice) {
+        const invoice = await stripe.invoices.retrieve(paymentIntent.invoice as string);
+        if (invoice.subscription) {
+          stripeSubscriptionId = invoice.subscription as string;
+          console.log('✅ Found Stripe Subscription ID:', stripeSubscriptionId);
+        }
+      }
+
+      // ✅ VERIFICAÇÃO OBRIGATÓRIA: Subscriptions MUST have Stripe ID for recurring payments
+      if (!stripeSubscriptionId) {
+        console.error('❌ CRITICAL ERROR: Payment succeeded but no Stripe Subscription ID found!');
+        return res.status(500).json({ 
+          message: "Erro crítico: Assinatura não foi configurada para recorrência. Entre em contato com suporte." 
+        });
       }
 
       const planName = paymentIntent.metadata.planName;
@@ -6157,10 +6227,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         highlightsAvailable: plan.highlightCount || 0
       });
 
-      // Create user subscription record with real paid values
+      // ✅ CRÍTICO: Create user subscription record with Stripe Subscription ID
       await storage.createUserSubscription({
         userId,
         planId: plan.id,
+        stripeSubscriptionId: stripeSubscriptionId, // ✅ ESSENCIAL para recorrência automática
+        stripeCustomerId: paymentIntent.customer as string,
         status: 'active',
         paymentMethod,
         currentPeriodStart: startDate,
@@ -6175,6 +6247,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           calculationDetails: `${planName} plan with ${vehicleCount} vehicles, ${paymentMethod} payment`
         }
       });
+
+      console.log('✅ User subscription created with Stripe Subscription ID for recurring payments');
 
       res.json({
         message: "Assinatura ativada com sucesso",

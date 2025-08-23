@@ -2823,6 +2823,13 @@ export class DatabaseStorage implements IStorage {
     } as UserSubscription & { plan: SubscriptionPlan };
   }
 
+  async getUserSubscriptions(): Promise<UserSubscription[]> {
+    return await db
+      .select()
+      .from(userSubscriptions)
+      .orderBy(desc(userSubscriptions.createdAt));
+  }
+
   async createUserSubscription(subscription: InsertUserSubscription): Promise<UserSubscription> {
     const [newSubscription] = await db
       .insert(userSubscriptions)
