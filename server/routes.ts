@@ -6408,7 +6408,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         planId: plan.id,
         stripeSubscriptionId: stripeSubscriptionId, // ✅ ESSENCIAL para recorrência automática
-        stripeCustomerId: paymentIntent.customer as string,
+        stripeCustomerId: intentData.customer as string,
         status: 'active',
         paymentMethod,
         currentPeriodStart: startDate,
