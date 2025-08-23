@@ -31,6 +31,7 @@ export interface IStorage {
   // Users
   getUser(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserWithPasswordByEmail(email: string): Promise<(User & { password: string }) | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined>;
 
@@ -266,40 +267,26 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // Users
   async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select({
-      id: users.id,
-      email: users.email,
-      name: users.name,
-      role: users.role,
-      pixKey: users.pixKey,
-      location: users.location,
-      profilePicture: users.profilePicture,
-      phone: users.phone,
-      pushToken: users.pushToken,
-      pushPlatform: users.pushPlatform,
-      createdAt: users.createdAt,
-      updatedAt: users.updatedAt
-      // Explicitly exclude password field for security
-    }).from(users).where(eq(users.id, id));
-    return user || undefined;
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    if (!user) return undefined;
+    
+    // Remove password field for security
+    const { password, ...userWithoutPassword } = user;
+    return userWithoutPassword as User;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select({
-      id: users.id,
-      email: users.email,
-      name: users.name,
-      role: users.role,
-      pixKey: users.pixKey,
-      location: users.location,
-      profilePicture: users.profilePicture,
-      phone: users.phone,
-      pushToken: users.pushToken,
-      pushPlatform: users.pushPlatform,
-      createdAt: users.createdAt,
-      updatedAt: users.updatedAt
-      // Explicitly exclude password field for security
-    }).from(users).where(eq(users.email, email));
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    if (!user) return undefined;
+    
+    // Remove password field for security
+    const { password, ...userWithoutPassword } = user;
+    return userWithoutPassword as User;
+  }
+
+  // Method specifically for login that includes password for verification
+  async getUserWithPasswordByEmail(email: string): Promise<(User & { password: string }) | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
     return user || undefined;
   }
 
@@ -324,69 +311,24 @@ export class DatabaseStorage implements IStorage {
   // Vehicles
   async getVehicle(id: number): Promise<VehicleWithOwner | undefined> {
     const [result] = await db
-      .select({
-        // Vehicle fields
-        id: vehicles.id,
-        ownerId: vehicles.ownerId,
-        brand: vehicles.brand,
-        model: vehicles.model,
-        year: vehicles.year,
-        category: vehicles.category,
-        pricePerDay: vehicles.pricePerDay,
-        location: vehicles.location,
-        description: vehicles.description,
-        features: vehicles.features,
-        images: vehicles.images,
-        isAvailable: vehicles.isAvailable,
-        status: vehicles.status,
-        fuelType: vehicles.fuelType,
-        transmission: vehicles.transmission,
-        seats: vehicles.seats,
-        doors: vehicles.doors,
-        createdAt: vehicles.createdAt,
-        updatedAt: vehicles.updatedAt,
-        // Owner fields (excluding password)
-        ownerName: users.name,
-        ownerEmail: users.email,
-        ownerPhone: users.phone,
-        ownerLocation: users.location,
-        ownerProfilePicture: users.profilePicture
-      })
+      .select()
       .from(vehicles)
       .leftJoin(users, eq(vehicles.ownerId, users.id))
       .where(eq(vehicles.id, id));
 
     if (!result) return undefined;
 
+    const vehicle = result.vehicles;
+    const owner = result.users;
+
+    if (!owner) return undefined;
+
+    // Remove password from owner data for security
+    const { password, ...ownerWithoutPassword } = owner;
+
     return {
-      id: result.id,
-      ownerId: result.ownerId,
-      brand: result.brand,
-      model: result.model,
-      year: result.year,
-      category: result.category,
-      pricePerDay: result.pricePerDay,
-      location: result.location,
-      description: result.description,
-      features: result.features,
-      images: result.images,
-      isAvailable: result.isAvailable,
-      status: result.status,
-      fuelType: result.fuelType,
-      transmission: result.transmission,
-      seats: result.seats,
-      doors: result.doors,
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
-      owner: {
-        id: result.ownerId,
-        name: result.ownerName!,
-        email: result.ownerEmail!,
-        phone: result.ownerPhone,
-        location: result.ownerLocation,
-        profilePicture: result.ownerProfilePicture,
-        role: 'owner' as const
-      } as User,
+      ...vehicle,
+      owner: ownerWithoutPassword as User,
     };
   }
 
@@ -1195,28 +1137,18 @@ export class DatabaseStorage implements IStorage {
     if (validUserIds.length === 0) return [];
 
     const usersList = await db
-      .select({
-        id: users.id,
-        email: users.email,
-        name: users.name,
-        role: users.role,
-        pixKey: users.pixKey,
-        location: users.location,
-        profilePicture: users.profilePicture,
-        phone: users.phone,
-        pushToken: users.pushToken,
-        pushPlatform: users.pushPlatform,
-        createdAt: users.createdAt,
-        updatedAt: users.updatedAt
-        // Exclude password field
-      })
+      .select()
       .from(users)
       .where(and(
         inArray(users.id, validUserIds),
         isNotNull(users.pushToken)
       ));
     
-    return usersList.map(user => ({ ...user, pushToken: user.pushToken || undefined }));
+    // Remove password field for security and return with proper typing
+    return usersList.map(user => {
+      const { password, ...userWithoutPassword } = user;
+      return { ...userWithoutPassword, pushToken: user.pushToken || undefined } as User & { pushToken?: string };
+    });
   }
 
   // Admin messaging methods

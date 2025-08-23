@@ -1140,18 +1140,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { email, password } = req.body;
 
-      const user = await storage.getUserByEmail(email);
-      if (!user) {
+      // Get user with password for verification
+      const userWithPassword = await storage.getUserWithPasswordByEmail(email);
+      if (!userWithPassword) {
         return res.status(401).json({ message: "E-mail ou senha incorretos" });
       }
 
-      const isValidPassword = await bcrypt.compare(password, user.password);
+      const isValidPassword = await bcrypt.compare(password, userWithPassword.password);
       if (!isValidPassword) {
         return res.status(401).json({ message: "E-mail ou senha incorretos" });
       }
 
-      const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
-      const refreshToken = jwt.sign({ userId: user.id }, JWT_SECRET + '_refresh', { expiresIn: '7d' });
+      // Get user without password for response
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(500).json({ message: "Erro interno do servidor" });
+      }
+
+      const token = jwt.sign({ userId: user.id }, VERIFIED_JWT_SECRET, { expiresIn: '15m' });
+      const refreshToken = jwt.sign({ userId: user.id }, VERIFIED_JWT_SECRET + '_refresh', { expiresIn: '7d' });
 
       console.log('🍪 Setting login cookies for user:', user.email);
 
