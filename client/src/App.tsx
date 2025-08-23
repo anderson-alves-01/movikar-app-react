@@ -53,7 +53,6 @@ import VehicleBoosts from "@/pages/vehicle-boosts";
 import Reviews from "@/pages/reviews";
 import Support from "@/pages/support";
 import NotFound from "@/pages/not-found";
-import { InstallPrompt, IOSInstallPrompt } from "@/components/InstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { OnboardingFlow, OnboardingTrigger } from "@/components/onboarding/onboarding-flow";
 import { PageTransition } from "@/components/ui/page-transition";
@@ -181,8 +180,6 @@ function App() {
               <VehicleComparison />
               
               {/* PWA Components */}
-              <InstallPrompt />
-              <IOSInstallPrompt />
               <OfflineIndicator />
             </TooltipProvider>
           </SearchProvider>
