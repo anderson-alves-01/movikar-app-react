@@ -25,9 +25,10 @@ interface CheckoutFormProps {
   amount: number;
   couponApplied?: string | null;
   couponDiscountAmount?: number;
+  type?: string; // 'setup_intent' or 'payment_intent'
 }
 
-const CheckoutForm = ({ clientSecret, planName, paymentMethod, amount, couponApplied, couponDiscountAmount = 0 }: CheckoutFormProps) => {
+const CheckoutForm = ({ clientSecret, planName, paymentMethod, amount, couponApplied, couponDiscountAmount = 0, type }: CheckoutFormProps) => {
   const stripe = useStripe();
   const elements = useElements();
   const [isLoading, setIsLoading] = useState(false);
@@ -96,13 +97,31 @@ const CheckoutForm = ({ clientSecret, planName, paymentMethod, amount, couponApp
 
     setIsLoading(true);
 
-    const { error, paymentIntent } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: window.location.origin + "/subscription-success",
-      },
-      redirect: "if_required",
-    });
+    // Use confirmSetup for SetupIntent, confirmPayment for PaymentIntent
+    let error, setupIntent, paymentIntent;
+    if (type === 'setup_intent' || clientSecret.startsWith('seti_')) {
+      // This is a SetupIntent
+      const setupResult = await stripe.confirmSetup({
+        elements,
+        confirmParams: {
+          return_url: window.location.origin + "/subscription-success",
+        },
+        redirect: "if_required",
+      });
+      error = setupResult.error;
+      setupIntent = setupResult.setupIntent;
+    } else {
+      // This is a PaymentIntent
+      const paymentResult = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: window.location.origin + "/subscription-success",
+        },
+        redirect: "if_required",
+      });
+      error = paymentResult.error;
+      paymentIntent = paymentResult.paymentIntent;
+    }
 
     if (error) {
       toast({
@@ -111,11 +130,12 @@ const CheckoutForm = ({ clientSecret, planName, paymentMethod, amount, couponApp
         variant: "destructive",
       });
       setIsLoading(false);
-    } else if (paymentIntent && paymentIntent.status === "succeeded") {
+    } else if ((setupIntent && setupIntent.status === "succeeded") || (paymentIntent && paymentIntent.status === "succeeded")) {
       // Confirm subscription on backend
       try {
+        const intentId = setupIntent?.id || paymentIntent?.id;
         const response = await apiRequest("POST", "/api/subscription/confirm", {
-          paymentIntentId: paymentIntent.id,
+          paymentIntentId: intentId,
         });
 
         if (response.ok) {
@@ -328,6 +348,7 @@ export default function SubscriptionCheckout() {
   const amount = parseInt(searchParams.get('amount') || '0');
   const couponApplied = searchParams.get('couponApplied');
   const couponDiscountAmount = parseInt(searchParams.get('discountAmount') || '0');
+  const type = searchParams.get('type');
 
   useEffect(() => {
     // Verify checkout data integrity
@@ -390,6 +411,7 @@ export default function SubscriptionCheckout() {
   let finalPlanName = planName;
   let finalPaymentMethod = paymentMethod;
   let finalAmount = amount;
+  let finalType = type;
 
   // If URL params are missing, try to use stored data
   if (!clientSecret || !planName || !amount) {
@@ -401,6 +423,7 @@ export default function SubscriptionCheckout() {
         finalPlanName = parsedData.planName;
         finalPaymentMethod = parsedData.paymentMethod || 'monthly';
         finalAmount = parsedData.amount;
+        finalType = parsedData.type;
         console.log('📋 Using stored checkout data');
       } catch (error) {
         console.log('❌ Failed to parse stored data');
@@ -456,6 +479,7 @@ export default function SubscriptionCheckout() {
             amount={finalAmount}
             couponApplied={couponApplied}
             couponDiscountAmount={couponDiscountAmount}
+            type={finalType}
           />
         </Elements>
       </div>

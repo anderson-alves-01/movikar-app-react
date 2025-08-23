@@ -299,6 +299,7 @@ export default function SubscriptionPlans() {
         amount: data.amount,
         couponApplied: data.couponApplied || null,
         discountAmount: data.discountAmount || 0,
+        type: data.type || 'setup_intent',
         timestamp: Date.now()
       };
       
@@ -310,7 +311,8 @@ export default function SubscriptionPlans() {
         clientSecret: data.clientSecret,
         planName: data.planName,
         paymentMethod: data.paymentMethod,
-        amount: data.amount.toString()
+        amount: data.amount.toString(),
+        type: data.type || 'setup_intent'
       });
       
       // Add coupon data to URL if present
