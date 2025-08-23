@@ -1475,6 +1475,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Helper functions for OAuth
   async function handleGoogleCallback(code: string) {
     try {
+      console.log('🔍 Google OAuth: Processing callback with code:', code.substring(0, 20) + '...');
+      
       // Exchange code for access token
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
@@ -1488,23 +1490,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }),
       });
 
+      console.log('🔍 Google OAuth: Token response status:', tokenResponse.status);
+      
+      if (!tokenResponse.ok) {
+        const errorText = await tokenResponse.text();
+        console.error('❌ Google OAuth token exchange failed:', {
+          status: tokenResponse.status,
+          statusText: tokenResponse.statusText,
+          error: errorText
+        });
+        throw new Error(`Token exchange failed: ${tokenResponse.status} ${errorText}`);
+      }
+
       const tokenData = await tokenResponse.json();
+      console.log('🔍 Google OAuth: Token data keys:', Object.keys(tokenData));
 
       if (!tokenData.access_token) {
-        throw new Error('No access token received');
+        console.error('❌ Google OAuth: No access token in response:', tokenData);
+        throw new Error('No access token received from Google');
       }
+
+      console.log('✅ Google OAuth: Access token received');
 
       // Get user info
       const userResponse = await fetch(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${tokenData.access_token}`);
+      
+      if (!userResponse.ok) {
+        const errorText = await userResponse.text();
+        console.error('❌ Google OAuth user info failed:', {
+          status: userResponse.status,
+          error: errorText
+        });
+        throw new Error(`User info request failed: ${userResponse.status}`);
+      }
+
       const userData = await userResponse.json();
+      console.log('✅ Google OAuth: User data received:', {
+        email: userData.email,
+        name: userData.name,
+        hasPicture: !!userData.picture
+      });
+
+      if (!userData.email) {
+        console.error('❌ Google OAuth: No email in user data:', userData);
+        throw new Error('No email received from Google');
+      }
 
       return {
         email: userData.email,
-        name: userData.name,
+        name: userData.name || userData.email.split('@')[0],
         picture: userData.picture,
       };
     } catch (error) {
-      console.error('Google OAuth error:', error);
+      console.error('❌ Google OAuth callback error:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        error
+      });
       return null;
     }
   }
