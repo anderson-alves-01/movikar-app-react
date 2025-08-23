@@ -36,10 +36,10 @@ export function InstallPrompt() {
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-sm text-gray-900">
-              Instalar alugae.mobi
+              Instalar App
             </h3>
             <p className="text-xs text-gray-600 mt-1">
-              Acesse mais rápido e receba notificações
+              Instalar para usar offline
             </p>
           </div>
           <div className="flex-shrink-0 flex items-center gap-2">

@@ -733,9 +733,6 @@ export default function SubscriptionPlans() {
                     )}
                   </div>
                 )}
-                <p className="text-sm text-gray-500 text-center">
-                  O cupom será aplicado somente após selecionar o plano no botão "Assinar Agora"
-                </p>
               </CardContent>
             </Card>
           </div>
