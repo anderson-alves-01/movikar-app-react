@@ -90,6 +90,9 @@ if (!JWT_SECRET) {
   process.exit(1);
 }
 
+// TypeScript assertion - we know JWT_SECRET is defined after the check above
+const VERIFIED_JWT_SECRET: string = JWT_SECRET;
+
 // Configure multer for file uploads
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -312,7 +315,7 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: number };
+    const decoded = jwt.verify(token, VERIFIED_JWT_SECRET) as { userId: number };
     console.log('🔐 Auth middleware - Token decoded, userId:', decoded.userId);
 
     const user = await storage.getUser(decoded.userId);
@@ -338,7 +341,7 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
       }
 
       try {
-        const decoded = jwt.verify(refreshToken, JWT_SECRET + '_refresh') as { userId: number };
+        const decoded = jwt.verify(refreshToken, VERIFIED_JWT_SECRET + '_refresh') as { userId: number };
         const user = await storage.getUser(decoded.userId);
 
         if (!user) {
@@ -348,8 +351,8 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
         }
 
         // Generate new tokens
-        const newToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
-        const newRefreshToken = jwt.sign({ userId: user.id }, JWT_SECRET + '_refresh', { expiresIn: '7d' });
+        const newToken = jwt.sign({ userId: user.id }, VERIFIED_JWT_SECRET, { expiresIn: '15m' });
+        const newRefreshToken = jwt.sign({ userId: user.id }, VERIFIED_JWT_SECRET + '_refresh', { expiresIn: '7d' });
 
         // Set new cookies with consistent settings
         const cookieOptions = {
@@ -1101,8 +1104,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Generate token
-      const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
-      const refreshToken = jwt.sign({ userId: user.id }, JWT_SECRET + '_refresh', { expiresIn: '7d' });
+      const token = jwt.sign({ userId: user.id }, VERIFIED_JWT_SECRET, { expiresIn: '15m' });
+      const refreshToken = jwt.sign({ userId: user.id }, VERIFIED_JWT_SECRET + '_refresh', { expiresIn: '7d' });
 
       // Set HttpOnly cookies - mesmas configurações do login
       res.cookie('token', token, {
@@ -1261,7 +1264,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: 'Refresh token não encontrado' });
       }
 
-      const decoded = jwt.verify(refreshToken, JWT_SECRET + '_refresh') as { userId: number };
+      const decoded = jwt.verify(refreshToken, VERIFIED_JWT_SECRET + '_refresh') as { userId: number };
       const user = await storage.getUser(decoded.userId);
 
       if (!user) {
@@ -1269,7 +1272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: 'Refresh token inválido' });
       }
 
-      const newToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
+      const newToken = jwt.sign({ userId: user.id }, VERIFIED_JWT_SECRET, { expiresIn: '15m' });
 
       console.log('✅ Token refreshed for user:', user.email);
 
@@ -1390,8 +1393,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Generate tokens
-      const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
-      const refreshToken = jwt.sign({ userId: user.id }, JWT_SECRET + '_refresh', { expiresIn: '7d' });
+      const token = jwt.sign({ userId: user.id }, VERIFIED_JWT_SECRET, { expiresIn: '15m' });
+      const refreshToken = jwt.sign({ userId: user.id }, VERIFIED_JWT_SECRET + '_refresh', { expiresIn: '7d' });
 
       // Set cookies
       const cookieOptions = {
