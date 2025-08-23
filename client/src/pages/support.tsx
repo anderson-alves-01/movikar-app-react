@@ -80,8 +80,8 @@ export default function Support() {
 
   // Handle support channel actions
   const handleChannelAction = (channelTitle: string) => {
-    const supportEmail = contactInfo?.supportEmail || "sac@alugae.mobi";
-    const supportPhone = contactInfo?.supportPhone || "(11) 9999-9999";
+    const supportEmail = (contactInfo as any)?.supportEmail || "sac@alugae.mobi";
+    const supportPhone = (contactInfo as any)?.supportPhone || "(11) 9999-9999";
     
     switch (channelTitle) {
       case "Chat Online":
@@ -202,13 +202,13 @@ export default function Support() {
       id: "central-de-ajuda",
       category: "Suporte",
       question: "Como acessar a central de ajuda?",
-      answer: `Nossa central de ajuda está disponível 24/7 através do chat online, WhatsApp (${contactInfo?.supportPhone || "(11) 9999-9999"}) e e-mail (${contactInfo?.supportEmail || "sac@alugae.mobi"}). Escolha o canal que preferir para receber atendimento personalizado.`
+      answer: `Nossa central de ajuda está disponível 24/7 através do chat online, WhatsApp (${(contactInfo as any)?.supportPhone || "(11) 9999-9999"}) e e-mail (${(contactInfo as any)?.supportEmail || "sac@alugae.mobi"}). Escolha o canal que preferir para receber atendimento personalizado.`
     },
     {
       id: "contato",
       category: "Suporte",
       question: "Como entrar em contato conosco?",
-      answer: `Você pode nos contatar através de múltiplos canais: Chat online (24/7), WhatsApp (${contactInfo?.supportPhone || "(11) 9999-9999"}) em horário comercial, ou e-mail ${contactInfo?.supportEmail || "sac@alugae.mobi"} com resposta em até 24h.`
+      answer: `Você pode nos contatar através de múltiplos canais: Chat online (24/7), WhatsApp (${(contactInfo as any)?.supportPhone || "(11) 9999-9999"}) em horário comercial, ou e-mail ${(contactInfo as any)?.supportEmail || "sac@alugae.mobi"} com resposta em até 24h.`
     },
     {
       id: "termos-de-uso",
@@ -261,14 +261,14 @@ export default function Support() {
     {
       icon: Mail,
       title: "E-mail",
-      description: contactInfo?.supportEmail || "sac@alugae.mobi",
+      description: (contactInfo as any)?.supportEmail || "sac@alugae.mobi",
       availability: "Resposta em até 24h",
       action: "Enviar E-mail"
     },
     {
       icon: Phone,
       title: "WhatsApp",
-      description: contactInfo?.supportPhone || "(11) 9999-9999",
+      description: (contactInfo as any)?.supportPhone || "(11) 9999-9999",
       availability: "Seg-Sex: 8h às 22h",
       action: "Enviar Mensagem"
     }
@@ -618,7 +618,7 @@ export default function Support() {
                 <p><strong>Razão Social:</strong> Alugae Tecnologia Ltda</p>
                 <p><strong>Endereço:</strong> São Paulo, SP</p>
                 <p><strong>Site:</strong> https://alugae.mobi</p>
-                <p><strong>E-mail:</strong> {contactInfo?.supportEmail || "contato@alugae.mobi"}</p>
+                <p><strong>E-mail:</strong> {(contactInfo as any)?.supportEmail || "contato@alugae.mobi"}</p>
               </div>
             </div>
           </div>

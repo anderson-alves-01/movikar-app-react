@@ -1,0 +1,77 @@
+﻿POLÍTICA DE PRIVACIDADE
+Última atualização: 20/08/2025
+O Alugae valoriza a confiança dos usuários e se compromete a proteger a privacidade e os dados pessoais de todos que utilizam a plataforma. Esta Política de Privacidade explica, de forma clara e transparente, como coletamos, utilizamos, armazenamos e protegemos suas informações, em conformidade com a Lei nº 13.709/2018 (LGPD).
+Ao utilizar o Alugae, você declara estar ciente e de acordo com as práticas descritas nesta Política.
+
+
+1. Quais dados coletamos?
+O Alugae coleta apenas as informações necessárias para o funcionamento da plataforma e a segurança das transações.
+* Dados de cadastro: nome completo, CPF/CNPJ, e-mail, telefone, senha de acesso.
+* Dados de veículos (para locadores): marca, modelo, ano, placa, documentação, RENAVAM, fotos e informações adicionais do veículo.
+* Dados de uso: histórico de anúncios, locações realizadas, interações e preferências dentro do aplicativo.
+* Dados de pagamento: informações processadas via Stripe, como valores pagos, datas e métodos de pagamento. O Alugae não armazena dados completos de cartão de crédito, apenas tokens criptografados enviados pela operadora.
+* Dados de geolocalização: coletados apenas se o usuário autorizar, para exibir anúncios próximos.
+* Dados técnicos: endereço IP, tipo de dispositivo, sistema operacional e navegador utilizado.
+
+
+2. Para que utilizamos seus dados?
+Os dados coletados têm como finalidade:
+* Criar e manter a conta do usuário.
+* Permitir a publicação de anúncios e a busca por veículos.
+* Garantir a segurança e autenticação dos acessos.
+* Processar pagamentos com segurança via Stripe.
+* Cumprir obrigações legais e regulatórias.
+* Melhorar a experiência do usuário por meio de personalização e recomendações.
+* Prevenir fraudes, acessos indevidos e uso indevido da plataforma.
+* Realizar análises estatísticas e de desempenho da plataforma (sempre de forma anônima).
+
+3. Compartilhamento de informações
+O Alugae não vende e não comercializa dados pessoais de seus usuários.
+Os dados poderão ser compartilhados apenas nos seguintes casos:
+   * Com prestadores de serviço essenciais: como meios de pagamento (Stripe), hospedagem de dados e ferramentas de segurança digital.
+   * Com autoridades públicas: sempre que houver obrigação legal, ordem judicial ou solicitação de autoridade competente.
+   * Com parceiros de segurança: em situações de investigação de fraude, uso indevido ou crimes cibernéticos.
+
+Em todos os casos, o compartilhamento será limitado ao estritamente necessário.
+
+
+4. Como protegemos seus dados
+O Alugae adota medidas de segurança compatíveis com as melhores práticas de mercado, incluindo:
+      * Criptografia de dados sensíveis.
+      * Armazenamento em servidores seguros.
+      * Monitoramento contínuo contra acessos não autorizados.
+      * Políticas internas de controle de acesso aos dados.
+Apesar de todos os cuidados, nenhum sistema digital é 100% imune. Por isso, incentivamos que o usuário também adote medidas de segurança, como não compartilhar senhas e manter dispositivos atualizados.
+
+
+5. Direitos do usuário (LGPD)
+De acordo com a LGPD, você possui os seguintes direitos em relação aos seus dados pessoais:
+      * Confirmação da existência de tratamento – saber se o Alugae possui dados seus.
+      * Acesso aos dados – obter uma cópia dos dados armazenados.
+      * Correção de dados incompletos, inexatos ou desatualizados.
+      * Anonimização, bloqueio ou exclusão de dados desnecessários ou excessivos.
+      * Portabilidade dos dados a outro fornecedor de serviço.
+      * Revogação do consentimento a qualquer momento, quando o tratamento se basear nele.
+      * Exclusão da conta e de todos os dados relacionados, ressalvadas as obrigações legais de armazenamento.
+Para exercer seus direitos, basta enviar solicitação para o nosso canal de atendimento: [e-mail oficial].
+
+
+6. Retenção dos dados
+Os dados pessoais serão mantidos apenas pelo período necessário para:
+      * Cumprimento das finalidades descritas nesta Política.
+      * Cumprimento de obrigações legais e regulatórias (ex.: exigências fiscais).
+      * Preservação de direitos em eventual processo judicial ou administrativo.
+Após esse período, os dados serão anonimizados ou excluídos de forma segura.
+7. Uso de cookies e tecnologias similares
+O Alugae poderá utilizar cookies e ferramentas de rastreamento para:
+      * Manter o usuário autenticado.
+      * Memorizar preferências de navegação.
+      * Coletar estatísticas de uso da plataforma.
+      * Oferecer conteúdo personalizado.
+O usuário pode configurar seu navegador para bloquear cookies, mas isso pode impactar o funcionamento da plataforma.
+
+
+8. Alterações desta Política
+O Alugae pode atualizar esta Política de Privacidade a qualquer momento, especialmente para refletir mudanças legais, regulatórias ou tecnológicas. Sempre que houver alteração relevante, notificaremos os usuários por e-mail ou dentro do aplicativo.
+9. Contato
+Em caso de dúvidas ou solicitações relacionadas à privacidade e ao uso de dados, entre em contato: sac.alugae.mobi

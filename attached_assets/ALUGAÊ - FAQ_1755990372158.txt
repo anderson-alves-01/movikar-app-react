@@ -1,0 +1,63 @@
+﻿Categoria: Geral
+1. O Alugae é uma locadora de carros?
+Não. O Alugae é uma plataforma de intermediação. Nós conectamos locadores (pessoas que têm carros disponíveis) com locatários (pessoas que querem alugar). Não possuímos frota própria e não participamos da negociação.
+2. O preço do carro pode ser negociado?
+Não. O valor exibido no anúncio é definido pelo locador e é fixo. Isso evita discussões e torna o processo mais objetivo.
+3. Como funciona o aluguel de carros pela plataforma Alugae?
+O Alugae conecta locadores (donos de veículos) a locatários (pessoas que desejam alugar). O locatário compra moedas dentro do app, escolhe o carro de interesse e usa as moedas para liberar o contato do locador. A partir desse momento, as partes tratam diretamente da locação. A plataforma não interfere nas condições de uso do veículo, sendo apenas responsável pela intermediação inicial.
+4. O Alugae garante o veículo ou o pagamento da locação?
+Não. O Alugae atua apenas como facilitador de contato entre locador e locatário. Toda a negociação, contrato, pagamento e uso do veículo é de responsabilidade das partes envolvidas.
+5. O Alugae é responsável por danos ao veículo ou problemas entre as partes?
+Não. A plataforma atua exclusivamente como intermediadora, sem responsabilidade por mau uso, acidentes, multas ou qualquer divergência entre locador e locatário. Para maior segurança, recomendamos contratar seguro e formalizar contrato entre as partes.
+
+
+Categoria: Para Locadores (Proprietários)
+6. Preciso pagar para anunciar um carro?
+Depende. O primeiro carro é gratuito. Se quiser anunciar mais veículos, será necessário contratar um dos planos pagos (Premium ou Enterprise), que oferecem benefícios extras, como relatórios avançados e maior visibilidade dos anúncios.
+7. Quais documentos o locador precisa apresentar para anunciar seu carro?
+ O locador deve fornecer:
+* Documento do veículo atualizado (CRLV);
+* Foto legível do carro;
+
+8. Quais são os planos disponíveis para locadores?
+O Alugae funciona no modelo freemium, oferecendo diferentes planos:
+   * Básico (Gratuito): permite cadastrar até 1 carro, com funcionalidades básicas.
+   * Premium (R$39,90/ mês): até 3 carros, direito a destaque Premium por 3 dias, relatórios avançados e suporte por e-mail.
+   * Enterprise (R$149,90/ mês): anúncios ilimitados, destaque Premium por 7 dias, integração via API, suporte via WhatsApp e gestão de frotas.
+
+9. Posso anunciar mais de um carro no plano gratuito?
+Não. O plano gratuito (Básico) permite apenas 1 carro ativo. Para quem deseja anunciar mais veículos, é necessário migrar para o plano Premium ou Enterprise.
+10. O que significa colocar um anúncio em “Destaque”?
+Anúncios destacados aparecem no topo da lista de resultados. É possível destacar um anúncio na página inicial ou em uma categoria específica, pagando um valor adicional por tempo limitado.
+11. Posso alterar meu plano de assinatura a qualquer momento?
+Sim. Você pode fazer upgrade ou downgrade do seu plano de acordo com suas necessidades. A mudança passa a valer na próxima cobrança, conforme o ciclo contratado.
+12. O preço dos anúncios é negociável entre locador e locatário?
+Não. O valor exibido no anúncio é fixo e não pode ser alterado ou negociado entre as partes.
+
+
+Categoria: Para Locatários
+13. Como funciona a compra de moedas?
+O usuário adquire moedas dentro do app, utilizando o sistema seguro de pagamentos Stripe. Cada vez que desejar liberar o contato de um locador, basta utilizar suas moedas.
+14. O que são as moedas e como elas funcionam?
+As moedas são a forma de liberar o contato do locador dentro da plataforma. O locatário compra moedas e, ao utilizá-las, tem acesso ao telefone do anúncio escolhido para finalizar a negociação diretamente com o dono do carro.
+15. Posso estornar a compra de moedas?
+Não. As moedas compradas não são reembolsáveis. Por isso, é importante avaliar bem antes de realizar a compra.
+16. Minhas moedas expiram?
+Não. As moedas não têm prazo de validade e podem ser utilizadas a qualquer momento, desde que a conta do usuário esteja ativa e regular.
+17. Quais documentos o locatário precisa apresentar para alugar um carro?
+O locatário deve possuir CNH válida e em seu nome, além de enviar foto legível do documento no momento da solicitação de contato. Sem esse envio, não será possível prosseguir.
+18. O valor do aluguel pode ser negociado diretamente com o dono do carro?
+Não. O preço exibido na plataforma é fixo e inegociável, garantindo transparência e evitando divergências.
+19. Como funciona o pagamento do aluguel?
+O pagamento é feito direto para o proprietário após a negociação de datas e local de entrega do carro dentro do app.
+20. A plataforma faz reembolso em caso de problema na locação?
+Não. O Alugae atua apenas como intermediador entre locadores e locatários. Reforçamos a importância das melhores práticas recomendadas (como seguro, contrato e verificação de documentos) para garantir a segurança da negociação.
+
+
+Categoria: Suporte e Conta
+21. Como faço para excluir minha conta?
+Você pode solicitar a exclusão da sua conta diretamente pelo aplicativo, na área de configurações do perfil. A exclusão é definitiva e remove todas as informações associadas, incluindo anúncios ativos. Recomendamos concluir ou cancelar eventuais locações antes de solicitar a exclusão.
+22. Posso reativar minha conta depois de excluí-la?
+Não. A exclusão da conta é permanente. Caso queira voltar a usar a plataforma, será necessário criar um novo cadastro.
+23. Como entro em contato com o suporte do Alugae?
+Você pode falar com nossa equipe pela página de contato do site ou diretamente pelo aplicativo, na aba de suporte. O tempo de resposta varia conforme o plano de assinatura do locador.

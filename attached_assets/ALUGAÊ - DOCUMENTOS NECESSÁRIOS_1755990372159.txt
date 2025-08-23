@@ -1,0 +1,13 @@
+﻿DOCUMENTOS NECESSÁRIOS
+A segurança é prioridade no Alugae. Para proteger tanto quem aluga quanto quem disponibiliza o carro, alguns documentos são obrigatórios no processo:
+* Para o Locador (quem anuncia o carro):
+
+   * Documento de propriedade do veículo em nome próprio ou autorização legal para alugá-lo.
+
+   * CNH válida, confirmando que está habilitado para dirigir e alugar veículos.
+
+      * Para o Locatário (quem vai alugar o carro):
+
+         * CNH válida, compatível com a categoria do veículo.
+
+Em alguns casos, o Alugae poderá solicitar o envio digitalizado desses documentos dentro da própria plataforma, como forma de validar as informações e aumentar a segurança de todos.

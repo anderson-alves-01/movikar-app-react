@@ -1,0 +1,14 @@
+﻿COMO ALUGAR?
+Alugar um carro pelo Alugae foi pensado para ser um processo rápido, transparente e seguro, eliminando a burocracia que geralmente existe em locadoras tradicionais. Nossa proposta é dar autonomia para que locadores e locatários se conectem diretamente, utilizando a tecnologia como facilitadora.
+Veja como funciona passo a passo:
+1. Crie sua conta gratuita no aplicativo em poucos minutos. Basta informar seus dados pessoais, aceitar os termos de uso e já terá acesso à plataforma.
+
+2. Navegue pelos anúncios de carros disponíveis de acordo com sua necessidade. É possível filtrar por categoria, localização e outras preferências.
+
+3. Adquira moedas dentro do aplicativo de forma simples e segura (pagamento processado via Stripe). As moedas funcionam como créditos que permitem liberar o telefone do locador.
+
+4. Utilize suas moedas para liberar o contato do proprietário do carro que deseja alugar. Assim, você poderá falar diretamente com ele para combinar os detalhes da locação.
+
+5. Finalize a negociação fora da plataforma, diretamente com o proprietário do veículo.
+
+Importante: Os preços exibidos em cada anúncio são definidos pelo próprio locador e são fixos, ou seja, não existe negociação dentro do aplicativo. Isso garante mais clareza e evita divergências.
