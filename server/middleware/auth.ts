@@ -2,7 +2,13 @@ import { Request, Response, NextFunction } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { storage } from '../storage';
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  console.error('❌ CRITICAL SECURITY ERROR: JWT_SECRET environment variable is required');
+  console.error('❌ Authentication middleware cannot function without a secure JWT secret');
+  process.exit(1);
+}
 
 interface AuthRequest extends Request {
   user?: any;

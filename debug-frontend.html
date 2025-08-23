@@ -66,10 +66,10 @@
         
         function setCookiesManually() {
             log('Setting cookies manually...');
-            // Set the cookies from the curl response
-            document.cookie = 'token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTc1NDQxOTUyMywiZXhwIjoxNzU0NDIwNDIzfQ.a8sjXzz9s-YeTWMJUm_CEjioLiSYiVHTnNfUfzcNcWE; path=/; max-age=900';
-            document.cookie = 'refresh_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTc1NDQxOTUyMywiZXhwIjoxNzU1MDI0MzIzfQ.aCtm_fzD4OdXOCUweGpA8pLJkZMbwptLshkTRFzgR1Q; path=/; max-age=604800';
-            log('Cookies set manually');
+            // Security Note: Never hardcode real tokens in production files
+            log('⚠️ Security Warning: This function requires manual token input');
+            log('📝 Use browser console to set cookies with actual tokens if needed for testing');
+            log('Example: document.cookie = "token=YOUR_TOKEN_HERE; path=/; max-age=900"');
         }
         
         function clearAllCache() {

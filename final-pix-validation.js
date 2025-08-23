@@ -6,7 +6,14 @@
  */
 
 const API_BASE = 'http://localhost:5000';
-const adminToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjM3LCJpYXQiOjE3NTQ5MTk5NjEsImV4cCI6MTc1NDkyMDg2MX0.zCKZWNcovOSCNqxx7A2kTd3w8ks3wg6yhWxYc57NhBA';
+// Security Note: Use environment variables for tokens in production
+const adminToken = process.env.TEST_ADMIN_TOKEN;
+
+if (!adminToken) {
+  console.error('❌ Error: TEST_ADMIN_TOKEN not configured!');
+  console.error('Set TEST_ADMIN_TOKEN environment variable');
+  process.exit(1);
+}
 
 async function apiCall(method, endpoint, data = null, token = null) {
   const url = `${API_BASE}${endpoint}`;

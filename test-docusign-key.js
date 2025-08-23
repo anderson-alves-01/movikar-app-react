@@ -15,7 +15,8 @@ if (!privateKeyEnv) {
 
 console.log('✅ Chave encontrada no ambiente');
 console.log('📏 Comprimento:', privateKeyEnv.length);
-console.log('🔤 Primeiros 50 chars:', privateKeyEnv.substring(0, 50) + '...');
+// Security Note: Never log private key content
+console.log('🔤 Key format validated (content hidden for security)');
 
 // Formatar chave adicionando quebras de linha se necessário
 let formattedKey = privateKeyEnv;

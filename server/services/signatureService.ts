@@ -139,6 +139,10 @@ class D4SignService {
   constructor() {
     this.apiKey = process.env.D4SIGN_API_KEY || "";
     this.cryptKey = process.env.D4SIGN_CRYPT_KEY || "";
+    
+    if (!this.apiKey || !this.cryptKey) {
+      console.warn('⚠️ D4Sign credentials not configured - using mock mode');
+    }
   }
 
   async createDocument(contract: ContractForSignature, pdfUrl: string): Promise<SignaturePlatformResponse> {
@@ -184,8 +188,9 @@ class DocuSignService {
     this.apiClient = new docusign.ApiClient();
     this.apiClient.setBasePath(baseDomain);
 
+    // Validate critical DocuSign credentials
     if (!this.integrationKey || !this.userId || !this.privateKey) {
-      console.warn("🟡 DocuSign credentials not configured - using mock mode");
+      console.warn("⚠️ DocuSign credentials not fully configured - using mock mode");
     } else {
       console.log("✅ DocuSign credentials configured - using real API");
       console.log(`🔑 Integration Key: ${this.integrationKey.substring(0, 10)}...`);

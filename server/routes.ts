@@ -82,7 +82,13 @@ let currentAdminSettings: AdminSettings = {
   annualDiscountPercentage: 15,
 };
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  console.error('❌ CRITICAL SECURITY ERROR: JWT_SECRET environment variable is required');
+  console.error('❌ Application cannot start without a secure JWT secret');
+  process.exit(1);
+}
 
 // Configure multer for file uploads
 const upload = multer({
@@ -105,7 +111,7 @@ const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 if (!stripeSecretKey) {
   console.warn('Warning: STRIPE_SECRET_KEY not found. Stripe functionality will be disabled.');
 } else {
-  console.log('✅ Stripe secret key loaded:', stripeSecretKey.substring(0, 10) + '...');
+  console.log('✅ Stripe secret key loaded: [HIDDEN FOR SECURITY]');
 }
 
 let stripe: Stripe | null = null;
@@ -119,12 +125,18 @@ if (stripeSecretKey) {
   }
 }
 
-// DocuSign configuration
-const DOCUSIGN_INTEGRATION_KEY = process.env.DOCUSIGN_INTEGRATION_KEY || 'mock-integration-key';
-const DOCUSIGN_USER_ID = process.env.DOCUSIGN_USER_ID || 'mock-user-id';
-const DOCUSIGN_ACCOUNT_ID = process.env.DOCUSIGN_ACCOUNT_ID || 'mock-account-id';
-const DOCUSIGN_RSA_PRIVATE_KEY = process.env.DOCUSIGN_RSA_PRIVATE_KEY || 'mock-private-key';
+// DocuSign configuration with proper validation
+const DOCUSIGN_INTEGRATION_KEY = process.env.DOCUSIGN_INTEGRATION_KEY;
+const DOCUSIGN_USER_ID = process.env.DOCUSIGN_USER_ID;
+const DOCUSIGN_ACCOUNT_ID = process.env.DOCUSIGN_ACCOUNT_ID;
+const DOCUSIGN_RSA_PRIVATE_KEY = process.env.DOCUSIGN_RSA_PRIVATE_KEY;
 const DOCUSIGN_BASE_URI = process.env.DOCUSIGN_BASE_URI || 'https://demo.docusign.net/restapi';
+
+// Validate critical DocuSign environment variables
+const hasDocuSignConfig = DOCUSIGN_INTEGRATION_KEY && DOCUSIGN_USER_ID && DOCUSIGN_ACCOUNT_ID && DOCUSIGN_RSA_PRIVATE_KEY;
+if (!hasDocuSignConfig) {
+  console.warn('⚠️ DocuSign credentials not fully configured - some features will use mock mode');
+}
 
 // DocuSign envelope creation function using the signature service
 async function createDocuSignEnvelope(params: {
@@ -342,8 +354,8 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
         // Set new cookies with consistent settings
         const cookieOptions = {
           httpOnly: true,
-          secure: false, // Set to false for development
-          sameSite: 'lax' as const,
+          secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+          sameSite: process.env.NODE_ENV === 'production' ? 'strict' as const : 'lax' as const,
           path: '/',
           domain: undefined // Let browser handle domain
         };
