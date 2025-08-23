@@ -7,9 +7,16 @@
 
 const API_BASE = 'http://localhost:5000';
 
-// Tokens de teste
-const adminToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjM3LCJpYXQiOjE3NTQ5MTk5NjEsImV4cCI6MTc1NDkyMDg2MX0.zCKZWNcovOSCNqxx7A2kTd3w8ks3wg6yhWxYc57NhBA';
-const ownerToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjM2LCJpYXQiOjE3NTQ5MTk3MzQsImV4cCI6MTc1NDkyMDYzNH0.gfn5uLEjmcFUQBY_yTJhd2W2xOCv3jex5ryYErqX5Dw';
+// Tokens de teste - usar variáveis de ambiente por segurança
+const adminToken = process.env.TEST_ADMIN_TOKEN;
+const ownerToken = process.env.TEST_OWNER_TOKEN;
+
+// Verificar se os tokens de teste estão configurados
+if (!adminToken || !ownerToken) {
+  console.error('❌ Erro: Tokens de teste não configurados!');
+  console.error('Configure as variáveis de ambiente TEST_ADMIN_TOKEN e TEST_OWNER_TOKEN');
+  process.exit(1);
+}
 
 async function apiCall(method, endpoint, data = null, token = null) {
   const url = `${API_BASE}${endpoint}`;
