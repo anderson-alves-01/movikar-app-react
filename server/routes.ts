@@ -6370,15 +6370,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         plan = await storage.createSubscriptionPlan({
           name: planName,
           displayName: planName === 'essencial' ? 'Plano Essencial' : 'Plano Plus',
-          description: planName === 'essencial' ? 'Anúncios ilimitados com destaque prata' : 'Anúncios ilimitados com destaque diamante',
+          description: planName === 'essencial' ? 'Para locadores que querem crescer' : 'Para profissionais e gestão de frotas',
           monthlyPrice: monthlyPrice.toString(),
           annualPrice: annualPrice.toString(),
-          maxVehicleListings: -1, // unlimited
+          maxVehicleListings: planName === 'essencial' ? 10 : 50, // Limite baseado no plano
           highlightType: planName === 'essencial' ? 'prata' : 'diamante',
-          highlightCount: planName === 'essencial' ? 3 : 10,
+          highlightCount: planName === 'essencial' ? 5 : 20,
           features: planName === 'essencial' 
-            ? ['Anúncios ilimitados', 'Destaque prata (3x mais visualizações)', 'Suporte prioritário']
-            : ['Anúncios ilimitados', 'Destaque diamante (10x mais visualizações)', 'Suporte VIP', 'Analytics avançados'],
+            ? ['Destaque prata (3x mais visualizações)', 'Relatórios básicos', 'Gestão simples de anúncios', 'Suporte por email']
+            : ['Destaque diamante (10x mais visualizações)', 'Relatórios avançados', 'Gestão completa de frotas', 'Dashboard multiusuário', 'API de integração', 'Suporte prioritário'],
           sortOrder: planName === 'essencial' ? 1 : 2
         });
       }
@@ -6392,14 +6392,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         endDate.setMonth(endDate.getMonth() + 1);
       }
 
-      // Update user subscription info
+      // Update user subscription info with selected vehicle count
+      const planMaxVehicles = plan.maxVehicleListings || 1;
+      const userVehicleCount = Math.min(vehicleCount, planMaxVehicles); // Respeita o limite do plano
+      
       await storage.updateUser(userId, {
         subscriptionPlan: planName,
         subscriptionStatus: 'active',
         subscriptionStartDate: startDate,
         subscriptionEndDate: endDate,
         subscriptionPaymentMethod: paymentMethod,
-        maxVehicleListings: -1, // unlimited
+        maxVehicleListings: userVehicleCount, // Quantidade selecionada pelo usuário
         highlightsAvailable: plan.highlightCount || 0
       });
 

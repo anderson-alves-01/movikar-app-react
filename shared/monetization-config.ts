@@ -17,42 +17,33 @@ export const MONETIZATION_CONFIG = {
       ]
     },
     PREMIUM: {
-      name: 'premium',
-      displayName: 'Premium',
+      name: 'essencial',
+      displayName: 'Plano Essencial',
       monthlyPrice: 39.90,
       annualPrice: 399.90,
-      maxVehicleListings: -1, // Ilimitado
+      maxVehicleListings: 10, // Até 10 veículos
       highlightType: 'prata',
       features: [
-        'Anúncios ilimitados',
-        'Destaque nos resultados com selo "Premium"',
-        'Topo das buscas',
-        'Relatórios avançados',
-        'Taxa de ocupação',
-        'Períodos de alta demanda',
-        'Comparação de preços',
-        'Gestão inteligente de disponibilidade',
-        'Sincronização com Google Calendar',
-        'Bloqueio automático de datas reservadas',
-        'Cálculo personalizado de diárias',
-        'Preços dinâmicos para feriados e eventos'
+        'Destaque prata (3x mais visualizações)',
+        'Relatórios básicos',
+        'Gestão simples de anúncios',
+        'Suporte por email'
       ]
     },
     ENTERPRISE: {
-      name: 'enterprise',
-      displayName: 'Enterprise',
+      name: 'plus',
+      displayName: 'Plano Plus',
       monthlyPrice: 149.90,
       annualPrice: 1499.90,
-      maxVehicleListings: -1, // Ilimitado
+      maxVehicleListings: 50, // Até 50 veículos
       highlightType: 'diamante',
       features: [
-        'Tudo do Premium',
+        'Destaque diamante (10x mais visualizações)',
+        'Relatórios avançados',
+        'Gestão completa de frotas',
         'Dashboard multiusuário',
         'API de integração',
-        'Suporte dedicado',
-        'Gestão de frotas',
-        'Relatórios customizados',
-        'Prioridade no suporte'
+        'Suporte prioritário'
       ]
     }
   },
