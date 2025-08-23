@@ -19,7 +19,18 @@ function logTest(name, passed, details = '') {
 
 function testSQL(query, description) {
   try {
-    const result = execSync(`psql "${process.env.DATABASE_URL}" -t -c "${query}"`, { 
+    // Validate DATABASE_URL exists and is properly formatted
+    if (!process.env.DATABASE_URL || !process.env.DATABASE_URL.startsWith('postgresql://')) {
+      throw new Error('Invalid or missing DATABASE_URL');
+    }
+    
+    // Sanitize query - only allow basic SELECT and COUNT queries for safety
+    const sanitizedQuery = query.replace(/[`;\\]/g, '').trim();
+    if (!sanitizedQuery.match(/^(SELECT|select).*(COUNT|count|FROM|from).*$/)) {
+      throw new Error('Only SELECT queries with COUNT allowed for security');
+    }
+    
+    const result = execSync(`psql "${process.env.DATABASE_URL}" -t -c "${sanitizedQuery}"`, { 
       encoding: 'utf8', 
       timeout: 5000 
     });
@@ -31,7 +42,18 @@ function testSQL(query, description) {
 
 function testEndpoint(url) {
   try {
-    const response = execSync(`curl -s -w "%{http_code}" "${url}"`, {
+    // Validate URL for security - only allow localhost endpoints
+    if (!url || typeof url !== 'string') {
+      throw new Error('Invalid URL provided');
+    }
+    
+    const urlPattern = /^https?:\/\/localhost:\d+\/api\/.+$/;
+    if (!urlPattern.test(url)) {
+      throw new Error('Only localhost API endpoints allowed for security');
+    }
+    
+    // Use safer curl with timeouts and limits
+    const response = execSync(`curl -s -f --max-time 5 --max-filesize 1048576 -w "%{http_code}" "${url}"`, {
       encoding: 'utf8',
       timeout: 5000
     });
@@ -65,8 +87,14 @@ async function runFinalIntegrationTest() {
   let foundTables = 0;
   
   for (const table of tables) {
+    // Validate table name to prevent injection - only allow alphanumeric and underscores
+    if (!/^[a-z_]+$/.test(table)) {
+      log(`   ⚠️ Skipping invalid table name: ${table}`);
+      continue;
+    }
+    
     const tableTest = testSQL(
-      `SELECT COUNT(*) FROM information_schema.tables WHERE table_name = '${table}';`,
+      `SELECT COUNT(*) FROM information_schema.tables WHERE table_name = '${table}'`,
       `Verificar tabela ${table}`
     );
     
@@ -88,10 +116,19 @@ async function runFinalIntegrationTest() {
   totalTests++;
   log('\n\x1b[34m🧪 Teste 2: Verificação de Dados nas Tabelas\x1b[0m');
   
-  // Primeiro, popula os dados
+  // Primeiro, popula os dados de forma segura
   try {
-    execSync('tsx populate-monetization-data.ts', { encoding: 'utf8', timeout: 10000 });
-    log('   📊 Dados populados com sucesso');
+    // Validate file exists before executing
+    if (fs.existsSync('populate-monetization-data.ts')) {
+      execSync('tsx populate-monetization-data.ts', { 
+        encoding: 'utf8', 
+        timeout: 10000,
+        cwd: process.cwd() // Ensure we're in the right directory
+      });
+      log('   📊 Dados populados com sucesso');
+    } else {
+      log('   ⚠️ Arquivo populate-monetization-data.ts não encontrado');
+    }
   } catch (error) {
     log('   ⚠️ Erro ao popular dados, verificando dados existentes...');
   }
@@ -100,7 +137,13 @@ async function runFinalIntegrationTest() {
   const dataCounts = [];
   
   for (const table of tables) {
-    const countTest = testSQL(`SELECT COUNT(*) FROM ${table};`, `Contar registros em ${table}`);
+    // Validate table name to prevent injection
+    if (!/^[a-z_]+$/.test(table)) {
+      dataCounts.push(`${table}: nome inválido`);
+      continue;
+    }
+    
+    const countTest = testSQL(`SELECT COUNT(*) FROM ${table}`, `Contar registros em ${table}`);
     if (countTest.success) {
       const count = parseInt(countTest.result);
       dataCounts.push(`${table}: ${count}`);
