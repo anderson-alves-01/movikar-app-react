@@ -266,12 +266,40 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // Users
   async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
+    const [user] = await db.select({
+      id: users.id,
+      email: users.email,
+      name: users.name,
+      role: users.role,
+      pixKey: users.pixKey,
+      location: users.location,
+      profilePicture: users.profilePicture,
+      phone: users.phone,
+      pushToken: users.pushToken,
+      pushPlatform: users.pushPlatform,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt
+      // Explicitly exclude password field for security
+    }).from(users).where(eq(users.id, id));
     return user || undefined;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
+    const [user] = await db.select({
+      id: users.id,
+      email: users.email,
+      name: users.name,
+      role: users.role,
+      pixKey: users.pixKey,
+      location: users.location,
+      profilePicture: users.profilePicture,
+      phone: users.phone,
+      pushToken: users.pushToken,
+      pushPlatform: users.pushPlatform,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt
+      // Explicitly exclude password field for security
+    }).from(users).where(eq(users.email, email));
     return user || undefined;
   }
 
@@ -296,7 +324,34 @@ export class DatabaseStorage implements IStorage {
   // Vehicles
   async getVehicle(id: number): Promise<VehicleWithOwner | undefined> {
     const [result] = await db
-      .select()
+      .select({
+        // Vehicle fields
+        id: vehicles.id,
+        ownerId: vehicles.ownerId,
+        brand: vehicles.brand,
+        model: vehicles.model,
+        year: vehicles.year,
+        category: vehicles.category,
+        pricePerDay: vehicles.pricePerDay,
+        location: vehicles.location,
+        description: vehicles.description,
+        features: vehicles.features,
+        images: vehicles.images,
+        isAvailable: vehicles.isAvailable,
+        status: vehicles.status,
+        fuelType: vehicles.fuelType,
+        transmission: vehicles.transmission,
+        seats: vehicles.seats,
+        doors: vehicles.doors,
+        createdAt: vehicles.createdAt,
+        updatedAt: vehicles.updatedAt,
+        // Owner fields (excluding password)
+        ownerName: users.name,
+        ownerEmail: users.email,
+        ownerPhone: users.phone,
+        ownerLocation: users.location,
+        ownerProfilePicture: users.profilePicture
+      })
       .from(vehicles)
       .leftJoin(users, eq(vehicles.ownerId, users.id))
       .where(eq(vehicles.id, id));
@@ -304,8 +359,34 @@ export class DatabaseStorage implements IStorage {
     if (!result) return undefined;
 
     return {
-      ...result.vehicles,
-      owner: result.users!,
+      id: result.id,
+      ownerId: result.ownerId,
+      brand: result.brand,
+      model: result.model,
+      year: result.year,
+      category: result.category,
+      pricePerDay: result.pricePerDay,
+      location: result.location,
+      description: result.description,
+      features: result.features,
+      images: result.images,
+      isAvailable: result.isAvailable,
+      status: result.status,
+      fuelType: result.fuelType,
+      transmission: result.transmission,
+      seats: result.seats,
+      doors: result.doors,
+      createdAt: result.createdAt,
+      updatedAt: result.updatedAt,
+      owner: {
+        id: result.ownerId,
+        name: result.ownerName!,
+        email: result.ownerEmail!,
+        phone: result.ownerPhone,
+        location: result.ownerLocation,
+        profilePicture: result.ownerProfilePicture,
+        role: 'owner' as const
+      } as User,
     };
   }
 
@@ -1109,11 +1190,29 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUsersWithPushTokens(userIds: number[]): Promise<(User & { pushToken?: string })[]> {
+    // Validate input to prevent injection
+    const validUserIds = userIds.filter(id => Number.isInteger(id) && id > 0);
+    if (validUserIds.length === 0) return [];
+
     const usersList = await db
-      .select()
+      .select({
+        id: users.id,
+        email: users.email,
+        name: users.name,
+        role: users.role,
+        pixKey: users.pixKey,
+        location: users.location,
+        profilePicture: users.profilePicture,
+        phone: users.phone,
+        pushToken: users.pushToken,
+        pushPlatform: users.pushPlatform,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt
+        // Exclude password field
+      })
       .from(users)
       .where(and(
-        inArray(users.id, userIds),
+        inArray(users.id, validUserIds),
         isNotNull(users.pushToken)
       ));
     
@@ -2047,12 +2146,11 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Award points to referrer
-    // @ts-ignore - Emergency deployment fix
     await this.addRewardTransaction({
       userId: referral.referrerId,
-      type: 'earned',
+      type: 'earned' as const,
       points: referral.rewardPoints || 0,
-      source: 'referral',
+      source: 'referral' as const,
       sourceId: referralId,
       description: 'Recompensa por convidar um amigo',
     });
@@ -2065,7 +2163,6 @@ export class DatabaseStorage implements IStorage {
     });
 
     // Update referrer's referral count
-    // @ts-ignore - Emergency deployment fix
     const rewards = await this.getUserRewards(referral.referrerId);
     if (rewards) {
       await this.updateUserRewards(referral.referrerId, {
@@ -2074,23 +2171,24 @@ export class DatabaseStorage implements IStorage {
       });
     }
   }
-    // @ts-ignore - Emergency deployment fix
 
   // User activity tracking methods
   async trackUserActivity(activity: InsertUserActivity): Promise<UserActivity> {
-    // @ts-ignore - User activity insert with proper typing
+    // Validate and sanitize input data
+    const sanitizedActivity = {
+      userId: Number(activity.userId),
+      activityType: String(activity.activityType).slice(0, 100), // Limit length
+      vehicleId: activity.vehicleId ? Number(activity.vehicleId) : null,
+      userAgent: activity.userAgent ? String(activity.userAgent).slice(0, 500) : null,
+      searchQuery: activity.searchQuery ? String(activity.searchQuery).slice(0, 255) : null,
+      sessionId: activity.sessionId ? String(activity.sessionId).slice(0, 255) : null,
+      ipAddress: activity.ipAddress ? String(activity.ipAddress).slice(0, 45) : null,
+      filters: activity.filters ? JSON.stringify(activity.filters) : null
+    };
+
     const [newActivity] = await db
       .insert(userActivity)
-      .values({
-        userId: activity.userId,
-        activityType: activity.activityType,
-        vehicleId: activity.vehicleId,
-        userAgent: activity.userAgent,
-        searchQuery: activity.searchQuery,
-        sessionId: activity.sessionId,
-        ipAddress: activity.ipAddress,
-        filters: activity.filters as any
-      })
+      .values(sanitizedActivity)
       .returning();
     return newActivity;
   }

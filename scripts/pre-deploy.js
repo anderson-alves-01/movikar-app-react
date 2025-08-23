@@ -165,7 +165,7 @@ class PreDeployment {
     
     try {
       const healthCheck = await this.executeCommand(
-        'curl -f http://localhost:5000/api/health || echo "Server not running"',
+        'curl -f --max-time 10 "http://localhost:5000/api/health" || echo "Server not running"',
         'Health check da aplicação'
       );
 
@@ -186,7 +186,7 @@ class PreDeployment {
       this.logInfo(`Tentativa de teste ${testAttempt}/${config.retryAttempts}`);
 
       testResult = await this.executeCommand(
-        'npx cypress run --headless --browser chrome --reporter json --reporter-options output=cypress/results/test-results.json',
+        'npx cypress run --headless --browser chrome --reporter json --reporter-options "output=cypress/results/test-results.json"',
         `Execução dos testes Cypress (tentativa ${testAttempt})`,
         config.testTimeout
       );

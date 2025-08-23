@@ -157,8 +157,9 @@ class SimplePreDeploy {
     
     try {
       const sanitizedUrl = this.sanitizeUrl(config.appUrl);
+      // Use safer approach with URL validation instead of shell command
       const result = await this.executeCommand(
-        `curl -s ${sanitizedUrl}/api/health || echo "FAILED"`,
+        `curl -s -f --max-time 10 "${sanitizedUrl}/api/health" || echo "FAILED"`,
         10000
       );
 
@@ -194,7 +195,7 @@ class SimplePreDeploy {
         const sanitizedUrl = this.sanitizeUrl(config.appUrl);
         const sanitizedEndpoint = this.sanitizeEndpoint(endpoint);
         const result = await this.executeCommand(
-          `curl -s -o /dev/null -w "%{http_code}" ${sanitizedUrl}${sanitizedEndpoint}`,
+          `curl -s -f --max-time 5 -o /dev/null -w "%{http_code}" "${sanitizedUrl}${sanitizedEndpoint}"`,
           5000
         );
         

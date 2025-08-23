@@ -95,9 +95,11 @@ async function main() {
   let missingFiles = 0;
   for (const file of criticalFiles) {
     try {
-      // Escape file path to prevent potential shell injection
-      const escapedFile = file.replace(/[^a-zA-Z0-9._/-]/g, '\\$&');
-      await executeCommand(`test -f "${escapedFile}"`);
+      // Validate file path to prevent injection - only allow safe characters
+      if (!/^[a-zA-Z0-9._/-]+$/.test(file)) {
+        throw new Error(`Invalid file path: ${file}`);
+      }
+      await executeCommand(`test -f "${file}"`);
       logSuccess(`Found: ${file}`);
     } catch (error) {
       logError(`Missing: ${file}`);
