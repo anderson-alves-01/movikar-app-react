@@ -6095,20 +6095,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return monthlyPrice;
       };
 
-      if (planName === 'essencial') {
+      // Normalize plan name to support both Portuguese and English
+      const normalizedPlanName = planName === 'essential' ? 'essencial' : planName;
+
+      if (normalizedPlanName === 'essencial') {
         const monthlyPrice = calculatePriceWithVehicleCount('essencial', vehicleCount);
         const annualDiscount = adminSettings?.annualDiscountPercentage ? parseFloat(adminSettings.annualDiscountPercentage.toString()) : 20;
         priceInCents = paymentMethod === 'annual' 
           ? Math.round((monthlyPrice * 12 * (1 - annualDiscount / 100)) * 100)
           : Math.round(monthlyPrice * 100);
-      } else if (planName === 'plus') {
+      } else if (normalizedPlanName === 'plus') {
         const monthlyPrice = calculatePriceWithVehicleCount('plus', vehicleCount);
         const annualDiscount = adminSettings?.annualDiscountPercentage ? parseFloat(adminSettings.annualDiscountPercentage.toString()) : 20;
         priceInCents = paymentMethod === 'annual' 
           ? Math.round((monthlyPrice * 12 * (1 - annualDiscount / 100)) * 100)
           : Math.round(monthlyPrice * 100);
       } else {
-        return res.status(400).json({ message: "Plano inválido" });
+        return res.status(400).json({ message: "Plano inválido. Planos aceitos: 'essential', 'essencial', 'plus'" });
       }
 
       console.log(`💰 Original price: ${priceInCents} cents for ${planName} (${vehicleCount} vehicles)`);
@@ -6129,7 +6132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Update user subscription directly without payment
         await storage.updateUser(userId, {
-          subscriptionPlan: planName,
+          subscriptionPlan: normalizedPlanName,
           subscriptionStatus: 'active',
           subscriptionStartDate: new Date(),
           subscriptionEndDate: paymentMethod === 'annual' 
@@ -6211,7 +6214,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
-      // Create recurring subscription instead of one-time payment intent
+      // Create recurring subscription with proper payment setup
       const subscription = await stripe.subscriptions.create({
         customer: customerId,
         items: [
@@ -6221,9 +6224,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ],
         payment_behavior: 'default_incomplete',
         payment_settings: { 
-          save_default_payment_method: 'on_subscription' 
+          save_default_payment_method: 'on_subscription',
+          payment_method_types: ['card']
         },
         expand: ['latest_invoice.payment_intent'],
+        collection_method: 'charge_automatically',
         metadata: {
           userId: userId.toString(),
           planName,
@@ -6235,20 +6240,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('✅ Stripe Subscription created:', subscription.id);
       
-      // Get the payment intent from the subscription
-      const paymentIntent = subscription.latest_invoice?.payment_intent;
-      if (!paymentIntent || typeof paymentIntent === 'string') {
-        throw new Error('Failed to get payment intent from subscription');
+      // Alternative approach: Create a setup intent for the subscription
+      console.log('🔄 Creating Setup Intent for subscription payment setup...');
+      const setupIntent = await stripe.setupIntents.create({
+        customer: customerId,
+        payment_method_types: ['card'],
+        usage: 'off_session',
+        metadata: {
+          subscriptionId: subscription.id,
+          userId: userId.toString(),
+          planName,
+          amount: priceInCents.toString()
+        }
+      });
+      
+      console.log('✅ Setup Intent created:', setupIntent.id);
+      
+      if (!setupIntent.client_secret) {
+        throw new Error('Failed to get setup intent client secret');
       }
 
       res.json({
-        clientSecret: paymentIntent.client_secret,
+        clientSecret: setupIntent.client_secret,
         amount: priceInCents,
         planName,
         paymentMethod,
         couponApplied: couponCode || null,
         discountAmount: discountAmount || 0,
-        subscriptionId: subscription.id // ✅ CRÍTICO: Include Stripe Subscription ID
+        subscriptionId: subscription.id,
+        setupIntentId: setupIntent.id,
+        type: 'setup_intent' // Indicate this is a setup intent for subscription
       });
 
     } catch (error: any) {
