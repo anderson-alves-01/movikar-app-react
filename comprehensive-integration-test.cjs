@@ -33,7 +33,7 @@ function logTest(name, passed, details = '', duration = 0) {
 // Função para executar comandos TypeScript
 function runTSCommand(code) {
   try {
-    const result = execSync(`tsx -e "${code.replace(/"/g, '\\"')}"`, {
+    const result = execSync('tsx', ['-e', code], {
       encoding: 'utf8',
       timeout: 10000
     });
@@ -46,7 +46,7 @@ function runTSCommand(code) {
 // Função para testar endpoint HTTP
 function testEndpoint(url, expectedStatus = 200) {
   try {
-    const response = execSync(`curl -s -w "%{http_code}" "${url}"`, {
+    const response = execSync('curl', ['-s', '-w', '%{http_code}', url], {
       encoding: 'utf8',
       timeout: 5000
     });
@@ -137,7 +137,7 @@ async function runComprehensiveTests() {
   
   // Primeiro popula os dados
   try {
-    execSync('tsx populate-monetization-data.ts', { encoding: 'utf8', timeout: 15000 });
+    execSync('tsx', ['populate-monetization-data.ts'], { encoding: 'utf8', timeout: 15000 });
   } catch (error) {
     log('Erro ao popular dados, continuando com teste...');
   }
