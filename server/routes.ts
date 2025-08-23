@@ -6250,6 +6250,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           subscriptionId: subscription.id,
           userId: userId.toString(),
           planName,
+          paymentMethod,
+          vehicleCount: vehicleCount.toString(),
           amount: priceInCents.toString()
         }
       });
@@ -6289,24 +6291,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: "Stripe não está configurado" });
       }
 
-      // Retrieve payment intent
-      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-
-      if (paymentIntent.status !== 'succeeded') {
-        return res.status(400).json({ message: "Pagamento não foi confirmado" });
-      }
-
-      // ✅ VERIFICAÇÃO CRÍTICA: Find the Stripe Subscription associated with this payment
+      // Handle both SetupIntent and PaymentIntent
+      let intentStatus = '';
       let stripeSubscriptionId: string | null = null;
+      let intentData: any;
       
-      // Get subscription from invoice
-      if (paymentIntent.invoice) {
-        const invoice = await stripe.invoices.retrieve(paymentIntent.invoice as string);
-        if (invoice.subscription) {
-          stripeSubscriptionId = invoice.subscription as string;
-          console.log('✅ Found Stripe Subscription ID:', stripeSubscriptionId);
+      if (paymentIntentId.startsWith('seti_')) {
+        // This is a SetupIntent
+        intentData = await stripe.setupIntents.retrieve(paymentIntentId);
+        intentStatus = intentData.status;
+        
+        // For setup intents, we need to get the subscription ID from metadata
+        stripeSubscriptionId = intentData.metadata?.subscriptionId || null;
+        console.log('🔧 SetupIntent status:', intentStatus, 'subscriptionId:', stripeSubscriptionId);
+        
+        if (intentStatus !== 'succeeded') {
+          return res.status(400).json({ message: "Setup de pagamento não foi confirmado" });
+        }
+      } else {
+        // This is a PaymentIntent
+        intentData = await stripe.paymentIntents.retrieve(paymentIntentId);
+        intentStatus = intentData.status;
+        
+        if (intentStatus !== 'succeeded') {
+          return res.status(400).json({ message: "Pagamento não foi confirmado" });
+        }
+        
+        // Get subscription from invoice
+        if (intentData.invoice) {
+          const invoice = await stripe.invoices.retrieve(intentData.invoice as string);
+          if (invoice.subscription) {
+            stripeSubscriptionId = invoice.subscription as string;
+          }
         }
       }
+
+      // Already handled above in the intent processing
 
       // ✅ VERIFICAÇÃO OBRIGATÓRIA: Subscriptions MUST have Stripe ID for recurring payments
       if (!stripeSubscriptionId) {
@@ -6316,11 +6336,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const planName = paymentIntent.metadata.planName;
-      const paymentMethod = paymentIntent.metadata.paymentMethod || 'monthly';
-      const vehicleCount = parseInt(paymentIntent.metadata.vehicleCount || '2');
-      const paidAmountCents = paymentIntent.amount;
-      const paidAmount = (paidAmountCents / 100).toFixed(2);
+      // Extract metadata and amount from the retrieved intent
+      let planName, paymentMethod, vehicleCount, paidAmountCents, paidAmount;
+      
+      if (paymentIntentId.startsWith('seti_')) {
+        // Get metadata from SetupIntent
+        planName = intentData.metadata?.planName;
+        paymentMethod = intentData.metadata?.paymentMethod || 'monthly';
+        vehicleCount = parseInt(intentData.metadata?.vehicleCount || '1');
+        paidAmountCents = parseInt(intentData.metadata?.amount || '0');
+        paidAmount = (paidAmountCents / 100).toFixed(2);
+      } else {
+        // Get metadata from PaymentIntent
+        planName = intentData.metadata.planName;
+        paymentMethod = intentData.metadata.paymentMethod || 'monthly';
+        vehicleCount = parseInt(intentData.metadata.vehicleCount || '1');
+        paidAmountCents = intentData.amount;
+        paidAmount = (paidAmountCents / 100).toFixed(2);
+      }
 
       // Get or create subscription plan
       let plan = await storage.getSubscriptionPlanByName(planName);

@@ -479,7 +479,7 @@ export default function SubscriptionCheckout() {
             amount={finalAmount}
             couponApplied={couponApplied}
             couponDiscountAmount={couponDiscountAmount}
-            type={finalType}
+            type={finalType || type || 'setup_intent'}
           />
         </Elements>
       </div>
