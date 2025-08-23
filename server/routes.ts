@@ -1065,6 +1065,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const APPLE_KEY_ID = process.env.APPLE_KEY_ID;
   const OAUTH_REDIRECT_URI = process.env.OAUTH_REDIRECT_URI || `${process.env.BASE_URL || 'http://localhost:5000'}/api/auth/oauth/callback`;
 
+  // Log OAuth configuration status for debugging
+  console.log('🔧 OAuth Configuration Status:');
+  console.log('  Google OAuth:', !!GOOGLE_CLIENT_ID && !!GOOGLE_CLIENT_SECRET ? '✅ Configured' : '❌ Missing credentials');
+  console.log('  Apple OAuth:', !!APPLE_CLIENT_ID && !!APPLE_PRIVATE_KEY && !!APPLE_TEAM_ID && !!APPLE_KEY_ID ? '✅ Configured' : '❌ Missing credentials');
+  console.log('  Redirect URI:', OAUTH_REDIRECT_URI);
+
   // Authentication routes
   app.post("/api/auth/register", validateUser, handleValidationErrors, async (req: Request, res: Response) => {
     try {
@@ -1297,8 +1303,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // OAuth Routes - Google
   app.get("/api/auth/google", (req, res) => {
-    if (!GOOGLE_CLIENT_ID) {
-      return res.status(500).json({ message: "Google OAuth não configurado" });
+    console.log('🔍 Google OAuth request received');
+    if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+      console.log('❌ Google OAuth missing configuration');
+      return res.redirect(`/auth?error=${encodeURIComponent('Google Sign In não configurado')}`);
     }
 
     const state = Buffer.from(JSON.stringify({
@@ -1318,9 +1326,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // OAuth Routes - Apple
   app.get("/api/auth/apple", (req, res) => {
+    console.log('🍎 Apple OAuth request received');
     if (!APPLE_CLIENT_ID || !APPLE_PRIVATE_KEY || !APPLE_TEAM_ID || !APPLE_KEY_ID) {
-      console.log('❌ Apple OAuth: Missing configuration');
-      return res.redirect(`/auth?error=${encodeURIComponent('Apple Sign In não está disponível no momento')}`);
+      console.log('❌ Apple OAuth: Missing configuration - redirecting to auth with error');
+      return res.redirect(`/auth?error=${encodeURIComponent('Apple Sign In não configurado')}`);
     }
 
     const state = Buffer.from(JSON.stringify({
@@ -1342,31 +1351,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // OAuth Callback Route
   app.all("/api/auth/oauth/callback", async (req, res) => {
     try {
+      console.log('🔄 OAuth callback received:', { method: req.method, query: req.query, body: req.body });
+      
       const { code, state, error: oauthError } = req.method === 'GET' ? req.query : req.body;
 
       if (oauthError) {
-        console.log('❌ OAuth error:', oauthError);
+        console.log('❌ OAuth error from provider:', oauthError);
         return res.redirect(`/auth?error=${encodeURIComponent('Erro na autenticação social')}`);
       }
 
       if (!code || !state) {
+        console.log('❌ OAuth missing parameters:', { code: !!code, state: !!state });
         return res.redirect(`/auth?error=${encodeURIComponent('Parâmetros OAuth inválidos')}`);
       }
 
-      // Parse state
-      const [provider, stateData] = (state as string).split(':');
-      const decodedState = JSON.parse(Buffer.from(stateData, 'base64').toString());
+      // Parse state safely
+      let provider, decodedState;
+      try {
+        const stateParts = (state as string).split(':');
+        if (stateParts.length < 2) {
+          throw new Error('Invalid state format');
+        }
+        provider = stateParts[0];
+        const stateData = stateParts.slice(1).join(':');
+        decodedState = JSON.parse(Buffer.from(stateData, 'base64').toString());
+        console.log('✅ OAuth state parsed:', { provider, decodedState });
+      } catch (error) {
+        console.log('❌ OAuth state parsing error:', error);
+        return res.redirect(`/auth?error=${encodeURIComponent('Estado OAuth inválido')}`);
+      }
 
       let userInfo;
       if (provider === 'google') {
+        if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+          console.log('❌ Google OAuth not configured');
+          return res.redirect(`/auth?error=${encodeURIComponent('Google Sign In não configurado')}`);
+        }
         userInfo = await handleGoogleCallback(code as string);
       } else if (provider === 'apple') {
+        if (!APPLE_CLIENT_ID || !APPLE_PRIVATE_KEY || !APPLE_TEAM_ID || !APPLE_KEY_ID) {
+          console.log('❌ Apple OAuth not configured properly');
+          return res.redirect(`/auth?error=${encodeURIComponent('Apple Sign In não configurado')}`);
+        }
         userInfo = await handleAppleCallback(code as string);
       } else {
+        console.log('❌ Unknown OAuth provider:', provider);
         return res.redirect(`/auth?error=${encodeURIComponent('Provedor OAuth inválido')}`);
       }
 
       if (!userInfo) {
+        console.log('❌ Failed to get user info from OAuth provider:', provider);
         return res.redirect(`/auth?error=${encodeURIComponent('Falha ao obter informações do usuário')}`);
       }
 
@@ -1429,7 +1463,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.redirect(`${finalRedirectUrl}?oauth_success=1`);
 
     } catch (error) {
-      console.error('OAuth callback error:', error);
+      console.error('❌ OAuth callback critical error:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        error
+      });
       res.redirect(`/auth?error=${encodeURIComponent('Erro interno na autenticação')}`);
     }
   });
