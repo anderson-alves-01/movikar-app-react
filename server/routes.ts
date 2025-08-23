@@ -91,7 +91,7 @@ if (!JWT_SECRET) {
 }
 
 // TypeScript assertion - we know JWT_SECRET is defined after the check above
-const VERIFIED_JWT_SECRET: string = JWT_SECRET;
+// TypeScript assertion - we know JWT_SECRET is defined after the check above
 
 // Configure multer for file uploads
 const upload = multer({
@@ -315,7 +315,7 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
   }
 
   try {
-    const decoded = jwt.verify(token, VERIFIED_JWT_SECRET) as { userId: number };
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: number };
     console.log('🔐 Auth middleware - Token decoded, userId:', decoded.userId);
 
     const user = await storage.getUser(decoded.userId);
@@ -341,7 +341,7 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
       }
 
       try {
-        const decoded = jwt.verify(refreshToken, VERIFIED_JWT_SECRET + '_refresh') as { userId: number };
+        const decoded = jwt.verify(refreshToken, JWT_SECRET + '_refresh') as { userId: number };
         const user = await storage.getUser(decoded.userId);
 
         if (!user) {
@@ -351,8 +351,8 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
         }
 
         // Generate new tokens
-        const newToken = jwt.sign({ userId: user.id }, VERIFIED_JWT_SECRET, { expiresIn: '15m' });
-        const newRefreshToken = jwt.sign({ userId: user.id }, VERIFIED_JWT_SECRET + '_refresh', { expiresIn: '7d' });
+        const newToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
+        const newRefreshToken = jwt.sign({ userId: user.id }, JWT_SECRET + '_refresh', { expiresIn: '7d' });
 
         // Set new cookies with consistent settings
         const cookieOptions = {
@@ -1110,21 +1110,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Generate token
-      const token = jwt.sign({ userId: user.id }, VERIFIED_JWT_SECRET, { expiresIn: '15m' });
-      const refreshToken = jwt.sign({ userId: user.id }, VERIFIED_JWT_SECRET + '_refresh', { expiresIn: '7d' });
+      const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
+      const refreshToken = jwt.sign({ userId: user.id }, JWT_SECRET + '_refresh', { expiresIn: '7d' });
 
-      // Set HttpOnly cookies - mesmas configurações do login
-      res.cookie('token', token, {
+      // Use dynamic cookie configuration for all auth endpoints
+      const isReplit = !!process.env.REPL_ID;
+      const isHTTPS = req.headers['x-forwarded-proto'] === 'https' || req.secure;
+      const useSecureCookies = isHTTPS || isReplit;
+
+      const cookieOptions = {
         httpOnly: true,
-        secure: false, // Permite HTTPS e HTTP em desenvolvimento
-        sameSite: 'lax', // Menos restritivo para desenvolvimento
+        secure: useSecureCookies,
+        sameSite: useSecureCookies ? 'none' as const : 'lax' as const,
+        path: '/',
+      };
+
+      res.cookie('token', token, {
+        ...cookieOptions,
         maxAge: 15 * 60 * 1000 // 15 minutes
       });
 
       res.cookie('refresh_token', refreshToken, {
-        httpOnly: true,
-        secure: false, // Permite HTTPS e HTTP em desenvolvimento
-        sameSite: 'lax', // Menos restritivo para desenvolvimento
+        ...cookieOptions,
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
 
@@ -1157,8 +1164,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: "Erro interno do servidor" });
       }
 
-      const token = jwt.sign({ userId: user.id }, VERIFIED_JWT_SECRET, { expiresIn: '15m' });
-      const refreshToken = jwt.sign({ userId: user.id }, VERIFIED_JWT_SECRET + '_refresh', { expiresIn: '7d' });
+      const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
+      const refreshToken = jwt.sign({ userId: user.id }, JWT_SECRET + '_refresh', { expiresIn: '7d' });
 
       console.log('🍪 Setting login cookies for user:', user.email);
 
@@ -1166,23 +1173,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const isReplit = !!process.env.REPL_ID;
       const isProduction = process.env.NODE_ENV === 'production';
       const isDevelopment = process.env.NODE_ENV === 'development';
+      const isHTTPS = req.headers['x-forwarded-proto'] === 'https' || req.secure;
 
       console.log('🔧 Environment:', { 
         NODE_ENV: process.env.NODE_ENV, 
         REPL_ID: !!process.env.REPL_ID,
         isDevelopment, 
         isProduction, 
-        isReplit 
+        isReplit,
+        isHTTPS,
+        protocol: req.headers['x-forwarded-proto'] || 'http'
       });
 
-      // Force development-friendly cookies in Replit development
-      const useSecureCookies = isProduction && !isDevelopment;
+      // Use secure cookies for HTTPS (Replit serves via HTTPS)
+      const useSecureCookies = isHTTPS || isReplit;
 
       const cookieOptions = {
         httpOnly: true,
-        secure: useSecureCookies, // Only secure in actual production
-        sameSite: useSecureCookies ? 'none' as const : 'lax' as const, // Lax for development
+        secure: useSecureCookies, // Secure for HTTPS/Replit
+        sameSite: useSecureCookies ? 'none' as const : 'lax' as const, // None for cross-origin HTTPS
         path: '/',
+        domain: isReplit ? undefined : undefined, // Let browser handle domain
       };
 
       console.log('🍪 Cookies set with options:', cookieOptions);
@@ -1277,7 +1288,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: 'Refresh token não encontrado' });
       }
 
-      const decoded = jwt.verify(refreshToken, VERIFIED_JWT_SECRET + '_refresh') as { userId: number };
+      const decoded = jwt.verify(refreshToken, JWT_SECRET + '_refresh') as { userId: number };
       const user = await storage.getUser(decoded.userId);
 
       if (!user) {
@@ -1285,14 +1296,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: 'Refresh token inválido' });
       }
 
-      const newToken = jwt.sign({ userId: user.id }, VERIFIED_JWT_SECRET, { expiresIn: '15m' });
+      const newToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
 
       console.log('✅ Token refreshed for user:', user.email);
 
+      // Use dynamic cookie configuration
+      const isReplit = !!process.env.REPL_ID;
+      const isHTTPS = req.headers['x-forwarded-proto'] === 'https' || req.secure;
+      const useSecureCookies = isHTTPS || isReplit;
+
       res.cookie('token', newToken, {
         httpOnly: true,
-        secure: false, // Permite HTTPS e HTTP em desenvolvimento
-        sameSite: 'lax', // Menos restritivo para desenvolvimento
+        secure: useSecureCookies,
+        sameSite: useSecureCookies ? 'none' as const : 'lax' as const,
+        path: '/',
         maxAge: 15 * 60 * 1000 // 15 minutes
       });
 
@@ -1434,14 +1451,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Generate tokens
-      const token = jwt.sign({ userId: user.id }, VERIFIED_JWT_SECRET, { expiresIn: '15m' });
-      const refreshToken = jwt.sign({ userId: user.id }, VERIFIED_JWT_SECRET + '_refresh', { expiresIn: '7d' });
+      const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
+      const refreshToken = jwt.sign({ userId: user.id }, JWT_SECRET + '_refresh', { expiresIn: '7d' });
 
-      // Set cookies
+      // Set cookies with dynamic configuration
+      const isReplit = !!process.env.REPL_ID;
+      const isHTTPS = req.headers['x-forwarded-proto'] === 'https' || req.secure;
+      const useSecureCookies = isHTTPS || isReplit;
+
       const cookieOptions = {
         httpOnly: true,
-        secure: false,
-        sameSite: 'lax' as const,
+        secure: useSecureCookies,
+        sameSite: useSecureCookies ? 'none' as const : 'lax' as const,
         path: '/',
       };
 
