@@ -5,13 +5,13 @@ export default function HeroSection() {
   return (
     <section className="relative bg-gradient-to-br from-gray-900 to-gray-800 text-white py-12 sm:py-16 lg:py-20">
       {/* Background */}
-      <div className="absolute inset-0 bg-black bg-opacity-40"></div>
       <div
-        className="absolute inset-0 bg-cover bg-center filter blur-sm"
+        className="absolute inset-0 bg-cover bg-center"
         style={{
           backgroundImage: `url('${bannerImage}')`,
         }}
       ></div>
+      <div className="absolute inset-0 bg-black bg-opacity-60"></div>
 
       <div className="relative max-w-7xl mx-auto mobile-padding">
         <div className="text-center">
