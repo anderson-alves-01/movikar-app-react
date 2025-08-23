@@ -283,6 +283,34 @@ Para não receber mais emails, acesse suas configurações no app.
 
     return this.sendNotificationEmail(ownerEmail, ownerName, emailData);
   }
+
+  async sendSubscriptionConfirmationEmail(
+    userEmail: string,
+    userName: string,
+    subscriptionData: {
+      planName: string;
+      paymentMethod: string;
+      amount: number;
+      endDate: string;
+      vehicleCount?: number;
+    }
+  ): Promise<boolean> {
+    const emailData: EmailNotificationData = {
+      title: `🎉 Assinatura Ativada - Plano ${subscriptionData.planName}`,
+      body: `Olá ${userName}!\n\nSua assinatura foi ativada com sucesso!\n\nDetalhes da assinatura:\n• Plano: ${subscriptionData.planName}\n• Pagamento: ${subscriptionData.paymentMethod === 'monthly' ? 'Mensal' : 'Anual'}\n• Valor pago: R$ ${subscriptionData.amount.toFixed(2)}\n• Válido até: ${subscriptionData.endDate}${subscriptionData.vehicleCount ? `\n• Veículos: ${subscriptionData.vehicleCount === -1 ? 'Ilimitados' : subscriptionData.vehicleCount}` : ''}\n\n🚗 Agora você pode aproveitar todos os benefícios do seu plano!\n\nAcesse o app para começar a listar seus veículos e gerenciar suas reservas.`,
+      data: subscriptionData
+    };
+
+    return this.sendNotificationEmail(userEmail, userName, emailData);
+  }
 }
 
 export default new EmailService();
+
+export type SubscriptionEmailData = {
+  planName: string;
+  paymentMethod: string;
+  amount: number;
+  endDate: string;
+  vehicleCount?: number;
+};

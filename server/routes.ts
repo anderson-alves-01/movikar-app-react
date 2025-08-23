@@ -59,7 +59,7 @@ import docusign from 'docusign-esign';
 import { getFeatureFlags } from "@shared/feature-flags";
 import type { AdminSettings } from "@shared/admin-settings";
 import { registerHealthRoutes } from "./routes/health";
-import emailService, { type BookingEmailData } from "./services/emailService";
+import emailService, { type BookingEmailData, type SubscriptionEmailData } from "./services/emailService";
 
 // In-memory storage for admin settings
 let currentAdminSettings: AdminSettings = {
@@ -6426,11 +6426,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('✅ User subscription created with Stripe Subscription ID for recurring payments');
 
+      // Get user data for email
+      const currentUser = await storage.getUserById(userId);
+      if (!currentUser) {
+        throw new Error('User not found');
+      }
+
+      // Send subscription confirmation email
+      const subscriptionEmailData: SubscriptionEmailData = {
+        planName: planName,
+        paymentMethod,
+        amount: Number(paidAmount),
+        endDate: endDate.toLocaleDateString('pt-BR'),
+        vehicleCount: vehicleCount === -1 ? -1 : vehicleCount
+      };
+
+      // Send email asynchronously (don't block the response)
+      console.log('📧 Enviando email de confirmação de assinatura para:', currentUser.email);
+      emailService.sendSubscriptionConfirmationEmail(
+        currentUser.email!,
+        currentUser.name || currentUser.email!,
+        subscriptionEmailData
+      ).then((success) => {
+        if (success) {
+          console.log('✅ Email de confirmação de assinatura enviado com sucesso');
+        } else {
+          console.log('❌ Falha ao enviar email de confirmação de assinatura');
+        }
+      }).catch(error => {
+        console.error('❌ Erro ao enviar email de confirmação de assinatura:', error);
+      });
+
       res.json({
         message: "Assinatura ativada com sucesso",
         plan: planName,
         paymentMethod,
-        endDate
+        endDate: endDate.toISOString(),
+        emailSent: true
       });
 
     } catch (error) {
