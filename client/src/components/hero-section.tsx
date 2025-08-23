@@ -22,7 +22,7 @@ export default function HeroSection() {
           </h1>
           <div className="bg-black bg-opacity-30 backdrop-blur-sm rounded-2xl p-4 sm:p-6 mb-8 sm:mb-12 max-w-4xl mx-auto">
             <p className="text-lg sm:text-xl md:text-2xl text-white font-semibold leading-relaxed mb-4">
-              Encontre carros de <span className="font-bold">pessoas reais</span>, na sua cidade - burocracia.
+              Encontre carros de <span className="font-bold">pessoas reais</span> na sua cidade - sem burocracia.
             </p>
             <p className="text-lg sm:text-xl md:text-2xl text-white font-bold">
               Seguro, confiável e sem complicações.
