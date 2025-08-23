@@ -6080,8 +6080,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           interval: paymentMethod === 'annual' ? 'year' : 'month'
         },
         product_data: {
-          name: `ALUGAE - ${planName === 'essencial' ? 'Plano Essencial' : 'Plano Plus'}`,
-          description: `${planName === 'essencial' ? 'Plano Essencial' : 'Plano Plus'} - ${vehicleCount} veículos`,
+          name: `ALUGAE - ${planName === 'essencial' ? 'Plano Essencial' : 'Plano Plus'} - ${vehicleCount} veículos`,
           metadata: {
             planName,
             vehicleCount: vehicleCount.toString()
