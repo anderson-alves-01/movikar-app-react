@@ -108,28 +108,23 @@ export default function SubscriptionPlans() {
       return;
     }
 
-    // Use the first non-free plan for validation if none selected
-    let planToUse = selectedPlan;
-    if (!planToUse) {
-      const availablePlans = displayPlans.filter(p => p.name !== 'free');
-      if (availablePlans.length > 0) {
-        planToUse = availablePlans[0].name;
-      } else {
-        toast({
-          title: "Nenhum Plano Disponível",
-          description: "Não há planos disponíveis para aplicar o cupom",
-          variant: "destructive",
-        });
-        return;
-      }
+    // Use the essencial plan as base for validation (lowest price)
+    const availablePlans = displayPlans.filter(p => p.name !== 'free');
+    if (availablePlans.length === 0) {
+      toast({
+        title: "Nenhum Plano Disponível",
+        description: "Não há planos disponíveis para aplicar o cupom",
+        variant: "destructive",
+      });
+      return;
     }
 
-    const plan = displayPlans.find(p => p.name === planToUse);
-    if (plan) {
-      const orderValue = getPrice(plan);
-      setSelectedPlan(planToUse); // Set the plan so discount shows
-      validateCoupon(couponCode, orderValue);
-    }
+    // Find essencial plan or first available plan
+    const basePlan = availablePlans.find(p => p.name === 'essencial') || availablePlans[0];
+    const orderValue = getPrice(basePlan);
+    
+    // Don't set selected plan here - just validate coupon
+    validateCoupon(couponCode, orderValue);
   };
 
   // Function to remove coupon
@@ -555,30 +550,39 @@ export default function SubscriptionPlans() {
     const price = getPrice(plan);
     if (plan.name === 'free') return 'Gratuito';
 
-    // Apply coupon discount if available and plan is selected
-    let finalPrice = price;
-    if (appliedCoupon && appliedCoupon.isValid && selectedPlan === plan.name) {
-      finalPrice = appliedCoupon.finalAmount ? appliedCoupon.finalAmount / 100 : price;
-    }
-
-    if (isAnnual) {
-      const monthlyEquivalent = finalPrice / 12;
-      return `R$ ${monthlyEquivalent.toFixed(2)}/mês`;
-    }
-
-    return `R$ ${finalPrice.toFixed(2)}/mês`;
-  };
-
-  const getOriginalPrice = (plan: SubscriptionPlan) => {
-    const price = getPrice(plan);
-    if (plan.name === 'free') return null;
-
+    // Show original price without discount (discount will be shown separately)
     if (isAnnual) {
       const monthlyEquivalent = price / 12;
       return `R$ ${monthlyEquivalent.toFixed(2)}/mês`;
     }
 
     return `R$ ${price.toFixed(2)}/mês`;
+  };
+
+  // Calculate coupon discount for any plan
+  const getCouponDiscount = (plan: SubscriptionPlan) => {
+    if (plan.name === 'free' || !appliedCoupon || !appliedCoupon.isValid) return null;
+    
+    const price = getPrice(plan);
+    const priceInCents = Math.round(price * 100);
+    
+    // Calculate discount based on coupon type
+    let discountAmount = 0;
+    if (appliedCoupon.coupon.discountType === 'percentage') {
+      discountAmount = Math.round((priceInCents * appliedCoupon.coupon.discountValue) / 100);
+    } else if (appliedCoupon.coupon.discountType === 'fixed') {
+      discountAmount = appliedCoupon.coupon.discountValue;
+    }
+    
+    // Ensure discount doesn't exceed price
+    discountAmount = Math.min(discountAmount, priceInCents);
+    const finalPrice = priceInCents - discountAmount;
+    
+    return {
+      discountAmount: discountAmount / 100, // Convert back to reais
+      finalPrice: finalPrice / 100,
+      discountPercentage: Math.round((discountAmount / priceInCents) * 100)
+    };
   };
 
   const getSavings = (plan: SubscriptionPlan) => {
@@ -728,7 +732,7 @@ export default function SubscriptionPlans() {
                   </div>
                 )}
                 <p className="text-sm text-gray-500 text-center">
-                  O cupom será aplicado automaticamente ao plano selecionado
+                  O cupom será aplicado somente após selecionar o plano no botão "Assinar Agora"
                 </p>
               </CardContent>
             </Card>
@@ -770,24 +774,26 @@ export default function SubscriptionPlans() {
 
                   <CardContent className="text-center pb-6">
                     <div className="mb-6">
-                      {appliedCoupon && appliedCoupon.isValid && selectedPlan === plan.name ? (
-                        <div className="space-y-2">
-                          <div className="text-2xl text-gray-500 line-through">
-                            {getOriginalPrice(plan)}
+                      <div className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                        {getDisplayPrice(plan)}
+                      </div>
+                      
+                      {/* Show coupon discount for all plans */}
+                      {appliedCoupon && appliedCoupon.isValid && plan.name !== 'free' && (() => {
+                        const discount = getCouponDiscount(plan);
+                        return discount ? (
+                          <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg p-3 mt-3">
+                            <div className="text-sm text-green-800 dark:text-green-200 font-medium">
+                              🎫 Com cupom {couponCode}: <span className="font-bold">R$ {discount.finalPrice.toFixed(2)}/{isAnnual ? 'ano' : 'mês'}</span>
+                            </div>
+                            <div className="text-xs text-green-600 dark:text-green-400">
+                              Desconto de R$ {discount.discountAmount.toFixed(2)} ({discount.discountPercentage}%)
+                            </div>
                           </div>
-                          <div className="text-4xl font-bold text-green-600 mb-2">
-                            {getDisplayPrice(plan)}
-                          </div>
-                          <div className="text-sm text-green-600 font-medium">
-                            Desconto: R$ {((appliedCoupon.discountAmount || 0) / 100).toFixed(2)}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                          {getDisplayPrice(plan)}
-                        </div>
-                      )}
-                      {isAnnual && savings && savings > 0 && (
+                        ) : null;
+                      })()}
+                      
+                      {isAnnual && savings && savings > 0 && !appliedCoupon && (
                         <div className="text-sm text-green-600 font-medium">
                           Economize R$ {savings.toFixed(2)}/ano
                         </div>
