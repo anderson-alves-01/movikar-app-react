@@ -239,6 +239,20 @@ export default function Header() {
                     </Button>
                   </Link>
 
+                  {/* Coin Balance Display - Mobile */}
+                  {user && userCoins && (
+                    <Link 
+                      href="/coins"
+                      className="sm:hidden flex items-center gap-1 px-2 py-1.5 bg-yellow-50 border border-yellow-200 rounded-lg hover:bg-yellow-100 transition-colors"
+                      data-testid="mobile-coin-balance"
+                    >
+                      <Coins className="h-4 w-4 text-yellow-600" />
+                      <span className="text-sm font-medium text-yellow-800">
+                        {userCoins.availableCoins}
+                      </span>
+                    </Link>
+                  )}
+
                   {/* Message Notification Bell */}
                   <Link href="/messages">
                     <Button 
