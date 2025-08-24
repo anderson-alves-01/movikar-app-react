@@ -91,11 +91,14 @@ export default function VehicleDetail() {
     onSuccess: () => {
       // Invalidate coins cache to update balance
       queryClient.invalidateQueries({ queryKey: ["/api/coins"] });
-      setShowMessages(true);
       toast({
         title: "Chat liberado!",
-        description: "200 moedas foram debitadas para acessar o chat.",
+        description: "200 moedas foram debitadas. Redirecionando para as mensagens...",
       });
+      // Redirect to messages page after successful payment
+      setTimeout(() => {
+        window.location.href = '/messages';
+      }, 1500);
     },
     onError: (error: any) => {
       toast({
