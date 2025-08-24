@@ -4072,6 +4072,48 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(contactUnlocks.createdAt));
   }
 
+  // Additional coin methods needed for purchase completion
+  async getCoinTransactionByPaymentIntent(paymentIntentId: string): Promise<CoinTransaction | undefined> {
+    const [transaction] = await db
+      .select()
+      .from(coinTransactions)
+      .where(eq(coinTransactions.paymentIntentId, paymentIntentId));
+    return transaction;
+  }
+
+  async updateUserCoins(userId: number, updates: { availableCoins?: number; totalCoins?: number; usedCoins?: number }): Promise<void> {
+    await db
+      .update(userCoins)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(eq(userCoins.userId, userId));
+  }
+
+  async createCoinTransaction(data: {
+    userId: number;
+    type: string;
+    amount: number;
+    description: string;
+    paymentIntentId?: string;
+    metadata?: any;
+  }): Promise<CoinTransaction> {
+    const [transaction] = await db
+      .insert(coinTransactions)
+      .values({
+        userId: data.userId,
+        type: data.type,
+        amount: data.amount,
+        description: data.description,
+        source: 'stripe_purchase',
+        paymentIntentId: data.paymentIntentId,
+        status: 'completed'
+      })
+      .returning();
+    return transaction;
+  }
+
 }
 
 export const storage = new DatabaseStorage();

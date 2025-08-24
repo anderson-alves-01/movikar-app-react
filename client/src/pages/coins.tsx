@@ -155,11 +155,26 @@ const CoinPurchaseForm = ({ packageInfo, onSuccess, discountCode, finalPrice }: 
           variant: "destructive",
         });
       } else {
-        toast({
-          title: "Compra realizada!",
-          description: `${packageInfo.coins} moedas adicionadas à sua conta.`,
-        });
-        onSuccess();
+        // Payment succeeded, now complete the purchase
+        try {
+          const paymentIntentId = clientSecret.split('_secret_')[0];
+          await apiRequest("POST", "/api/coins/complete-purchase", {
+            paymentIntentId
+          });
+          
+          toast({
+            title: "Compra realizada!",
+            description: `${packageInfo.coins} moedas adicionadas à sua conta.`,
+          });
+          onSuccess();
+        } catch (completionError: any) {
+          console.error("Error completing purchase:", completionError);
+          toast({
+            title: "Pagamento aprovado",
+            description: "Pagamento processado, mas houve erro ao creditar moedas. Entre em contato com o suporte.",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error: any) {
       toast({

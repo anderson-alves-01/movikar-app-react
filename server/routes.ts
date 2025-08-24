@@ -3719,6 +3719,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Complete coin purchase after Stripe payment confirmation
+  app.post("/api/coins/complete-purchase", authenticateToken, async (req, res) => {
+    try {
+      if (!stripe) {
+        return res.status(500).json({ message: "Stripe não configurado" });
+      }
+
+      const { paymentIntentId } = req.body;
+      const userId = req.user!.id;
+
+      if (!paymentIntentId) {
+        return res.status(400).json({ message: "ID do payment intent é obrigatório" });
+      }
+
+      // Verify payment with Stripe
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      
+      if (paymentIntent.status !== 'succeeded') {
+        return res.status(400).json({ message: "Pagamento não foi confirmado" });
+      }
+
+      // Verify this payment belongs to the current user
+      if (paymentIntent.metadata.userId !== userId.toString()) {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      // Check if this purchase was already processed
+      const existingTransaction = await storage.getCoinTransactionByPaymentIntent(paymentIntentId);
+      if (existingTransaction) {
+        return res.json({ 
+          message: "Compra já processada",
+          coinsAdded: parseInt(paymentIntent.metadata.coinAmount),
+          alreadyProcessed: true 
+        });
+      }
+
+      // Extract purchase details from payment intent metadata
+      const coinsToAdd = parseInt(paymentIntent.metadata.coinAmount);
+      const packageName = paymentIntent.metadata.packageName;
+      const originalPrice = parseFloat(paymentIntent.metadata.originalPrice);
+      const finalPrice = parseFloat(paymentIntent.metadata.finalPrice);
+      const couponCode = paymentIntent.metadata.couponCode || null;
+
+      // Get user's current coin balance
+      let userCoins = await storage.getUserCoins(userId);
+      if (!userCoins) {
+        userCoins = await storage.createUserCoins(userId);
+      }
+
+      // Add coins to user's balance
+      const newBalance = userCoins.availableCoins + coinsToAdd;
+      await storage.updateUserCoins(userId, { availableCoins: newBalance });
+
+      // Record the transaction
+      const transaction = await storage.createCoinTransaction({
+        userId,
+        type: 'purchase',
+        amount: coinsToAdd,
+        description: `Compra de ${packageName}`,
+        paymentIntentId,
+        metadata: {
+          packageName,
+          originalPrice,
+          finalPrice,
+          couponCode: couponCode || undefined
+        }
+      });
+
+      console.log(`💰 Coins credited to user ${userId}: +${coinsToAdd} coins (new balance: ${newBalance})`);
+
+      res.json({
+        message: "Moedas creditadas com sucesso!",
+        coinsAdded: coinsToAdd,
+        newBalance,
+        transaction
+      });
+    } catch (error) {
+      console.error("Complete coin purchase error:", error);
+      res.status(500).json({ message: "Erro ao completar compra de moedas" });
+    }
+  });
+
   // Unlock contact information for a vehicle
   app.post("/api/coins/unlock-contact", authenticateToken, async (req, res) => {
     try {
