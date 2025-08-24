@@ -642,11 +642,12 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
                 {/* Primary Action: Rent Now Request (No payment required) - Always visible */}
                 <Button 
                   type="button"
+                  variant="outline"
                   onClick={handleRentNow}
                   className={`w-full font-semibold transition-colors mb-3 ${
                     hasDateConflict() || (user && !rentalAccess?.canProceed)
-                      ? 'bg-gray-400 hover:bg-gray-500 cursor-not-allowed text-white' 
-                      : 'bg-green-600 text-white hover:bg-green-700'
+                      ? 'border-gray-400 text-gray-400 cursor-not-allowed' 
+                      : 'border-green-600 text-green-600 hover:bg-green-50'
                   }`}
                   disabled={
                     rentNowMutation.isPending || 
