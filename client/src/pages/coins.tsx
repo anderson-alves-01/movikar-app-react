@@ -235,7 +235,7 @@ export default function CoinsPage() {
 
       setAppliedDiscount({
         code: discountCode,
-        percentage: response.percentage,
+        percentage: Number(response.percentage),
         description: response.description
       });
 
@@ -264,8 +264,10 @@ export default function CoinsPage() {
   };
 
   const calculateDiscountedPrice = (originalPrice: number) => {
-    if (!appliedDiscount) return originalPrice;
-    return originalPrice * (1 - appliedDiscount.percentage / 100);
+    if (!appliedDiscount || !appliedDiscount.percentage) return originalPrice;
+    const percentage = Number(appliedDiscount.percentage);
+    if (isNaN(percentage) || percentage < 0 || percentage > 100) return originalPrice;
+    return originalPrice * (1 - percentage / 100);
   };
 
   const getTransactionIcon = (type: string) => {
@@ -480,7 +482,10 @@ export default function CoinsPage() {
                           )}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {pkg.coins} moedas • {(pkg.price / pkg.coins * 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} por 100 moedas
+                          {pkg.coins} moedas • {appliedDiscount ? 
+                            (calculateDiscountedPrice(pkg.price) / pkg.coins * 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) :
+                            (pkg.price / pkg.coins * 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                          } por 100 moedas
                         </div>
                       </CardContent>
                     </Card>
