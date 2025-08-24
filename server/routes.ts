@@ -4415,6 +4415,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Transfer coins to user (admin only)
+  app.post("/api/admin/transfer-coins", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const { userId, amount, description } = req.body;
+
+      if (!userId || !amount || amount <= 0) {
+        return res.status(400).json({ message: "ID do usuário e valor válido são obrigatórios" });
+      }
+
+      // Check if user exists
+      const user = await storage.getUserById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      // Ensure user has coin record
+      let userCoins = await storage.getUserCoins(userId);
+      if (!userCoins) {
+        userCoins = await storage.createUserCoins(userId);
+      }
+
+      // Add coins to user
+      await storage.addCoins(
+        userId,
+        amount,
+        'admin_transfer',
+        description || `Transferência de moedas pelo administrador`,
+        `admin_transfer_${userId}_${Date.now()}`
+      );
+
+      // Get updated coin balance
+      const updatedCoins = await storage.getUserCoins(userId);
+
+      res.json({
+        success: true,
+        transferred: amount,
+        totalCoins: updatedCoins?.availableCoins || 0,
+        message: `${amount} moedas transferidas para ${user.name}`
+      });
+
+    } catch (error) {
+      console.error("Transfer coins error:", error);
+      res.status(500).json({ message: "Erro ao transferir moedas" });
+    }
+  });
+
   // Admin Users CRUD
   app.get("/api/admin/users", authenticateToken, requireAdmin, async (req, res) => {
     try {

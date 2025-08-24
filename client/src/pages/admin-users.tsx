@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Users, Search, Filter, Shield, CheckCircle, XCircle, Edit, Trash2, Plus, Save } from "lucide-react";
+import { Users, Search, Filter, Shield, CheckCircle, XCircle, Edit, Trash2, Plus, Save, Coins } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuthStore } from "@/lib/auth";
@@ -39,6 +39,9 @@ export default function AdminUsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isTransferCoinsDialogOpen, setIsTransferCoinsDialogOpen] = useState(false);
+  const [transferAmount, setTransferAmount] = useState('');
+  const [transferDescription, setTransferDescription] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [newUserData, setNewUserData] = useState({
@@ -180,6 +183,44 @@ export default function AdminUsersPage() {
     },
   });
 
+  // Transfer coins mutation
+  const transferCoinsMutation = useMutation({
+    mutationFn: async (data: { userId: number; amount: number; description: string }) => {
+      const response = await fetch('/api/admin/transfer-coins', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to transfer coins');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/admin/users', currentPage, pageSize, searchTerm, roleFilter, verificationFilter] 
+      });
+      toast({ title: "Moedas transferidas com sucesso!" });
+      setIsTransferCoinsDialogOpen(false);
+      setSelectedUser(null);
+      setTransferAmount('');
+      setTransferDescription('');
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Erro ao transferir moedas", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+
   // Create user mutation
   const createUserMutation = useMutation({
     mutationFn: async (userData: typeof newUserData) => {
@@ -224,6 +265,32 @@ export default function AdminUsersPage() {
   const handleEditUser = (user: User) => {
     setSelectedUser(user);
     setIsEditDialogOpen(true);
+  };
+
+  const handleTransferCoins = (user: User) => {
+    setSelectedUser(user);
+    setIsTransferCoinsDialogOpen(true);
+  };
+
+  const handleTransferCoinsSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser || !transferAmount) return;
+    
+    const amount = parseInt(transferAmount);
+    if (amount <= 0) {
+      toast({ 
+        title: "Erro", 
+        description: "Valor deve ser maior que zero",
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    transferCoinsMutation.mutate({
+      userId: selectedUser.id,
+      amount,
+      description: transferDescription || `Transferência de moedas pelo admin`
+    });
   };
 
   const handleDeleteUser = (userId: number) => {
@@ -437,6 +504,9 @@ export default function AdminUsersPage() {
                           <div className="flex items-center gap-2">
                             <Button size="sm" variant="outline" onClick={() => handleEditUser(user)}>
                               <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="outline" className="text-green-600 hover:text-green-700" onClick={() => handleTransferCoins(user)}>
+                              <Coins className="h-4 w-4" />
                             </Button>
                             <Button 
                               size="sm" 
@@ -732,6 +802,57 @@ export default function AdminUsersPage() {
                 <Button type="submit" disabled={createUserMutation.isPending}>
                   <Plus className="h-4 w-4 mr-2" />
                   {createUserMutation.isPending ? 'Criando...' : 'Criar Usuário'}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Transfer Coins Dialog */}
+        <Dialog open={isTransferCoinsDialogOpen} onOpenChange={setIsTransferCoinsDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Transferir Moedas</DialogTitle>
+              <DialogDescription>
+                Transfira moedas para {selectedUser?.name}
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleTransferCoinsSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="transferAmount">Quantidade de Moedas</Label>
+                <Input
+                  id="transferAmount"
+                  type="number"
+                  min="1"
+                  placeholder="Ex: 100"
+                  value={transferAmount}
+                  onChange={(e) => setTransferAmount(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="transferDescription">Descrição (opcional)</Label>
+                <Textarea
+                  id="transferDescription"
+                  placeholder="Motivo da transferência..."
+                  value={transferDescription}
+                  onChange={(e) => setTransferDescription(e.target.value)}
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsTransferCoinsDialogOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={transferCoinsMutation.isPending}>
+                  <Coins className="h-4 w-4 mr-2" />
+                  {transferCoinsMutation.isPending ? 'Transferindo...' : 'Transferir'}
                 </Button>
               </div>
             </form>
