@@ -35,157 +35,178 @@ export default function TermsOfUseModal({ open, onOpenChange, onAccept }: TermsO
         <ScrollArea className="flex-1 pr-4 max-h-[60vh] overflow-y-auto">
           <div className="space-y-6 text-sm text-gray-700">
             
-            {/* Seção 1 - Natureza da Plataforma */}
+            {/* Cabeçalho */}
+            <div className="text-center mb-6">
+              <p className="text-xs text-gray-500 mb-2">Última atualização: 20/08/2025</p>
+              <p className="text-gray-700">
+                Seja bem-vindo ao Alugae, a plataforma digital que conecta locadores e locatários de veículos de forma prática, acessível e transparente. Ao utilizar nossos serviços, você declara estar ciente e de acordo com as regras e condições descritas nestes Termos de Uso.
+              </p>
+            </div>
+
+            {/* Seção 1 - Objeto */}
             <section>
-              <h3 className="font-semibold text-lg mb-3 text-gray-900">1. NATUREZA DA PLATAFORMA</h3>
+              <h3 className="font-semibold text-lg mb-3 text-gray-900">1. Objeto</h3>
               <p className="mb-3">
-                A plataforma alugae.mobi atua exclusivamente como <strong>intermediária</strong> entre locadores e locatários de veículos. 
-                Somos apenas um ponto de conexão que permite a visualização de datas indisponíveis dos veículos e 
-                a possibilidade de solicitar aluguel informando as datas necessárias.
+                O Alugae disponibiliza uma solução tecnológica para facilitar a exposição de veículos para locação e o contato entre locadores e locatários. Ressaltamos que:
               </p>
-              <p className="mb-3">
-                <strong>Importante:</strong> O locatário somente irá receber notificação da intenção de aluguel. 
-                A plataforma não firma contratos entre as partes e nem calcula seguros contra acidentes e sinistros.
-              </p>
+              <ul className="list-disc list-inside space-y-2 ml-4">
+                <li>Não somos proprietários dos veículos.</li>
+                <li>Não participamos das negociações entre usuários.</li>
+                <li>Não assumimos qualquer responsabilidade sobre a qualidade, condições ou uso dos veículos.</li>
+                <li>Nosso papel é exclusivamente de intermediador digital, fornecendo infraestrutura de anúncio, comunicação e pagamento.</li>
+              </ul>
             </section>
 
-            {/* ISENÇÃO DE RESPONSABILIDADE - DESTAQUE PRINCIPAL */}
+            {/* Seção 2 - Cadastro de Usuários */}
+            <section>
+              <h3 className="font-semibold text-lg mb-3 text-gray-900">2. Cadastro de Usuários</h3>
+              <div className="space-y-3">
+                <p><strong>2.1.</strong> O acesso à plataforma depende de cadastro prévio com informações verdadeiras, completas e atualizadas.</p>
+                <p><strong>2.2.</strong> O usuário é integralmente responsável pela veracidade dos dados fornecidos.</p>
+                <p><strong>2.3.</strong> O Alugae se reserva o direito de suspender ou cancelar contas em caso de fraude, má conduta, informações falsas ou descumprimento destes Termos.</p>
+                <p><strong>2.4.</strong> O uso da plataforma por menores de 18 anos é proibido.</p>
+              </div>
+            </section>
+
+            {/* Seção 3 - Responsabilidades das Partes */}
+            <section>
+              <h3 className="font-semibold text-lg mb-3 text-gray-900">3. Responsabilidades das Partes</h3>
+              <div className="space-y-3">
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="font-medium text-green-800 mb-2">Locador:</p>
+                  <p className="text-green-700">Deve disponibilizar veículo em boas condições, regularizado, licenciado e com documentação em dia.</p>
+                </div>
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="font-medium text-blue-800 mb-2">Locatário:</p>
+                  <p className="text-blue-700">Deve possuir CNH válida e utilizar o veículo dentro da legalidade.</p>
+                </div>
+                <p className="font-medium">Ambos assumem total responsabilidade por suas obrigações legais, financeiras e contratuais.</p>
+              </div>
+            </section>
+
+            {/* Seção 4 - Pagamentos e Monetização */}
+            <section>
+              <h3 className="font-semibold text-lg mb-3 text-gray-900">4. Pagamentos e Monetização</h3>
+              <div className="space-y-3">
+                <p><strong>4.1.</strong> O contato entre locador e locatário somente é liberado após o pagamento via Stripe, dentro da plataforma.</p>
+                <p><strong>4.2.</strong> O preço exibido nos anúncios é definido pelo locador e não pode ser negociado fora do Alugae.</p>
+                <p><strong>4.3.</strong> O Alugae oferece planos de assinatura, moedas e destaques que ampliam a visibilidade do anúncio.</p>
+                <p><strong>4.4.</strong> Pagamentos realizados não são reembolsáveis após a confirmação.</p>
+              </div>
+            </section>
+
+            {/* Seção 5 - Planos e Destaques */}
+            <section>
+              <h3 className="font-semibold text-lg mb-3 text-gray-900">5. Planos e Destaques</h3>
+              <p className="mb-3">O Alugae disponibiliza diferentes planos para atender às necessidades dos locadores:</p>
+              <div className="grid gap-4 mb-4">
+                <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                  <h4 className="font-semibold text-gray-900 mb-2">Básico (Gratuito)</h4>
+                  <p className="text-gray-700">Permite anunciar 1 carro, com acesso às funcionalidades básicas da plataforma. Ideal para quem está começando a utilizar o Alugae.</p>
+                </div>
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h4 className="font-semibold text-blue-900 mb-2">Premium (R$39,90/mês)</h4>
+                  <p className="text-blue-800">Permite anunciar até 3 carros, com direito a destaque "Premium" por 3 dias, relatórios avançados e suporte por e-mail.</p>
+                </div>
+                <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                  <h4 className="font-semibold text-purple-900 mb-2">Enterprise (R$149,90/mês)</h4>
+                  <p className="text-purple-800">Permite anunciar carros ilimitados, com direito a destaque "Premium" por 7 dias, integração via API, suporte via WhatsApp e funcionalidades adicionais de gestão de frotas.</p>
+                </div>
+              </div>
+              <p className="mb-3">Além disso, há a opção de adquirir destaques pagos, que aumentam a exposição dos anúncios em posições privilegiadas dentro da plataforma.</p>
+              <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+                <p className="text-yellow-800 font-medium">
+                  ⚠️ Os valores dos planos podem sofrer alterações a qualquer momento, sem aviso prévio. Por isso, é importante sempre considerar o valor exibido na página de compra no momento da contratação, que prevalecerá sobre quaisquer informações anteriores.
+                </p>
+              </div>
+            </section>
+
+            {/* Seção 6 - Limitação de Responsabilidade */}
             <section className="bg-red-50 border-2 border-red-300 p-6 rounded-lg">
               <div className="flex items-start space-x-3">
                 <AlertTriangle className="h-8 w-8 text-red-600 mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-bold text-xl mb-4 text-red-800">2. ISENÇÃO TOTAL DE RESPONSABILIDADE</h3>
-                  <div className="bg-red-100 border-2 border-red-400 p-4 rounded-lg mb-4">
-                    <p className="font-bold text-red-900 text-center text-lg">
-                      A PLATAFORMA NÃO SE RESPONSABILIZA POR:
-                    </p>
-                  </div>
-                  <ul className="list-disc list-inside space-y-2 text-red-800 font-medium">
-                    <li><strong>Acidentes</strong> ocorridos durante o período de locação</li>
-                    <li><strong>Danos</strong> causados aos veículos ou terceiros</li>
-                    <li><strong>Furtos ou roubos</strong> dos veículos</li>
-                    <li><strong>Inadimplência</strong> ou descumprimento de acordos entre as partes</li>
-                    <li><strong>Problemas</strong> ou sinistros de qualquer natureza</li>
+                  <h3 className="font-bold text-xl mb-4 text-red-800">6. Limitação de Responsabilidade</h3>
+                  <p className="font-bold text-red-900 mb-3">O Alugae não se responsabiliza por:</p>
+                  <ul className="list-disc list-inside space-y-2 text-red-800">
+                    <li>Qualidade, estado ou disponibilidade do veículo.</li>
+                    <li>Multas, infrações, acidentes ou danos durante a locação.</li>
+                    <li>Perdas financeiras decorrentes do descumprimento contratual entre as partes.</li>
+                    <li>Seguros, coberturas adicionais ou indenizações.</li>
                   </ul>
                   <p className="mt-4 font-medium text-red-800">
-                    Toda responsabilidade é <strong>exclusiva das partes envolvidas</strong> (locador e locatário).
+                    O uso da plataforma implica plena ciência de que o Alugae é apenas um intermediador e não garante o êxito das transações.
                   </p>
                 </div>
               </div>
             </section>
 
-            {/* Seção 3 - Cadastro e Informações */}
-            <section>
-              <h3 className="font-semibold text-lg mb-3 text-gray-900">3. CADASTRO E INFORMAÇÕES</h3>
-              <p className="mb-3">Ao se cadastrar na plataforma, você declara e garante:</p>
-              <ul className="list-disc list-inside space-y-2">
-                <li>Fornecer informações <strong>verdadeiras e corretas</strong></li>
-                <li>Possuir mais de 18 anos e capacidade jurídica plena</li>
-                <li>Manter seus dados sempre atualizados</li>
-                <li>Ser responsável pela veracidade de todas as informações fornecidas</li>
-              </ul>
-            </section>
-
-            {/* Seção 4 - Funcionamento da Plataforma */}
-            <section>
-              <h3 className="font-semibold text-lg mb-3 text-gray-900">4. FUNCIONAMENTO DA PLATAFORMA</h3>
-              <p className="mb-3">O sistema permite:</p>
-              <ul className="list-disc list-inside space-y-2">
-                <li><strong>Visualização de datas indisponíveis</strong> dos veículos cadastrados</li>
-                <li><strong>Solicitação de aluguel</strong> através de notificações ao proprietário</li>
-                <li><strong>Comunicação direta</strong> entre locador e locatário via chat interno</li>
-                <li><strong>Início de negociação</strong> por conversa no app após solicitação</li>
-              </ul>
-              <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mt-4">
-                <p className="text-yellow-800 font-medium">
-                  ⚠️ <strong>Proibição:</strong> É expressamente proibida a negociação de valores fora da plataforma. 
-                  O valor do carro é fixo conforme anunciado.
+            {/* Seção 7 - Melhores Práticas Recomendadas */}
+            <section className="bg-blue-50 border border-blue-200 p-6 rounded-lg">
+              <h3 className="font-semibold text-lg mb-3 text-blue-900">7. Melhores Práticas Recomendadas</h3>
+              <p className="mb-4 text-blue-800">
+                Embora não sejam obrigatórias, o Alugae recomenda fortemente que os usuários sigam as práticas abaixo para garantir maior segurança e transparência nas transações. Essas práticas não substituem a responsabilidade individual, mas servem como diretrizes para reduzir riscos, evitar conflitos e proteger tanto locadores quanto locatários.
+              </p>
+              <div className="space-y-4">
+                <div className="border-l-4 border-blue-500 pl-4">
+                  <h4 className="font-semibold text-blue-900">🔹 1. Utilizar contrato de locação por escrito</h4>
+                  <p className="text-blue-800">Recomendamos que todas as locações sejam formalizadas em contrato particular, contendo dados do locador, locatário e veículo, valores, prazos, responsabilidades e eventuais penalidades. O contrato protege ambas as partes em caso de divergências.</p>
+                </div>
+                <div className="border-l-4 border-blue-500 pl-4">
+                  <h4 className="font-semibold text-blue-900">🔹 2. Registrar fotos e vídeos do veículo antes e depois da entrega</h4>
+                  <p className="text-blue-800">O registro fotográfico é uma forma simples de evitar discussões sobre danos. Fotos devem mostrar detalhes externos, internos, quilometragem e estado geral do veículo.</p>
+                </div>
+                <div className="border-l-4 border-blue-500 pl-4">
+                  <h4 className="font-semibold text-blue-900">🔹 3. Conferir documentação e CNH</h4>
+                  <p className="text-blue-800">O locador deve exigir a CNH válida do locatário antes da entrega. O locatário deve verificar se o veículo está devidamente licenciado e regularizado.</p>
+                </div>
+                <div className="border-l-4 border-blue-500 pl-4">
+                  <h4 className="font-semibold text-blue-900">🔹 4. Considerar seguro de cobertura</h4>
+                  <p className="text-blue-800">Não é obrigatório, mas recomendamos fortemente que seja avaliada a contratação de seguro adicional para cobrir terceiros, acidentes ou imprevistos. Essa medida reduz riscos de prejuízos significativos.</p>
+                </div>
+                <div className="border-l-4 border-blue-500 pl-4">
+                  <h4 className="font-semibold text-blue-900">🔹 5. Estabelecer regras claras de uso</h4>
+                  <p className="text-blue-800">Quilometragem permitida, combustível, multas, manutenção e responsabilidade em caso de avaria devem ser definidos previamente. Essas condições podem estar descritas no contrato.</p>
+                </div>
+                <div className="border-l-4 border-blue-500 pl-4">
+                  <h4 className="font-semibold text-blue-900">🔹 6. Utilizar exclusivamente a plataforma para transações financeiras</h4>
+                  <p className="text-blue-800">Transações feitas fora do Alugae não têm garantia, registro ou suporte. Isso pode colocar as partes em risco de fraude.</p>
+                </div>
+              </div>
+              <div className="mt-4 p-3 bg-blue-100 border border-blue-300 rounded">
+                <p className="text-blue-900 font-medium text-sm">
+                  <strong>Importante:</strong> O não cumprimento dessas práticas não impede o uso da plataforma, mas são uma recomendação para que as negociações sejam mais seguras para ambas as partes.
                 </p>
               </div>
             </section>
 
-            {/* Seção 5 - Recomendações de Boas Práticas */}
-            <section className="bg-blue-50 border border-blue-200 p-6 rounded-lg">
-              <h3 className="font-semibold text-lg mb-3 text-blue-900">5. RECOMENDAÇÕES DE BOAS PRÁTICAS</h3>
-              <p className="mb-3 text-blue-800">
-                <strong>IMPORTANTE:</strong> As práticas abaixo são recomendações, sem obrigatoriedade, 
-                mas fortemente sugeridas para a segurança de todos:
-              </p>
-              <ul className="list-disc list-inside space-y-2 text-blue-800">
-                <li><strong>Contratação de seguro adequado</strong> para o período de locação</li>
-                <li><strong>Elaboração de contrato específico</strong> entre locador e locatário</li>
-                <li><strong>Registro fotográfico completo</strong> do veículo antes e após a locação</li>
-                <li><strong>Conferência da validade da CNH</strong> e documentos do condutor</li>
-                <li><strong>Verificação das condições gerais</strong> do veículo (pneus, freios, etc.)</li>
-                <li><strong>Definição clara de responsabilidades</strong> em caso de danos</li>
-              </ul>
-            </section>
-
-            {/* Seção 6 - Processo de Locação */}
+            {/* Seção 8 - Encerramento de Conta */}
             <section>
-              <h3 className="font-semibold text-lg mb-3 text-gray-900">6. PROCESSO DE LOCAÇÃO</h3>
-              <h4 className="font-medium text-md mb-2 text-gray-800">6.1 Solicitação de Aluguel</h4>
-              <ul className="list-disc list-inside space-y-1 mb-4">
-                <li>O interessado visualiza as datas disponíveis do veículo</li>
-                <li>Solicita o aluguel informando as datas desejadas</li>
-                <li>O proprietário recebe notificação da intenção de aluguel</li>
-                <li>As partes iniciam negociação direta via chat da plataforma</li>
-              </ul>
-
-              <h4 className="font-medium text-md mb-2 text-gray-800">6.2 Negociação</h4>
-              <ul className="list-disc list-inside space-y-1">
-                <li>Toda negociação é de responsabilidade exclusiva das partes</li>
-                <li>O valor base do veículo é fixo conforme anunciado</li>
-                <li>Caução e detalhes adicionais devem ser acordados entre as partes</li>
-                <li>Local e horário de entrega/devolução devem ser definidos</li>
-              </ul>
-            </section>
-
-            {/* Seção 7 - Limitações da Plataforma */}
-            <section>
-              <h3 className="font-semibold text-lg mb-3 text-gray-900">7. LIMITAÇÕES DA PLATAFORMA</h3>
-              <p className="mb-3">A plataforma alugae.mobi:</p>
-              <ul className="list-disc list-inside space-y-2">
-                <li><strong>NÃO</strong> firma contratos entre as partes</li>
-                <li><strong>NÃO</strong> calcula ou fornece seguros</li>
-                <li><strong>NÃO</strong> intermedia pagamentos</li>
-                <li><strong>NÃO</strong> se responsabiliza por sinistros</li>
-                <li><strong>NÃO</strong> participa das negociações comerciais</li>
-                <li><strong>APENAS</strong> conecta interessados em alugar com proprietários</li>
-              </ul>
-            </section>
-
-            {/* Seção 8 - Uso da Plataforma */}
-            <section>
-              <h3 className="font-semibold text-lg mb-3 text-gray-900">8. USO DA PLATAFORMA</h3>
-              <ul className="list-disc list-inside space-y-2">
-                <li>É necessário ter pelo menos 18 anos para usar os serviços</li>
-                <li>É proibido usar a plataforma para atividades ilegais</li>
-                <li>Você é responsável por manter a confidencialidade de sua conta</li>
-                <li>O uso deve ser feito de forma responsável e respeitosa</li>
-              </ul>
-            </section>
-
-            {/* Seção 9 - Modificações dos Termos */}
-            <section>
-              <h3 className="font-semibold text-lg mb-3 text-gray-900">9. MODIFICAÇÕES DOS TERMOS</h3>
+              <h3 className="font-semibold text-lg mb-3 text-gray-900">8. Encerramento de Conta</h3>
               <p>
-                Podemos atualizar estes termos periodicamente. Usuários serão notificados sobre mudanças 
-                significativas. O uso continuado da plataforma constitui aceite das modificações.
+                O usuário pode encerrar sua conta a qualquer momento. O Alugae também poderá suspender ou excluir contas que descumpram os Termos, pratiquem fraude ou utilizem a plataforma de forma ilícita.
               </p>
             </section>
 
-            {/* Seção 10 - Contato */}
+            {/* Seção 9 - Alterações dos Termos */}
             <section>
-              <h3 className="font-semibold text-lg mb-3 text-gray-900">10. CONTATO</h3>
+              <h3 className="font-semibold text-lg mb-3 text-gray-900">9. Alterações dos Termos</h3>
               <p>
-                Para dúvidas sobre estes termos, entre em contato através dos canais oficiais da plataforma alugae.mobi.
+                Estes Termos podem ser atualizados periodicamente. O uso contínuo da plataforma implica aceitação das versões mais recentes.
+              </p>
+            </section>
+
+            {/* Seção 10 - Foro */}
+            <section>
+              <h3 className="font-semibold text-lg mb-3 text-gray-900">10. Foro</h3>
+              <p>
+                Fica eleito o foro da cidade de Brasília-DF, com renúncia a qualquer outro, para dirimir litígios decorrentes destes Termos.
               </p>
             </section>
 
             <div className="pt-4 border-t border-gray-200">
               <p className="text-xs text-gray-500 text-center">
-                Última atualização: {new Date().toLocaleDateString('pt-BR')} • Versão 1.0
+                Última atualização: 20/08/2025 • Termos de Uso do Alugae
               </p>
             </div>
           </div>
