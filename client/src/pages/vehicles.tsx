@@ -143,7 +143,7 @@ export default function Vehicles() {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="py-8">
+        <div className="pt-20 pb-8">
           <div className="max-w-4xl mx-auto px-4">
             <div className="text-center py-12">
               <h1 className="text-2xl font-bold text-gray-900 mb-4">Acesso Restrito</h1>
@@ -158,7 +158,7 @@ export default function Vehicles() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className="py-4 sm:py-8">
+      <div className="pt-20 pb-4 sm:pb-8">
         <div className="max-w-6xl mx-auto mobile-padding">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 gap-4">
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Meus Veículos</h1>

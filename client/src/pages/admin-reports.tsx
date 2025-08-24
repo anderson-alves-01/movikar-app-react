@@ -16,7 +16,7 @@ export default function AdminReports() {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="py-8">
+        <div className="pt-20 pb-8">
           <div className="max-w-4xl mx-auto px-4">
             <div className="text-center py-12">
               <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
@@ -47,7 +47,7 @@ export default function AdminReports() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className="py-8">
+      <div className="pt-20 pb-8">
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
             <div>

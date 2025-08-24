@@ -45,7 +45,7 @@ function AdminSettingsPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="py-8">
+        <div className="pt-20 pb-8">
           <div className="max-w-4xl mx-auto px-4">
             <div className="text-center py-12">
               <Shield className="h-16 w-16 text-red-500 mx-auto mb-4" />
@@ -190,7 +190,7 @@ function AdminSettingsPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="py-8">
+        <div className="pt-20 pb-8">
           <div className="max-w-4xl mx-auto px-4">
             <div className="text-center py-12">
               <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -205,7 +205,7 @@ function AdminSettingsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className="py-8">
+      <div className="pt-20 pb-8">
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
             <div>

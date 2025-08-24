@@ -177,7 +177,7 @@ export default function VehicleEdit() {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="flex items-center justify-center py-20">
+        <div className="flex items-center justify-center pt-20 pb-8">
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
         </div>
       </div>
@@ -188,7 +188,7 @@ export default function VehicleEdit() {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-8 text-center">
           <h1 className="text-2xl font-bold text-gray-800 mb-4">Veículo não encontrado</h1>
           <p className="text-gray-600 mb-8">Este veículo não existe ou você não tem permissão para editá-lo.</p>
           <Button asChild>
@@ -203,7 +203,7 @@ export default function VehicleEdit() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-8">
         {/* Back Button */}
         <div className="mb-6">
           <Button variant="ghost" asChild>

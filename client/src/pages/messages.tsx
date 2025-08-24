@@ -102,7 +102,7 @@ export default function Messages() {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="py-8">
+        <div className="pt-20 pb-8">
           <div className="max-w-4xl mx-auto px-4">
             <div className="text-center py-12">
               <h1 className="text-2xl font-bold text-gray-900 mb-4">Acesso Restrito</h1>
@@ -117,7 +117,7 @@ export default function Messages() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className="py-4 sm:py-8">
+      <div className="pt-20 pb-4 sm:pb-8">
         <div className="max-w-7xl mx-auto mobile-padding">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8">Mensagens</h1>
 
