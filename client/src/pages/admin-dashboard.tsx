@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
-import Header from "@/components/header";
+import AdminLayout from "@/components/admin-layout";
 import { Loading } from "@/components/ui/loading";
 import {
   Users,
@@ -38,21 +38,16 @@ export default function AdminDashboard() {
   // Verificar se é admin
   if (!user || user.role !== 'admin') {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <div className="py-8">
-          <div className="max-w-4xl mx-auto mobile-padding">
-            <div className="text-center py-12">
-              <Shield className="h-12 w-12 sm:h-16 sm:w-16 text-red-500 mx-auto mb-4" />
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Acesso Negado</h1>
-              <p className="text-gray-600 text-sm sm:text-base px-4">Você precisa de privilégios de administrador para acessar esta página.</p>
-              <Link href="/">
-                <Button className="mt-4 w-full sm:w-auto">Voltar ao Início</Button>
-              </Link>
-            </div>
-          </div>
+      <AdminLayout>
+        <div className="text-center py-12">
+          <Shield className="h-12 w-12 sm:h-16 sm:w-16 text-red-500 mx-auto mb-4" />
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Acesso Negado</h1>
+          <p className="text-gray-600 text-sm sm:text-base px-4">Você precisa de privilégios de administrador para acessar esta página.</p>
+          <Link href="/">
+            <Button className="mt-4 w-full sm:w-auto">Voltar ao Início</Button>
+          </Link>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
@@ -184,167 +179,156 @@ export default function AdminDashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <div className="py-8">
-          <div className="max-w-6xl mx-auto px-4">
-            <Loading />
-          </div>
+      <AdminLayout>
+        <div className="max-w-6xl mx-auto">
+          <Loading />
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <div className="py-8">
-        <div className="max-w-7xl mx-auto px-4">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Painel Administrativo</h1>
-                <p className="text-gray-600 mt-2">Bem-vindo, {user.name}</p>
-              </div>
-              <div className="flex gap-2 items-center">
-                <Link href="/">
-                  <Button variant="ghost" size="sm">
-                    Ir para o Site
-                  </Button>
-                </Link>
-                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                  <Shield className="h-4 w-4 mr-1" />
-                  Administrador
-                </Badge>
-              </div>
+    <AdminLayout>
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Painel Administrativo</h1>
+              <p className="text-gray-600 mt-2">Bem-vindo, {user.name}</p>
             </div>
-          </div>
-
-          {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {isLoading ? (
-              [...Array(4)].map((_, i) => (
-                <Card key={i}>
-                  <CardContent className="p-6">
-                    <div className="animate-pulse">
-                      <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                      <div className="h-8 bg-gray-200 rounded"></div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              quickStats.map((stat, index) => (
-                <Card key={index}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">{stat.label}</p>
-                        <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                      </div>
-                      {stat.change && (
-                        <div className={`text-sm ${stat.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-                          {stat.change}
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
-
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Admin Modules */}
-            <div className="lg:col-span-2">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Módulos Administrativos</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {adminModules.map((module, index) => {
-                  const IconComponent = module.icon;
-                  return (
-                    <Link key={index} href={module.href}>
-                      <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
-                        <CardContent className="p-6">
-                          <div className="flex items-center justify-between mb-4">
-                            <div className={`p-3 rounded-lg ${module.color} text-white`}>
-                              <IconComponent className="h-6 w-6" />
-                            </div>
-                            {module.priority && (
-                              <Badge variant="destructive" className="text-xs">
-                                Prioridade
-                              </Badge>
-                            )}
-                          </div>
-                          <h3 className="font-semibold text-gray-900 mb-2">{module.title}</h3>
-                          <p className="text-sm text-gray-600 mb-3">{module.description}</p>
-                          <p className="text-xs text-gray-500">{module.stats}</p>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Alerts & Quick Actions */}
-            <div className="space-y-6">
-              {/* Recent Alerts */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <AlertTriangle className="h-5 w-5 text-yellow-500" />
-                    Alertas Recentes
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {recentAlerts.map((alert, index) => (
-                    <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
-                      <div className={`w-2 h-2 rounded-full mt-2 ${
-                        alert.type === 'error' ? 'bg-red-500' :
-                        alert.type === 'warning' ? 'bg-yellow-500' : 
-                        'bg-blue-500'
-                      }`} />
-                      <div className="flex-1">
-                        <p className="text-sm text-gray-900">{alert.message}</p>
-                        <p className="text-xs text-gray-500 mt-1">{alert.time}</p>
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-
-              {/* Quick Actions */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Ações Rápidas</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Link href="/admin/vehicle-approval">
-                    <Button variant="outline" className="w-full justify-start">
-                      <Car className="h-4 w-4 mr-2" />
-                      Aprovar Veículos
-                    </Button>
-                  </Link>
-                  <Link href="/admin/reports">
-                    <Button variant="outline" className="w-full justify-start">
-                      <BarChart3 className="h-4 w-4 mr-2" />
-                      Visualizar Relatórios
-                    </Button>
-                  </Link>
-                  <Link href="/admin/settings">
-                    <Button variant="outline" className="w-full justify-start">
-                      <Settings className="h-4 w-4 mr-2" />
-                      Configurações
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
+            <div className="flex gap-2 items-center">
+              <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                <Shield className="h-4 w-4 mr-1" />
+                Administrador
+              </Badge>
             </div>
           </div>
         </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {isLoading ? (
+            [...Array(4)].map((_, i) => (
+              <Card key={i}>
+                <CardContent className="p-6">
+                  <div className="animate-pulse">
+                    <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-8 bg-gray-200 rounded"></div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            quickStats.map((stat, index) => (
+              <Card key={index}>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">{stat.label}</p>
+                      <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                    </div>
+                    {stat.change && (
+                      <div className={`text-sm ${stat.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                        {stat.change}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Admin Modules */}
+          <div className="lg:col-span-2">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Módulos Administrativos</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {adminModules.map((module, index) => {
+                const IconComponent = module.icon;
+                return (
+                  <Link key={index} href={module.href}>
+                    <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className={`p-3 rounded-lg ${module.color} text-white`}>
+                            <IconComponent className="h-6 w-6" />
+                          </div>
+                          {module.priority && (
+                            <Badge variant="destructive" className="text-xs">
+                              Prioridade
+                            </Badge>
+                          )}
+                        </div>
+                        <h3 className="font-semibold text-gray-900 mb-2">{module.title}</h3>
+                        <p className="text-sm text-gray-600 mb-3">{module.description}</p>
+                        <p className="text-xs text-gray-500">{module.stats}</p>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Alerts & Quick Actions */}
+          <div className="space-y-6">
+            {/* Recent Alerts */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                  Alertas Recentes
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {recentAlerts.map((alert, index) => (
+                  <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
+                    <div className={`w-2 h-2 rounded-full mt-2 ${
+                      alert.type === 'error' ? 'bg-red-500' :
+                      alert.type === 'warning' ? 'bg-yellow-500' : 
+                      'bg-blue-500'
+                    }`} />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-900">{alert.message}</p>
+                      <p className="text-xs text-gray-500 mt-1">{alert.time}</p>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Ações Rápidas</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Link href="/admin/vehicle-approval">
+                  <Button variant="outline" className="w-full justify-start">
+                    <Car className="h-4 w-4 mr-2" />
+                    Aprovar Veículos
+                  </Button>
+                </Link>
+                <Link href="/admin/reports">
+                  <Button variant="outline" className="w-full justify-start">
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Visualizar Relatórios
+                  </Button>
+                </Link>
+                <Link href="/admin/settings">
+                  <Button variant="outline" className="w-full justify-start">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Configurações
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
-    </div>
+    </AdminLayout>
   );
 }
