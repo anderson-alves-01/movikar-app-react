@@ -383,6 +383,92 @@ export default function Support() {
           </div>
         </section>
 
+        {/* Required Documents Section */}
+        <section>
+          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+            Documentos Necessários
+          </h2>
+          
+          <Card className="max-w-4xl mx-auto">
+            <CardHeader>
+              <CardTitle className="text-xl text-center flex items-center justify-center">
+                <Shield className="h-6 w-6 mr-2 text-blue-600" />
+                Segurança em Primeiro Lugar
+              </CardTitle>
+              <CardDescription className="text-center">
+                A segurança é prioridade no Alugae. Para proteger tanto quem aluga quanto quem disponibiliza o carro, alguns documentos são obrigatórios no processo:
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 gap-8">
+                {/* Para Locadores */}
+                <div className="space-y-4">
+                  <div className="flex items-center mb-4">
+                    <Car className="h-6 w-6 mr-2 text-green-600" />
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Para o Locador (quem anuncia o carro)
+                    </h3>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-start space-x-3 p-4 bg-green-50 rounded-lg border border-green-200">
+                      <FileText className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-green-800">Documento do Veículo</p>
+                        <p className="text-sm text-green-700">
+                          Documento de propriedade do veículo em nome próprio ou autorização legal para alugá-lo.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3 p-4 bg-green-50 rounded-lg border border-green-200">
+                      <FileText className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-green-800">CNH Válida</p>
+                        <p className="text-sm text-green-700">
+                          CNH válida, confirmando que está habilitado para dirigir e alugar veículos.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Para Locatários */}
+                <div className="space-y-4">
+                  <div className="flex items-center mb-4">
+                    <User className="h-6 w-6 mr-2 text-blue-600" />
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Para o Locatário (quem vai alugar o carro)
+                    </h3>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-start space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <FileText className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-blue-800">CNH Válida</p>
+                        <p className="text-sm text-blue-700">
+                          CNH válida, compatível com a categoria do veículo.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Important Note */}
+              <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-start space-x-3">
+                  <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-yellow-800">Validação Digital</p>
+                    <p className="text-sm text-yellow-700">
+                      Em alguns casos, o Alugae poderá solicitar o envio digitalizado desses documentos dentro da própria plataforma, como forma de validar as informações e aumentar a segurança de todos.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
         {/* FAQ Section */}
         <section>
           <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
