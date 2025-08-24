@@ -23,13 +23,17 @@ interface UserCoins {
 
 interface ContactUnlock {
   id: number;
+  userId: number;
+  vehicleId: number;
+  ownerId: number;
+  coinsSpent: number;
   contactInfo: {
     name: string;
     phone: string;
     email: string;
   };
   expiresAt: string;
-  coinsSpent: number;
+  createdAt: string;
 }
 
 export default function UnlockContactButton({ vehicleId, ownerId, ownerName, className }: UnlockContactButtonProps) {
@@ -39,7 +43,7 @@ export default function UnlockContactButton({ vehicleId, ownerId, ownerName, cla
   const [showContactInfo, setShowContactInfo] = useState(false);
   const [unlockedContact, setUnlockedContact] = useState<ContactUnlock | null>(null);
 
-  const coinsRequired = 50;
+  const coinsRequired = 200;
 
   // Get user's coin balance
   const { data: userCoins } = useQuery<UserCoins>({
@@ -47,10 +51,10 @@ export default function UnlockContactButton({ vehicleId, ownerId, ownerName, cla
   });
 
   // Check if contact is already unlocked
-  const { data: existingUnlock } = useQuery<ContactUnlock>({
+  const { data: existingUnlock } = useQuery<ContactUnlock | undefined>({
     queryKey: ["/api/coins/unlocks", vehicleId],
     queryFn: async () => {
-      const unlocks = await apiRequest("GET", "/api/coins/unlocks");
+      const unlocks = await apiRequest("GET", "/api/coins/unlocks") as unknown as ContactUnlock[];
       return unlocks.find((unlock: ContactUnlock) => unlock.vehicleId === vehicleId);
     },
   });
@@ -59,7 +63,7 @@ export default function UnlockContactButton({ vehicleId, ownerId, ownerName, cla
     mutationFn: async () => {
       return await apiRequest("POST", "/api/coins/unlock-contact", {
         vehicleId,
-      });
+      }) as unknown as ContactUnlock;
     },
     onSuccess: (data) => {
       setUnlockedContact(data);

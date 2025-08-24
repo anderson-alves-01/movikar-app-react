@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import Header from "@/components/header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -66,33 +67,33 @@ interface CoinPackage {
 
 const coinPackages: CoinPackage[] = [
   {
-    id: '100',
-    coins: 100,
-    price: 10.00,
-    name: '100 Moedas',
-    description: 'Pacote básico para desbloquear 2 contatos'
-  },
-  {
-    id: '250',
-    coins: 250,
+    id: '200',
+    coins: 200,
     price: 20.00,
-    name: '250 Moedas',
-    description: 'Pacote intermediário para 5 contatos',
-    popular: true
+    name: '200 Moedas',
+    description: 'Pacote básico'
   },
   {
     id: '500',
     coins: 500,
-    price: 35.00,
+    price: 45.00,
     name: '500 Moedas',
-    description: 'Pacote avançado para 10 contatos'
+    description: 'Pacote intermediário',
+    popular: true
   },
   {
     id: '1000',
     coins: 1000,
-    price: 60.00,
+    price: 80.00,
     name: '1000 Moedas',
-    description: 'Pacote premium para 20 contatos'
+    description: 'Pacote avançado'
+  },
+  {
+    id: '2000',
+    coins: 2000,
+    price: 150.00,
+    name: '2000 Moedas',
+    description: 'Pacote premium'
   }
 ];
 
@@ -115,7 +116,7 @@ const CoinPurchaseForm = ({ packageInfo, onSuccess }: { packageInfo: CoinPackage
       // Create payment intent
       const response = await apiRequest("POST", "/api/coins/purchase", {
         coinPackage: packageInfo.id
-      });
+      }) as unknown as { clientSecret: string };
 
       const { clientSecret } = response;
 
@@ -173,7 +174,7 @@ const CoinPurchaseForm = ({ packageInfo, onSuccess }: { packageInfo: CoinPackage
         className="w-full"
         data-testid="button-confirm-purchase"
       >
-        {loading ? "Processando..." : `Comprar por R$ ${packageInfo.price.toFixed(2)}`}
+        {loading ? "Processando..." : `Comprar por ${packageInfo.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`}
       </Button>
     </form>
   );
@@ -248,7 +249,9 @@ export default function CoinsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
           <Coins className="h-8 w-8 text-yellow-600" />
@@ -267,7 +270,7 @@ export default function CoinsPage() {
                 {userCoins?.availableCoins || 0}
               </div>
               <p className="text-xs text-muted-foreground">
-                50 moedas = 1 contato desbloqueado
+                200 moedas = 1 contato desbloqueado
               </p>
             </CardContent>
           </Card>
@@ -317,7 +320,7 @@ export default function CoinsPage() {
                 <CardTitle>Comprar Moedas</CardTitle>
                 <CardDescription>
                   Use moedas para desbloquear informações de contato dos proprietários de veículos.
-                  Cada contato custa 50 moedas e fica disponível por 30 dias.
+                  Cada contato custa 200 moedas e fica disponível por 30 dias.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -341,9 +344,9 @@ export default function CoinsPage() {
                         <CardDescription>{pkg.description}</CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-2xl font-bold mb-2">R$ {pkg.price.toFixed(2)}</div>
+                        <div className="text-2xl font-bold mb-2">{pkg.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
                         <div className="text-sm text-muted-foreground">
-                          {pkg.coins} moedas • R$ {(pkg.price / pkg.coins * 100).toFixed(1)} por 100 moedas
+                          {pkg.coins} moedas • {(pkg.price / pkg.coins * 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} por 100 moedas
                         </div>
                       </CardContent>
                     </Card>
@@ -355,7 +358,7 @@ export default function CoinsPage() {
                     <CardHeader>
                       <CardTitle>Finalizar Compra</CardTitle>
                       <CardDescription>
-                        Você está comprando {selectedPackage.name} por R$ {selectedPackage.price.toFixed(2)}
+                        Você está comprando {selectedPackage.name} por {selectedPackage.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -508,6 +511,7 @@ export default function CoinsPage() {
             </Card>
           </TabsContent>
         </Tabs>
+        </div>
       </div>
     </div>
   );
