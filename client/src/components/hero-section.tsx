@@ -1,5 +1,7 @@
-import { Shield, Clock, DollarSign } from "lucide-react";
 import bannerImage from "@assets/ALUGAE - BANNER SITE_1755986952224.jpg";
+import icone1 from "@assets/ALUGAE - ICONE 1_1756046864997.png";
+import icone2 from "@assets/ALUGAE - ICONE 2_1756046864999.png";
+import icone3 from "@assets/ALUGAE - ICONE 3_1756046864999.png";
 
 export default function HeroSection() {
   return (
@@ -34,8 +36,8 @@ export default function HeroSection() {
           {/* Value Propositions */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 mt-12 sm:mt-16 feature-cards">
             <div className="text-center">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <img src={icone1} alt="Sem Burocracia" className="h-12 w-12 sm:h-16 sm:w-16" />
               </div>
               <h3 className="text-lg sm:text-xl font-bold mb-2">
                 Sem Burocracia
@@ -45,8 +47,8 @@ export default function HeroSection() {
               </p>
             </div>
             <div className="text-center">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <img src={icone2} alt="Fácil e Rápido" className="h-12 w-12 sm:h-16 sm:w-16" />
               </div>
               <h3 className="text-lg sm:text-xl font-bold mb-2">
                 Fácil e Rápido
@@ -56,8 +58,8 @@ export default function HeroSection() {
               </p>
             </div>
             <div className="text-center">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-warning rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <img src={icone3} alt="Preços Justos" className="h-12 w-12 sm:h-16 sm:w-16" />
               </div>
               <h3 className="text-lg sm:text-xl font-bold mb-2">
                 Preços Justos
