@@ -229,21 +229,28 @@ export default function CoinsPage() {
 
     setValidatingDiscount(true);
     try {
+      console.log('🔍 Validating discount code:', discountCode);
       const response = await apiRequest("POST", "/api/coins/validate-discount", {
         code: discountCode
       }) as any;
 
-      setAppliedDiscount({
+      console.log('✅ Discount validation response:', response);
+
+      const discountData = {
         code: discountCode,
         percentage: Number(response.percentage),
         description: response.description
-      });
+      };
+      
+      console.log('💾 Setting applied discount:', discountData);
+      setAppliedDiscount(discountData);
 
       toast({
         title: "Desconto aplicado!",
         description: `${response.percentage}% de desconto - ${response.description}`,
       });
     } catch (error: any) {
+      console.error('❌ Discount validation error:', error);
       toast({
         title: "Código inválido",
         description: error.message || "Código de desconto não encontrado",
@@ -264,6 +271,13 @@ export default function CoinsPage() {
   };
 
   const calculateDiscountedPrice = (originalPrice: number) => {
+    console.log('🧮 calculateDiscountedPrice called with:', {
+      originalPrice,
+      appliedDiscount,
+      hasAppliedDiscount: !!appliedDiscount,
+      percentage: appliedDiscount?.percentage
+    });
+    
     if (!appliedDiscount || !appliedDiscount.percentage) {
       console.log('🧮 No discount applied, returning original price:', originalPrice);
       return originalPrice;
