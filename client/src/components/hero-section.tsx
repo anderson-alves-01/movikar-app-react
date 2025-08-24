@@ -37,7 +37,7 @@ export default function HeroSection() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 mt-12 sm:mt-16 feature-cards">
             <div className="text-center">
               <div className="w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                <img src={icone1} alt="Sem Burocracia" className="h-12 w-12 sm:h-16 sm:w-16" />
+                <img src={icone1} alt="Sem Burocracia" className="h-10 w-10 sm:h-14 sm:w-14 object-contain" />
               </div>
               <h3 className="text-lg sm:text-xl font-bold mb-2">
                 Sem Burocracia
@@ -48,7 +48,7 @@ export default function HeroSection() {
             </div>
             <div className="text-center">
               <div className="w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                <img src={icone2} alt="Fácil e Rápido" className="h-12 w-12 sm:h-16 sm:w-16" />
+                <img src={icone2} alt="Fácil e Rápido" className="h-10 w-10 sm:h-14 sm:w-14 object-contain" />
               </div>
               <h3 className="text-lg sm:text-xl font-bold mb-2">
                 Fácil e Rápido
@@ -59,7 +59,7 @@ export default function HeroSection() {
             </div>
             <div className="text-center">
               <div className="w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                <img src={icone3} alt="Preços Justos" className="h-12 w-12 sm:h-16 sm:w-16" />
+                <img src={icone3} alt="Preços Justos" className="h-10 w-10 sm:h-14 sm:w-14 object-contain" />
               </div>
               <h3 className="text-lg sm:text-xl font-bold mb-2">
                 Preços Justos
