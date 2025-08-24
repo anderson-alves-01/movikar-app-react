@@ -3782,18 +3782,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userCoins = await storage.createUserCoins(userId);
       }
 
-      if (userCoins.availableCoins < coinsRequired) {
-        return res.status(400).json({ 
-          message: `Moedas insuficientes. Você precisa de ${coinsRequired} moedas para fazer uma solicitação de aluguel.`,
-          availableCoins: userCoins.availableCoins,
-          requiredCoins: coinsRequired
-        });
-      }
+      const canProceed = userCoins.availableCoins >= coinsRequired;
 
       res.json({ 
-        canProceed: true,
+        canProceed,
         availableCoins: userCoins.availableCoins,
-        requiredCoins: coinsRequired
+        requiredCoins: coinsRequired,
+        message: canProceed 
+          ? "Moedas suficientes para prosseguir" 
+          : `Moedas insuficientes. Você precisa de ${coinsRequired} moedas para fazer uma solicitação de aluguel.`
       });
 
     } catch (error) {
