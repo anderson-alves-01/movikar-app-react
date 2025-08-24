@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Star, Loader2, Calendar, AlertTriangle } from "lucide-react";
+import { Star, Loader2, Calendar, AlertTriangle, Coins } from "lucide-react";
 import { useAuthStore } from "@/lib/auth";
 import { getAuthHeaders } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -71,6 +71,13 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
     },
   });
 
+  // Check rental access (coins availability)
+  const { data: rentalAccess, isLoading: loadingRentalAccess } = useQuery({
+    queryKey: ['/api/coins/check-rental-access'],
+    enabled: !!user,
+    retry: false,
+  });
+
   const bookingMutation = useMutation({
     mutationFn: async (data: any) => {
       const response = await apiRequest('POST', '/api/bookings', data);
@@ -87,6 +94,28 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
       toast({
         title: "Erro",
         description: error.message || "Falha ao solicitar reserva",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation to deduct coins for rental request
+  const deductCoinsMutation = useMutation({
+    mutationFn: async ({ vehicleId, requestType }: { vehicleId: number; requestType: string }) => {
+      const response = await apiRequest('POST', '/api/coins/deduct-rental', {
+        vehicleId,
+        requestType
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/coins/check-rental-access'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/coins/balance'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro com moedas",
+        description: error.message || "Falha ao processar moedas",
         variant: "destructive",
       });
     },
@@ -222,68 +251,71 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
       return;
     }
 
-    if (!bookingData.startDate || !bookingData.endDate) {
+    // Check if user has enough coins for checkout
+    if (!rentalAccess?.canProceed) {
       toast({
-        title: "Datas obrigatórias",
-        description: "Selecione as datas de retirada e devolução",
+        title: "Moedas insuficientes",
+        description: "Você precisa de 200 moedas para usar o checkout. Compre mais moedas para continuar.",
         variant: "destructive",
       });
       return;
     }
 
-    // Check for date conflicts
-    if (hasDateConflict()) {
-      toast({
-        title: "Datas indisponíveis",
-        description: "As datas selecionadas conflitam com reservas existentes. Escolha outras datas.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const pricing = calculatePricing();
-    
-    // Prepare checkout data
-    const checkoutData = {
-      vehicleId: vehicle.id,
-      startDate: bookingData.startDate,
-      endDate: bookingData.endDate,
-      totalPrice: pricing.total.toFixed(2),
-      serviceFee: pricing.serviceFee.toFixed(2),
-      insuranceFee: pricing.insuranceFee.toFixed(2),
-      securityDeposit: pricing.securityDeposit.toFixed(2),
-      includeInsurance: bookingData.includeInsurance,
-      vehicle: {
-        id: vehicle.id,
-        brand: vehicle.brand,
-        model: vehicle.model,
-        year: vehicle.year,
-        pricePerDay: vehicle.pricePerDay,
-        securityDepositValue: vehicle.securityDepositValue || 20,
-        securityDepositType: vehicle.securityDepositType || 'percentage',
-        images: vehicle.images || []
-      }
-    };
-
-    // Store data on server and redirect with checkoutId to avoid URL length issues
+    // First deduct coins for checkout
     try {
+      await deductCoinsMutation.mutateAsync({
+        vehicleId: vehicle.id,
+        requestType: 'checkout'
+      });
+
+      toast({
+        title: "200 moedas debitadas",
+        description: "Prosseguindo para o checkout...",
+      });
+
+      // Now proceed with checkout
+      const pricing = calculatePricing();
+      
+      // Prepare checkout data
+      const checkoutData = {
+        vehicleId: vehicle.id,
+        startDate: bookingData.startDate,
+        endDate: bookingData.endDate,
+        totalPrice: pricing.total.toFixed(2),
+        serviceFee: pricing.serviceFee.toFixed(2),
+        insuranceFee: pricing.insuranceFee.toFixed(2),
+        securityDeposit: pricing.securityDeposit.toFixed(2),
+        includeInsurance: bookingData.includeInsurance,
+        vehicle: {
+          id: vehicle.id,
+          brand: vehicle.brand,
+          model: vehicle.model,
+          year: vehicle.year,
+          pricePerDay: vehicle.pricePerDay,
+          securityDepositValue: vehicle.securityDepositValue || 20,
+          securityDepositType: vehicle.securityDepositType || 'percentage',
+          images: vehicle.images || []
+        }
+      };
+
+      // Store data on server and redirect with checkoutId to avoid URL length issues
       const response = await apiRequest("POST", "/api/store-checkout-data", checkoutData);
       const result = await response.json();
       
       // Redirect to checkout with checkout ID
       window.location.href = `/checkout/${vehicle.id}?checkoutId=${result.checkoutId}`;
-    } catch (error) {
-      console.error("Error storing checkout data:", error);
+    } catch (error: any) {
+      console.error("Error in checkout process:", error);
       toast({
         title: "Erro",
-        description: "Erro ao preparar checkout. Tente novamente.",
+        description: error.message || "Erro ao processar checkout. Tente novamente.",
         variant: "destructive",
       });
     }
   };
 
   // Handle "Rent Now" request (no payment, just request)
-  const handleRentNow = () => {
+  const handleRentNow = async () => {
     if (!user) {
       toast({
         title: "Login necessário",
@@ -311,20 +343,50 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
       return;
     }
 
-    const pricing = calculatePricing();
-    
-    const requestData = {
-      vehicleId: vehicle.id,
-      startDate: bookingData.startDate,
-      endDate: bookingData.endDate,
-      totalPrice: pricing.total,
-      serviceFee: pricing.serviceFee,
-      insuranceFee: pricing.insuranceFee,
-      securityDeposit: pricing.securityDeposit,
-      includeInsurance: bookingData.includeInsurance,
-    };
-    
-    rentNowMutation.mutate(requestData);
+    // Check if user has enough coins
+    if (!rentalAccess?.canProceed) {
+      toast({
+        title: "Moedas insuficientes",
+        description: "Você precisa de 200 moedas para fazer uma solicitação de aluguel. Compre mais moedas para continuar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // First deduct coins for rent now request
+    try {
+      await deductCoinsMutation.mutateAsync({
+        vehicleId: vehicle.id,
+        requestType: 'rent_now'
+      });
+
+      toast({
+        title: "200 moedas debitadas",
+        description: "Enviando solicitação de aluguel...",
+      });
+
+      const pricing = calculatePricing();
+      
+      const requestData = {
+        vehicleId: vehicle.id,
+        startDate: bookingData.startDate,
+        endDate: bookingData.endDate,
+        totalPrice: pricing.total,
+        serviceFee: pricing.serviceFee,
+        insuranceFee: pricing.insuranceFee,
+        securityDeposit: pricing.securityDeposit,
+        includeInsurance: bookingData.includeInsurance,
+      };
+      
+      rentNowMutation.mutate(requestData);
+    } catch (error: any) {
+      console.error("Error deducting coins for rent now:", error);
+      toast({
+        title: "Erro",
+        description: error.message || "Falha ao processar moedas para solicitação.",
+        variant: "destructive",
+      });
+    }
   };
 
   const pricing = calculatePricing();
@@ -556,31 +618,66 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
 
             {/* Action Buttons */}
             
+                {/* Coins requirement notice */}
+                {user && !rentalAccess?.canProceed && !loadingRentalAccess && (
+                  <div className="border border-amber-200 bg-amber-50 rounded-lg p-3 mb-3">
+                    <div className="flex items-start gap-3">
+                      <Coins className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <div className="text-sm">
+                        <p className="text-amber-800 font-medium mb-1">
+                          💰 Moedas necessárias para alugar
+                        </p>
+                        <p className="text-amber-700">
+                          Você precisa de 200 moedas para usar os botões de aluguel. 
+                          <span className="font-medium"> Saldo atual: {rentalAccess?.availableCoins || 0} moedas</span>
+                        </p>
+                        <p className="text-amber-600 text-xs mt-1">
+                          Compre mais moedas na área "Moedas" do seu perfil.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Primary Action: Rent Now Request (No payment required) - Always visible */}
                 <Button 
                   type="button"
                   onClick={handleRentNow}
                   className={`w-full font-semibold transition-colors mb-3 ${
-                    hasDateConflict() 
+                    hasDateConflict() || (user && !rentalAccess?.canProceed)
                       ? 'bg-gray-400 hover:bg-gray-500 cursor-not-allowed text-white' 
                       : 'bg-green-600 text-white hover:bg-green-700'
                   }`}
-                  disabled={rentNowMutation.isPending || !user || !bookingData.startDate || !bookingData.endDate || hasDateConflict()}
+                  disabled={
+                    rentNowMutation.isPending || 
+                    deductCoinsMutation.isPending ||
+                    !user || 
+                    !bookingData.startDate || 
+                    !bookingData.endDate || 
+                    hasDateConflict() || 
+                    (user && !rentalAccess?.canProceed)
+                  }
                   data-testid="button-rent-now-request"
                 >
-                  {rentNowMutation.isPending ? (
+                  {rentNowMutation.isPending || deductCoinsMutation.isPending ? (
                     <span className="flex items-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Enviando solicitação...
+                      {deductCoinsMutation.isPending ? "Processando moedas..." : "Enviando solicitação..."}
                     </span>
                   ) : hasDateConflict() ? (
                     <span className="flex items-center gap-2">
                       <AlertTriangle className="h-4 w-4" />
                       Datas indisponíveis - Escolha outras datas
                     </span>
+                  ) : (user && !rentalAccess?.canProceed) ? (
+                    <span className="flex items-center gap-2">
+                      <Coins className="h-4 w-4" />
+                      Moedas insuficientes (200 necessárias)
+                    </span>
                   ) : (
                     <span className="flex items-center gap-2">
-                      📧 Alugaê
+                      <Coins className="h-4 w-4" />
+                      📧 Alugaê (200 moedas)
                       {pricing.days > 0 && <span className="ml-2 font-normal">({formatCurrency(pricing.total)})</span>}
                     </span>
                   )}
@@ -592,21 +689,39 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
                     type="submit" 
                     variant="outline"
                     className={`w-full font-semibold transition-colors ${
-                      hasDateConflict() 
+                      hasDateConflict() || (user && !rentalAccess?.canProceed)
                         ? 'border-red-500 text-red-500 cursor-not-allowed' 
                         : 'border-primary text-primary hover:bg-primary hover:text-white'
                     }`}
-                    disabled={!user || !bookingData.startDate || !bookingData.endDate || hasDateConflict()}
+                    disabled={
+                      !user || 
+                      !bookingData.startDate || 
+                      !bookingData.endDate || 
+                      hasDateConflict() || 
+                      deductCoinsMutation.isPending ||
+                      (user && !rentalAccess?.canProceed)
+                    }
                     data-testid="button-book-now"
                   >
-                    {hasDateConflict() ? (
+                    {deductCoinsMutation.isPending ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Processando moedas...
+                      </span>
+                    ) : hasDateConflict() ? (
                       <span className="flex items-center gap-2">
                         <AlertTriangle className="h-4 w-4" />
                         Datas indisponíveis
                       </span>
+                    ) : (user && !rentalAccess?.canProceed) ? (
+                      <span className="flex items-center gap-2">
+                        <Coins className="h-4 w-4" />
+                        Moedas insuficientes (200 necessárias)
+                      </span>
                     ) : (
                       <span className="flex items-center gap-2">
-                        💳 Pagar Agora
+                        <Coins className="h-4 w-4" />
+                        💳 Pagar Agora (200 moedas)
                         {pricing.days > 0 && <span className="ml-2 font-normal">({formatCurrency(pricing.total)})</span>}
                       </span>
                     )}
@@ -616,7 +731,10 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
                 {adminSettings?.enableRentNowCheckout && (
                   <div className="text-xs text-gray-500 space-y-1 mt-3">
                     <p className="text-center font-medium text-blue-700">
-                      💳 <strong>Pagar Agora:</strong> Pagamento imediato e confirmação automática
+                      💳 <strong>Pagar Agora:</strong> Pagamento imediato e confirmação automática (+ 200 moedas)
+                    </p>
+                    <p className="text-center font-medium text-green-700">
+                      📧 <strong>Alugaê:</strong> Solicitação ao proprietário via email (+ 200 moedas)
                     </p>
                     {!user && (
                       <p className="text-center text-amber-600 font-medium">

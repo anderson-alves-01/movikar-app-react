@@ -131,6 +131,7 @@ export interface IStorage {
   createUserCoins(userId: number): Promise<UserCoins>;
   addCoins(userId: number, amount: number, source: string, description: string, sourceId?: string, paymentIntentId?: string): Promise<void>;
   spendCoins(userId: number, amount: number, description: string, vehicleId?: number, ownerId?: number): Promise<boolean>;
+  deductCoins(userId: number, amount: number, type: string, description: string, sourceId?: string): Promise<void>;
   getCoinTransactions(userId: number, limit?: number, offset?: number): Promise<CoinTransaction[]>;
   unlockContact(userId: number, vehicleId: number, ownerId: number, coinsRequired: number): Promise<ContactUnlock | null>;
   getContactUnlock(userId: number, vehicleId: number): Promise<ContactUnlock | undefined>;
@@ -3966,6 +3967,19 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(coinTransactions.createdAt))
       .limit(limit)
       .offset(offset);
+  }
+
+  async deductCoins(
+    userId: number, 
+    amount: number, 
+    type: string, 
+    description: string, 
+    sourceId?: string
+  ): Promise<void> {
+    const success = await this.spendCoins(userId, amount, description);
+    if (!success) {
+      throw new Error('Moedas insuficientes para a operação');
+    }
   }
 
   async unlockContact(

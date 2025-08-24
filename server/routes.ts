@@ -3629,7 +3629,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { vehicleId } = req.body;
       const userId = req.user!.id;
-      const coinsRequired = 50; // Cost to unlock contact
+      const coinsRequired = 200; // Cost to unlock contact
 
       if (!vehicleId) {
         return res.status(400).json({ message: "ID do veículo é obrigatório" });
@@ -3699,6 +3699,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get contact unlocks error:", error);
       res.status(500).json({ message: "Erro ao buscar contatos desbloqueados" });
+    }
+  });
+
+  // Check if user can make rental request (has enough coins)
+  app.post("/api/coins/check-rental-access", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const coinsRequired = 200;
+
+      // Check if user has enough coins
+      let userCoins = await storage.getUserCoins(userId);
+      if (!userCoins) {
+        userCoins = await storage.createUserCoins(userId);
+      }
+
+      if (userCoins.availableCoins < coinsRequired) {
+        return res.status(400).json({ 
+          message: `Moedas insuficientes. Você precisa de ${coinsRequired} moedas para fazer uma solicitação de aluguel.`,
+          availableCoins: userCoins.availableCoins,
+          requiredCoins: coinsRequired
+        });
+      }
+
+      res.json({ 
+        canProceed: true,
+        availableCoins: userCoins.availableCoins,
+        requiredCoins: coinsRequired
+      });
+
+    } catch (error) {
+      console.error("Error checking rental access:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Deduct coins for rental request
+  app.post("/api/coins/deduct-rental", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const { vehicleId, requestType } = req.body; // requestType: 'rent_now' or 'checkout'
+      const coinsRequired = 200;
+
+      if (!vehicleId || !requestType) {
+        return res.status(400).json({ message: "Vehicle ID e tipo de solicitação são obrigatórios" });
+      }
+
+      // Check if user has enough coins
+      let userCoins = await storage.getUserCoins(userId);
+      if (!userCoins) {
+        userCoins = await storage.createUserCoins(userId);
+      }
+
+      if (userCoins.availableCoins < coinsRequired) {
+        return res.status(400).json({ 
+          message: `Moedas insuficientes. Você precisa de ${coinsRequired} moedas.`,
+          availableCoins: userCoins.availableCoins,
+          requiredCoins: coinsRequired
+        });
+      }
+
+      // Deduct coins
+      const description = requestType === 'rent_now' 
+        ? `Solicitação de aluguel - Veículo #${vehicleId}`
+        : `Checkout de aluguel - Veículo #${vehicleId}`;
+
+      await storage.deductCoins(
+        userId,
+        coinsRequired,
+        'spend',
+        description,
+        `rental_${requestType}_${vehicleId}_${userId}_${Date.now()}`
+      );
+
+      res.json({ 
+        success: true,
+        coinsDeducted: coinsRequired,
+        remainingCoins: userCoins.availableCoins - coinsRequired
+      });
+
+    } catch (error) {
+      console.error("Error deducting coins for rental:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
     }
   });
 
