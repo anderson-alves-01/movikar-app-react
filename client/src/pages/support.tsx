@@ -383,6 +383,99 @@ export default function Support() {
           </div>
         </section>
 
+        {/* How to Rent Section */}
+        <section>
+          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+            Como Alugar um Veículo
+          </h2>
+          
+          <Card className="max-w-5xl mx-auto">
+            <CardHeader>
+              <CardTitle className="text-xl text-center flex items-center justify-center">
+                <User className="h-6 w-6 mr-2 text-blue-600" />
+                Processo rápido, transparente e seguro
+              </CardTitle>
+              <CardDescription className="text-center">
+                Alugar um carro pelo Alugae foi pensado para ser um processo rápido, transparente e seguro, eliminando a burocracia que geralmente existe em locadoras tradicionais. Nossa proposta é dar autonomia para que locadores e locatários se conectem diretamente, utilizando a tecnologia como facilitadora.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-8">
+                {/* Step-by-step process */}
+                <div className="grid gap-6">
+                  {/* Step 1 */}
+                  <div className="flex items-start space-x-4 p-6 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                      1
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-blue-900 mb-2">Crie sua conta gratuita</h3>
+                      <p className="text-blue-800">Crie sua conta gratuita no aplicativo em poucos minutos. Basta informar seus dados pessoais, aceitar os termos de uso e já terá acesso à plataforma.</p>
+                    </div>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div className="flex items-start space-x-4 p-6 bg-indigo-50 rounded-lg border border-indigo-200">
+                    <div className="flex-shrink-0 w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                      2
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-indigo-900 mb-2">Navegue pelos anúncios</h3>
+                      <p className="text-indigo-800">Navegue pelos anúncios de carros disponíveis de acordo com sua necessidade. É possível filtrar por categoria, localização e outras preferências.</p>
+                    </div>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className="flex items-start space-x-4 p-6 bg-emerald-50 rounded-lg border border-emerald-200">
+                    <div className="flex-shrink-0 w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                      3
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-emerald-900 mb-2">Adquira moedas</h3>
+                      <p className="text-emerald-800">Adquira moedas dentro do aplicativo de forma simples e segura (pagamento processado via Stripe). As moedas funcionam como créditos que permitem liberar o telefone do locador.</p>
+                    </div>
+                  </div>
+
+                  {/* Step 4 */}
+                  <div className="flex items-start space-x-4 p-6 bg-orange-50 rounded-lg border border-orange-200">
+                    <div className="flex-shrink-0 w-8 h-8 bg-orange-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                      4
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-orange-900 mb-2">Libere o contato do proprietário</h3>
+                      <p className="text-orange-800">Utilize suas moedas para liberar o contato do proprietário do carro que deseja alugar. Assim, você poderá falar diretamente com ele para combinar os detalhes da locação.</p>
+                    </div>
+                  </div>
+
+                  {/* Step 5 */}
+                  <div className="flex items-start space-x-4 p-6 bg-purple-50 rounded-lg border border-purple-200">
+                    <div className="flex-shrink-0 w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                      5
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-purple-900 mb-2">Finalize a negociação</h3>
+                      <p className="text-purple-800">Finalize a negociação fora da plataforma, diretamente com o proprietário do veículo.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Important Note */}
+                <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="flex items-start space-x-3">
+                    <AlertCircle className="h-6 w-6 text-yellow-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-yellow-900 mb-2">Importante</h3>
+                      <p className="text-yellow-800">
+                        Os preços exibidos em cada anúncio são definidos pelo próprio locador e são fixos, ou seja, não existe negociação dentro do aplicativo. Isso garante mais clareza e evita divergências.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
         {/* How to Advertise Section */}
         <section>
           <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
