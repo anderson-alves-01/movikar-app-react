@@ -132,9 +132,14 @@ const CoinPurchaseForm = ({ packageInfo, onSuccess, discountCode, finalPrice }: 
       const response = await apiRequest("POST", "/api/coins/purchase", {
         coinPackage: packageInfo.id,
         discountCode: discountCode
-      }) as unknown as { clientSecret: string };
+      });
 
-      const { clientSecret } = response;
+      const data = await response.json();
+      const { clientSecret } = data;
+
+      if (!clientSecret) {
+        throw new Error("Client secret não foi fornecido pelo servidor");
+      }
 
       // Confirm payment
       const { error } = await stripe.confirmCardPayment(clientSecret, {
