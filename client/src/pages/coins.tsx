@@ -431,10 +431,19 @@ export default function CoinsPage() {
         </div>
 
         <Tabs defaultValue="purchase" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="purchase" data-testid="tab-purchase">Comprar Moedas</TabsTrigger>
-            <TabsTrigger value="history" data-testid="tab-history">Histórico</TabsTrigger>
-            <TabsTrigger value="unlocks" data-testid="tab-unlocks">Contatos Desbloqueados</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 h-auto">
+            <TabsTrigger value="purchase" data-testid="tab-purchase" className="text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-1.5">
+              <span className="block sm:hidden">Comprar</span>
+              <span className="hidden sm:block">Comprar Moedas</span>
+            </TabsTrigger>
+            <TabsTrigger value="history" data-testid="tab-history" className="text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-1.5">
+              <span className="block sm:hidden">Histórico</span>
+              <span className="hidden sm:block">Histórico</span>
+            </TabsTrigger>
+            <TabsTrigger value="unlocks" data-testid="tab-unlocks" className="text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-1.5">
+              <span className="block sm:hidden">Contatos</span>
+              <span className="hidden sm:block">Contatos Desbloqueados</span>
+            </TabsTrigger>
           </TabsList>
 
           {/* Purchase Tab */}

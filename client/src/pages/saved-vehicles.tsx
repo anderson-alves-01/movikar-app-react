@@ -200,8 +200,8 @@ export default function SavedVehicles() {
               {/* Category Tabs */}
               {allCategories.length > 1 && (
                 <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-6">
-                    <TabsTrigger value="all" className="text-xs">
+                  <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 h-auto">
+                    <TabsTrigger value="all" className="text-xs px-2 py-2">
                       Todos ({(savedVehicles && Array.isArray(savedVehicles)) ? savedVehicles.length : 0})
                     </TabsTrigger>
                     {Array.isArray(categories) && categories.map((category: string) => {

@@ -373,11 +373,23 @@ export default function PerformanceDashboard() {
 
       {/* Gráficos */}
       <Tabs defaultValue="revenue" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="revenue">Receita</TabsTrigger>
-          <TabsTrigger value="bookings">Reservas</TabsTrigger>
-          <TabsTrigger value="users">Usuários</TabsTrigger>
-          <TabsTrigger value="categories">Categorias</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4 h-auto">
+          <TabsTrigger value="revenue" className="text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-1.5">
+            <span className="block sm:hidden">Receita</span>
+            <span className="hidden sm:block">Receita</span>
+          </TabsTrigger>
+          <TabsTrigger value="bookings" className="text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-1.5">
+            <span className="block sm:hidden">Reservas</span>
+            <span className="hidden sm:block">Reservas</span>
+          </TabsTrigger>
+          <TabsTrigger value="users" className="text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-1.5">
+            <span className="block sm:hidden">Usuários</span>
+            <span className="hidden sm:block">Usuários</span>
+          </TabsTrigger>
+          <TabsTrigger value="categories" className="text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-1.5">
+            <span className="block sm:hidden">Categorias</span>
+            <span className="hidden sm:block">Categorias</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="revenue" className="space-y-6">

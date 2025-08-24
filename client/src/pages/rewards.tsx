@@ -352,11 +352,23 @@ export default function Rewards() {
       </div>
 
       <Tabs defaultValue="invite" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="invite">Convidar Amigos</TabsTrigger>
-          <TabsTrigger value="use-code">Usar Código</TabsTrigger>
-          <TabsTrigger value="use-points">Usar Pontos</TabsTrigger>
-          <TabsTrigger value="history">Histórico</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4 h-auto">
+          <TabsTrigger value="invite" className="text-xs sm:text-sm px-1 py-2 sm:px-3 sm:py-1.5">
+            <span className="block sm:hidden">Convidar</span>
+            <span className="hidden sm:block">Convidar Amigos</span>
+          </TabsTrigger>
+          <TabsTrigger value="use-code" className="text-xs sm:text-sm px-1 py-2 sm:px-3 sm:py-1.5">
+            <span className="block sm:hidden">Código</span>
+            <span className="hidden sm:block">Usar Código</span>
+          </TabsTrigger>
+          <TabsTrigger value="use-points" className="text-xs sm:text-sm px-1 py-2 sm:px-3 sm:py-1.5">
+            <span className="block sm:hidden">Pontos</span>
+            <span className="hidden sm:block">Usar Pontos</span>
+          </TabsTrigger>
+          <TabsTrigger value="history" className="text-xs sm:text-sm px-1 py-2 sm:px-3 sm:py-1.5">
+            <span className="block sm:hidden">Histórico</span>
+            <span className="hidden sm:block">Histórico</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="invite" className="space-y-6">

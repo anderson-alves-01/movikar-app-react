@@ -184,14 +184,16 @@ export default function InspectionHistory() {
       </div>
 
       <Tabs defaultValue="pending" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="pending" className="flex items-center gap-2">
+        <TabsList className="grid w-full grid-cols-2 h-auto">
+          <TabsTrigger value="pending" className="flex items-center gap-2 text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-1.5">
             <Clock className="h-4 w-4" />
-            Pendentes ({filteredPending.length})
+            <span className="block sm:hidden">Pendentes ({filteredPending.length})</span>
+            <span className="hidden sm:block">Pendentes ({filteredPending.length})</span>
           </TabsTrigger>
-          <TabsTrigger value="completed" className="flex items-center gap-2">
+          <TabsTrigger value="completed" className="flex items-center gap-2 text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-1.5">
             <CheckCircle2 className="h-4 w-4" />
-            Concluídas ({filteredInspections.length})
+            <span className="block sm:hidden">Concluídas ({filteredInspections.length})</span>
+            <span className="hidden sm:block">Concluídas ({filteredInspections.length})</span>
           </TabsTrigger>
         </TabsList>
 

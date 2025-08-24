@@ -270,9 +270,15 @@ export default function VehicleBoosts() {
           </div>
 
           <Tabs defaultValue="create" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="create" data-testid="tab-create">Criar Boost</TabsTrigger>
-              <TabsTrigger value="active" data-testid="tab-active">Boosts Ativos</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 h-auto">
+              <TabsTrigger value="create" data-testid="tab-create" className="text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-1.5">
+                <span className="block sm:hidden">Criar</span>
+                <span className="hidden sm:block">Criar Boost</span>
+              </TabsTrigger>
+              <TabsTrigger value="active" data-testid="tab-active" className="text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-1.5">
+                <span className="block sm:hidden">Ativos</span>
+                <span className="hidden sm:block">Boosts Ativos</span>
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="create" className="space-y-6">

@@ -522,10 +522,19 @@ export default function Reservations() {
           <h1 className="text-3xl font-bold text-gray-900 mb-8">Minhas Reservas</h1>
 
         <Tabs defaultValue="renter" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="renter">Como Locatário</TabsTrigger>
-            <TabsTrigger value="owner">Como Proprietário</TabsTrigger>
-            <TabsTrigger value="queue">Fila de Espera</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 h-auto">
+            <TabsTrigger value="renter" className="text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-1.5">
+              <span className="block sm:hidden">Locatário</span>
+              <span className="hidden sm:block">Como Locatário</span>
+            </TabsTrigger>
+            <TabsTrigger value="owner" className="text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-1.5">
+              <span className="block sm:hidden">Proprietário</span>
+              <span className="hidden sm:block">Como Proprietário</span>
+            </TabsTrigger>
+            <TabsTrigger value="queue" className="text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-1.5">
+              <span className="block sm:hidden">Fila</span>
+              <span className="hidden sm:block">Fila de Espera</span>
+            </TabsTrigger>
           </TabsList>
 
           {/* Reservas como Locatário */}

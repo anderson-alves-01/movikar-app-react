@@ -482,10 +482,19 @@ export default function Profile() {
 
         {/* Tabs */}
         <Tabs defaultValue="renter" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="renter">Minhas Reservas</TabsTrigger>
-            <TabsTrigger value="owner">Como Proprietário</TabsTrigger>
-            <TabsTrigger value="vehicles">Meus Veículos</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 h-auto">
+            <TabsTrigger value="renter" className="text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-1.5">
+              <span className="block sm:hidden">Reservas</span>
+              <span className="hidden sm:block">Minhas Reservas</span>
+            </TabsTrigger>
+            <TabsTrigger value="owner" className="text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-1.5">
+              <span className="block sm:hidden">Proprietário</span>
+              <span className="hidden sm:block">Como Proprietário</span>
+            </TabsTrigger>
+            <TabsTrigger value="vehicles" className="text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-1.5">
+              <span className="block sm:hidden">Veículos</span>
+              <span className="hidden sm:block">Meus Veículos</span>
+            </TabsTrigger>
           </TabsList>
 
           {/* Renter Bookings */}
