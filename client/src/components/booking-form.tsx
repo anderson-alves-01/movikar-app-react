@@ -12,7 +12,6 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency } from "@/lib/currency";
 import type { AdminSettings } from "@shared/admin-settings";
-import logoPath from "@assets/logo.png";
 
 interface BookingFormProps {
   vehicle: {
@@ -678,7 +677,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
                   ) : (
                     <span className="flex items-center gap-2">
                       <Coins className="h-4 w-4" />
-                      <img src={logoPath} alt="Alugaê" className="h-5 w-auto" />
+                      <img src="/assets/logo.png" alt="Alugaê" className="h-5 w-auto" />
                       (200 moedas)
                       {pricing.days > 0 && <span className="ml-2 font-normal">({formatCurrency(pricing.total)})</span>}
                     </span>
@@ -736,7 +735,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
                       💳 <strong>Pagar Agora:</strong> Pagamento imediato e confirmação automática (+ 200 moedas)
                     </p>
                     <p className="text-center font-medium text-green-700 flex items-center justify-center gap-1">
-                      <img src={logoPath} alt="Alugaê" className="h-4 w-auto" />
+                      <img src="/assets/logo.png" alt="Alugaê" className="h-4 w-auto" />
                       <strong>Alugaê:</strong> Solicitação ao proprietário via email (+ 200 moedas)
                     </p>
                     {!user && (
