@@ -3595,6 +3595,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'SAVE30': { percentage: 30, description: 'Super desconto', active: true },
         'FIRST50': { percentage: 50, description: 'Primeira compra', active: true },
         'VIP15': { percentage: 15, description: 'Cliente VIP', active: true },
+        'DESCONTO99': { percentage: 99, description: 'Super mega desconto!', active: true },
       };
 
       const discount = discountCodes[code.toUpperCase()];
@@ -3648,6 +3649,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'SAVE30': { percentage: 30, description: 'Super desconto', active: true },
           'FIRST50': { percentage: 50, description: 'Primeira compra', active: true },
           'VIP15': { percentage: 15, description: 'Cliente VIP', active: true },
+          'DESCONTO99': { percentage: 99, description: 'Super mega desconto!', active: true },
         };
 
         const discount = discountCodes[discountCode.toUpperCase()];
