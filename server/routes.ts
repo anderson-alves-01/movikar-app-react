@@ -1942,11 +1942,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const allApproved = requiredTypes.every(type => approvedTypes.includes(type));
 
         if (allApproved) {
+          // Check if user is not already verified to avoid duplicate coins
+          const userResult = await pool.query(`
+            SELECT verification_status FROM users WHERE id = $1
+          `, [userId]);
+          
+          const wasAlreadyVerified = userResult.rows[0]?.verification_status === 'verified';
+          
           await pool.query(`
             UPDATE users 
             SET verification_status = 'verified'
             WHERE id = $1
           `, [userId]);
+
+          // Give 300 free coins only if user wasn't previously verified
+          if (!wasAlreadyVerified) {
+            try {
+              await storage.addCoins(
+                userId,
+                300,
+                'document_validation',
+                'Bônus de 300 moedas por verificação de documentos',
+                `verification_${userId}`
+              );
+              console.log(`✅ Awarded 300 free coins to verified user ${userId}`);
+            } catch (coinError) {
+              console.error('❌ Error awarding verification coins:', coinError);
+            }
+          }
         }
       }
 
@@ -3519,6 +3542,163 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("❌ Create contract error:", error);
       res.status(500).json({ message: "Erro ao criar contrato" });
+    }
+  });
+
+  // Coin System Routes
+  // Get user's coin balance
+  app.get("/api/coins", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      let coins = await storage.getUserCoins(userId);
+      
+      // Create coin record if it doesn't exist
+      if (!coins) {
+        coins = await storage.createUserCoins(userId);
+      }
+      
+      res.json(coins);
+    } catch (error) {
+      console.error("Get coins error:", error);
+      res.status(500).json({ message: "Erro ao buscar saldo de moedas" });
+    }
+  });
+
+  // Get user's coin transaction history
+  app.get("/api/coins/transactions", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const limit = parseInt(req.query.limit as string) || 50;
+      const offset = parseInt(req.query.offset as string) || 0;
+      
+      const transactions = await storage.getCoinTransactions(userId, limit, offset);
+      res.json(transactions);
+    } catch (error) {
+      console.error("Get coin transactions error:", error);
+      res.status(500).json({ message: "Erro ao buscar histórico de transações" });
+    }
+  });
+
+  // Purchase coins via Stripe
+  app.post("/api/coins/purchase", authenticateToken, async (req, res) => {
+    try {
+      if (!stripe) {
+        return res.status(500).json({ message: "Stripe não configurado" });
+      }
+
+      const { coinPackage } = req.body;
+      
+      // Define coin packages
+      const packages = {
+        '100': { coins: 100, price: 10.00, name: '100 moedas' },
+        '250': { coins: 250, price: 20.00, name: '250 moedas' },
+        '500': { coins: 500, price: 35.00, name: '500 moedas' },
+        '1000': { coins: 1000, price: 60.00, name: '1000 moedas' },
+      };
+
+      const selectedPackage = packages[coinPackage as keyof typeof packages];
+      if (!selectedPackage) {
+        return res.status(400).json({ message: "Pacote de moedas inválido" });
+      }
+
+      // Create Stripe payment intent
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(selectedPackage.price * 100), // Convert to cents
+        currency: 'brl',
+        metadata: {
+          type: 'coin_purchase',
+          userId: req.user!.id.toString(),
+          coinAmount: selectedPackage.coins.toString(),
+          packageName: selectedPackage.name,
+        },
+        description: `Compra de ${selectedPackage.name} - alugae.mobi`,
+      });
+
+      res.json({ 
+        clientSecret: paymentIntent.client_secret,
+        packageInfo: selectedPackage
+      });
+    } catch (error) {
+      console.error("Purchase coins error:", error);
+      res.status(500).json({ message: "Erro ao processar compra de moedas" });
+    }
+  });
+
+  // Unlock contact information for a vehicle
+  app.post("/api/coins/unlock-contact", authenticateToken, async (req, res) => {
+    try {
+      const { vehicleId } = req.body;
+      const userId = req.user!.id;
+      const coinsRequired = 50; // Cost to unlock contact
+
+      if (!vehicleId) {
+        return res.status(400).json({ message: "ID do veículo é obrigatório" });
+      }
+
+      // Check if already unlocked
+      const existingUnlock = await storage.getContactUnlock(userId, vehicleId);
+      if (existingUnlock) {
+        return res.json({
+          success: true,
+          contactInfo: existingUnlock.contactInfo,
+          message: "Contato já desbloqueado"
+        });
+      }
+
+      // Get vehicle details
+      const vehicle = await storage.getVehicle(vehicleId);
+      if (!vehicle) {
+        return res.status(404).json({ message: "Veículo não encontrado" });
+      }
+
+      // Check if user is trying to unlock their own vehicle
+      if (vehicle.ownerId === userId) {
+        return res.status(400).json({ message: "Você não pode desbloquear seu próprio veículo" });
+      }
+
+      // Check user's coin balance
+      let userCoins = await storage.getUserCoins(userId);
+      if (!userCoins) {
+        userCoins = await storage.createUserCoins(userId);
+      }
+
+      if (userCoins.availableCoins < coinsRequired) {
+        return res.status(400).json({ 
+          message: "Moedas insuficientes para desbloquear contato",
+          required: coinsRequired,
+          available: userCoins.availableCoins
+        });
+      }
+
+      // Unlock contact
+      const unlock = await storage.unlockContact(userId, vehicleId, vehicle.ownerId, coinsRequired);
+      
+      if (!unlock) {
+        return res.status(500).json({ message: "Erro ao desbloquear contato" });
+      }
+
+      res.json({
+        success: true,
+        contactInfo: unlock.contactInfo,
+        coinsSpent: coinsRequired,
+        expiresAt: unlock.expiresAt,
+        message: "Contato desbloqueado com sucesso"
+      });
+    } catch (error) {
+      console.error("Unlock contact error:", error);
+      res.status(500).json({ message: "Erro ao desbloquear contato" });
+    }
+  });
+
+  // Get all contact unlocks for the user
+  app.get("/api/coins/unlocks", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const unlocks = await storage.getAllContactUnlocks(userId);
+      res.json(unlocks);
+    } catch (error) {
+      console.error("Get contact unlocks error:", error);
+      res.status(500).json({ message: "Erro ao buscar contatos desbloqueados" });
     }
   });
 
@@ -5760,7 +5940,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       switch (event.type) {
         case 'payment_intent.succeeded':
-          await stripeService.handlePaymentSucceeded(event.data.object as Stripe.PaymentIntent);
+          const paymentIntent = event.data.object as Stripe.PaymentIntent;
+          
+          // Check if this is a coin purchase
+          if (paymentIntent.metadata?.type === 'coin_purchase') {
+            console.log("💰 Processing coin purchase payment:", paymentIntent.id);
+            
+            const userId = parseInt(paymentIntent.metadata.userId);
+            const coinAmount = parseInt(paymentIntent.metadata.coinAmount);
+            const packageName = paymentIntent.metadata.packageName;
+            
+            if (userId && coinAmount) {
+              try {
+                await storage.addCoins(
+                  userId,
+                  coinAmount,
+                  'stripe_payment',
+                  `Compra de ${packageName}`,
+                  paymentIntent.id,
+                  paymentIntent.id
+                );
+                console.log(`✅ Added ${coinAmount} coins to user ${userId}`);
+              } catch (error) {
+                console.error("❌ Error adding coins:", error);
+              }
+            }
+          } else {
+            // Handle regular booking payments
+            await stripeService.handlePaymentSucceeded(paymentIntent);
+          }
           break;
 
         case 'payment_intent.payment_failed':

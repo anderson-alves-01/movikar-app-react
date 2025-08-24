@@ -1484,3 +1484,117 @@ export const reviewResponsesRelations = relations(reviewResponses, ({ one }) => 
 export const carModelsRelations = relations(carModels, ({ many }) => ({
   // Add relation to vehicles if needed
 }));
+
+// User Coins System - Sistema de moedas para locatários
+export const userCoins = pgTable("user_coins", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull().unique(),
+  totalCoins: integer("total_coins").default(0).notNull(),
+  availableCoins: integer("available_coins").default(0).notNull(),
+  usedCoins: integer("used_coins").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Coin Transactions - Histórico de transações de moedas
+export const coinTransactions = pgTable("coin_transactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  type: varchar("type", { length: 20 }).notNull(), // purchase, spend, bonus, refund
+  amount: integer("amount").notNull(), // Quantidade de moedas (positivo para receber, negativo para gastar)
+  description: text("description").notNull(),
+  source: varchar("source", { length: 50 }).notNull(), // stripe_payment, document_validation, contact_unlock, admin_bonus
+  sourceId: varchar("source_id", { length: 255 }), // Payment intent ID, contact unlock ID, etc
+  vehicleId: integer("vehicle_id").references(() => vehicles.id), // Para transações relacionadas a veículos
+  ownerId: integer("owner_id").references(() => users.id), // Para transações relacionadas a proprietários
+  status: varchar("status", { length: 20 }).default("completed").notNull(), // pending, completed, cancelled
+  paymentIntentId: varchar("payment_intent_id", { length: 255 }), // Stripe payment intent para compras
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Contact Unlocks - Controle de liberação de contatos
+export const contactUnlocks = pgTable("contact_unlocks", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(), // Locatário que desbloqueou
+  vehicleId: integer("vehicle_id").references(() => vehicles.id).notNull(),
+  ownerId: integer("owner_id").references(() => users.id).notNull(), // Proprietário cujo contato foi desbloqueado
+  coinsSpent: integer("coins_spent").notNull(), // Quantidade de moedas gastas
+  contactInfo: jsonb("contact_info").$type<{
+    phone: string;
+    email: string;
+    name: string;
+  }>().notNull(),
+  expiresAt: timestamp("expires_at").notNull(), // Quando o acesso expira
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  unique("unique_user_vehicle_unlock").on(table.userId, table.vehicleId),
+  index("idx_contact_unlocks_user").on(table.userId),
+  index("idx_contact_unlocks_vehicle").on(table.vehicleId),
+]);
+
+// Types for coin system
+export type UserCoins = typeof userCoins.$inferSelect;
+export type InsertUserCoins = typeof userCoins.$inferInsert;
+export type CoinTransaction = typeof coinTransactions.$inferSelect;
+export type InsertCoinTransaction = typeof coinTransactions.$inferInsert;
+export type ContactUnlock = typeof contactUnlocks.$inferSelect;
+export type InsertContactUnlock = typeof contactUnlocks.$inferInsert;
+
+// Zod schemas for coin system
+export const insertUserCoinsSchema = createInsertSchema(userCoins).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCoinTransactionSchema = createInsertSchema(coinTransactions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertContactUnlockSchema = createInsertSchema(contactUnlocks).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Relations for coin system
+export const userCoinsRelations = relations(userCoins, ({ one, many }) => ({
+  user: one(users, {
+    fields: [userCoins.userId],
+    references: [users.id],
+  }),
+  transactions: many(coinTransactions),
+}));
+
+export const coinTransactionsRelations = relations(coinTransactions, ({ one }) => ({
+  user: one(users, {
+    fields: [coinTransactions.userId],
+    references: [users.id],
+  }),
+  vehicle: one(vehicles, {
+    fields: [coinTransactions.vehicleId],
+    references: [vehicles.id],
+  }),
+  owner: one(users, {
+    fields: [coinTransactions.ownerId],
+    references: [users.id],
+    relationName: "coinTransactionsAsOwner",
+  }),
+}));
+
+export const contactUnlocksRelations = relations(contactUnlocks, ({ one }) => ({
+  user: one(users, {
+    fields: [contactUnlocks.userId],
+    references: [users.id],
+    relationName: "contactUnlocksAsUser",
+  }),
+  vehicle: one(vehicles, {
+    fields: [contactUnlocks.vehicleId],
+    references: [vehicles.id],
+  }),
+  owner: one(users, {
+    fields: [contactUnlocks.ownerId],
+    references: [users.id],
+    relationName: "contactUnlocksAsOwner",
+  }),
+}));

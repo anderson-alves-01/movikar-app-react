@@ -31,6 +31,7 @@ import { useAuthStore } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/currency";
 import WaitingQueueButton from "@/components/waiting-queue-button";
+import UnlockContactButton from "@/components/unlock-contact-button";
 
 export default function VehicleDetail() {
   const [, params] = useRoute("/vehicle/:id");
@@ -348,6 +349,16 @@ export default function VehicleDetail() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Unlock Contact Section */}
+            {user && user.id !== vehicle.owner.id && (
+              <UnlockContactButton
+                vehicleId={vehicle.id}
+                ownerId={vehicle.owner.id}
+                ownerName={vehicle.owner.name}
+                className="mb-8"
+              />
+            )}
 
             {/* Reviews */}
             <Card>

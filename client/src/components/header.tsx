@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Search, Menu, User, MessageCircle, Car, LogOut, Shield, Bell, Gift, Sparkles, BarChart3, RotateCcw, DollarSign, BookmarkCheck, Crown, Star } from "lucide-react";
+import { Search, Menu, User, MessageCircle, Car, LogOut, Shield, Bell, Gift, Sparkles, BarChart3, RotateCcw, DollarSign, BookmarkCheck, Crown, Star, Coins } from "lucide-react";
 import { useAuthStore } from "@/lib/auth";
 import { useSearch } from "@/contexts/SearchContext";
 import { buildSearchParams } from "@/lib/searchUtils";
@@ -73,6 +73,25 @@ export default function Header() {
     enabled: !!user,
     staleTime: 30000, // Cache for 30 seconds
     refetchInterval: 60000, // Refetch every minute
+    retry: false
+  });
+
+  // Fetch user's coin balance
+  const { data: userCoins } = useQuery({
+    queryKey: ['/api/coins'],
+    queryFn: async () => {
+      if (!user) return null;
+      
+      const response = await fetch('/api/coins', {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        return null;
+      }
+      return response.json();
+    },
+    enabled: !!user,
+    staleTime: 60000, // Cache for 1 minute
     retry: false
   });
 
@@ -240,6 +259,20 @@ export default function Header() {
                     </Button>
                   </Link>
 
+                  {/* Coin Balance Display */}
+                  {user && userCoins && (
+                    <Link 
+                      href="/coins"
+                      className="hidden sm:flex items-center gap-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg hover:bg-yellow-100 transition-colors"
+                      data-testid="header-coin-balance"
+                    >
+                      <Coins className="h-4 w-4 text-yellow-600" />
+                      <span className="text-sm font-medium text-yellow-800">
+                        {userCoins.availableCoins}
+                      </span>
+                    </Link>
+                  )}
+
                   {/* User Menu */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -272,6 +305,12 @@ export default function Header() {
                         <Link href="/reservations" className="cursor-pointer">
                           <Car className="h-4 w-4 mr-2" />
                           Minhas Reservas
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/coins" className="cursor-pointer">
+                          <Coins className="h-4 w-4 mr-2 text-yellow-600" />
+                          Minhas Moedas
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>

@@ -52,6 +52,7 @@ import OwnerLeads from "@/pages/owner-leads";
 import VehicleBoosts from "@/pages/vehicle-boosts";
 import Reviews from "@/pages/reviews";
 import Support from "@/pages/support";
+import Coins from "@/pages/coins";
 import NotFound from "@/pages/not-found";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { OnboardingFlow, OnboardingTrigger } from "@/components/onboarding/onboarding-flow";
@@ -110,6 +111,7 @@ function Router() {
         <Route path="/dashboard" component={Profile} />
         <Route path="/messages" component={Messages} />
         <Route path="/contracts" component={Contracts} />
+        <Route path="/coins" component={Coins} />
 
         <Route path="/contracts/:id" component={ContractPreview} />
         <Route path="/rewards" component={Rewards} />

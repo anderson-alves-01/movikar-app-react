@@ -1,5 +1,5 @@
 import { 
-  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity, adminSettings, savedVehicles, coupons, subscriptionPlans, userSubscriptions, vehicleInspections, payouts, ownerInspections, cnhValidation, deliveryPickupSettings, supportTickets, supportMessages, userDocuments,
+  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity, adminSettings, savedVehicles, coupons, subscriptionPlans, userSubscriptions, vehicleInspections, payouts, ownerInspections, cnhValidation, deliveryPickupSettings, supportTickets, supportMessages, userDocuments, userCoins, coinTransactions, contactUnlocks,
   type User, type InsertUser, type Vehicle, type InsertVehicle, 
   type Booking, type InsertBooking, type Review, type InsertReview,
   type Message, type InsertMessage, type VehicleWithOwner, type BookingWithDetails,
@@ -13,7 +13,9 @@ import {
   type Coupon, type InsertCoupon, type SubscriptionPlan, type InsertSubscriptionPlan,
   type UserSubscription, type InsertUserSubscription,
   type VehicleInspection, type InsertVehicleInspection, type Payout,
-  type OwnerInspection, type InsertOwnerInspection
+  type OwnerInspection, type InsertOwnerInspection,
+  type UserCoins, type InsertUserCoins, type CoinTransaction, type InsertCoinTransaction,
+  type ContactUnlock, type InsertContactUnlock
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, and, gte, lte, desc, asc, or, like, ilike, sql, lt, ne, inArray, not, isNull, isNotNull } from "drizzle-orm";
@@ -123,6 +125,16 @@ export interface IStorage {
   
   // Admin messaging
   getUsersByRole(role: string): Promise<User[]>;
+
+  // Coin System
+  getUserCoins(userId: number): Promise<UserCoins | undefined>;
+  createUserCoins(userId: number): Promise<UserCoins>;
+  addCoins(userId: number, amount: number, source: string, description: string, sourceId?: string, paymentIntentId?: string): Promise<void>;
+  spendCoins(userId: number, amount: number, description: string, vehicleId?: number, ownerId?: number): Promise<boolean>;
+  getCoinTransactions(userId: number, limit?: number, offset?: number): Promise<CoinTransaction[]>;
+  unlockContact(userId: number, vehicleId: number, ownerId: number, coinsRequired: number): Promise<ContactUnlock | null>;
+  getContactUnlock(userId: number, vehicleId: number): Promise<ContactUnlock | undefined>;
+  getAllContactUnlocks(userId: number): Promise<ContactUnlock[]>;
   getUserStats(): Promise<{
     totalUsers: number;
     ownersCount: number;
@@ -3823,6 +3835,227 @@ export class DatabaseStorage implements IStorage {
         eq(reviews.type, type)
       ));
     return !!review;
+  }
+
+  // Coin System Methods
+  async getUserCoins(userId: number): Promise<UserCoins | undefined> {
+    const [coins] = await db
+      .select()
+      .from(userCoins)
+      .where(eq(userCoins.userId, userId));
+    return coins;
+  }
+
+  async createUserCoins(userId: number): Promise<UserCoins> {
+    const [coins] = await db
+      .insert(userCoins)
+      .values({
+        userId,
+        totalCoins: 0,
+        availableCoins: 0,
+        usedCoins: 0,
+      })
+      .returning();
+    return coins;
+  }
+
+  async addCoins(
+    userId: number, 
+    amount: number, 
+    source: string, 
+    description: string, 
+    sourceId?: string, 
+    paymentIntentId?: string
+  ): Promise<void> {
+    await db.transaction(async (tx) => {
+      // Get or create user coins
+      const [coins] = await tx
+        .select()
+        .from(userCoins)
+        .where(eq(userCoins.userId, userId));
+      
+      if (!coins) {
+        await tx
+          .insert(userCoins)
+          .values({
+            userId,
+            totalCoins: amount,
+            availableCoins: amount,
+            usedCoins: 0,
+          });
+      } else {
+        await tx
+          .update(userCoins)
+          .set({
+            totalCoins: coins.totalCoins + amount,
+            availableCoins: coins.availableCoins + amount,
+            updatedAt: new Date(),
+          })
+          .where(eq(userCoins.userId, userId));
+      }
+
+      // Create transaction record
+      await tx
+        .insert(coinTransactions)
+        .values({
+          userId,
+          type: 'purchase',
+          amount,
+          description,
+          source,
+          sourceId,
+          paymentIntentId,
+          status: 'completed',
+        });
+    });
+  }
+
+  async spendCoins(
+    userId: number, 
+    amount: number, 
+    description: string, 
+    vehicleId?: number, 
+    ownerId?: number
+  ): Promise<boolean> {
+    const result = await db.transaction(async (tx) => {
+      // Get current coins
+      const [coins] = await tx
+        .select()
+        .from(userCoins)
+        .where(eq(userCoins.userId, userId));
+      
+      if (!coins || coins.availableCoins < amount) {
+        return false;
+      }
+
+      // Update user coins
+      await tx
+        .update(userCoins)
+        .set({
+          availableCoins: coins.availableCoins - amount,
+          usedCoins: coins.usedCoins + amount,
+          updatedAt: new Date(),
+        })
+        .where(eq(userCoins.userId, userId));
+
+      // Create transaction record
+      await tx
+        .insert(coinTransactions)
+        .values({
+          userId,
+          type: 'spend',
+          amount: -amount,
+          description,
+          source: 'contact_unlock',
+          vehicleId,
+          ownerId,
+          status: 'completed',
+        });
+
+      return true;
+    });
+
+    return result;
+  }
+
+  async getCoinTransactions(userId: number, limit = 50, offset = 0): Promise<CoinTransaction[]> {
+    return await db
+      .select()
+      .from(coinTransactions)
+      .where(eq(coinTransactions.userId, userId))
+      .orderBy(desc(coinTransactions.createdAt))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async unlockContact(
+    userId: number, 
+    vehicleId: number, 
+    ownerId: number, 
+    coinsRequired: number
+  ): Promise<ContactUnlock | null> {
+    const result = await db.transaction(async (tx) => {
+      // Check if already unlocked
+      const [existing] = await tx
+        .select()
+        .from(contactUnlocks)
+        .where(and(
+          eq(contactUnlocks.userId, userId),
+          eq(contactUnlocks.vehicleId, vehicleId)
+        ));
+      
+      if (existing) {
+        return existing;
+      }
+
+      // Get owner contact info
+      const [owner] = await tx
+        .select({
+          name: users.name,
+          email: users.email,
+          phone: users.phone,
+        })
+        .from(users)
+        .where(eq(users.id, ownerId));
+      
+      if (!owner) {
+        return null;
+      }
+
+      // Spend coins
+      const coinsSpent = await this.spendCoins(
+        userId, 
+        coinsRequired, 
+        `Contato desbloqueado para veículo #${vehicleId}`,
+        vehicleId,
+        ownerId
+      );
+
+      if (!coinsSpent) {
+        return null;
+      }
+
+      // Create unlock record
+      const [unlock] = await tx
+        .insert(contactUnlocks)
+        .values({
+          userId,
+          vehicleId,
+          ownerId,
+          coinsSpent: coinsRequired,
+          contactInfo: {
+            name: owner.name,
+            email: owner.email,
+            phone: owner.phone || '',
+          },
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+        })
+        .returning();
+
+      return unlock;
+    });
+
+    return result;
+  }
+
+  async getContactUnlock(userId: number, vehicleId: number): Promise<ContactUnlock | undefined> {
+    const [unlock] = await db
+      .select()
+      .from(contactUnlocks)
+      .where(and(
+        eq(contactUnlocks.userId, userId),
+        eq(contactUnlocks.vehicleId, vehicleId),
+        gte(contactUnlocks.expiresAt, new Date())
+      ));
+    return unlock;
+  }
+
+  async getAllContactUnlocks(userId: number): Promise<ContactUnlock[]> {
+    return await db
+      .select()
+      .from(contactUnlocks)
+      .where(eq(contactUnlocks.userId, userId))
+      .orderBy(desc(contactUnlocks.createdAt));
   }
 
 }
