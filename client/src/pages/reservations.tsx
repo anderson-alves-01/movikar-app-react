@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CalendarDays, MapPin, Car, User, Clock, X, FileText, Eye, PenTool, Search, CheckCircle2, AlertTriangle, CameraIcon, Star } from "lucide-react";
+import { CalendarDays, MapPin, Car, User, Clock, X, FileText, Eye, PenTool, Search, CheckCircle2, AlertTriangle, CameraIcon, Star, MessageCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency } from "@/lib/currency";
@@ -596,52 +596,75 @@ export default function Reservations() {
                               {formatCurrency(booking.totalPrice)}
                             </span>
                           </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                            {shouldShowInspectionButton(booking) && (
+                          <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
+                            {/* Botões principais sempre visíveis */}
+                            <div className="flex flex-1 gap-2">
                               <Button 
                                 size="sm" 
-                                className="bg-blue-600 hover:bg-blue-700 text-white"
-                                onClick={() => handleInspection(booking.id)}
-                                data-testid={`button-inspection-${booking.id}`}
+                                variant="outline"
+                                onClick={() => window.location.href = `/vehicle/${booking.vehicle.id}`}
+                                className="flex-1 min-w-0"
                               >
-                                <CameraIcon className="w-4 h-4 mr-1" />
-                                Realizar Vistoria
+                                Ver veículo
                               </Button>
-                            )}
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => window.location.href = `/messages?booking=${booking.id}`}
+                                className="flex-1 min-w-0"
+                              >
+                                <MessageCircle className="w-4 h-4 mr-1" />
+                                Conversar
+                              </Button>
+                            </div>
                             
-                            {shouldShowOwnerInspectionButton(booking) && (
-                              <Button 
-                                size="sm" 
-                                className="bg-purple-600 hover:bg-purple-700 text-white"
-                                onClick={() => window.location.href = `/owner-inspection/${booking.id}`}
-                                data-testid={`button-owner-inspection-${booking.id}`}
-                              >
-                                <CheckCircle2 className="w-4 h-4 mr-1" />
-                                Vistoria Proprietário
-                              </Button>
-                            )}
+                            {/* Botões de ação específicos */}
+                            <div className="flex gap-2 flex-wrap">
+                              {shouldShowInspectionButton(booking) && (
+                                <Button 
+                                  size="sm" 
+                                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                                  onClick={() => handleInspection(booking.id)}
+                                  data-testid={`button-inspection-${booking.id}`}
+                                >
+                                  <CameraIcon className="w-4 h-4 mr-1" />
+                                  Realizar Vistoria
+                                </Button>
+                              )}
+                              
+                              {shouldShowOwnerInspectionButton(booking) && (
+                                <Button 
+                                  size="sm" 
+                                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                                  onClick={() => window.location.href = `/owner-inspection/${booking.id}`}
+                                  data-testid={`button-owner-inspection-${booking.id}`}
+                                >
+                                  <CheckCircle2 className="w-4 h-4 mr-1" />
+                                  Vistoria Proprietário
+                                </Button>
+                              )}
 
-                            {shouldShowReviewButton(booking) && (
+                              {shouldShowReviewButton(booking) && (
+                                <Button 
+                                  size="sm" 
+                                  className="bg-yellow-500 hover:bg-yellow-600 text-white"
+                                  onClick={() => handleReview(booking)}
+                                  data-testid={`button-review-${booking.id}`}
+                                >
+                                  <Star className="w-4 h-4 mr-1" />
+                                  Avaliar
+                                </Button>
+                              )}
+                              
                               <Button 
                                 size="sm" 
-                                className="bg-yellow-500 hover:bg-yellow-600 text-white"
-                                onClick={() => handleReview(booking)}
-                                data-testid={`button-review-${booking.id}`}
+                                variant="secondary"
+                                onClick={() => handleViewDetails(booking.id)}
+                                data-testid={`button-details-${booking.id}`}
                               >
-                                <Star className="w-4 h-4 mr-1" />
-                                Avaliar
+                                Ver Detalhes
                               </Button>
-                            )}
-                            
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleViewDetails(booking.id)}
-                              data-testid={`button-details-${booking.id}`}
-                              className="col-span-1 sm:col-span-2 lg:col-span-1"
-                            >
-                              Ver Detalhes
-                            </Button>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -721,73 +744,96 @@ export default function Reservations() {
                               {formatCurrency(booking.totalPrice)}
                             </span>
                           </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                            {booking.status === "pending" && (
-                              <>
-                                <Button 
-                                  size="sm" 
-                                  variant="outline" 
-                                  className="text-green-600 border-green-600 hover:bg-green-50"
-                                  onClick={() => handleBookingAction(booking.id, "approved")}
-                                  disabled={updateBookingMutation.isPending}
-                                >
-                                  Aprovar
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="outline" 
-                                  className="text-red-600 border-red-600 hover:bg-red-50"
-                                  onClick={() => handleBookingAction(booking.id, "rejected")}
-                                  disabled={updateBookingMutation.isPending}
-                                >
-                                  Rejeitar
-                                </Button>
-                              </>
-                            )}
-                            {shouldShowInspectionButton(booking) && (
+                          <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
+                            {/* Botões principais sempre visíveis */}
+                            <div className="flex flex-1 gap-2">
                               <Button 
                                 size="sm" 
-                                className="bg-blue-600 hover:bg-blue-700 text-white"
-                                onClick={() => handleInspection(booking.id)}
-                                data-testid={`button-inspection-${booking.id}`}
+                                variant="outline"
+                                onClick={() => window.location.href = `/vehicle/${booking.vehicle.id}`}
+                                className="flex-1 min-w-0"
                               >
-                                <CameraIcon className="w-4 h-4 mr-1" />
-                                Realizar Vistoria
+                                Ver veículo
                               </Button>
-                            )}
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => window.location.href = `/messages?booking=${booking.id}`}
+                                className="flex-1 min-w-0"
+                              >
+                                <MessageCircle className="w-4 h-4 mr-1" />
+                                Conversar
+                              </Button>
+                            </div>
                             
-                            {shouldShowOwnerInspectionButton(booking) && (
-                              <Button 
-                                size="sm" 
-                                className="bg-purple-600 hover:bg-purple-700 text-white"
-                                onClick={() => window.location.href = `/owner-inspection/${booking.id}`}
-                                data-testid={`button-owner-inspection-${booking.id}`}
-                              >
-                                <CheckCircle2 className="w-4 h-4 mr-1" />
-                                Vistoria Proprietário
-                              </Button>
-                            )}
+                            {/* Botões de ação específicos */}
+                            <div className="flex gap-2 flex-wrap">
+                              {booking.status === "pending" && (
+                                <>
+                                  <Button 
+                                    size="sm" 
+                                    className="bg-green-600 hover:bg-green-700 text-white"
+                                    onClick={() => handleBookingAction(booking.id, "approved")}
+                                    disabled={updateBookingMutation.isPending}
+                                  >
+                                    <CheckCircle2 className="w-4 h-4 mr-1" />
+                                    Aprovar
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    className="bg-red-600 hover:bg-red-700 text-white"
+                                    onClick={() => handleBookingAction(booking.id, "rejected")}
+                                    disabled={updateBookingMutation.isPending}
+                                  >
+                                    <X className="w-4 h-4 mr-1" />
+                                    Rejeitar
+                                  </Button>
+                                </>
+                              )}
+                              {shouldShowInspectionButton(booking) && (
+                                <Button 
+                                  size="sm" 
+                                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                                  onClick={() => handleInspection(booking.id)}
+                                  data-testid={`button-inspection-${booking.id}`}
+                                >
+                                  <CameraIcon className="w-4 h-4 mr-1" />
+                                  Realizar Vistoria
+                                </Button>
+                              )}
+                              
+                              {shouldShowOwnerInspectionButton(booking) && (
+                                <Button 
+                                  size="sm" 
+                                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                                  onClick={() => window.location.href = `/owner-inspection/${booking.id}`}
+                                  data-testid={`button-owner-inspection-${booking.id}`}
+                                >
+                                  <CheckCircle2 className="w-4 h-4 mr-1" />
+                                  Vistoria Proprietário
+                                </Button>
+                              )}
 
-                            {shouldShowReviewButton(booking) && (
+                              {shouldShowReviewButton(booking) && (
+                                <Button 
+                                  size="sm" 
+                                  className="bg-yellow-500 hover:bg-yellow-600 text-white"
+                                  onClick={() => handleReview(booking)}
+                                  data-testid={`button-review-${booking.id}`}
+                                >
+                                  <Star className="w-4 h-4 mr-1" />
+                                  Avaliar
+                                </Button>
+                              )}
+                              
                               <Button 
                                 size="sm" 
-                                className="bg-yellow-500 hover:bg-yellow-600 text-white"
-                                onClick={() => handleReview(booking)}
-                                data-testid={`button-review-${booking.id}`}
+                                variant="secondary"
+                                onClick={() => handleViewDetails(booking.id)}
                               >
-                                <Star className="w-4 h-4 mr-1" />
-                                Avaliar
+                                Ver Detalhes
                               </Button>
-                            )}
-                            
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleViewDetails(booking.id)}
-                              className="col-span-1 sm:col-span-2 lg:col-span-1"
-                            >
-                              Ver Detalhes
-                            </Button>
+                            </div>
                           </div>
                         </div>
                       </div>
