@@ -67,6 +67,14 @@ interface CoinPackage {
   popular?: boolean;
 }
 
+interface CouponValidation {
+  isValid: boolean;
+  coupon?: any;
+  discountAmount?: number;
+  finalAmount?: number;
+  message?: string;
+}
+
 const coinPackages: CoinPackage[] = [
   {
     id: '200',
@@ -192,9 +200,9 @@ export default function CoinsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedPackage, setSelectedPackage] = useState<CoinPackage | null>(null);
-  const [discountCode, setDiscountCode] = useState('');
-  const [appliedDiscount, setAppliedDiscount] = useState<{code: string, percentage: number, description: string} | null>(null);
-  const [validatingDiscount, setValidatingDiscount] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<CouponValidation | null>(null);
+  const [isCouponLoading, setIsCouponLoading] = useState(false);
 
   // Fetch user's coin balance
   const { data: userCoins, isLoading: coinsLoading } = useQuery<UserCoins>({
@@ -217,94 +225,89 @@ export default function CoinsPage() {
     queryClient.invalidateQueries({ queryKey: ["/api/coins/transactions"] });
   };
 
-  const validateDiscountCode = async () => {
-    if (!discountCode.trim()) {
+  // Function to validate coupon
+  const validateCoupon = async (code: string, orderValue: number) => {
+    setIsCouponLoading(true);
+    try {
+      const response = await apiRequest('POST', '/api/validate-coupon', {
+        code: code.toUpperCase(),
+        orderValue: Math.round(orderValue * 100), // Convert to cents
+      });
+      
+      const data = await response.json();
+      if (data.isValid) {
+        setAppliedCoupon({
+          isValid: true,
+          coupon: data.coupon,
+          discountAmount: data.discountAmount,
+          finalAmount: data.finalAmount,
+          message: data.message,
+        });
+        toast({
+          title: "Cupom Aplicado!",
+          description: data.message,
+        });
+      }
+    } catch (error: any) {
       toast({
-        title: "Código necessário",
-        description: "Digite um código de desconto",
+        title: "Erro no Cupom",
+        description: error.message || "Cupom inválido ou expirado",
+        variant: "destructive",
+      });
+      setAppliedCoupon(null);
+    } finally {
+      setIsCouponLoading(false);
+    }
+  };
+
+  // Function to apply coupon
+  const handleApplyCoupon = () => {
+    if (!couponCode.trim()) {
+      toast({
+        title: "Código Necessário",
+        description: "Digite um código de cupom",
         variant: "destructive",
       });
       return;
     }
 
-    setValidatingDiscount(true);
-    try {
-      console.log('🔍 Validating discount code:', discountCode);
-      const response = await apiRequest("POST", "/api/coins/validate-discount", {
-        code: discountCode
-      }) as any;
-
-      console.log('✅ Discount validation response:', response);
-      console.log('✅ Response type:', typeof response);
-      console.log('✅ Response.percentage:', response.percentage, 'Type:', typeof response.percentage);
-      console.log('✅ Response.description:', response.description, 'Type:', typeof response.description);
-
-      const discountData = {
-        code: discountCode.toUpperCase(),
-        percentage: Number(response.percentage),
-        description: response.description
-      };
-      
-      console.log('💾 Setting applied discount:', discountData);
-      setAppliedDiscount(discountData);
-
-      toast({
-        title: "Desconto aplicado!",
-        description: `${response.percentage}% de desconto - ${response.description}`,
-      });
-    } catch (error: any) {
-      console.error('❌ Discount validation error:', error);
-      toast({
-        title: "Código inválido",
-        description: error.message || "Código de desconto não encontrado",
-        variant: "destructive",
-      });
-    } finally {
-      setValidatingDiscount(false);
-    }
+    // Use the first package as base for validation
+    const orderValue = coinPackages[0].price;
+    validateCoupon(couponCode, orderValue);
   };
 
-  const removeDiscount = () => {
-    setAppliedDiscount(null);
-    setDiscountCode('');
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
     toast({
-      title: "Desconto removido",
-      description: "O desconto foi removido dos preços",
+      title: "Cupom Removido",
+      description: "O cupom foi removido dos preços",
     });
   };
 
-  const calculateDiscountedPrice = (originalPrice: number) => {
-    console.log('🧮 calculateDiscountedPrice called with:', {
-      originalPrice,
-      appliedDiscount,
-      hasAppliedDiscount: !!appliedDiscount,
-      percentage: appliedDiscount?.percentage
-    });
+  // Calculate coupon discount for any package
+  const getCouponDiscount = (pkg: CoinPackage) => {
+    if (!appliedCoupon || !appliedCoupon.isValid) return null;
     
-    if (!appliedDiscount || !appliedDiscount.percentage) {
-      console.log('🧮 No discount applied, returning original price:', originalPrice);
-      return originalPrice;
+    const priceInCents = Math.round(pkg.price * 100);
+    
+    // Calculate discount based on coupon type
+    let discountAmount = 0;
+    if (appliedCoupon.coupon.discountType === 'percentage') {
+      discountAmount = Math.round((priceInCents * appliedCoupon.coupon.discountValue) / 100);
+    } else if (appliedCoupon.coupon.discountType === 'fixed') {
+      discountAmount = appliedCoupon.coupon.discountValue;
     }
     
-    const percentage = Number(appliedDiscount.percentage);
-    console.log('🧮 Raw percentage value:', percentage, 'Type:', typeof percentage);
+    // Ensure discount doesn't exceed price
+    discountAmount = Math.min(discountAmount, priceInCents);
+    const finalPrice = priceInCents - discountAmount;
     
-    if (isNaN(percentage) || percentage < 0 || percentage > 100) {
-      console.log('🧮 Invalid percentage, returning original price:', originalPrice);
-      return originalPrice;
-    }
-    
-    const discountedPrice = originalPrice * (1 - percentage / 100);
-    
-    console.log('🧮 DETAILED Discount calculation:', {
-      originalPrice,
-      percentage,
-      discountedPrice,
-      appliedDiscount,
-      calculation: `${originalPrice} * (1 - ${percentage}/100) = ${originalPrice} * ${1 - percentage/100} = ${discountedPrice}`
-    });
-    
-    return Math.max(0, discountedPrice); // Ensure price never goes below 0
+    return {
+      discountAmount: discountAmount / 100, // Convert back to reais
+      finalPrice: finalPrice / 100,
+      discountPercentage: Math.round((discountAmount / priceInCents) * 100)
+    };
   };
 
   const getTransactionIcon = (type: string) => {
@@ -437,42 +440,42 @@ export default function CoinsPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    {appliedDiscount ? (
+                    {appliedCoupon && appliedCoupon.isValid ? (
                       <div className="bg-green-100 border border-green-300 rounded-lg p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <Gift className="h-4 w-4 text-green-600" />
                             <span className="font-medium text-green-800">
-                              {appliedDiscount.percentage}% de desconto aplicado
+                              Cupom aplicado
                             </span>
                           </div>
                           <Button 
                             variant="ghost" 
                             size="sm" 
-                            onClick={removeDiscount}
+                            onClick={removeCoupon}
                             className="text-green-700 hover:text-green-900"
                           >
                             <X className="h-4 w-4" />
                           </Button>
                         </div>
-                        <p className="text-sm text-green-700 mt-1">{appliedDiscount.description}</p>
-                        <p className="text-xs text-green-600 mt-2">Código: {appliedDiscount.code}</p>
+                        <p className="text-sm text-green-700 mt-1">{appliedCoupon.message}</p>
+                        <p className="text-xs text-green-600 mt-2">Código: {appliedCoupon.coupon.code}</p>
                       </div>
                     ) : (
                       <div className="flex gap-2">
                         <Input
-                          placeholder="Digite seu código de desconto"
-                          value={discountCode}
-                          onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
+                          placeholder="Digite seu código de cupom"
+                          value={couponCode}
+                          onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                           className="flex-1"
-                          onKeyPress={(e) => e.key === 'Enter' && validateDiscountCode()}
+                          onKeyPress={(e) => e.key === 'Enter' && handleApplyCoupon()}
                         />
                         <Button 
-                          onClick={validateDiscountCode}
-                          disabled={validatingDiscount || !discountCode.trim()}
+                          onClick={handleApplyCoupon}
+                          disabled={isCouponLoading || !couponCode.trim()}
                           className="bg-green-600 hover:bg-green-700"
                         >
-                          {validatingDiscount ? "Verificando..." : "Aplicar"}
+                          {isCouponLoading ? "Verificando..." : "Aplicar"}
                         </Button>
                       </div>
                     )}
@@ -500,29 +503,37 @@ export default function CoinsPage() {
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-2">
-                          {appliedDiscount ? (
-                            <div>
-                              <div className="text-lg text-gray-500 line-through">
-                                {pkg.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                              </div>
-                              <div className="text-2xl font-bold text-green-600">
-                                {calculateDiscountedPrice(pkg.price).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                              </div>
-                              <div className="text-xs text-green-600 font-medium">
-                                Economia: {(pkg.price - calculateDiscountedPrice(pkg.price)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="text-2xl font-bold mb-2">
-                              {pkg.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                            </div>
-                          )}
+                          {(() => {
+                            const discount = getCouponDiscount(pkg);
+                            if (discount) {
+                              return (
+                                <div>
+                                  <div className="text-lg text-gray-500 line-through">
+                                    {pkg.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                  </div>
+                                  <div className="text-2xl font-bold text-green-600">
+                                    {discount.finalPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                  </div>
+                                  <div className="text-xs text-green-600 font-medium">
+                                    Economia: {discount.discountAmount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                  </div>
+                                </div>
+                              );
+                            } else {
+                              return (
+                                <div className="text-2xl font-bold mb-2">
+                                  {pkg.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                </div>
+                              );
+                            }
+                          })()}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {pkg.coins} moedas • {appliedDiscount ? 
-                            (calculateDiscountedPrice(pkg.price) / pkg.coins * 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) :
-                            (pkg.price / pkg.coins * 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-                          } por 100 moedas
+                          {pkg.coins} moedas • {(() => {
+                            const discount = getCouponDiscount(pkg);
+                            const finalPrice = discount ? discount.finalPrice : pkg.price;
+                            return (finalPrice / pkg.coins * 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                          })()} por 100 moedas
                         </div>
                       </CardContent>
                     </Card>
@@ -534,23 +545,28 @@ export default function CoinsPage() {
                     <CardHeader>
                       <CardTitle>Finalizar Compra</CardTitle>
                       <CardDescription>
-                        Você está comprando {selectedPackage.name} por {appliedDiscount ? (
-                          <span>
-                            <span className="line-through text-gray-500">
-                              {selectedPackage.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                            </span>
-                            {' '}
-                            <span className="text-green-600 font-semibold">
-                              {calculateDiscountedPrice(selectedPackage.price).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                            </span>
-                            {' '}
-                            <span className="text-green-600 text-sm">
-                              ({appliedDiscount.percentage}% de desconto)
-                            </span>
-                          </span>
-                        ) : (
-                          selectedPackage.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-                        )}
+                        Você está comprando {selectedPackage.name} por {(() => {
+                          const discount = getCouponDiscount(selectedPackage);
+                          if (discount) {
+                            return (
+                              <span>
+                                <span className="line-through text-gray-500">
+                                  {selectedPackage.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                </span>
+                                {' '}
+                                <span className="text-green-600 font-semibold">
+                                  {discount.finalPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                </span>
+                                {' '}
+                                <span className="text-green-600 text-sm">
+                                  ({discount.discountPercentage}% de desconto)
+                                </span>
+                              </span>
+                            );
+                          } else {
+                            return selectedPackage.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                          }
+                        })()}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -558,8 +574,11 @@ export default function CoinsPage() {
                         <CoinPurchaseForm 
                           packageInfo={selectedPackage} 
                           onSuccess={handlePurchaseSuccess}
-                          discountCode={appliedDiscount?.code}
-                          finalPrice={appliedDiscount ? calculateDiscountedPrice(selectedPackage.price) : selectedPackage.price}
+                          discountCode={appliedCoupon?.coupon?.code}
+                          finalPrice={(() => {
+                            const discount = getCouponDiscount(selectedPackage);
+                            return discount ? discount.finalPrice : selectedPackage.price;
+                          })()}
                         />
                       </Elements>
                     </CardContent>
