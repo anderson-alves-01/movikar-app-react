@@ -3579,6 +3579,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Validate discount code
+  app.post("/api/coins/validate-discount", authenticateToken, async (req, res) => {
+    try {
+      const { code } = req.body;
+      
+      if (!code) {
+        return res.status(400).json({ message: "Código de desconto é obrigatório" });
+      }
+
+      // Define available discount codes
+      const discountCodes: { [key: string]: { percentage: number, description: string, active: boolean } } = {
+        'WELCOME10': { percentage: 10, description: 'Desconto de boas-vindas', active: true },
+        'PROMO20': { percentage: 20, description: 'Promoção especial', active: true },
+        'SAVE30': { percentage: 30, description: 'Super desconto', active: true },
+        'FIRST50': { percentage: 50, description: 'Primeira compra', active: true },
+        'VIP15': { percentage: 15, description: 'Cliente VIP', active: true },
+      };
+
+      const discount = discountCodes[code.toUpperCase()];
+      
+      if (!discount || !discount.active) {
+        return res.status(404).json({ message: "Código de desconto inválido ou expirado" });
+      }
+
+      res.json({
+        code: code.toUpperCase(),
+        percentage: discount.percentage,
+        description: discount.description,
+        valid: true
+      });
+    } catch (error) {
+      console.error("Validate discount error:", error);
+      res.status(500).json({ message: "Erro ao validar código de desconto" });
+    }
+  });
+
   // Purchase coins via Stripe
   app.post("/api/coins/purchase", authenticateToken, async (req, res) => {
     try {
@@ -3586,14 +3622,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: "Stripe não configurado" });
       }
 
-      const { coinPackage } = req.body;
+      const { coinPackage, discountCode } = req.body;
       
-      // Define coin packages
+      // Define coin packages - updated to match frontend
       const packages = {
-        '100': { coins: 100, price: 10.00, name: '100 moedas' },
-        '250': { coins: 250, price: 20.00, name: '250 moedas' },
-        '500': { coins: 500, price: 35.00, name: '500 moedas' },
-        '1000': { coins: 1000, price: 60.00, name: '1000 moedas' },
+        '200': { coins: 200, price: 20.00, name: '200 moedas' },
+        '500': { coins: 500, price: 45.00, name: '500 moedas' },
+        '1000': { coins: 1000, price: 80.00, name: '1000 moedas' },
+        '2000': { coins: 2000, price: 150.00, name: '2000 moedas' },
       };
 
       const selectedPackage = packages[coinPackage as keyof typeof packages];
@@ -3601,22 +3637,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Pacote de moedas inválido" });
       }
 
+      // Apply discount if provided
+      let finalPrice = selectedPackage.price;
+      let discountApplied = null;
+      
+      if (discountCode) {
+        const discountCodes: { [key: string]: { percentage: number, description: string, active: boolean } } = {
+          'WELCOME10': { percentage: 10, description: 'Desconto de boas-vindas', active: true },
+          'PROMO20': { percentage: 20, description: 'Promoção especial', active: true },
+          'SAVE30': { percentage: 30, description: 'Super desconto', active: true },
+          'FIRST50': { percentage: 50, description: 'Primeira compra', active: true },
+          'VIP15': { percentage: 15, description: 'Cliente VIP', active: true },
+        };
+
+        const discount = discountCodes[discountCode.toUpperCase()];
+        if (discount && discount.active) {
+          finalPrice = selectedPackage.price * (1 - discount.percentage / 100);
+          discountApplied = {
+            code: discountCode.toUpperCase(),
+            percentage: discount.percentage,
+            originalPrice: selectedPackage.price,
+            discountAmount: selectedPackage.price - finalPrice
+          };
+        }
+      }
+
       // Create Stripe payment intent
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(selectedPackage.price * 100), // Convert to cents
+        amount: Math.round(finalPrice * 100), // Convert to cents with discount applied
         currency: 'brl',
         metadata: {
           type: 'coin_purchase',
           userId: req.user!.id.toString(),
           coinAmount: selectedPackage.coins.toString(),
           packageName: selectedPackage.name,
+          discountCode: discountCode || '',
+          originalPrice: selectedPackage.price.toString(),
+          finalPrice: finalPrice.toString(),
         },
         description: `Compra de ${selectedPackage.name} - alugae.mobi`,
       });
 
       res.json({ 
         clientSecret: paymentIntent.client_secret,
-        packageInfo: selectedPackage
+        packageInfo: selectedPackage,
+        finalPrice,
+        discountApplied
       });
     } catch (error) {
       console.error("Purchase coins error:", error);

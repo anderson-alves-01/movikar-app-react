@@ -10,7 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Coins, CreditCard, History, UserCheck, Calendar, Phone, Mail, User } from "lucide-react";
+import { Coins, CreditCard, History, UserCheck, Calendar, Phone, Mail, User, Gift, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
@@ -97,7 +99,12 @@ const coinPackages: CoinPackage[] = [
   }
 ];
 
-const CoinPurchaseForm = ({ packageInfo, onSuccess }: { packageInfo: CoinPackage, onSuccess: () => void }) => {
+const CoinPurchaseForm = ({ packageInfo, onSuccess, discountCode, finalPrice }: { 
+  packageInfo: CoinPackage, 
+  onSuccess: () => void,
+  discountCode?: string,
+  finalPrice?: number 
+}) => {
   const stripe = useStripe();
   const elements = useElements();
   const { toast } = useToast();
@@ -115,7 +122,8 @@ const CoinPurchaseForm = ({ packageInfo, onSuccess }: { packageInfo: CoinPackage
     try {
       // Create payment intent
       const response = await apiRequest("POST", "/api/coins/purchase", {
-        coinPackage: packageInfo.id
+        coinPackage: packageInfo.id,
+        discountCode: discountCode
       }) as unknown as { clientSecret: string };
 
       const { clientSecret } = response;
@@ -174,7 +182,7 @@ const CoinPurchaseForm = ({ packageInfo, onSuccess }: { packageInfo: CoinPackage
         className="w-full"
         data-testid="button-confirm-purchase"
       >
-        {loading ? "Processando..." : `Comprar por ${packageInfo.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`}
+        {loading ? "Processando..." : `Comprar por ${(finalPrice || packageInfo.price).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`}
       </Button>
     </form>
   );
@@ -184,6 +192,9 @@ export default function CoinsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedPackage, setSelectedPackage] = useState<CoinPackage | null>(null);
+  const [discountCode, setDiscountCode] = useState('');
+  const [appliedDiscount, setAppliedDiscount] = useState<{code: string, percentage: number, description: string} | null>(null);
+  const [validatingDiscount, setValidatingDiscount] = useState(false);
 
   // Fetch user's coin balance
   const { data: userCoins, isLoading: coinsLoading } = useQuery<UserCoins>({
@@ -204,6 +215,57 @@ export default function CoinsPage() {
     setSelectedPackage(null);
     queryClient.invalidateQueries({ queryKey: ["/api/coins"] });
     queryClient.invalidateQueries({ queryKey: ["/api/coins/transactions"] });
+  };
+
+  const validateDiscountCode = async () => {
+    if (!discountCode.trim()) {
+      toast({
+        title: "Código necessário",
+        description: "Digite um código de desconto",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setValidatingDiscount(true);
+    try {
+      const response = await apiRequest("POST", "/api/coins/validate-discount", {
+        code: discountCode
+      }) as any;
+
+      setAppliedDiscount({
+        code: discountCode,
+        percentage: response.percentage,
+        description: response.description
+      });
+
+      toast({
+        title: "Desconto aplicado!",
+        description: `${response.percentage}% de desconto - ${response.description}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Código inválido",
+        description: error.message || "Código de desconto não encontrado",
+        variant: "destructive",
+      });
+    } finally {
+      setValidatingDiscount(false);
+    }
+  };
+
+  const removeDiscount = () => {
+    setAppliedDiscount(null);
+    setDiscountCode('');
+    toast({
+      title: "Desconto removido",
+      description: "O desconto foi removido dos preços",
+    });
+  };
+
+  const calculateDiscountedPrice = (originalPrice: number) => {
+    if (!appliedDiscount) return originalPrice;
+    return originalPrice * (1 - appliedDiscount.percentage / 100);
   };
 
   const getTransactionIcon = (type: string) => {
@@ -324,6 +386,60 @@ export default function CoinsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Discount Code Section */}
+                <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center gap-2">
+                      <Gift className="h-5 w-5 text-green-600" />
+                      <CardTitle className="text-lg text-green-800">Código de Desconto</CardTitle>
+                    </div>
+                    <CardDescription className="text-green-700">
+                      Tem um código promocional? Digite aqui para aplicar desconto em sua compra.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {appliedDiscount ? (
+                      <div className="bg-green-100 border border-green-300 rounded-lg p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Gift className="h-4 w-4 text-green-600" />
+                            <span className="font-medium text-green-800">
+                              {appliedDiscount.percentage}% de desconto aplicado
+                            </span>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={removeDiscount}
+                            className="text-green-700 hover:text-green-900"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <p className="text-sm text-green-700 mt-1">{appliedDiscount.description}</p>
+                        <p className="text-xs text-green-600 mt-2">Código: {appliedDiscount.code}</p>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Digite seu código de desconto"
+                          value={discountCode}
+                          onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
+                          className="flex-1"
+                          onKeyPress={(e) => e.key === 'Enter' && validateDiscountCode()}
+                        />
+                        <Button 
+                          onClick={validateDiscountCode}
+                          disabled={validatingDiscount || !discountCode.trim()}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          {validatingDiscount ? "Verificando..." : "Aplicar"}
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {coinPackages.map((pkg) => (
                     <Card 
@@ -344,7 +460,25 @@ export default function CoinsPage() {
                         <CardDescription>{pkg.description}</CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-2xl font-bold mb-2">{pkg.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+                        <div className="space-y-2">
+                          {appliedDiscount ? (
+                            <div>
+                              <div className="text-lg text-gray-500 line-through">
+                                {pkg.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                              </div>
+                              <div className="text-2xl font-bold text-green-600">
+                                {calculateDiscountedPrice(pkg.price).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                              </div>
+                              <div className="text-xs text-green-600 font-medium">
+                                Economia: {(pkg.price - calculateDiscountedPrice(pkg.price)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-2xl font-bold mb-2">
+                              {pkg.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            </div>
+                          )}
+                        </div>
                         <div className="text-sm text-muted-foreground">
                           {pkg.coins} moedas • {(pkg.price / pkg.coins * 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} por 100 moedas
                         </div>
@@ -358,7 +492,23 @@ export default function CoinsPage() {
                     <CardHeader>
                       <CardTitle>Finalizar Compra</CardTitle>
                       <CardDescription>
-                        Você está comprando {selectedPackage.name} por {selectedPackage.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                        Você está comprando {selectedPackage.name} por {appliedDiscount ? (
+                          <span>
+                            <span className="line-through text-gray-500">
+                              {selectedPackage.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            </span>
+                            {' '}
+                            <span className="text-green-600 font-semibold">
+                              {calculateDiscountedPrice(selectedPackage.price).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            </span>
+                            {' '}
+                            <span className="text-green-600 text-sm">
+                              ({appliedDiscount.percentage}% de desconto)
+                            </span>
+                          </span>
+                        ) : (
+                          selectedPackage.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                        )}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -366,6 +516,8 @@ export default function CoinsPage() {
                         <CoinPurchaseForm 
                           packageInfo={selectedPackage} 
                           onSuccess={handlePurchaseSuccess}
+                          discountCode={appliedDiscount?.code}
+                          finalPrice={appliedDiscount ? calculateDiscountedPrice(selectedPackage.price) : selectedPackage.price}
                         />
                       </Elements>
                     </CardContent>
