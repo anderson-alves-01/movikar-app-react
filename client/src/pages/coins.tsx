@@ -264,17 +264,30 @@ export default function CoinsPage() {
   };
 
   const calculateDiscountedPrice = (originalPrice: number) => {
-    if (!appliedDiscount || !appliedDiscount.percentage) return originalPrice;
+    if (!appliedDiscount || !appliedDiscount.percentage) {
+      console.log('🧮 No discount applied, returning original price:', originalPrice);
+      return originalPrice;
+    }
+    
     const percentage = Number(appliedDiscount.percentage);
-    if (isNaN(percentage) || percentage < 0 || percentage > 100) return originalPrice;
+    console.log('🧮 Raw percentage value:', percentage, 'Type:', typeof percentage);
+    
+    if (isNaN(percentage) || percentage < 0 || percentage > 100) {
+      console.log('🧮 Invalid percentage, returning original price:', originalPrice);
+      return originalPrice;
+    }
+    
     const discountedPrice = originalPrice * (1 - percentage / 100);
-    console.log('🧮 Discount calculation:', {
+    
+    console.log('🧮 DETAILED Discount calculation:', {
       originalPrice,
       percentage,
       discountedPrice,
-      appliedDiscount
+      appliedDiscount,
+      calculation: `${originalPrice} * (1 - ${percentage}/100) = ${originalPrice} * ${1 - percentage/100} = ${discountedPrice}`
     });
-    return discountedPrice;
+    
+    return Math.max(0, discountedPrice); // Ensure price never goes below 0
   };
 
   const getTransactionIcon = (type: string) => {
