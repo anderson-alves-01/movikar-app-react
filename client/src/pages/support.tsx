@@ -383,6 +383,116 @@ export default function Support() {
           </div>
         </section>
 
+        {/* How to Advertise Section */}
+        <section>
+          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+            Como Anunciar Seu Veículo
+          </h2>
+          
+          <Card className="max-w-5xl mx-auto">
+            <CardHeader>
+              <CardTitle className="text-xl text-center flex items-center justify-center">
+                <Car className="h-6 w-6 mr-2 text-green-600" />
+                Transforme seu carro em renda extra
+              </CardTitle>
+              <CardDescription className="text-center">
+                Se você possui um carro disponível e deseja transformá-lo em uma fonte de renda extra, o processo para anunciar no Alugae é bem simples.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-8">
+                {/* Step-by-step process */}
+                <div className="grid gap-6">
+                  {/* Step 1 */}
+                  <div className="flex items-start space-x-4 p-6 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                      1
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-blue-900 mb-2">Cadastre-se na plataforma</h3>
+                      <p className="text-blue-800">Crie sua conta como locador e preencha os dados básicos.</p>
+                    </div>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div className="flex items-start space-x-4 p-6 bg-purple-50 rounded-lg border border-purple-200">
+                    <div className="flex-shrink-0 w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                      2
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-purple-900 mb-3">Escolha o seu plano</h3>
+                      <div className="grid md:grid-cols-3 gap-4">
+                        <div className="p-4 bg-white rounded-lg border border-gray-200">
+                          <h4 className="font-semibold text-gray-900 mb-1">Básico (Gratuito)</h4>
+                          <p className="text-sm text-gray-600">Até 1 anúncio, funcionalidades essenciais.</p>
+                        </div>
+                        <div className="p-4 bg-white rounded-lg border border-gray-200">
+                          <h4 className="font-semibold text-gray-900 mb-1">Premium (R$ 39,90/mês)</h4>
+                          <p className="text-sm text-gray-600">Até 3 carros, destaque "Premium" por 3 dias, relatórios avançados e suporte por e-mail.</p>
+                        </div>
+                        <div className="p-4 bg-white rounded-lg border border-gray-200">
+                          <h4 className="font-semibold text-gray-900 mb-1">Enterprise (R$ 149,90/mês)</h4>
+                          <p className="text-sm text-gray-600">Anúncios ilimitados, destaque "Premium" por 7 dias, suporte por WhatsApp, integração via API e gestão de frotas.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className="flex items-start space-x-4 p-6 bg-green-50 rounded-lg border border-green-200">
+                    <div className="flex-shrink-0 w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                      3
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-green-900 mb-2">Cadastre seu veículo</h3>
+                      <p className="text-green-800">Inclua fotos de qualidade, descrição completa, categoria, regras de uso e o preço do aluguel (fixo e definido dentro da plataforma).</p>
+                    </div>
+                  </div>
+
+                  {/* Step 4 */}
+                  <div className="flex items-start space-x-4 p-6 bg-orange-50 rounded-lg border border-orange-200">
+                    <div className="flex-shrink-0 w-8 h-8 bg-orange-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                      4
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-orange-900 mb-2">Valide seus documentos</h3>
+                      <p className="text-orange-800">Para mais credibilidade, envie os documentos do carro e sua CNH válida.</p>
+                    </div>
+                  </div>
+
+                  {/* Step 5 */}
+                  <div className="flex items-start space-x-4 p-6 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <div className="flex-shrink-0 w-8 h-8 bg-yellow-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                      5
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-yellow-900 mb-3">Destaque seu anúncio (opcional)</h3>
+                      <p className="text-yellow-800 mb-3">Aumente sua visibilidade contratando destaques pagos, como:</p>
+                      <div className="grid md:grid-cols-2 gap-3">
+                        <div className="p-3 bg-white rounded border border-gray-200">
+                          <p className="font-medium text-gray-900">Página Inicial</p>
+                          <p className="text-sm text-gray-600">R$ 15,00 por 7 dias</p>
+                        </div>
+                        <div className="p-3 bg-white rounded border border-gray-200">
+                          <p className="font-medium text-gray-900">Categorias</p>
+                          <p className="text-sm text-gray-600">R$ 10,00 por 7 dias</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Success Message */}
+                <div className="text-center p-6 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg">
+                  <CheckCircle2 className="h-12 w-12 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold mb-2">Pronto!</h3>
+                  <p className="text-green-100">Seu carro estará disponível para milhares de potenciais locatários.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
         {/* Required Documents Section */}
         <section>
           <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
