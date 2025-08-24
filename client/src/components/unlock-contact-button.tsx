@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Coins, Phone, Mail, User, Clock, AlertCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { CoinAnimation, FloatingCoin } from "@/components/coin-animation";
 
 interface UnlockContactButtonProps {
   vehicleId: number;
@@ -42,6 +43,9 @@ export default function UnlockContactButton({ vehicleId, ownerId, ownerName, cla
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showContactInfo, setShowContactInfo] = useState(false);
   const [unlockedContact, setUnlockedContact] = useState<ContactUnlock | null>(null);
+  const [showSpendAnimation, setShowSpendAnimation] = useState(false);
+  const [showFloatingCoins, setShowFloatingCoins] = useState(false);
+  const [buttonRect, setButtonRect] = useState<DOMRect | null>(null);
 
   const coinsRequired = 200;
 
@@ -68,6 +72,8 @@ export default function UnlockContactButton({ vehicleId, ownerId, ownerName, cla
     onSuccess: (data) => {
       setUnlockedContact(data);
       setShowContactInfo(true);
+      setShowSpendAnimation(true);
+      setShowFloatingCoins(true);
       toast({
         title: "Contato desbloqueado!",
         description: `${coinsRequired} moedas foram utilizadas para desbloquear o contato.`,

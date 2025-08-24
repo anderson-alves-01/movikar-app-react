@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
+import { CoinAnimation, CoinCounterAnimation, CoinSparkleEffect } from "@/components/coin-animation";
 
 // Initialize Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
@@ -223,6 +224,10 @@ export default function CoinsPage() {
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<CouponValidation | null>(null);
   const [isCouponLoading, setIsCouponLoading] = useState(false);
+  const [showPurchaseAnimation, setShowPurchaseAnimation] = useState(false);
+  const [showSparkles, setShowSparkles] = useState(false);
+  const [purchaseAmount, setPurchaseAmount] = useState(0);
+  const [previousCoins, setPreviousCoins] = useState(0);
 
   // Fetch user's coin balance
   const { data: userCoins, isLoading: coinsLoading } = useQuery<UserCoins>({
@@ -240,6 +245,12 @@ export default function CoinsPage() {
   });
 
   const handlePurchaseSuccess = () => {
+    if (selectedPackage) {
+      setPreviousCoins(userCoins?.availableCoins || 0);
+      setPurchaseAmount(selectedPackage.coins);
+      setShowPurchaseAnimation(true);
+      setShowSparkles(true);
+    }
     setSelectedPackage(null);
     queryClient.invalidateQueries({ queryKey: ["/api/coins"] });
     queryClient.invalidateQueries({ queryKey: ["/api/coins/transactions"] });
@@ -391,7 +402,11 @@ export default function CoinsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600" data-testid="text-available-coins">
-                {userCoins?.availableCoins || 0}
+                <CoinCounterAnimation 
+                  from={previousCoins || userCoins?.availableCoins || 0} 
+                  to={userCoins?.availableCoins || 0}
+                  className="text-yellow-600"
+                />
               </div>
               <p className="text-xs text-muted-foreground">
                 200 moedas = 1 contato desbloqueado
@@ -406,7 +421,11 @@ export default function CoinsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600" data-testid="text-total-coins">
-                {userCoins?.totalCoins || 0}
+                <CoinCounterAnimation 
+                  from={userCoins?.totalCoins || 0} 
+                  to={userCoins?.totalCoins || 0}
+                  className="text-green-600"
+                />
               </div>
               <p className="text-xs text-muted-foreground">
                 Moedas adquiridas até hoje
@@ -755,6 +774,20 @@ export default function CoinsPage() {
         </Tabs>
         </div>
       </div>
+
+      {/* Animation Components */}
+      <CoinAnimation
+        type="purchase"
+        amount={purchaseAmount}
+        show={showPurchaseAnimation}
+        onComplete={() => setShowPurchaseAnimation(false)}
+      />
+      
+      <CoinSparkleEffect
+        show={showSparkles}
+        onComplete={() => setShowSparkles(false)}
+        particleCount={20}
+      />
     </div>
   );
 }

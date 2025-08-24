@@ -13,11 +13,15 @@ import { CarLoading, VehicleCardSkeleton } from "@/components/ui/loading";
 import { useAuthStore } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
+import PrivacyPolicyModal from "@/components/privacy-policy-modal";
+import TermsOfUseModal from "@/components/terms-of-use-modal";
 
 export default function Home() {
   const { filters, clearFilters } = useSearch();
   const [localFilters, setLocalFilters] = useState<SearchFilters>({});
   const [showFilters, setShowFilters] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const { setAuth } = useAuthStore();
   const { toast } = useToast();
 
@@ -364,8 +368,22 @@ export default function Home() {
               <ul className="space-y-2 text-gray-300">
                 <li><a href="/support#central-de-ajuda" className="hover:text-white transition-colors">Central de ajuda</a></li>
                 <li><a href="/support#contato" className="hover:text-white transition-colors">Contato</a></li>
-                <li><a href="/support#termos-de-uso" className="hover:text-white transition-colors">Termos de uso</a></li>
-                <li><a href="/support#politica-privacidade" className="hover:text-white transition-colors">Política de privacidade</a></li>
+                <li>
+                  <button 
+                    onClick={() => setShowTermsModal(true)}
+                    className="hover:text-white transition-colors text-left"
+                  >
+                    Termos de uso
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => setShowPrivacyModal(true)}
+                    className="hover:text-white transition-colors text-left"
+                  >
+                    Política de privacidade
+                  </button>
+                </li>
               </ul>
             </div>
           </div>
@@ -385,6 +403,19 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Modais */}
+      <PrivacyPolicyModal
+        open={showPrivacyModal}
+        onOpenChange={setShowPrivacyModal}
+        onAccept={() => setShowPrivacyModal(false)}
+      />
+      
+      <TermsOfUseModal
+        open={showTermsModal}
+        onOpenChange={setShowTermsModal}
+        onAccept={() => setShowTermsModal(false)}
+      />
     </div>
   );
 }
