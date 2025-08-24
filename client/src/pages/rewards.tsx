@@ -88,15 +88,15 @@ export default function Rewards() {
     }
   }, [referralCode]);
 
-  // Fetch user rewards - only if user is authenticated
-  const { data: rewards, isLoading: rewardsLoading } = useQuery<UserRewards>({
-    queryKey: ['/api/rewards/balance'],
+  // Fetch user coins - only if user is authenticated
+  const { data: userCoins, isLoading: rewardsLoading } = useQuery<any>({
+    queryKey: ['/api/coins'],
     enabled: !!user,
   });
 
-  // Fetch reward transactions - only if user is authenticated
-  const { data: transactions, isLoading: transactionsLoading } = useQuery<RewardTransaction[]>({
-    queryKey: ['/api/rewards/transactions'],
+  // Fetch coin transactions - only if user is authenticated
+  const { data: transactions, isLoading: transactionsLoading } = useQuery<any[]>({
+    queryKey: ['/api/coins/transactions'],
     enabled: !!user,
   });
 
@@ -134,7 +134,7 @@ export default function Rewards() {
     onSuccess: () => {
       toast({
         title: "Sucesso!",
-        description: "Código de convite aplicado com sucesso! Vocês ganharam pontos.",
+        description: "Código de convite aplicado com sucesso! Vocês ganharam moedas.",
       });
       setUseReferralCode('');
       queryClient.invalidateQueries({ queryKey: ['/api/rewards/balance'] });
@@ -185,36 +185,38 @@ export default function Rewards() {
     },
   });
 
-  // Use points mutation
-  const usePointsMutation = useMutation({
-    mutationFn: async (points: number) => {
-      const response = await fetch('/api/rewards/use-points', {
+  // Use coins mutation
+  const useCoinsMutation = useMutation({
+    mutationFn: async (coins: number) => {
+      const response = await fetch('/api/coins/deduct', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
         body: JSON.stringify({ 
-          points, 
-          description: `Desconto de ${points} pontos aplicado` 
+          amount: coins, 
+          description: `Desconto de ${coins} moedas aplicado`,
+          vehicleId: null,
+          ownerId: null
         }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Erro ao usar pontos');
+        throw new Error(error.message || 'Erro ao usar moedas');
       }
 
       return response.json();
     },
     onSuccess: (data) => {
       toast({
-        title: "Pontos utilizados!",
-        description: `Desconto de R$ ${data.discountAmount.toFixed(2)} aplicado!`,
+        title: "Moedas utilizadas!",
+        description: `Desconto de R$ ${(parseInt(pointsToUse) * 0.01).toFixed(2)} aplicado!`,
       });
       setPointsToUse('');
-      queryClient.invalidateQueries({ queryKey: ['/api/rewards/balance'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/rewards/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/coins'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/coins/transactions'] });
     },
     onError: (error: Error) => {
       toast({
@@ -244,10 +246,10 @@ export default function Rewards() {
     }
   };
 
-  const handleUsePoints = () => {
-    const points = parseInt(pointsToUse);
-    if (points > 0) {
-      usePointsMutation.mutate(points);
+  const handleUseCoins = () => {
+    const coins = parseInt(pointsToUse);
+    if (coins > 0) {
+      useCoinsMutation.mutate(coins);
     }
   };
 
@@ -300,22 +302,22 @@ export default function Rewards() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-20">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Sistema de Recompensas</h1>
-          <p className="text-gray-600">Ganhe pontos convidando amigos e use para desconto em reservas</p>
+          <p className="text-gray-600">Ganhe moedas convidando amigos e use para desconto em reservas</p>
         </div>
 
       {/* Points Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pontos Disponíveis</CardTitle>
+            <CardTitle className="text-sm font-medium">Moedas Disponíveis</CardTitle>
             <Coins className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {rewards?.availablePoints || 0}
+              {userCoins?.availableCoins || 0}
             </div>
             <p className="text-xs text-muted-foreground">
-              = R$ {((rewards?.availablePoints || 0) * 0.01).toFixed(2)} em desconto
+              = R$ {((userCoins?.availableCoins || 0) * 0.01).toFixed(2)} em desconto
             </p>
           </CardContent>
         </Card>
@@ -327,10 +329,10 @@ export default function Rewards() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {rewards?.totalPoints || 0}
+              {userCoins?.totalCoins || 0}
             </div>
             <p className="text-xs text-muted-foreground">
-              Pontos acumulados
+              Moedas acumuladas
             </p>
           </CardContent>
         </Card>
@@ -342,7 +344,7 @@ export default function Rewards() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {rewards?.successfulReferrals || 0}
+              {referrals?.filter(r => r.status === 'completed').length || 0}
             </div>
             <p className="text-xs text-muted-foreground">
               Convites aceitos
@@ -362,8 +364,8 @@ export default function Rewards() {
             <span className="hidden sm:block">Usar Código</span>
           </TabsTrigger>
           <TabsTrigger value="use-points" className="text-xs sm:text-sm px-1 py-2 sm:px-3 sm:py-1.5">
-            <span className="block sm:hidden">Pontos</span>
-            <span className="hidden sm:block">Usar Pontos</span>
+            <span className="block sm:hidden">Moedas</span>
+            <span className="hidden sm:block">Usar Moedas</span>
           </TabsTrigger>
           <TabsTrigger value="history" className="text-xs sm:text-sm px-1 py-2 sm:px-3 sm:py-1.5">
             <span className="block sm:hidden">Histórico</span>
@@ -376,10 +378,10 @@ export default function Rewards() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Gift className="h-5 w-5" />
-                Convide Amigos e Ganhe Pontos
+                Convide Amigos e Ganhe Moedas
               </CardTitle>
               <CardDescription>
-                Compartilhe seu link de convite e ganhe 100 pontos para cada amigo que se cadastrar!
+                Compartilhe seu link de convite e ganhe 100 moedas para cada amigo que se cadastrar!
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -405,9 +407,9 @@ export default function Rewards() {
                 <ul className="text-sm text-blue-800 space-y-1">
                   <li>• Compartilhe seu link com amigos</li>
                   <li>• Eles são direcionados automaticamente para o cadastro</li>
-                  <li>• Seu amigo ganha 50 pontos ao se cadastrar</li>
-                  <li>• Você ganha 100 pontos quando ele completar o cadastro</li>
-                  <li>• Use os pontos para desconto em reservas (1 ponto = R$ 0,01)</li>
+                  <li>• Seu amigo ganha 300 moedas de bônus ao validar documentos</li>
+                  <li>• Você ganha 100 moedas quando ele completar o cadastro</li>
+                  <li>• Use as moedas para desconto em reservas (1 moeda = R$ 0,01)</li>
                 </ul>
               </div>
 
@@ -440,7 +442,7 @@ export default function Rewards() {
             <CardHeader>
               <CardTitle>Usar Código de Convite</CardTitle>
               <CardDescription>
-                Tem um código de convite? Digite aqui para ganhar pontos!
+                Tem um código de convite? Digite aqui para ganhar moedas!
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -461,7 +463,7 @@ export default function Rewards() {
               
               <div className="bg-green-50 p-4 rounded-lg">
                 <p className="text-sm text-green-800">
-                  Ao usar um código de convite, você ganha 50 pontos de bônus de boas-vindas!
+                  Ao usar um código de convite, você recebe acesso a todas as funcionalidades!
                 </p>
               </div>
 
@@ -472,7 +474,7 @@ export default function Rewards() {
                   <div>
                     <h4 className="font-medium">Processar Convites Pendentes</h4>
                     <p className="text-sm text-gray-600">
-                      Ative pontos de convites que ainda não foram processados
+                      Ative moedas de convites que ainda não foram processados
                     </p>
                   </div>
                   <Button 
@@ -492,26 +494,26 @@ export default function Rewards() {
         <TabsContent value="use-points" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Usar Pontos para Desconto</CardTitle>
+              <CardTitle>Usar Moedas para Desconto</CardTitle>
               <CardDescription>
-                Troque seus pontos por desconto em reservas (1 ponto = R$ 0,01)
+                Troque suas moedas por desconto em reservas (1 moeda = R$ 0,01)
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex gap-4">
                 <Input
                   type="number"
-                  placeholder="Quantidade de pontos"
+                  placeholder="Quantidade de moedas"
                   value={pointsToUse}
                   onChange={(e) => setPointsToUse(e.target.value)}
                   min="1"
-                  max={rewards?.availablePoints || 0}
+                  max={userCoins?.availableCoins || 0}
                 />
                 <Button 
-                  onClick={handleUsePoints}
-                  disabled={!pointsToUse || parseInt(pointsToUse) <= 0 || usePointsMutation.isPending}
+                  onClick={handleUseCoins}
+                  disabled={!pointsToUse || parseInt(pointsToUse) <= 0 || useCoinsMutation.isPending}
                 >
-                  {usePointsMutation.isPending ? 'Aplicando...' : 'Aplicar Desconto'}
+                  {useCoinsMutation.isPending ? 'Aplicando...' : 'Aplicar Desconto'}
                 </Button>
               </div>
               
@@ -531,7 +533,7 @@ export default function Rewards() {
             <CardHeader>
               <CardTitle>Histórico de Transações</CardTitle>
               <CardDescription>
-                Veja todas as suas transações de pontos
+                Veja todas as suas transações de moedas
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -547,11 +549,11 @@ export default function Rewards() {
                     <div key={transaction.id} className="flex items-center justify-between p-4 border rounded-lg">
                       <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-full ${
-                          transaction.type === 'earned' ? 'bg-green-100' : 'bg-red-100'
+                          transaction.amount > 0 ? 'bg-green-100' : 'bg-red-100'
                         }`}>
-                          {transaction.type === 'earned' ? (
+                          {transaction.amount > 0 ? (
                             <TrendingUp className={`h-4 w-4 ${
-                              transaction.type === 'earned' ? 'text-green-600' : 'text-red-600'
+                              transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
                             }`} />
                           ) : (
                             <Coins className="h-4 w-4 text-red-600" />
@@ -566,9 +568,9 @@ export default function Rewards() {
                       </div>
                       <div className="text-right">
                         <p className={`font-medium ${
-                          transaction.type === 'earned' ? 'text-green-600' : 'text-red-600'
+                          transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
                         }`}>
-                          {transaction.type === 'earned' ? '+' : ''}{transaction.points} pontos
+                          {transaction.amount > 0 ? '+' : ''}{Math.abs(transaction.amount)} moedas
                         </p>
                         {transaction.discountAmount && (
                           <p className="text-sm text-gray-600">

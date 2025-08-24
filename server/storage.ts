@@ -2090,14 +2090,16 @@ export class DatabaseStorage implements IStorage {
       return;
     }
 
-    // Award points to referrer
-    await this.addRewardTransaction({
+    console.log(`🎁 Processing reward for referral ${referralId}`);
+
+    // Award 100 coins to referrer using the coin system
+    await this.addCoinTransaction({
       userId: referral.referrerId,
-      type: 'earned' as const,
-      points: referral.rewardPoints || 0,
-      source: 'referral' as const,
-      sourceId: referralId,
-      description: 'Recompensa por convidar um amigo',
+      type: 'bonus',
+      amount: 100,
+      description: 'Recompensa por convite de amigo',
+      source: 'referral_bonus',
+      status: 'completed'
     });
 
     // Update referral status
@@ -2107,14 +2109,7 @@ export class DatabaseStorage implements IStorage {
       completedAt: new Date(),
     });
 
-    // Update referrer's referral count
-    const rewards = await this.getUserRewards(referral.referrerId);
-    if (rewards) {
-      await this.updateUserRewards(referral.referrerId, {
-        referralCount: (rewards.referralCount || 0) + 1,
-        successfulReferrals: (rewards.successfulReferrals || 0) + 1,
-      });
-    }
+    console.log(`✅ Successfully awarded 100 coins to user ${referral.referrerId} for referral ${referralId}`);
   }
 
   // User activity tracking methods
