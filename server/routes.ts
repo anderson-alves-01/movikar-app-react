@@ -3641,37 +3641,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Pacote de moedas inválido" });
       }
 
-      // Apply discount if provided
+      // Apply coupon if provided (using same system as subscriptions)
       let finalPrice = selectedPackage.price;
-      let discountApplied = null;
+      let couponApplied = null;
       
       if (discountCode) {
-        const discountCodes: { [key: string]: { percentage: number, description: string, active: boolean } } = {
-          'WELCOME10': { percentage: 10, description: 'Desconto de boas-vindas', active: true },
-          'PROMO20': { percentage: 20, description: 'Promoção especial', active: true },
-          'SAVE30': { percentage: 30, description: 'Super desconto', active: true },
-          'FIRST50': { percentage: 50, description: 'Primeira compra', active: true },
-          'VIP15': { percentage: 15, description: 'Cliente VIP', active: true },
-          'DESCONTO99': { percentage: 99, description: 'Super mega desconto!', active: true },
-        };
+        try {
+          // Get coupon from database
+          const [coupon] = await db.select().from(coupons)
+            .where(eq(coupons.code, discountCode.toUpperCase()));
 
-        const discount = discountCodes[discountCode.toUpperCase()];
-        if (discount && discount.active) {
-          finalPrice = selectedPackage.price * (1 - discount.percentage / 100);
-          discountApplied = {
-            code: discountCode.toUpperCase(),
-            percentage: discount.percentage,
-            originalPrice: selectedPackage.price,
-            discountAmount: selectedPackage.price - finalPrice
-          };
+          if (coupon && coupon.isActive && new Date() < new Date(coupon.expiresAt)) {
+            const priceInCents = Math.round(selectedPackage.price * 100);
+            let discountAmount = 0;
+            
+            // Calculate discount based on coupon type
+            if (coupon.discountType === 'percentage') {
+              discountAmount = Math.round((priceInCents * coupon.discountValue) / 100);
+            } else if (coupon.discountType === 'fixed') {
+              discountAmount = coupon.discountValue;
+            }
+            
+            // Ensure discount doesn't exceed price
+            discountAmount = Math.min(discountAmount, priceInCents);
+            const finalPriceInCents = priceInCents - discountAmount;
+            finalPrice = finalPriceInCents / 100;
+            
+            couponApplied = {
+              code: discountCode.toUpperCase(),
+              discountType: coupon.discountType,
+              discountValue: coupon.discountValue,
+              originalPrice: selectedPackage.price,
+              discountAmount: discountAmount / 100,
+              finalPrice: finalPrice
+            };
 
-          console.log('💰 Backend discount calculation:', {
-            discountCode: discountCode.toUpperCase(),
-            originalPrice: selectedPackage.price,
-            percentage: discount.percentage,
-            finalPrice,
-            discountAmount: selectedPackage.price - finalPrice
-          });
+            console.log('💰 Coupon applied to coin purchase:', {
+              couponCode: discountCode.toUpperCase(),
+              originalPrice: selectedPackage.price,
+              discountType: coupon.discountType,
+              discountValue: coupon.discountValue,
+              finalPrice,
+              discountAmount: discountAmount / 100
+            });
+          }
+        } catch (couponError) {
+          console.error('Error applying coupon to coin purchase:', couponError);
+          // Continue without coupon if there's an error
         }
       }
 
@@ -3684,7 +3700,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userId: req.user!.id.toString(),
           coinAmount: selectedPackage.coins.toString(),
           packageName: selectedPackage.name,
-          discountCode: discountCode || '',
+          couponCode: discountCode || '',
           originalPrice: selectedPackage.price.toString(),
           finalPrice: finalPrice.toString(),
         },
@@ -3695,7 +3711,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         clientSecret: paymentIntent.client_secret,
         packageInfo: selectedPackage,
         finalPrice,
-        discountApplied
+        couponApplied
       });
     } catch (error) {
       console.error("Purchase coins error:", error);
