@@ -267,7 +267,14 @@ export default function CoinsPage() {
     if (!appliedDiscount || !appliedDiscount.percentage) return originalPrice;
     const percentage = Number(appliedDiscount.percentage);
     if (isNaN(percentage) || percentage < 0 || percentage > 100) return originalPrice;
-    return originalPrice * (1 - percentage / 100);
+    const discountedPrice = originalPrice * (1 - percentage / 100);
+    console.log('🧮 Discount calculation:', {
+      originalPrice,
+      percentage,
+      discountedPrice,
+      appliedDiscount
+    });
+    return discountedPrice;
   };
 
   const getTransactionIcon = (type: string) => {

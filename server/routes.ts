@@ -3661,6 +3661,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             originalPrice: selectedPackage.price,
             discountAmount: selectedPackage.price - finalPrice
           };
+
+          console.log('💰 Backend discount calculation:', {
+            discountCode: discountCode.toUpperCase(),
+            originalPrice: selectedPackage.price,
+            percentage: discount.percentage,
+            finalPrice,
+            discountAmount: selectedPackage.price - finalPrice
+          });
         }
       }
 
