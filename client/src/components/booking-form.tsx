@@ -74,6 +74,10 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
   // Check rental access (coins availability)
   const { data: rentalAccess, isLoading: loadingRentalAccess } = useQuery({
     queryKey: ['/api/coins/check-rental-access'],
+    queryFn: async () => {
+      const response = await apiRequest('POST', '/api/coins/check-rental-access', {});
+      return response.json();
+    },
     enabled: !!user,
     retry: false,
   });
