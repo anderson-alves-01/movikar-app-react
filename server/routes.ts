@@ -3604,12 +3604,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Código de desconto inválido ou expirado" });
       }
 
-      res.json({
+      const responseData = {
         code: code.toUpperCase(),
         percentage: discount.percentage,
         description: discount.description,
         valid: true
-      });
+      };
+      
+      console.log('📤 Sending discount validation response:', responseData);
+      res.json(responseData);
     } catch (error) {
       console.error("Validate discount error:", error);
       res.status(500).json({ message: "Erro ao validar código de desconto" });

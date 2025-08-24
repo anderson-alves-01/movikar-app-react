@@ -235,9 +235,12 @@ export default function CoinsPage() {
       }) as any;
 
       console.log('✅ Discount validation response:', response);
+      console.log('✅ Response type:', typeof response);
+      console.log('✅ Response.percentage:', response.percentage, 'Type:', typeof response.percentage);
+      console.log('✅ Response.description:', response.description, 'Type:', typeof response.description);
 
       const discountData = {
-        code: discountCode,
+        code: discountCode.toUpperCase(),
         percentage: Number(response.percentage),
         description: response.description
       };
