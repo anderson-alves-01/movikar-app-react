@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { useRoute, Link } from "wouter";
 import Header from "@/components/header";
 import BookingForm from "@/components/booking-form";
@@ -25,7 +26,8 @@ import {
   CheckCircle,
   Shield,
   Clock,
-  DollarSign
+  DollarSign,
+  Coins
 } from "lucide-react";
 import { useAuthStore } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -66,6 +68,71 @@ export default function VehicleDetail() {
     },
     enabled: !!vehicleId,
   });
+
+  // Fetch user's coin balance for chat access
+  const { data: userCoins } = useQuery({
+    queryKey: ['/api/coins'],
+    enabled: !!user,
+  });
+
+  const hasEnoughCoinsForChat = user && userCoins && userCoins.availableCoins >= 200;
+  const queryClient = useQueryClient();
+
+  // Mutation to deduct coins for chat access
+  const deductCoinsForChatMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", "/api/coins/deduct", {
+        amount: 200,
+        description: "Chat com proprietário",
+        vehicleId: vehicleId,
+        ownerId: vehicle?.owner?.id,
+      });
+    },
+    onSuccess: () => {
+      // Invalidate coins cache to update balance
+      queryClient.invalidateQueries({ queryKey: ["/api/coins"] });
+      setShowMessages(true);
+      toast({
+        title: "Chat liberado!",
+        description: "200 moedas foram debitadas para acessar o chat.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao liberar chat",
+        description: error.message || "Não foi possível debitar as moedas",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleChatAccess = () => {
+    if (!user) {
+      toast({
+        title: "Login necessário",
+        description: "Faça login para conversar com o proprietário",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!hasEnoughCoinsForChat) {
+      toast({
+        title: "Moedas insuficientes",
+        description: "Você precisa de 200 moedas para conversar com o proprietário",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (showMessages) {
+      // If chat is already open, just close it
+      setShowMessages(false);
+    } else {
+      // Deduct coins and open chat
+      deductCoinsForChatMutation.mutate();
+    }
+  };
 
 
 
@@ -339,12 +406,41 @@ export default function VehicleDetail() {
                   </div>
                   
                   <Button 
-                    className="bg-secondary text-white hover:bg-teal-600 transition-colors w-full sm:w-auto flex-shrink-0 mt-2 sm:mt-0"
-                    onClick={() => setShowMessages(!showMessages)}
+                    className={`transition-colors w-full sm:w-auto flex-shrink-0 mt-2 sm:mt-0 ${
+                      !user || (!hasEnoughCoinsForChat && !showMessages)
+                        ? 'bg-gray-400 text-white cursor-not-allowed' 
+                        : 'bg-secondary text-white hover:bg-teal-600'
+                    }`}
+                    onClick={handleChatAccess}
+                    disabled={deductCoinsForChatMutation.isPending || (!user || (!hasEnoughCoinsForChat && !showMessages))}
                     data-testid="button-contact-owner"
                   >
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Conversar
+                    {deductCoinsForChatMutation.isPending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Processando...
+                      </>
+                    ) : !user ? (
+                      <>
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Fazer login para conversar
+                      </>
+                    ) : showMessages ? (
+                      <>
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Fechar chat
+                      </>
+                    ) : !hasEnoughCoinsForChat ? (
+                      <>
+                        <Coins className="h-4 w-4 mr-2" />
+                        Conversar (200 moedas)
+                      </>
+                    ) : (
+                      <>
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Conversar (200 moedas)
+                      </>
+                    )}
                   </Button>
                 </div>
               </CardContent>

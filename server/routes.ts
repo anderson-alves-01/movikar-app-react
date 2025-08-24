@@ -3802,6 +3802,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // General endpoint to deduct coins (for chat, rental, etc)
+  app.post("/api/coins/deduct", authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const { amount, description, vehicleId, ownerId } = req.body;
+
+      if (!amount || !description) {
+        return res.status(400).json({ message: "Valor e descrição são obrigatórios" });
+      }
+
+      // Check if user has enough coins
+      let userCoins = await storage.getUserCoins(userId);
+      if (!userCoins) {
+        userCoins = await storage.createUserCoins(userId);
+      }
+
+      if (userCoins.availableCoins < amount) {
+        return res.status(400).json({ 
+          message: `Moedas insuficientes. Você precisa de ${amount} moedas.`,
+          availableCoins: userCoins.availableCoins,
+          requiredCoins: amount
+        });
+      }
+
+      // Deduct coins
+      await storage.deductCoins(
+        userId,
+        amount,
+        'spend',
+        description,
+        `chat_${vehicleId}_${userId}_${Date.now()}`
+      );
+
+      // Get updated coin balance
+      const updatedCoins = await storage.getUserCoins(userId);
+
+      res.json({
+        success: true,
+        deducted: amount,
+        remainingCoins: updatedCoins?.availableCoins || 0,
+        message: `${amount} moedas debitadas com sucesso`
+      });
+
+    } catch (error) {
+      console.error("Deduct coins error:", error);
+      res.status(500).json({ message: "Erro ao debitar moedas" });
+    }
+  });
+
   // Deduct coins for rental request
   app.post("/api/coins/deduct-rental", authenticateToken, async (req, res) => {
     try {
