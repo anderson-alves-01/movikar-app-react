@@ -1,0 +1,87 @@
+TERMOS DE USO
+Última atualização: 20/08/2025
+Seja bem-vindo ao Alugae, a plataforma digital que conecta locadores e locatários de veículos de forma prática, acessível e transparente. Ao utilizar nossos serviços, você declara estar ciente e de acordo com as regras e condições descritas nestes Termos de Uso.
+1. Objeto
+O Alugae disponibiliza uma solução tecnológica para facilitar a exposição de veículos para locação e o contato entre locadores e locatários. Ressaltamos que:
+Não somos proprietários dos veículos.
+Não participamos das negociações entre usuários.
+Não assumimos qualquer responsabilidade sobre a qualidade, condições ou uso dos veículos.
+Nosso papel é exclusivamente de intermediador digital, fornecendo infraestrutura de anúncio, comunicação e pagamento.
+
+2. Cadastro de Usuários
+2.1. O acesso à plataforma depende de cadastro prévio com informações verdadeiras, completas e atualizadas.
+ 2.2. O usuário é integralmente responsável pela veracidade dos dados fornecidos.
+ 2.3. O Alugae se reserva o direito de suspender ou cancelar contas em caso de fraude, má conduta, informações falsas ou descumprimento destes Termos.
+ 2.4. O uso da plataforma por menores de 18 anos é proibido.
+
+3. Responsabilidades das Partes
+Locador: Deve disponibilizar veículo em boas condições, regularizado, licenciado e com documentação em dia.
+Locatário: Deve possuir CNH válida e utilizar o veículo dentro da legalidade.
+Ambos assumem total responsabilidade por suas obrigações legais, financeiras e contratuais.
+
+
+4. Pagamentos e Monetização
+4.1. O contato entre locador e locatário somente é liberado após o pagamento via Stripe, dentro da plataforma.
+ 4.2. O preço exibido nos anúncios é definido pelo locador e não pode ser negociado fora do Alugae.
+ 4.3. O Alugae oferece planos de assinatura, moedas e destaques que ampliam a visibilidade do anúncio.
+ 4.4. Pagamentos realizados não são reembolsáveis após a confirmação.
+
+5. Planos e Destaques
+O Alugae disponibiliza diferentes planos para atender às necessidades dos locadores:
+Básico (Gratuito): Permite anunciar 1 carro, com acesso às funcionalidades básicas da plataforma. Ideal para quem está começando a utilizar o Alugae.
+Premium (R$39,90/mês): Permite anunciar até 3 carros, com direito a destaque "Premium" por 3 dias, relatórios avançados e suporte por e-mail.
+Enterprise (R$149,90/mês): Permite anunciar carros ilimitados, com direito a destaque "Premium" por 7 dias, integração via API, suporte via WhatsApp e funcionalidades adicionais de gestão de frotas.
+Além disso, há a opção de adquirir destaques pagos, que aumentam a exposição dos anúncios em posições privilegiadas dentro da plataforma.
+Os valores dos planos podem sofrer alterações a qualquer momento, sem aviso prévio. Por isso, é importante sempre considerar o valor exibido na página de compra no momento da contratação, que prevalecerá sobre quaisquer informações anteriores.
+
+6. Limitação de Responsabilidade
+O Alugae não se responsabiliza por:
+Qualidade, estado ou disponibilidade do veículo.
+Multas, infrações, acidentes ou danos durante a locação.
+Perdas financeiras decorrentes do descumprimento contratual entre as partes.
+Seguros, coberturas adicionais ou indenizações.
+O uso da plataforma implica plena ciência de que o Alugae é apenas um intermediador e não garante o êxito das transações.
+
+7. Melhores Práticas Recomendadas
+Embora não sejam obrigatórias, o Alugae recomenda fortemente que os usuários sigam as práticas abaixo para garantir maior segurança e transparência nas transações.
+Essas práticas não substituem a responsabilidade individual, mas servem como diretrizes para reduzir riscos, evitar conflitos e proteger tanto locadores quanto locatários.
+🔹 1. Utilizar contrato de locação por escrito
+Recomendamos que todas as locações sejam formalizadas em contrato particular, contendo dados do locador, locatário e veículo, valores, prazos, responsabilidades e eventuais penalidades.
+O contrato protege ambas as partes em caso de divergências.
+
+
+🔹 2. Registrar fotos e vídeos do veículo antes e depois da entrega
+O registro fotográfico é uma forma simples de evitar discussões sobre danos.
+Fotos devem mostrar detalhes externos, internos, quilometragem e estado geral do veículo.
+
+
+🔹 3. Conferir documentação e CNH
+O locador deve exigir a CNH válida do locatário antes da entrega.
+O locatário deve verificar se o veículo está devidamente licenciado e regularizado.
+
+
+🔹 4. Considerar seguro de cobertura
+Não é obrigatório, mas recomendamos fortemente que seja avaliada a contratação de seguro adicional para cobrir terceiros, acidentes ou imprevistos.
+Essa medida reduz riscos de prejuízos significativos.
+
+
+🔹 5. Estabelecer regras claras de uso
+Quilometragem permitida, combustível, multas, manutenção e responsabilidade em caso de avaria devem ser definidos previamente.
+Essas condições podem estar descritas no contrato.
+
+
+🔹 6. Utilizar exclusivamente a plataforma para transações financeiras
+Transações feitas fora do Alugae não têm garantia, registro ou suporte.
+Isso pode colocar as partes em risco de fraude.
+
+
+Importante: O não cumprimento dessas práticas não impede o uso da plataforma, mas são uma recomendação para que as negociações sejam mais seguras para ambas as partes.
+
+8. Encerramento de Conta
+O usuário pode encerrar sua conta a qualquer momento. O Alugae também poderá suspender ou excluir contas que descumpram os Termos, pratiquem fraude ou utilizem a plataforma de forma ilícita.
+
+9. Alterações dos Termos
+Estes Termos podem ser atualizados periodicamente. O uso contínuo da plataforma implica aceitação das versões mais recentes.
+
+10. Foro
+Fica eleito o foro da cidade de Brasília-DF, com renúncia a qualquer outro, para dirimir litígios decorrentes destes Termos.

@@ -145,108 +145,150 @@ export default function Support() {
   };
 
   const faqItems = [
+    // Geral
+    {
+      id: "alugae-locadora",
+      category: "Geral",
+      question: "O Alugae é uma locadora de carros?",
+      answer: "Não. O Alugae é uma plataforma de intermediação. Nós conectamos locadores (pessoas que têm carros disponíveis) com locatários (pessoas que querem alugar). Não possuímos frota própria e não participamos da negociação."
+    },
+    {
+      id: "preco-negociavel",
+      category: "Geral",
+      question: "O preço do carro pode ser negociado?",
+      answer: "Não. O valor exibido no anúncio é definido pelo locador e é fixo. Isso evita discussões e torna o processo mais objetivo."
+    },
+    {
+      id: "como-funciona-aluguel",
+      category: "Geral",
+      question: "Como funciona o aluguel de carros pela plataforma Alugae?",
+      answer: "O Alugae conecta locadores (donos de veículos) a locatários (pessoas que desejam alugar). O locatário compra moedas dentro do app, escolhe o carro de interesse e usa as moedas para liberar o contato do locador. A partir desse momento, as partes tratam diretamente da locação. A plataforma não interfere nas condições de uso do veículo, sendo apenas responsável pela intermediação inicial."
+    },
+    {
+      id: "alugae-garante",
+      category: "Geral",
+      question: "O Alugae garante o veículo ou o pagamento da locação?",
+      answer: "Não. O Alugae atua apenas como facilitador de contato entre locador e locatário. Toda a negociação, contrato, pagamento e uso do veículo é de responsabilidade das partes envolvidas."
+    },
+    {
+      id: "responsabilidade-danos",
+      category: "Geral",
+      question: "O Alugae é responsável por danos ao veículo ou problemas entre as partes?",
+      answer: "Não. A plataforma atua exclusivamente como intermediadora, sem responsabilidade por mau uso, acidentes, multas ou qualquer divergência entre locador e locatário. Para maior segurança, recomendamos contratar seguro e formalizar contrato entre as partes."
+    },
+    
+    // Para Locadores (Proprietários)
+    {
+      id: "pagar-anunciar",
+      category: "Para Proprietários",
+      question: "Preciso pagar para anunciar um carro?",
+      answer: "Depende. O primeiro carro é gratuito. Se quiser anunciar mais veículos, será necessário contratar um dos planos pagos (Premium ou Enterprise), que oferecem benefícios extras, como relatórios avançados e maior visibilidade dos anúncios."
+    },
+    {
+      id: "documentos-locador",
+      category: "Para Proprietários",
+      question: "Quais documentos o locador precisa apresentar para anunciar seu carro?",
+      answer: "O locador deve fornecer: Documento do veículo atualizado (CRLV) e foto legível do carro."
+    },
+    {
+      id: "planos-disponíveis",
+      category: "Para Proprietários",
+      question: "Quais são os planos disponíveis para locadores?",
+      answer: "O Alugae funciona no modelo freemium, oferecendo diferentes planos: Básico (Gratuito): permite cadastrar até 1 carro, com funcionalidades básicas. Premium (R$39,90/mês): até 3 carros, direito a destaque Premium por 3 dias, relatórios avançados e suporte por e-mail. Enterprise (R$149,90/mês): anúncios ilimitados, destaque Premium por 7 dias, integração via API, suporte via WhatsApp e gestão de frotas."
+    },
+    {
+      id: "mais-carros-gratuito",
+      category: "Para Proprietários",
+      question: "Posso anunciar mais de um carro no plano gratuito?",
+      answer: "Não. O plano gratuito (Básico) permite apenas 1 carro ativo. Para quem deseja anunciar mais veículos, é necessário migrar para o plano Premium ou Enterprise."
+    },
+    {
+      id: "destaque-anuncio",
+      category: "Para Proprietários",
+      question: "O que significa colocar um anúncio em 'Destaque'?",
+      answer: "Anúncios destacados aparecem no topo da lista de resultados. É possível destacar um anúncio na página inicial ou em uma categoria específica, pagando um valor adicional por tempo limitado."
+    },
+    {
+      id: "alterar-plano",
+      category: "Para Proprietários",
+      question: "Posso alterar meu plano de assinatura a qualquer momento?",
+      answer: "Sim. Você pode fazer upgrade ou downgrade do seu plano de acordo com suas necessidades. A mudança passa a valer na próxima cobrança, conforme o ciclo contratado."
+    },
+    {
+      id: "preco-negociavel-locador",
+      category: "Para Proprietários",
+      question: "O preço dos anúncios é negociável entre locador e locatário?",
+      answer: "Não. O valor exibido no anúncio é fixo e não pode ser alterado ou negociado entre as partes."
+    },
+    
     // Para Locatários
     {
-      id: "como-alugar",
+      id: "compra-moedas",
       category: "Para Locatários",
-      question: "Como alugar um veículo?",
-      answer: "Pesquise veículos disponíveis na sua região, selecione as datas, revise os detalhes do aluguel, efetue o pagamento e aguarde a confirmação do proprietário. Após confirmação, você receberá instruções para retirada do veículo."
+      question: "Como funciona a compra de moedas?",
+      answer: "O usuário adquire moedas dentro do app, utilizando o sistema seguro de pagamentos Stripe. Cada vez que desejar liberar o contato de um locador, basta utilizar suas moedas."
     },
     {
-      id: "seguros",
-      category: "Para Locatários", 
-      question: "Como funciona o seguro dos veículos?",
-      answer: "É recomendado que o proprietario possua seguro próprio para evitar transtornos. Verifique sempre se o veículo possui seguro válido antes de confirmar o aluguel."
+      id: "o-que-sao-moedas",
+      category: "Para Locatários",
+      question: "O que são as moedas e como elas funcionam?",
+      answer: "As moedas são a forma de liberar o contato do locador dentro da plataforma. O locatário compra moedas e, ao utilizá-las, tem acesso ao telefone do anúncio escolhido para finalizar a negociação diretamente com o dono do carro."
     },
     {
-      id: "documentos-necessarios",
+      id: "estorno-moedas",
       category: "Para Locatários",
-      question: "Quais documentos preciso para alugar?",
-      answer: "CNH válida, documento de identidade (RG ou CPF) e cartão de crédito para caução. Alguns proprietários podem solicitar documentos adicionais como comprovante de renda ou residência."
+      question: "Posso estornar a compra de moedas?",
+      answer: "Não. As moedas compradas não são reembolsáveis. Por isso, é importante avaliar bem antes de realizar a compra."
     },
     {
-      id: "faq-geral",
+      id: "moedas-expiram",
       category: "Para Locatários",
-      question: "Perguntas frequentes sobre locação",
-      answer: "Tire suas principais dúvidas sobre como funciona o processo de locação, desde a busca até a devolução do veículo. Consulte nosso guia completo de locatários."
+      question: "Minhas moedas expiram?",
+      answer: "Não. As moedas não têm prazo de validade e podem ser utilizadas a qualquer momento, desde que a conta do usuário esteja ativa e regular."
+    },
+    {
+      id: "documentos-locatario",
+      category: "Para Locatários",
+      question: "Quais documentos o locatário precisa apresentar para alugar um carro?",
+      answer: "O locatário deve possuir CNH válida e em seu nome, além de enviar foto legível do documento no momento da solicitação de contato. Sem esse envio, não será possível prosseguir."
+    },
+    {
+      id: "valor-negociavel",
+      category: "Para Locatários",
+      question: "O valor do aluguel pode ser negociado diretamente com o dono do carro?",
+      answer: "Não. O preço exibido na plataforma é fixo e inegociável, garantindo transparência e evitando divergências."
+    },
+    {
+      id: "pagamento-aluguel",
+      category: "Para Locatários",
+      question: "Como funciona o pagamento do aluguel?",
+      answer: "O pagamento é feito direto para o proprietário após a negociação de datas e local de entrega do carro dentro do app."
+    },
+    {
+      id: "reembolso-problema",
+      category: "Para Locatários",
+      question: "A plataforma faz reembolso em caso de problema na locação?",
+      answer: "Não. O Alugae atua apenas como intermediador entre locadores e locatários. Reforçamos a importância das melhores práticas recomendadas (como seguro, contrato e verificação de documentos) para garantir a segurança da negociação."
     },
     
-    // Para Proprietários
+    // Suporte e Conta
     {
-      id: "como-anunciar",
-      category: "Para Proprietários",
-      question: "Como anunciar meu veículo?",
-      answer: "Acesse seu perfil, clique em 'Cadastrar Veículo', preencha as informações detalhadas, envie fotos de qualidade e documentos necessários. Após aprovação da nossa equipe, seu veículo ficará disponível para aluguel."
+      id: "excluir-conta",
+      category: "Suporte e Conta",
+      question: "Como faço para excluir minha conta?",
+      answer: "Você pode solicitar a exclusão da sua conta diretamente pelo aplicativo, na área de configurações do perfil. A exclusão é definitiva e remove todas as informações associadas, incluindo anúncios ativos. Recomendamos concluir ou cancelar eventuais locações antes de solicitar a exclusão."
     },
     {
-      id: "precificacao",
-      category: "Para Proprietários",
-      question: "Como definir o preço do meu veículo?",
-      answer: "Nossa plataforma oferece sugestões de preços baseadas no mercado local, modelo do veículo e demanda. Você pode ajustar os valores conforme sua estratégia, considerando temporadas e eventos locais."
+      id: "reativar-conta",
+      category: "Suporte e Conta",
+      question: "Posso reativar minha conta depois de excluí-la?",
+      answer: "Não. A exclusão da conta é permanente. Caso queira voltar a usar a plataforma, será necessário criar um novo cadastro."
     },
     {
-      id: "protecao-total",
-      category: "Para Proprietários", 
-      question: "O que é a proteção total?",
-      answer: "A proteção total inclui cobertura para danos, roubo e outras situações imprevistas. É uma camada adicional de segurança para proprietários que desejam maior tranquilidade ao alugar seus veículos."
-    },
-    {
-      id: "suporte-24-7",
-      category: "Para Proprietários",
-      question: "Como funciona o suporte 24/7?",
-      answer: "Oferecemos suporte contínuo através de chat online, WhatsApp e e-mail. Nossa equipe está disponível para ajudar com emergências, dúvidas sobre reservas e questões técnicas da plataforma."
-    },
-    
-    // Suporte
-    {
-      id: "central-de-ajuda",
-      category: "Suporte",
-      question: "Como acessar a central de ajuda?",
-      answer: `Nossa central de ajuda está disponível 24/7 através do chat online, WhatsApp (${(contactInfo as any)?.supportPhone || "(11) 9999-9999"}) e e-mail (${(contactInfo as any)?.supportEmail || "sac@alugae.mobi"}). Escolha o canal que preferir para receber atendimento personalizado.`
-    },
-    {
-      id: "contato",
-      category: "Suporte",
-      question: "Como entrar em contato conosco?",
-      answer: `Você pode nos contatar através de múltiplos canais: Chat online (24/7), WhatsApp (${(contactInfo as any)?.supportPhone || "(11) 9999-9999"}) em horário comercial, ou e-mail ${(contactInfo as any)?.supportEmail || "sac@alugae.mobi"} com resposta em até 24h.`
-    },
-    {
-      id: "termos-de-uso",
-      category: "Suporte",
-      question: "Onde encontro os termos de uso?",
-      answer: "Os termos de uso estão disponíveis no rodapé de todas as páginas e durante o cadastro. Eles contêm informações importantes sobre direitos, deveres e responsabilidades de usuários e proprietários."
-    },
-    {
-      id: "politica-privacidade",
-      category: "Suporte", 
-      question: "Como protegemos sua privacidade?",
-      answer: "Seguimos rigorosas políticas de proteção de dados pessoais, conforme LGPD. Seus dados são criptografados, nunca compartilhados com terceiros sem consentimento e você tem controle total sobre suas informações."
-    },
-    
-    // Gerais
-    {
-      id: "como-funciona-vistoria",
-      category: "Geral",
-      question: "Como funciona a vistoria do veículo?",
-      answer: "Antes e após o aluguel, é recomendado que a vistoria seja realizada documentando o estado do veículo para proteger locatário e proprietário. Use fotos e descreva qualquer dano existente."
-    },
-    {
-      id: "cancelamento-reserva",
-      category: "Geral",
-      question: "Posso cancelar minha reserva?",
-      answer: "Sim, você pode cancelar conforme nossa política de cancelamento. Os termos variam dependendo do tempo de antecedência: 24h+ (reembolso total), 12-24h (50% de reembolso), menos de 12h (sem reembolso)."
-    },
-    {
-      id: "problemas-pagamento",
-      category: "Geral",
-      question: "Problemas com pagamento - o que fazer?",
-      answer: "Verifique os dados do cartão, limite disponível e tente novamente. Se o problema persistir, entre em contato conosco. Aceitamos cartões de crédito, débito e PIX para maior conveniência."
-    },
-    {
-      id: "criar-conta",
-      category: "Geral",
-      question: "Como criar uma conta no alugae.mobi?",
-      answer: "Clique em 'Cadastrar', preencha seus dados pessoais, confirme seu e-mail e comece a usar a plataforma. O processo é rápido e seguro, levando apenas alguns minutos para completar."
+      id: "contato-suporte",
+      category: "Suporte e Conta",
+      question: "Como entro em contato com o suporte do Alugae?",
+      answer: "Você pode falar com nossa equipe pela página de contato do site ou diretamente pelo aplicativo, na aba de suporte. O tempo de resposta varia conforme o plano de assinatura do locador."
     }
   ];
 
@@ -349,7 +391,7 @@ export default function Support() {
           
           {/* FAQ Categories Navigation */}
           <div className="flex flex-wrap justify-center gap-4 mb-8">
-            {["Para Locatários", "Para Proprietários", "Suporte", "Geral"].map((category) => (
+            {["Geral", "Para Proprietários", "Para Locatários", "Suporte e Conta"].map((category) => (
               <Button
                 key={category}
                 variant="outline"
@@ -362,7 +404,7 @@ export default function Support() {
           </div>
 
           {/* FAQ by Categories */}
-          {["Para Locatários", "Para Proprietários", "Suporte", "Geral"].map((category) => (
+          {["Geral", "Para Proprietários", "Para Locatários", "Suporte e Conta"].map((category) => (
             <Card key={category} className="mb-6" id={`category-${category.toLowerCase().replace(/\s+/g, '-')}`}>
               <CardHeader>
                 <CardTitle className="text-xl text-gray-900">{category}</CardTitle>
