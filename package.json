@@ -11,6 +11,7 @@
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
+    "@expo/cli": "^0.24.20",
     "@google-cloud/storage": "^7.17.0",
     "@hookform/resolvers": "^3.10.0",
     "@jridgewell/trace-mapping": "^0.3.25",
@@ -77,6 +78,7 @@
     "docusign-esign": "^8.3.0",
     "drizzle-orm": "^0.39.1",
     "drizzle-zod": "^0.7.0",
+    "eas-cli": "^16.17.4",
     "embla-carousel-react": "^8.6.0",
     "expo": "^53.0.20",
     "expo-auth-session": "^6.2.1",
