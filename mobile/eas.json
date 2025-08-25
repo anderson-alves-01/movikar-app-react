@@ -9,7 +9,8 @@
       "android": {
         "buildType": "apk",
         "gradleCommand": ":app:assembleDebug"
-      }
+      },
+      "node": "20.18.0"
     },
     "preview": {
       "distribution": "internal",
@@ -24,7 +25,8 @@
             "keyPassword": "alugae123"
           }
         }
-      }
+      },
+      "node": "20.18.0"
     },
     "production": {
       "android": {
@@ -41,7 +43,8 @@
       },
       "ios": {
         "buildConfiguration": "Release"
-      }
+      },
+      "node": "20.18.0"
     }
   },
   "submit": {
