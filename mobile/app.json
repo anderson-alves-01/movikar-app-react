@@ -31,9 +31,7 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "eas": {
-        "projectId": "alugae-mobile-ios-build-2025"
-      }
+      "eas": {}
     },
     "plugins": [
       "expo-web-browser"
