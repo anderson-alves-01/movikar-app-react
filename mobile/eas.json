@@ -16,30 +16,14 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk",
-        "gradleCommand": ":app:assembleRelease",
-        "credentials": {
-          "keystore": {
-            "keystorePath": "./alugae.keystore",
-            "keystorePassword": "alugae123",
-            "keyAlias": "alugae",
-            "keyPassword": "alugae123"
-          }
-        }
+        "gradleCommand": ":app:assembleRelease"
       },
       "node": "20.18.0"
     },
     "production": {
       "android": {
         "buildType": "app-bundle",
-        "gradleCommand": ":app:bundleRelease",
-        "credentials": {
-          "keystore": {
-            "keystorePath": "./alugae.keystore",
-            "keystorePassword": "alugae123",
-            "keyAlias": "alugae",
-            "keyPassword": "alugae123"
-          }
-        }
+        "gradleCommand": ":app:bundleRelease"
       },
       "ios": {
         "buildConfiguration": "Release"
