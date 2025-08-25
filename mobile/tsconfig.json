@@ -12,17 +12,23 @@
     "isolatedModules": true,
     "baseUrl": "./",
     "paths": {
-      "@/*": ["./src/*"],
-      "@components/*": ["./components/*"],
-      "@screens/*": ["./screens/*"],
-      "@utils/*": ["./utils/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@components/*": [
+        "./components/*"
+      ],
+      "@screens/*": [
+        "./screens/*"
+      ],
+      "@utils/*": [
+        "./utils/*"
+      ]
     }
   },
   "include": [
     "**/*.ts",
-    "**/*.tsx",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "**/*.tsx"
   ],
   "exclude": [
     "node_modules"
