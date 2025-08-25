@@ -53,6 +53,8 @@ import VehicleBoosts from "@/pages/vehicle-boosts";
 import Reviews from "@/pages/reviews";
 import Support from "@/pages/support";
 import Coins from "@/pages/coins";
+import PrivacyPolicyPage from "@/pages/privacy-policy";
+import TermsOfUsePage from "@/pages/terms-of-use";
 import NotFound from "@/pages/not-found";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { OnboardingFlow, OnboardingTrigger } from "@/components/onboarding/onboarding-flow";
@@ -160,6 +162,8 @@ function Router() {
         
         <Route path="/reviews" component={Reviews} />
         <Route path="/support" component={Support} />
+        <Route path="/privacy-policy" component={PrivacyPolicyPage} />
+        <Route path="/terms-of-use" component={TermsOfUsePage} />
         
         <Route component={NotFound} />
       </Switch>
