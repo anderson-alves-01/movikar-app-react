@@ -23,18 +23,6 @@
     }
   },
   "submit": {
-    "production": {
-      "android": {
-        "serviceAccountKeyPath": "./google-service-account.json",
-        "track": "internal"
-      },
-      "ios": {
-        "ascAppId": "your-app-store-connect-app-id",
-        "appleId": "your-apple-id@email.com",
-        "ascApiKeyPath": "./AuthKey_XXXXXXXXX.p8",
-        "ascApiKeyId": "XXXXXXXXX",
-        "ascApiKeyIssuerId": "your-issuer-id"
-      }
-    }
+    "production": {}
   }
 }
