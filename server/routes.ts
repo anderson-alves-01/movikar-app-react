@@ -4873,7 +4873,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Google Mobile OAuth endpoint
+  app.post("/api/auth/google-mobile", async (req, res) => {
+    try {
+      const { googleId, email, name, photo, idToken } = req.body;
 
+      if (!googleId || !email || !idToken) {
+        return res.status(400).json({ message: "Dados do Google obrigatórios" });
+      }
+
+      // Verify Google ID token
+      const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
+      if (!response.ok) {
+        return res.status(401).json({ message: "Token Google inválido" });
+      }
+
+      const tokenInfo = await response.json();
+      if (tokenInfo.sub !== googleId) {
+        return res.status(401).json({ message: "Google ID não confere" });
+      }
+
+      // Find or create user
+      let user = await storage.getUserByEmail(email);
+
+      if (!user) {
+        // Create new user
+        user = await storage.createUser({
+          name: name || email.split('@')[0],
+          email: email,
+          password: await bcrypt.hash(Math.random().toString(36), 10), // Random password
+          phone: '', // Will be filled later
+          role: 'renter',
+          avatar: photo,
+        });
+
+        console.log('✅ New Google mobile user created:', user.email);
+      } else {
+        // Update existing user info if needed
+        if (photo && !user.avatar) {
+          await storage.updateUser(user.id, { avatar: photo });
+        }
+      }
+
+      // Generate tokens
+      const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
+      const refreshToken = jwt.sign({ userId: user.id }, JWT_SECRET + '_refresh', { expiresIn: '7d' });
+
+      const { password: _, ...userWithoutPassword } = user;
+
+      res.json({
+        user: userWithoutPassword,
+        token: token,
+        refreshToken: refreshToken
+      });
+
+    } catch (error) {
+      console.error('❌ Google mobile login error:', error);
+      res.status(500).json({ message: 'Erro interno na autenticação' });
+    }
+  });
+
+  // Apple Mobile OAuth endpoint
+  app.post("/api/auth/apple-mobile", async (req, res) => {
+    try {
+      const { appleId, email, fullName, identityToken, authorizationCode } = req.body;
+
+      if (!appleId || !identityToken) {
+        return res.status(400).json({ message: "Dados da Apple obrigatórios" });
+      }
+
+      // For Apple, email might not be provided on subsequent logins
+      // We'll need to handle users by their Apple ID
+      let user;
+      
+      if (email) {
+        user = await storage.getUserByEmail(email);
+      }
+
+      if (!user) {
+        // Create new user
+        const userName = fullName ? `${fullName.givenName || ''} ${fullName.familyName || ''}`.trim() : `Usuário Apple ${appleId.slice(-4)}`;
+        
+        user = await storage.createUser({
+          name: userName || `Usuário Apple ${appleId.slice(-4)}`,
+          email: email || `${appleId}@apple.private`,
+          password: await bcrypt.hash(Math.random().toString(36), 10), // Random password
+          phone: '', // Will be filled later
+          role: 'renter',
+          avatar: '',
+        });
+
+        console.log('✅ New Apple mobile user created:', user.email);
+      }
+
+      // Generate tokens
+      const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
+      const refreshToken = jwt.sign({ userId: user.id }, JWT_SECRET + '_refresh', { expiresIn: '7d' });
+
+      const { password: _, ...userWithoutPassword } = user;
+
+      res.json({
+        user: userWithoutPassword,
+        token: token,
+        refreshToken: refreshToken
+      });
+
+    } catch (error) {
+      console.error('❌ Apple mobile login error:', error);
+      res.status(500).json({ message: 'Erro interno na autenticação' });
+    }
+  });
 
   // Webhooks and external integrations
   app.post("/webhook/signatures", async (req, res) => {

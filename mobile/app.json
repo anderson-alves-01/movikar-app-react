@@ -22,7 +22,8 @@
         "NSLocationWhenInUseUsageDescription": "Este app precisa acessar sua localização para mostrar veículos próximos.",
         "NSCameraUsageDescription": "Este app precisa acessar a câmera para capturar fotos dos veículos.",
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "adaptiveIcon": {
@@ -30,7 +31,8 @@
         "backgroundColor": "#20B2AA"
       },
       "package": "com.alugae.mobile",
-      "versionCode": 1
+      "versionCode": 1,
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -42,7 +44,14 @@
     },
     "plugins": [
       "expo-web-browser",
-      "expo-font"
+      "expo-font",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "474421653647-your_ios_client_id_here.apps.googleusercontent.com"
+        }
+      ],
+      "expo-apple-authentication"
     ]
   }
 }

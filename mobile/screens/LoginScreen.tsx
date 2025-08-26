@@ -133,6 +133,18 @@ export default function LoginScreen({ navigation }: Props) {
     }
   };
 
+  const handleAppleLogin = async () => {
+    setLoading(true);
+    try {
+      await authService.loginWithApple();
+      navigation.replace('Home');
+    } catch (error: any) {
+      Alert.alert('Erro', error.message || 'Erro no login com Apple');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleForgotPassword = () => {
     Alert.prompt(
       'Recuperar Senha',
@@ -311,6 +323,17 @@ export default function LoginScreen({ navigation }: Props) {
                 <Ionicons name="logo-google" size={20} color="#4285F4" />
                 <Text style={styles.socialButtonText}>Continuar com Google</Text>
               </TouchableOpacity>
+
+              {Platform.OS === 'ios' && (
+                <TouchableOpacity
+                  style={[styles.socialButton, styles.appleButton]}
+                  onPress={handleAppleLogin}
+                  disabled={loading}
+                >
+                  <Ionicons name="logo-apple" size={20} color="#000" />
+                  <Text style={[styles.socialButtonText, styles.appleButtonText]}>Continuar com Apple</Text>
+                </TouchableOpacity>
+              )}
             </View>
           )}
 
@@ -482,6 +505,13 @@ const styles = StyleSheet.create({
     color: '#333',
     fontSize: 16,
     marginLeft: 8,
+  },
+  appleButton: {
+    marginTop: 10,
+    backgroundColor: '#000',
+  },
+  appleButtonText: {
+    color: '#fff',
   },
   switchContainer: {
     flexDirection: 'row',

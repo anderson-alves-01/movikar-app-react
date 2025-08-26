@@ -233,49 +233,48 @@ class AuthService {
   // Google Sign In
   async loginWithGoogle(): Promise<User> {
     try {
-      const redirectUri = AuthSession.makeRedirectUri();
+      // Check Google Play Services (Android)
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
       
-      const request = new AuthSession.AuthRequest({
-        clientId: 'YOUR_GOOGLE_CLIENT_ID', // Replace with actual client ID
-        scopes: ['openid', 'profile', 'email'],
-        redirectUri,
-        responseType: AuthSession.ResponseType.Code,
-        extraParams: {},
-      });
-
-      const result = await request.promptAsync({
-        authorizationEndpoint: 'https://accounts.google.com/oauth/authorize',
-      });
-
-      if (result.type === 'success') {
-        // Send auth code to your backend
-        const response = await fetch('https://alugae.mobi/api/auth/google', {
+      // Get user info from Google
+      const userInfo = await GoogleSignin.signIn();
+      
+      if (userInfo.data?.user) {
+        const { user } = userInfo.data;
+        
+        // Send Google user data to your backend for verification and JWT token generation
+        const response = await fetch('https://alugae.mobi/api/auth/google-mobile', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            code: result.params.code,
-            redirectUri,
+            googleId: user.id,
+            email: user.email,
+            name: user.name,
+            photo: user.photo,
+            idToken: userInfo.data.idToken,
           }),
         });
 
         if (!response.ok) {
-          throw new Error('Erro na autenticação com Google');
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Falha na autenticação com Google');
         }
 
         const data = await response.json();
         
+        // Store tokens and user data
         this.token = data.token;
         this.refreshToken = data.refreshToken;
         this.user = data.user;
 
-        if (this.token && this.refreshToken && this.user) {
+        if (this.token && this.user) {
           await Promise.all([
             AsyncStorage.setItem(TOKEN_KEY, this.token),
-            AsyncStorage.setItem(REFRESH_TOKEN_KEY, this.refreshToken),
+            this.refreshToken && AsyncStorage.setItem(REFRESH_TOKEN_KEY, this.refreshToken),
             AsyncStorage.setItem(USER_KEY, JSON.stringify(this.user)),
-          ]);
+          ].filter(Boolean));
 
           return this.user;
         } else {
@@ -284,21 +283,84 @@ class AuthService {
       }
 
       throw new Error('Login cancelado');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Google login error:', error);
-      throw error;
+      
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        throw new Error('Login cancelado pelo usuário');
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        throw new Error('Login em andamento');
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        throw new Error('Google Play Services não disponível');
+      } else {
+        throw error;
+      }
     }
   }
 
   // Apple Sign In (iOS only)
   async loginWithApple(): Promise<User> {
     try {
-      // Implementation for Apple Sign In
-      // This would require @react-native-apple-authentication package
-      throw new Error('Apple Sign In não implementado ainda');
-    } catch (error) {
+      // Check if Apple Authentication is available
+      const isAvailable = await AppleAuthentication.isAvailableAsync();
+      if (!isAvailable) {
+        throw new Error('Apple Sign In não está disponível neste dispositivo');
+      }
+
+      // Request Apple authentication
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      // Send Apple user data to your backend for verification and JWT token generation
+      const response = await fetch('https://alugae.mobi/api/auth/apple-mobile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          appleId: credential.user,
+          email: credential.email,
+          fullName: credential.fullName,
+          identityToken: credential.identityToken,
+          authorizationCode: credential.authorizationCode,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Falha na autenticação com Apple');
+      }
+
+      const data = await response.json();
+      
+      // Store tokens and user data
+      this.token = data.token;
+      this.refreshToken = data.refreshToken;
+      this.user = data.user;
+
+      if (this.token && this.user) {
+        await Promise.all([
+          AsyncStorage.setItem(TOKEN_KEY, this.token),
+          this.refreshToken && AsyncStorage.setItem(REFRESH_TOKEN_KEY, this.refreshToken),
+          AsyncStorage.setItem(USER_KEY, JSON.stringify(this.user)),
+        ].filter(Boolean));
+
+        return this.user;
+      } else {
+        throw new Error('Dados de autenticação Apple inválidos');
+      }
+    } catch (error: any) {
       console.error('Apple login error:', error);
-      throw error;
+      
+      if (error.code === 'ERR_CANCELED') {
+        throw new Error('Login cancelado pelo usuário');
+      } else {
+        throw error;
+      }
     }
   }
 
