@@ -1,4 +1,5 @@
 import type { Express, Request, Response, NextFunction } from "express";
+import express from "express";
 import { WebSocketServer, WebSocket } from 'ws';
 
 interface AuthRequest extends Request {
@@ -6536,118 +6537,136 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Webhook Stripe para trigger automático - PRODUÇÃO
-  app.post("/api/webhooks/stripe", async (req, res) => {
+  app.post("/api/webhooks/stripe", express.raw({ type: 'application/json' }), async (req, res) => {
+    const startTime = Date.now();
+    
     try {
-      console.log("🔔 Webhook Stripe recebido");
+      console.log("🔔 Webhook Stripe recebido - ID:", req.headers['stripe-signature']?.toString().substring(0, 20));
       
-      // Validar assinatura do webhook (essencial para produção)
-      const sig = req.headers['stripe-signature'] as string;
-      const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+      // Responder imediatamente para evitar timeout
+      res.status(200).json({ received: true, timestamp: startTime });
       
-      if (!webhookSecret) {
-        console.error("❌ STRIPE_WEBHOOK_SECRET não configurado");
-        return res.status(400).json({ error: "Webhook secret não configurado" });
-      }
-
-      if (!stripe) {
-        console.error("❌ Stripe não está configurado");
-        return res.status(500).json({ error: "Stripe não está configurado" });
-      }
-
-      let event: Stripe.Event;
-      try {
-        event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-      } catch (err: any) {
-        console.error("❌ Erro na validação do webhook:", err.message);
-        return res.status(400).json({ error: "Webhook signature verification failed" });
-      }
-
-      console.log("✅ Webhook validado:", event.type);
-
-      // Processar eventos relevantes
-      const { StripeProductionService } = await import('./services/stripeProductionService.js');
-      const stripeService = new StripeProductionService();
-
-      switch (event.type) {
-        case 'payment_intent.succeeded':
-          const paymentIntent = event.data.object as Stripe.PaymentIntent;
+      // Processar webhook de forma assíncrona
+      setImmediate(async () => {
+        try {
+          // Validar assinatura do webhook (essencial para produção)
+          const sig = req.headers['stripe-signature'] as string;
+          const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
           
-          // Check if this is a coin purchase
-          if (paymentIntent.metadata?.type === 'coin_purchase') {
-            console.log("💰 Processing coin purchase payment:", paymentIntent.id);
-            
-            const userId = parseInt(paymentIntent.metadata.userId);
-            const coinAmount = parseInt(paymentIntent.metadata.coinAmount);
-            const packageName = paymentIntent.metadata.packageName;
-            
-            if (userId && coinAmount) {
-              try {
-                await storage.addCoins(
-                  userId,
-                  coinAmount,
-                  'stripe_payment',
-                  `Compra de ${packageName}`,
-                  paymentIntent.id,
-                  paymentIntent.id
-                );
-                console.log(`✅ Added ${coinAmount} coins to user ${userId}`);
-              } catch (error) {
-                console.error("❌ Error adding coins:", error);
+          if (!webhookSecret) {
+            console.error("❌ STRIPE_WEBHOOK_SECRET não configurado");
+            return;
+          }
+
+          if (!stripe) {
+            console.error("❌ Stripe não está configurado");
+            return;
+          }
+
+          if (!sig) {
+            console.error("❌ Stripe signature não encontrada");
+            return;
+          }
+
+          let event: Stripe.Event;
+          try {
+            event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+          } catch (err: any) {
+            console.error("❌ Erro na validação do webhook:", err.message);
+            return;
+          }
+
+          console.log("✅ Webhook validado:", event.type, "- processando...");
+
+          // Processar eventos relevantes
+          const { StripeProductionService } = await import('./services/stripeProductionService.js');
+          const stripeService = new StripeProductionService();
+
+          switch (event.type) {
+            case 'payment_intent.succeeded':
+              const paymentIntent = event.data.object as Stripe.PaymentIntent;
+              
+              // Check if this is a coin purchase
+              if (paymentIntent.metadata?.type === 'coin_purchase') {
+                console.log("💰 Processing coin purchase payment:", paymentIntent.id);
+                
+                const userId = parseInt(paymentIntent.metadata.userId);
+                const coinAmount = parseInt(paymentIntent.metadata.coinAmount);
+                const packageName = paymentIntent.metadata.packageName;
+                
+                if (userId && coinAmount) {
+                  try {
+                    await storage.addCoins(
+                      userId,
+                      coinAmount,
+                      'stripe_payment',
+                      `Compra de ${packageName}`,
+                      paymentIntent.id,
+                      paymentIntent.id
+                    );
+                    console.log(`✅ Added ${coinAmount} coins to user ${userId}`);
+                  } catch (error) {
+                    console.error("❌ Error adding coins:", error);
+                  }
+                }
+              } else {
+                // Handle regular booking payments
+                await stripeService.handlePaymentSucceeded(paymentIntent);
               }
-            }
-          } else {
-            // Handle regular booking payments
-            await stripeService.handlePaymentSucceeded(paymentIntent);
+              break;
+
+            case 'payment_intent.payment_failed':
+              console.log("❌ Pagamento falhou:", event.data.object.id);
+              // Atualizar booking para status failed
+              const failedBooking = await storage.getBookingByPaymentIntent(event.data.object.id);
+              if (failedBooking) {
+                await storage.updateBookingPaymentStatus(failedBooking.id, 'failed');
+              }
+              break;
+
+            case 'customer.subscription.created':
+              console.log("✅ Assinatura criada:", event.data.object.id);
+              await stripeService.handleSubscriptionCreated(event.data.object as Stripe.Subscription);
+              break;
+
+            case 'customer.subscription.updated':
+              console.log("📋 Assinatura atualizada:", event.data.object.id);
+              await stripeService.handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
+              break;
+
+            case 'customer.subscription.deleted':
+              console.log("❌ Assinatura cancelada:", event.data.object.id);
+              await stripeService.handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
+              break;
+
+            case 'invoice.payment_succeeded':
+              console.log("💰 Renovação automática bem-sucedida:", event.data.object.id);
+              await stripeService.handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
+              break;
+
+            case 'invoice.payment_failed':
+              console.log("❌ Falha na renovação automática:", event.data.object.id);
+              await stripeService.handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
+              break;
+
+            default:
+              console.log("ℹ️ Evento não processado:", event.type);
           }
-          break;
 
-        case 'payment_intent.payment_failed':
-          console.log("❌ Pagamento falhou:", event.data.object.id);
-          // Atualizar booking para status failed
-          const failedBooking = await storage.getBookingByPaymentIntent(event.data.object.id);
-          if (failedBooking) {
-            await storage.updateBookingPaymentStatus(failedBooking.id, 'failed');
-          }
-          break;
+          const endTime = Date.now();
+          console.log(`✅ Webhook processado em ${endTime - startTime}ms`);
 
-        case 'invoice.payment_succeeded':
-          console.log("✅ Fatura paga:", event.data.object.id);
-          break;
-
-        case 'customer.subscription.created':
-          console.log("✅ Assinatura criada:", event.data.object.id);
-          await stripeService.handleSubscriptionCreated(event.data.object as Stripe.Subscription);
-          break;
-
-        case 'customer.subscription.updated':
-          console.log("📋 Assinatura atualizada:", event.data.object.id);
-          await stripeService.handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
-          break;
-
-        case 'customer.subscription.deleted':
-          console.log("❌ Assinatura cancelada:", event.data.object.id);
-          await stripeService.handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
-          break;
-
-        case 'invoice.payment_succeeded':
-          console.log("💰 Renovação automática bem-sucedida:", event.data.object.id);
-          await stripeService.handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
-          break;
-
-        case 'invoice.payment_failed':
-          console.log("❌ Falha na renovação automática:", event.data.object.id);
-          await stripeService.handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
-          break;
-
-        default:
-          console.log("ℹ️ Evento não processado:", event.type);
-      }
-
-      res.json({ received: true });
+        } catch (processingError: any) {
+          console.error("❌ Erro no processamento assíncrono do webhook:", processingError);
+        }
+      });
 
     } catch (error: any) {
-      console.error("❌ Erro no webhook Stripe:", error);
-      res.status(500).json({ message: "Webhook error" });
+      console.error("❌ Erro crítico no webhook Stripe:", error);
+      // Se a resposta ainda não foi enviada, enviar erro
+      if (!res.headersSent) {
+        res.status(500).json({ message: "Webhook error", timestamp: startTime });
+      }
     }
   });
 
