@@ -2,10 +2,11 @@
   "expo": {
     "name": "alugae - Aluguel de Carros",
     "slug": "alugae-mobile",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "jsEngine": "hermes",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -17,11 +18,14 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.alugae.mobile",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Este app precisa acessar sua localização para mostrar veículos próximos.",
         "NSCameraUsageDescription": "Este app precisa acessar a câmera para capturar fotos dos veículos.",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": [],
+        "UIRequiredDeviceCapabilities": ["armv7"],
+        "LSRequiresIPhoneOS": true
       },
       "googleServicesFile": "./GoogleService-Info.plist"
     },
