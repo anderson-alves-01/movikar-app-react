@@ -2,6 +2,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as AuthSession from 'expo-auth-session';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import apiService from './apiService';
 
 const TOKEN_KEY = 'auth_token';
@@ -39,6 +41,18 @@ class AuthService {
 
   // Initialize auth service
   async initialize() {
+    // Configure Google Sign In
+    try {
+      GoogleSignin.configure({
+        webClientId: '474421653647-n4d2bdc4ca8bh4vvjl4bqn8e5t8lv0il.apps.googleusercontent.com', // Your web client ID from Google Console
+        iosClientId: '474421653647-your_ios_client_id_here.apps.googleusercontent.com', // Your iOS client ID
+        offlineAccess: true,
+        hostedDomain: '',
+        accountName: '',
+      });
+    } catch (error) {
+      console.error('Google Sign In configuration error:', error);
+    }
     try {
       const token = await AsyncStorage.getItem(TOKEN_KEY);
       const refreshToken = await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
