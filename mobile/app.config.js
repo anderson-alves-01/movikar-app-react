@@ -29,8 +29,7 @@ export default {
         // Crash prevention settings
         UIApplicationExitsOnSuspend: false,
         UIFileSharingEnabled: false
-      },
-      googleServicesFile: "./GoogleService-Info.plist"
+      }
     },
     android: {
       adaptiveIcon: {
@@ -38,8 +37,7 @@ export default {
         backgroundColor: "#20B2AA"
       },
       package: "com.alugae.mobile",
-      versionCode: 2,
-      googleServicesFile: "./google-services.json"
+      versionCode: 2
     },
     web: {
       favicon: "./assets/favicon.png"
@@ -55,7 +53,7 @@ export default {
       [
         "@react-native-google-signin/google-signin",
         {
-          iosUrlScheme: "474421653647-your_ios_client_id_here.apps.googleusercontent.com"
+          iosUrlScheme: "com.googleusercontent.apps.474421653647-your_ios_client_id_here"
         }
       ],
       "expo-apple-authentication"
