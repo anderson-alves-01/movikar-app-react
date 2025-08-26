@@ -1581,12 +1581,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   async function handleAppleCallback(code: string) {
     try {
-      console.log('🍎 Apple OAuth callback received:', code);
+      console.log('🍎 Apple OAuth callback received, code length:', code?.length);
 
       if (!APPLE_CLIENT_ID || !APPLE_PRIVATE_KEY || !APPLE_TEAM_ID || !APPLE_KEY_ID) {
         console.error('❌ Apple OAuth: Missing required environment variables');
+        console.error('❌ Available vars:', {
+          APPLE_CLIENT_ID: !!APPLE_CLIENT_ID,
+          APPLE_PRIVATE_KEY: !!APPLE_PRIVATE_KEY,
+          APPLE_TEAM_ID: !!APPLE_TEAM_ID,
+          APPLE_KEY_ID: !!APPLE_KEY_ID
+        });
         throw new Error('Apple OAuth not properly configured');
       }
+
+      console.log('✅ Apple OAuth: All environment variables present');
 
       // Create client secret JWT for Apple
       const now = Math.floor(Date.now() / 1000);
@@ -1598,6 +1606,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sub: APPLE_CLIENT_ID,
       };
 
+      console.log('🍎 Creating client secret JWT with payload:', {
+        iss: APPLE_TEAM_ID,
+        sub: APPLE_CLIENT_ID,
+        aud: 'https://appleid.apple.com'
+      });
+
       const clientSecret = jwt.sign(clientSecretPayload, APPLE_PRIVATE_KEY.replace(/\\n/g, '\n'), {
         algorithm: 'ES256',
         header: {
@@ -1606,7 +1620,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
+      console.log('✅ Apple OAuth: Client secret JWT created');
+
       // Exchange authorization code for access token
+      console.log('🍎 Exchanging code for tokens...');
       const tokenResponse = await fetch('https://appleid.apple.com/auth/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -1619,27 +1636,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }),
       });
 
+      console.log('🍎 Token response status:', tokenResponse.status, tokenResponse.statusText);
+
+      if (!tokenResponse.ok) {
+        const errorText = await tokenResponse.text();
+        console.error('❌ Apple OAuth token exchange failed:', {
+          status: tokenResponse.status,
+          statusText: tokenResponse.statusText,
+          error: errorText
+        });
+        throw new Error(`Apple token exchange failed: ${tokenResponse.status} ${errorText}`);
+      }
+
       const tokenData = await tokenResponse.json();
+      console.log('🍎 Token data received:', {
+        hasAccessToken: !!tokenData.access_token,
+        hasIdToken: !!tokenData.id_token,
+        tokenType: tokenData.token_type,
+        error: tokenData.error
+      });
 
       if (!tokenData.access_token && !tokenData.id_token) {
         console.error('❌ Apple OAuth: No tokens received', tokenData);
-        throw new Error('No access token received from Apple');
+        throw new Error('No tokens received from Apple');
       }
 
       // Decode the ID token to get user info
       let userInfo = null;
       if (tokenData.id_token) {
+        console.log('🍎 Decoding ID token...');
         const decoded = jwt.decode(tokenData.id_token) as any;
+        console.log('🍎 Decoded token data:', {
+          email: decoded?.email,
+          emailVerified: decoded?.email_verified,
+          sub: decoded?.sub,
+          aud: decoded?.aud
+        });
+        
         userInfo = {
           email: decoded.email,
-          name: decoded.name || 'Apple User',
+          name: decoded.name || `Apple User ${decoded.sub?.slice(-4) || ''}`,
           picture: null,
         };
+        
+        console.log('✅ Apple OAuth: User info extracted:', userInfo);
+      } else {
+        console.error('❌ Apple OAuth: No ID token found in response');
       }
 
       return userInfo;
     } catch (error) {
-      console.error('Apple OAuth error:', error);
+      console.error('❌ Apple OAuth callback error:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        error
+      });
       return null;
     }
   }
