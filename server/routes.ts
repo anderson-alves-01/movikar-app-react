@@ -1613,9 +1613,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // This bypasses the complex token validation that may be failing
       console.log('🍎 Using simplified Apple OAuth approach');
       
+      // Generate a more user-friendly name
+      const userNumber = Math.floor(Math.random() * 9999) + 1;
       const simpleUserInfo = {
         email: `apple_user_${Date.now()}_${Math.random().toString(36).slice(2, 6)}@appleid.local`,
-        name: `Apple User ${Math.random().toString(36).slice(2, 6)}`,
+        name: `Usuário Apple ${userNumber}`,
         picture: null
       };
       
