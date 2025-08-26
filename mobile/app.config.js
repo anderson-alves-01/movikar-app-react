@@ -50,12 +50,6 @@ export default {
     plugins: [
       "expo-web-browser",
       "expo-font",
-      [
-        "@react-native-google-signin/google-signin",
-        {
-          iosUrlScheme: "com.googleusercontent.apps.474421653647-your_ios_client_id_here"
-        }
-      ],
       "expo-apple-authentication"
     ],
     // Stability settings
