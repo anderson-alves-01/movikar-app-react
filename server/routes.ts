@@ -1612,15 +1612,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         aud: 'https://appleid.apple.com'
       });
 
-      const clientSecret = jwt.sign(clientSecretPayload, APPLE_PRIVATE_KEY.replace(/\\n/g, '\n'), {
-        algorithm: 'ES256',
-        header: {
-          kid: APPLE_KEY_ID,
-          alg: 'ES256'
-        }
-      });
-
-      console.log('✅ Apple OAuth: Client secret JWT created');
+      let clientSecret;
+      try {
+        clientSecret = jwt.sign(clientSecretPayload, APPLE_PRIVATE_KEY.replace(/\\n/g, '\n'), {
+          algorithm: 'ES256',
+          header: {
+            kid: APPLE_KEY_ID,
+            alg: 'ES256'
+          }
+        });
+        console.log('✅ Apple OAuth: Client secret JWT created');
+      } catch (jwtError) {
+        console.error('❌ Apple OAuth: JWT creation failed:', jwtError);
+        throw new Error('Failed to create Apple client secret JWT');
+      }
 
       // Exchange authorization code for access token
       console.log('🍎 Exchanging code for tokens...');
@@ -1638,50 +1643,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('🍎 Token response status:', tokenResponse.status, tokenResponse.statusText);
 
+      let tokenData;
+      try {
+        tokenData = await tokenResponse.json();
+        console.log('🍎 Token data received:', {
+          hasAccessToken: !!tokenData.access_token,
+          hasIdToken: !!tokenData.id_token,
+          tokenType: tokenData.token_type,
+          error: tokenData.error
+        });
+      } catch (parseError) {
+        console.error('❌ Apple OAuth: Failed to parse token response:', parseError);
+        throw new Error('Failed to parse Apple token response');
+      }
+
       if (!tokenResponse.ok) {
-        const errorText = await tokenResponse.text();
         console.error('❌ Apple OAuth token exchange failed:', {
           status: tokenResponse.status,
           statusText: tokenResponse.statusText,
-          error: errorText
+          error: tokenData
         });
-        throw new Error(`Apple token exchange failed: ${tokenResponse.status} ${errorText}`);
+        throw new Error(`Apple token exchange failed: ${tokenResponse.status} ${JSON.stringify(tokenData)}`);
       }
-
-      const tokenData = await tokenResponse.json();
-      console.log('🍎 Token data received:', {
-        hasAccessToken: !!tokenData.access_token,
-        hasIdToken: !!tokenData.id_token,
-        tokenType: tokenData.token_type,
-        error: tokenData.error
-      });
 
       if (tokenData.error) {
         console.error('❌ Apple OAuth: Token exchange error:', tokenData);
         throw new Error(`Apple token exchange failed: ${tokenData.error} - ${tokenData.error_description || ''}`);
       }
 
-      if (!tokenData.access_token && !tokenData.id_token) {
-        console.error('❌ Apple OAuth: No tokens received', tokenData);
-        throw new Error('No tokens received from Apple');
+      if (!tokenData.id_token) {
+        console.error('❌ Apple OAuth: No ID token received', tokenData);
+        throw new Error('No ID token received from Apple');
       }
 
       // Decode the ID token to get user info
       let userInfo = null;
-      if (tokenData.id_token) {
+      try {
         console.log('🍎 Decoding ID token...');
         const decoded = jwt.decode(tokenData.id_token) as any;
+        
+        if (!decoded) {
+          throw new Error('Failed to decode Apple ID token');
+        }
+        
         console.log('🍎 Decoded token data:', {
           email: decoded?.email,
           emailVerified: decoded?.email_verified,
           sub: decoded?.sub,
-          aud: decoded?.aud
+          aud: decoded?.aud,
+          hasSubject: !!decoded?.sub
         });
         
+        // Generate a unique identifier for the user
+        const userSubject = decoded.sub;
+        if (!userSubject) {
+          throw new Error('No subject ID found in Apple ID token');
+        }
+        
         // Apple sometimes doesn't provide email on subsequent logins
-        // We need to handle this case and still create a valid user
-        const userEmail = decoded.email || `apple_user_${decoded.sub}@apple.com`;
-        const userName = decoded.name || `Apple User ${decoded.sub?.slice(-4) || Math.random().toString(36).slice(2, 6)}`;
+        // Use subject ID to create a consistent email
+        const userEmail = decoded.email || `apple_user_${userSubject.replace(/\./g, '_')}@appleid.local`;
+        const userName = decoded.name || `Apple User ${userSubject.slice(-4)}`;
         
         userInfo = {
           email: userEmail,
@@ -1689,16 +1711,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           picture: null,
         };
         
-        console.log('✅ Apple OAuth: User info extracted:', userInfo);
+        console.log('✅ Apple OAuth: User info extracted:', {
+          email: userInfo.email,
+          name: userInfo.name,
+          hasSubject: !!userSubject
+        });
         
-        // Additional validation
-        if (!userInfo.email || !userInfo.name) {
+        // Final validation
+        if (!userInfo.email || !userInfo.name || userInfo.email === 'undefined' || userInfo.name === 'undefined') {
           console.error('❌ Apple OAuth: Invalid user info after extraction:', userInfo);
           throw new Error('Failed to extract valid user information from Apple ID token');
         }
-      } else {
-        console.error('❌ Apple OAuth: No ID token found in response');
-        throw new Error('No ID token received from Apple');
+        
+      } catch (decodeError) {
+        console.error('❌ Apple OAuth: Token decode error:', decodeError);
+        throw new Error('Failed to decode Apple ID token');
       }
 
       return userInfo;
