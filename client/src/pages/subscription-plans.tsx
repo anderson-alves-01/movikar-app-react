@@ -657,9 +657,19 @@ export default function SubscriptionPlans() {
               >
                 <Minus className="h-4 w-4" />
               </Button>
-              <div className="flex items-center justify-center min-w-[120px] px-4 py-2 border rounded-md bg-white dark:bg-gray-800">
-                <span className="text-lg font-semibold">{vehicleCount}</span>
-                <span className="text-sm text-gray-500 ml-1">anúncios</span>
+              <div className="flex items-center min-w-[120px]">
+                <Input
+                  type="number"
+                  value={vehicleCount}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value) || 3;
+                    setVehicleCount(Math.max(3, Math.min(50, value)));
+                  }}
+                  min={3}
+                  max={50}
+                  className="text-center text-lg font-semibold w-20 h-10"
+                />
+                <span className="text-sm text-gray-500 ml-2">anúncios</span>
               </div>
               <Button
                 variant="outline"
