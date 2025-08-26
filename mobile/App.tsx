@@ -203,9 +203,9 @@ export default function App() {
       }
 
       try {
-        // Chat service may not have initialize method, skip if not available
-        if (chatService && typeof chatService.initialize === 'function') {
-          await chatService.initialize();
+        // Chat service initialization - connect if available
+        if (chatService && typeof (chatService as any).connect === 'function') {
+          await (chatService as any).connect();
         }
       } catch (chatError) {
         console.warn('Chat service initialization failed:', chatError);
