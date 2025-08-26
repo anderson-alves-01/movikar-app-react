@@ -30,7 +30,8 @@ import {
   ClipboardCheck,
   Users,
   Eye,
-  Zap
+  Zap,
+  Coins
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -109,6 +110,25 @@ export default function Profile() {
     },
     enabled: !!user,
     staleTime: 5000,
+  });
+
+  // Fetch user's coin balance
+  const { data: userCoins } = useQuery({
+    queryKey: ['/api/coins'],
+    queryFn: async () => {
+      if (!user) return null;
+      
+      const response = await fetch('/api/coins', {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        return null;
+      }
+      return response.json();
+    },
+    enabled: !!user,
+    staleTime: 60000, // Cache for 1 minute
+    retry: false
   });
 
   // Update user mutation
@@ -398,7 +418,7 @@ export default function Profile() {
                 ) : (
                   <>
                     <div className="flex items-center justify-between mb-2">
-                      <h1 className="text-2xl font-bold text-gray-800">{user.name}</h1>
+                      <h1 className="text-3xl font-bold text-gray-900">{user.name || 'Usuário Apple 7256'}</h1>
                       <Button variant="outline" size="sm" onClick={handleEditProfile}>
                         <Edit className="h-4 w-4 mr-2" />
                         Editar
@@ -408,10 +428,10 @@ export default function Profile() {
                     <div className="flex items-center space-x-4 text-sm text-gray-600 mb-4">
                       <div className="flex items-center">
                         <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                        <span>{user.rating}</span>
+                        <span>{user.rating || '0.00'}</span>
                       </div>
                       <span>•</span>
-                      <span>{user.totalRentals} aluguéis</span>
+                      <span>{user.totalRentals || 0} aluguéis</span>
                       <span>•</span>
                       <span>Membro desde {new Date().getFullYear()}</span>
                     </div>
@@ -442,7 +462,7 @@ export default function Profile() {
                     </div>
 
                     {/* Subscription Plan Display */}
-                    <div className="mt-4 flex items-center gap-3">
+                    <div className="mt-4 flex flex-wrap items-center gap-3">
                       <Badge 
                         variant={(user as any).subscriptionPlan === 'free' ? 'secondary' : (user as any).subscriptionPlan === 'essencial' ? 'default' : 'destructive'}
                         className="text-sm px-3 py-1"
@@ -466,13 +486,30 @@ export default function Profile() {
                         </Button>
                       )}
                     </div>
+
+                    {/* User Coins Display */}
+                    {userCoins && (
+                      <div className="mt-4 flex items-center gap-3">
+                        <div className="flex items-center gap-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <Coins className="h-4 w-4 text-yellow-600" />
+                          <span className="text-sm font-medium text-yellow-800">
+                            {userCoins.availableCoins} moedas
+                          </span>
+                        </div>
+                        <Button asChild variant="outline" size="sm">
+                          <Link href="/coins">
+                            Gerenciar moedas
+                          </Link>
+                        </Button>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
 
               <div className="text-right">
-                <div className="text-2xl font-bold text-success">
-                  {formatCurrency(parseFloat(user.totalEarnings))}
+                <div className="text-3xl font-bold text-gray-900">
+                  R$ {parseFloat(user.totalEarnings || '0').toFixed(2).replace('.', ',')}
                 </div>
                 <div className="text-sm text-gray-600">Total ganho</div>
               </div>
@@ -482,17 +519,17 @@ export default function Profile() {
 
         {/* Tabs */}
         <Tabs defaultValue="renter" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 h-auto">
-            <TabsTrigger value="renter" className="text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-1.5">
-              <span className="block sm:hidden">Reservas</span>
+          <TabsList className="grid w-full grid-cols-3 h-auto bg-gray-100 rounded-lg">
+            <TabsTrigger value="renter" className="text-sm px-4 py-3 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              <span className="block sm:hidden">Minhas Reservas</span>
               <span className="hidden sm:block">Minhas Reservas</span>
             </TabsTrigger>
-            <TabsTrigger value="owner" className="text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-1.5">
-              <span className="block sm:hidden">Proprietário</span>
+            <TabsTrigger value="owner" className="text-sm px-4 py-3 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              <span className="block sm:hidden">Como Proprietário</span>
               <span className="hidden sm:block">Como Proprietário</span>
             </TabsTrigger>
-            <TabsTrigger value="vehicles" className="text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-1.5">
-              <span className="block sm:hidden">Veículos</span>
+            <TabsTrigger value="vehicles" className="text-sm px-4 py-3 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              <span className="block sm:hidden">Meus Veículos</span>
               <span className="hidden sm:block">Meus Veículos</span>
             </TabsTrigger>
           </TabsList>
@@ -599,10 +636,14 @@ export default function Profile() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8">
-                    <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">Você ainda não fez nenhuma reserva</p>
-                    <Button className="mt-4" asChild>
+                  <div className="text-center py-16">
+                    <div className="flex justify-center mb-4">
+                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                        <Calendar className="h-8 w-8 text-gray-400" />
+                      </div>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-800 mb-2">Você ainda não fez nenhuma reserva</h3>
+                    <Button asChild className="mt-4 bg-red-500 hover:bg-red-600 text-white">
                       <Link href="/">Encontrar veículos</Link>
                     </Button>
                   </div>
