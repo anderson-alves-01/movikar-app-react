@@ -320,10 +320,10 @@ export default function Profile() {
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-8">
         {/* Profile Header */}
         <Card className="mb-8">
-          <CardContent className="p-6">
+          <CardContent className="p-8">
             <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
               <Avatar className="h-24 w-24">
                 <AvatarImage src={user.avatar} />
