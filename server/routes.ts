@@ -1656,6 +1656,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: tokenData.error
       });
 
+      if (tokenData.error) {
+        console.error('❌ Apple OAuth: Token exchange error:', tokenData);
+        throw new Error(`Apple token exchange failed: ${tokenData.error} - ${tokenData.error_description || ''}`);
+      }
+
       if (!tokenData.access_token && !tokenData.id_token) {
         console.error('❌ Apple OAuth: No tokens received', tokenData);
         throw new Error('No tokens received from Apple');
@@ -1673,15 +1678,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           aud: decoded?.aud
         });
         
+        // Apple sometimes doesn't provide email on subsequent logins
+        // We need to handle this case and still create a valid user
+        const userEmail = decoded.email || `apple_user_${decoded.sub}@apple.com`;
+        const userName = decoded.name || `Apple User ${decoded.sub?.slice(-4) || Math.random().toString(36).slice(2, 6)}`;
+        
         userInfo = {
-          email: decoded.email,
-          name: decoded.name || `Apple User ${decoded.sub?.slice(-4) || ''}`,
+          email: userEmail,
+          name: userName,
           picture: null,
         };
         
         console.log('✅ Apple OAuth: User info extracted:', userInfo);
+        
+        // Additional validation
+        if (!userInfo.email || !userInfo.name) {
+          console.error('❌ Apple OAuth: Invalid user info after extraction:', userInfo);
+          throw new Error('Failed to extract valid user information from Apple ID token');
+        }
       } else {
         console.error('❌ Apple OAuth: No ID token found in response');
+        throw new Error('No ID token received from Apple');
       }
 
       return userInfo;
