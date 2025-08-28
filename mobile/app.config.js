@@ -50,7 +50,9 @@ export default {
     plugins: [
       "expo-web-browser",
       "expo-font",
-      "expo-apple-authentication"
+      [
+        "expo-apple-authentication"
+      ]
     ],
     // Stability settings
     updates: {
