@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import logoImage from '@/assets/logo.png';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -26,6 +26,16 @@ export default function LaunchLandingPage() {
   const [isRenter, setIsRenter] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [waitlistCount, setWaitlistCount] = useState(1247);
+
+  // Incrementar contador a cada minuto
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setWaitlistCount(prev => prev + Math.floor(Math.random() * 3) + 1); // Aumenta 1-3 pessoas por minuto
+    }, 60000); // 60 segundos
+
+    return () => clearInterval(interval);
+  }, []);
 
   const registerMutation = useMutation({
     mutationFn: async (userData: any) => {
@@ -131,7 +141,10 @@ export default function LaunchLandingPage() {
             {/* Contador de pessoas na lista */}
             <div className="flex items-center justify-center space-x-2 text-gray-600">
               <Users className="h-5 w-5" />
-              <span><strong>549+</strong> pessoas já estão na lista de espera.</span>
+              <div className="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-full shadow-lg inline-flex items-center space-x-2 animate-pulse">
+                <Users className="h-5 w-5" />
+                <span><strong>{waitlistCount.toLocaleString()}+</strong> pessoas já estão na lista de espera!</span>
+              </div>
             </div>
           </div>
         </div>
@@ -334,7 +347,12 @@ export default function LaunchLandingPage() {
               Cadastre-se e seja avisado em primeira mão!
             </h2>
             <p className="text-xl text-teal-100">
-              Não fique de fora! Mais de <strong>549</strong> pessoas já estão na lista de espera.
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <div className="flex items-center justify-center space-x-2 text-red-700">
+                  <Clock className="h-5 w-5" />
+                  <span className="font-semibold">Não fique de fora! Mais de <strong className="text-red-600">{waitlistCount.toLocaleString()}</strong> pessoas já estão na lista de espera.</span>
+                </div>
+              </div>
             </p>
           </div>
 
