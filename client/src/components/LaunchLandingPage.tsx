@@ -141,7 +141,7 @@ export default function LaunchLandingPage() {
             {/* Contador de pessoas na lista */}
             <div className="flex items-center justify-center space-x-2 text-gray-600">
               <Users className="h-5 w-5" />
-              <div className="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-full shadow-lg inline-flex items-center space-x-2 animate-pulse">
+              <div className="bg-gradient-to-r from-teal-500 to-teal-600 text-white px-6 py-3 rounded-full shadow-lg inline-flex items-center space-x-2 animate-pulse">
                 <Users className="h-5 w-5" />
                 <span><strong>{waitlistCount.toLocaleString()}+</strong> pessoas já estão na lista de espera!</span>
               </div>
@@ -347,10 +347,10 @@ export default function LaunchLandingPage() {
               Cadastre-se e seja avisado em primeira mão!
             </h2>
             <p className="text-xl text-teal-100">
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-                <div className="flex items-center justify-center space-x-2 text-red-700">
+              <div className="bg-teal-50 border border-teal-200 rounded-lg p-4 mb-6">
+                <div className="flex items-center justify-center space-x-2 text-teal-700">
                   <Clock className="h-5 w-5" />
-                  <span className="font-semibold">Não fique de fora! Mais de <strong className="text-red-600">{waitlistCount.toLocaleString()}</strong> pessoas já estão na lista de espera.</span>
+                  <span className="font-semibold">Não fique de fora! Mais de <strong className="text-teal-600">{waitlistCount.toLocaleString()}</strong> pessoas já estão na lista de espera.</span>
                 </div>
               </div>
             </p>
