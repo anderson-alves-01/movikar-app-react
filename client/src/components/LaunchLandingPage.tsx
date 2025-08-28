@@ -139,10 +139,8 @@ export default function LaunchLandingPage() {
             </div>
 
             {/* Contador de pessoas na lista */}
-            <div className="flex items-center justify-center space-x-2 text-gray-600">
-              <Users className="h-5 w-5" />
+            <div className="flex items-center justify-center">
               <div className="bg-gradient-to-r from-teal-500 to-teal-600 text-white px-6 py-3 rounded-full shadow-lg inline-flex items-center space-x-2 animate-pulse">
-                <Users className="h-5 w-5" />
                 <span><strong>{waitlistCount.toLocaleString()}+</strong> pessoas já estão na lista de espera!</span>
               </div>
             </div>
@@ -163,32 +161,32 @@ export default function LaunchLandingPage() {
           
           <div className="grid md:grid-cols-4 gap-8">
             <Card className="text-center p-6 border-none shadow-lg">
-              <div className="bg-red-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <Users className="h-8 w-8 text-red-500" />
+              <div className="bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl w-16 h-16 flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Users className="h-8 w-8 text-white" />
               </div>
               <h3 className="font-semibold mb-2">Cadastro simples</h3>
               <p className="text-gray-600 text-sm">Crie sua conta em poucos minutos</p>
             </Card>
             
             <Card className="text-center p-6 border-none shadow-lg">
-              <div className="bg-teal-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <Car className="h-8 w-8 text-teal-600" />
+              <div className="bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl w-16 h-16 flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Car className="h-8 w-8 text-white" />
               </div>
               <h3 className="font-semibold mb-2">Encontre ou ofereça um carro</h3>
               <p className="text-gray-600 text-sm">Procure carros próximos ou anuncie o seu</p>
             </Card>
             
             <Card className="text-center p-6 border-none shadow-lg">
-              <div className="bg-teal-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <Shield className="h-8 w-8 text-teal-600" />
+              <div className="bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl w-16 h-16 flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Shield className="h-8 w-8 text-white" />
               </div>
               <h3 className="font-semibold mb-2">Aluguel seguro e sem burocracia</h3>
               <p className="text-gray-600 text-sm">Processo 100% digital e protegido</p>
             </Card>
             
             <Card className="text-center p-6 border-none shadow-lg">
-              <div className="bg-teal-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <CreditCard className="h-8 w-8 text-teal-600" />
+              <div className="bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl w-16 h-16 flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <CreditCard className="h-8 w-8 text-white" />
               </div>
               <h3 className="font-semibold mb-2">Pagamento garantido via plataforma</h3>
               <p className="text-gray-600 text-sm">Transações seguras e automáticas</p>
