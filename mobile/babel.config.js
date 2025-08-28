@@ -3,16 +3,8 @@ module.exports = function(api) {
   return {
     presets: ['babel-preset-expo'],
     plugins: [
-      // Add reanimated plugin to prevent crashes
+      // Add reanimated plugin to prevent crashes (must be last)
       'react-native-reanimated/plugin',
     ],
-    env: {
-      production: {
-        plugins: [
-          // Optimize production builds
-          'transform-remove-console',
-        ],
-      },
-    },
   };
 };
