@@ -324,7 +324,7 @@ export default function LaunchLandingPage() {
                   Você cadastra o carro em poucos minutos, define a disponibilidade e recebe por cada aluguel.
                 </p>
                 <Button 
-                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  className="w-full bg-red-500 hover:bg-red-600 text-white"
                   onClick={() => document.getElementById('cadastro')?.scrollIntoView({ behavior: 'smooth' })}
                 >
                   Tenho um carro para alugar
