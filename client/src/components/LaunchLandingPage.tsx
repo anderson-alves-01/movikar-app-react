@@ -151,20 +151,20 @@ export default function LaunchLandingPage() {
             <div className="flex flex-col sm:flex-row gap-6 justify-center mb-20">
               <Button 
                 size="lg" 
-                className="bg-yellow-400 hover:bg-yellow-300 text-black px-12 py-6 text-2xl font-black shadow-2xl transform hover:scale-110 transition-all duration-300 animate-pulse"
+                className="bg-yellow-400 hover:bg-yellow-300 text-black px-8 py-6 text-xl font-black shadow-2xl transform hover:scale-110 transition-all duration-300 animate-pulse"
                 onClick={() => document.getElementById('cadastro')?.scrollIntoView({ behavior: 'smooth' })}
               >
-                <Car className="mr-3 h-8 w-8" />
-                QUERO ALUGAR AGORA!
-                <ArrowRight className="ml-3 h-8 w-8" />
+                <Car className="mr-2 h-6 w-6" />
+                ALUGAR AGORA
+                <ArrowRight className="ml-2 h-6 w-6" />
               </Button>
               <Button 
                 size="lg" 
-                className="bg-white/20 hover:bg-white/30 text-white border-2 border-white px-12 py-6 text-2xl font-black shadow-2xl transform hover:scale-110 transition-all duration-300 backdrop-blur-sm"
+                className="bg-white/20 hover:bg-white/30 text-white border-2 border-white px-8 py-6 text-xl font-black shadow-2xl transform hover:scale-110 transition-all duration-300 backdrop-blur-sm"
                 onClick={() => document.getElementById('cadastro')?.scrollIntoView({ behavior: 'smooth' })}
               >
-                <DollarSign className="mr-3 h-8 w-8" />
-                GANHAR DINHEIRO
+                <DollarSign className="mr-2 h-6 w-6" />
+                GANHAR RENDA
               </Button>
             </div>
 
@@ -302,11 +302,11 @@ export default function LaunchLandingPage() {
                   Cadastre-se AGORA e seja um dos primeiros!
                 </p>
                 <Button 
-                  className="w-full bg-white hover:bg-gray-100 text-black py-4 text-xl font-black shadow-xl transform hover:scale-105 transition-all"
+                  className="w-full bg-white hover:bg-gray-100 text-black py-4 text-lg font-black shadow-xl transform hover:scale-105 transition-all"
                   onClick={() => document.getElementById('cadastro')?.scrollIntoView({ behavior: 'smooth' })}
                 >
-                  <Car className="mr-2 h-6 w-6" />
-                  QUERO DIRIGIR JÁ!
+                  <Car className="mr-2 h-5 w-5" />
+                  DIRIGIR JÁ
                 </Button>
               </div>
             </div>
@@ -348,11 +348,11 @@ export default function LaunchLandingPage() {
                   Ganhe até R$ 3.000/mês com seu carro parado!
                 </p>
                 <Button 
-                  className="w-full bg-white hover:bg-gray-100 text-black py-4 text-xl font-black shadow-xl transform hover:scale-105 transition-all"
+                  className="w-full bg-white hover:bg-gray-100 text-black py-4 text-lg font-black shadow-xl transform hover:scale-105 transition-all"
                   onClick={() => document.getElementById('cadastro')?.scrollIntoView({ behavior: 'smooth' })}
                 >
-                  <DollarSign className="mr-2 h-6 w-6" />
-                  QUERO GANHAR DINHEIRO!
+                  <DollarSign className="mr-2 h-5 w-5" />
+                  GANHAR DINHEIRO
                 </Button>
               </div>
             </div>
@@ -553,11 +553,11 @@ export default function LaunchLandingPage() {
                 
                 <Button 
                   type="submit" 
-                  className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-black py-6 text-2xl font-black shadow-2xl transform hover:scale-105 transition-all duration-300 border-4 border-yellow-600"
+                  className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-black py-6 text-xl font-black shadow-2xl transform hover:scale-105 transition-all duration-300 border-4 border-yellow-600"
                   disabled={!email || !name || registerMutation.isPending}
                 >
-                  {registerMutation.isPending ? 'CADASTRANDO...' : 'GARANTIR MINHA VAGA AGORA!'}
-                  <ArrowRight className="ml-3 h-8 w-8" />
+                  {registerMutation.isPending ? 'CADASTRANDO...' : 'GARANTIR VAGA!'}
+                  <ArrowRight className="ml-2 h-6 w-6" />
                 </Button>
               </form>
             </Card>
