@@ -248,8 +248,8 @@ export default function LaunchLandingPage() {
             <div className="bg-white rounded-lg shadow-xl p-8 overflow-hidden relative">
               <div className="absolute inset-0 z-0">
                 <img 
-                  src="https://images.unsplash.com/photo-1549317336-206569e8475c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80" 
-                  alt="Pessoas felizes dirigindo" 
+                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80" 
+                  alt="Motorista dirigindo" 
                   className="w-full h-full object-cover opacity-20"
                 />
               </div>
@@ -271,7 +271,7 @@ export default function LaunchLandingPage() {
         </div>
       </section>
 
-      {/* Para Locadores */}
+      {/* Para você que tem carro */}
       <section id="locadores" className="relative py-20 bg-white overflow-hidden">
         <div className="absolute inset-0">
           <img 
@@ -283,33 +283,9 @@ export default function LaunchLandingPage() {
         <div className="absolute inset-0 bg-white/65"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="bg-teal-50 rounded-lg shadow-xl p-8 overflow-hidden relative">
-              <div className="absolute inset-0 z-0">
-                <img 
-                  src="https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80" 
-                  alt="Carro elegante" 
-                  className="w-full h-full object-cover opacity-30"
-                />
-              </div>
-              <div className="relative z-10">
-                <DollarSign className="h-16 w-16 text-teal-600 mx-auto mb-6" />
-                <h3 className="text-2xl font-bold text-center mb-4">Transforme seu carro em renda</h3>
-                <p className="text-gray-600 text-center mb-6">
-                  Você cadastra o carro em poucos minutos, define a disponibilidade e recebe por cada aluguel.
-                </p>
-                <Button 
-                  variant="outline" 
-                  className="w-full border-teal-600 text-teal-600 hover:bg-teal-50"
-                  onClick={() => document.getElementById('cadastro')?.scrollIntoView({ behavior: 'smooth' })}
-                >
-                  Tenho um carro para alugar
-                </Button>
-              </div>
-            </div>
-            
             <div>
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-                Para <span className="text-red-500">Locadores</span>
+                Para <span className="text-red-500">você que tem carro</span>
               </h2>
               <p className="text-xl text-gray-600 mb-8">
                 Transforme seu carro parado em renda extra. Você cadastra o carro em poucos minutos, 
@@ -338,6 +314,30 @@ export default function LaunchLandingPage() {
                     <p className="text-gray-600">Aproveite o tempo em que o carro ficaria parado</p>
                   </div>
                 </div>
+              </div>
+            </div>
+            
+            <div className="bg-teal-50 rounded-lg shadow-xl p-8 overflow-hidden relative">
+              <div className="absolute inset-0 z-0">
+                <img 
+                  src="https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80" 
+                  alt="Carro elegante" 
+                  className="w-full h-full object-cover opacity-30"
+                />
+              </div>
+              <div className="relative z-10">
+                <DollarSign className="h-16 w-16 text-teal-600 mx-auto mb-6" />
+                <h3 className="text-2xl font-bold text-center mb-4">Transforme seu carro em renda</h3>
+                <p className="text-gray-600 text-center mb-6">
+                  Você cadastra o carro em poucos minutos, define a disponibilidade e recebe por cada aluguel.
+                </p>
+                <Button 
+                  variant="outline" 
+                  className="w-full border-teal-600 text-teal-600 hover:bg-teal-50"
+                  onClick={() => document.getElementById('cadastro')?.scrollIntoView({ behavior: 'smooth' })}
+                >
+                  Tenho um carro para alugar
+                </Button>
               </div>
             </div>
           </div>
