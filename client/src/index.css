@@ -2,6 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Animações impactantes personalizadas */
+@layer utilities {
+  .animate-spin-slow {
+    animation: spin 3s linear infinite;
+  }
+  
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+  
+  .animate-shake {
+    animation: shake 0.5s ease-in-out infinite;
+  }
+  
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 20px rgba(255, 193, 7, 0.5);
+  }
+  to {
+    box-shadow: 0 0 30px rgba(255, 193, 7, 0.8), 0 0 40px rgba(255, 193, 7, 0.6);
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
 /* Mobile Responsive Base Styles */
 @layer base {
   html {
