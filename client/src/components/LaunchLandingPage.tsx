@@ -324,8 +324,7 @@ export default function LaunchLandingPage() {
                   Você cadastra o carro em poucos minutos, define a disponibilidade e recebe por cada aluguel.
                 </p>
                 <Button 
-                  variant="outline" 
-                  className="w-full border-teal-600 text-teal-600 hover:bg-teal-50"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
                   onClick={() => document.getElementById('cadastro')?.scrollIntoView({ behavior: 'smooth' })}
                 >
                   Tenho um carro para alugar
@@ -337,7 +336,7 @@ export default function LaunchLandingPage() {
       </section>
 
       {/* FAQ */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-gradient-to-br from-gray-100 to-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Perguntas Frequentes</h2>
