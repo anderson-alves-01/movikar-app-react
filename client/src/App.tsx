@@ -8,6 +8,8 @@ import { OnboardingProvider } from "@/contexts/OnboardingContext";
 import VehicleComparison from "@/components/vehicle-comparison";
 import AuthProvider from "@/components/AuthProvider";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import LaunchLandingPage from "@/components/LaunchLandingPage";
+import { SHOW_LAUNCH_PAGE } from "@/components/LaunchSwitch";
 import Home from "@/pages/home";
 import Auth from "@/pages/auth";
 import Profile from "@/pages/profile";
@@ -175,6 +177,19 @@ function Router() {
 }
 
 function App() {
+  // Se SHOW_LAUNCH_PAGE for true, exibe apenas a landing page
+  if (SHOW_LAUNCH_PAGE) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <LaunchLandingPage />
+        </TooltipProvider>
+      </QueryClientProvider>
+    );
+  }
+
+  // App normal após o lançamento
   return (
     <QueryClientProvider client={queryClient}>
       <OnboardingProvider>
