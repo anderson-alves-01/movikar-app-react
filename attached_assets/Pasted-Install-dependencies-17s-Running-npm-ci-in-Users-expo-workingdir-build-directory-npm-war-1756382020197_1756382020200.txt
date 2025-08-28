@@ -1,0 +1,53 @@
+Install dependencies
+
+17s
+
+
+Running "npm ci" in /Users/expo/workingdir/build directory
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm warn deprecated sudo-prompt@9.1.1: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+npm warn deprecated react-navigation@5.0.0: This package is no longer supported. Please use @react-navigation/native instead. See https://reactnavigation.org/docs/getting-started/ for usage guide
+npm warn deprecated lodash.isequal@4.5.0: This package is deprecated. Use require('node:util').isDeepStrictEqual instead.
+npm warn deprecated lodash.get@4.4.2: This package is deprecated. Use the optional chaining (?.) operator instead.
+npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+npm warn deprecated @oclif/screen@3.0.8: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+npm warn deprecated glob@6.0.4: Glob versions prior to v9 are no longer supported
+npm warn deprecated rimraf@2.4.5: Rimraf versions prior to v4 are no longer supported
+npm warn deprecated @xmldom/xmldom@0.7.13: this version is no longer supported, please update to at least 0.8.*
+npm warn deprecated puppeteer@5.5.0: < 22.8.2 is no longer supported
+npm error code 1
+npm error path /Users/expo/workingdir/build/node_modules/html-pdf-node/node_modules/puppeteer
+npm error command failed
+npm error command sh -c node install.js
+npm error The chromium binary is not available for arm64: 
+npm error If you are on Ubuntu, you can install with: 
+npm error
+npm error  apt-get install chromium-browser
+npm error
+npm error /Users/expo/workingdir/build/node_modules/html-pdf-node/node_modules/puppeteer/lib/cjs/puppeteer/node/BrowserFetcher.js:112
+npm error             throw new Error();
+npm error             ^
+npm error
+npm error Error
+npm error     at /Users/expo/workingdir/build/node_modules/html-pdf-node/node_modules/puppeteer/lib/cjs/puppeteer/node/BrowserFetcher.js:112:19
+npm error     at FSReqCallback.oncomplete (node:fs:197:21)
+npm error
+npm error Node.js v20.18.0
+npm error A complete log of this run can be found in: /Users/expo/.npm/_logs/2025-08-28T11_49_19_817Z-debug-0.log
+npm ci exited with non-zero code: 1
+
+Fail job
+
+1s
+
+
+Build failed
+
+npm ci exited with non-zero code: 1

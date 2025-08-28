@@ -1,0 +1,22 @@
+# Ignore parent project files
+../package.json
+../package-lock.json
+../node_modules
+../server
+../client
+../shared
+../drizzle
+../.env*
+
+# Ignore docs and guides
+../*.md
+../MOBILE_*.md
+../DOCUSIGN_*.md
+../PIX_*.md
+
+# Ignore backend specific files
+../server.ts
+../db.ts
+../vite.config.ts
+../tailwind.config.ts
+../drizzle.config.ts
