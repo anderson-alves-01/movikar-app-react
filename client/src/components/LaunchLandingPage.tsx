@@ -96,10 +96,10 @@ export default function LaunchLandingPage() {
           <img 
             src={peopleCarImage} 
             alt="Pessoas felizes dirigindo" 
-            className="w-full h-full object-cover opacity-30"
+            className="w-full h-full object-cover opacity-60"
           />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-r from-white/60 via-white/50 to-white/60"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-white/40 via-white/30 to-white/40"></div>
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center">
             <Badge className="mb-4 bg-red-100 text-red-800 hover:bg-red-100">
@@ -277,10 +277,10 @@ export default function LaunchLandingPage() {
           <img 
             src={luxuryCarImage} 
             alt="Carro de luxo" 
-            className="w-full h-full object-cover opacity-25"
+            className="w-full h-full object-cover opacity-50"
           />
         </div>
-        <div className="absolute inset-0 bg-white/65"></div>
+        <div className="absolute inset-0 bg-white/40"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
