@@ -143,7 +143,7 @@ export default function Home() {
       <OnboardingFlow page="home" />
       
       {/* Subscription Banner */}
-      <section className="py-8 bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800">
+      <section className="py-8 bg-secondary">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="text-center md:text-left mb-6 md:mb-0">
@@ -152,7 +152,7 @@ export default function Home() {
                 <h3 className="text-2xl font-bold text-white">Destaque seus anúncios</h3>
                 <Sparkles className="h-5 w-5 text-yellow-300 ml-2" />
               </div>
-              <p className="text-purple-100 text-lg max-w-2xl">
+              <p className="text-white/90 text-lg max-w-2xl">
                 Com os planos Premium, seus veículos aparecem no topo das pesquisas e recebem até 10x mais visualizações
               </p>
             </div>
@@ -160,7 +160,7 @@ export default function Home() {
               <Link href="/subscription-plans">
                 <Button 
                   size="lg" 
-                  className="bg-white text-purple-700 hover:bg-gray-100 font-semibold px-8 py-3 shadow-lg"
+                  className="bg-white text-secondary hover:bg-gray-100 font-semibold px-8 py-3 shadow-lg"
                 >
                   <Crown className="h-5 w-5 mr-2" />
                   Ver Planos
@@ -278,14 +278,14 @@ export default function Home() {
       </section>
 
       {/* Owner CTA Section */}
-      <section className="py-16 bg-gradient-to-r from-primary to-red-600 text-white">
+      <section className="py-16 bg-primary text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl md:text-4xl font-bold mb-6">
                 Transforme seu carro em uma fonte de renda
               </h2>
-              <p className="text-xl mb-8 text-red-100">
+              <p className="text-xl mb-8 text-white/90">
                 Alugue seu veículo quando não estiver usando e ganhe até R$ 2.000 por mês. É fácil, seguro e lucrativo.
               </p>
               
@@ -311,7 +311,7 @@ export default function Home() {
               </div>
               
               <Link href="/vehicles">
-                <Button variant="secondary" size="lg" className="bg-white text-primary font-bold hover:bg-gray-100">
+                <Button variant="secondary" size="lg" className="bg-secondary text-white font-bold hover:bg-secondary-hover">
                   Anunciar meu carro
                 </Button>
               </Link>

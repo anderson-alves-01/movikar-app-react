@@ -5,7 +5,7 @@ import icone3 from "@assets/ALUGAE - ICONE 3_1756046864999.png";
 
 export default function HeroSection() {
   return (
-    <section className="relative bg-gradient-brand text-white py-12 sm:py-16 lg:py-20">
+    <section className="relative bg-primary text-white py-12 sm:py-16 lg:py-20">
       {/* Background */}
       <div
         className="absolute inset-0 bg-cover bg-center"
