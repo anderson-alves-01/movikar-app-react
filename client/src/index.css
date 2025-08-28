@@ -558,16 +558,18 @@
   --border: hsl(186, 25%, 90%);
   --input: hsl(186, 25%, 90%);
   
-  /* Cores principais da marca alugae.mobi */
-  --primary: hsl(177, 70%, 41%);        /* Verde-azulado principal #20B2AA */
+  /* Cores principais da marca alugae.mobi - Versões pastéis profissionais */
+  --primary: hsl(177, 35%, 55%);        /* Verde-azulado suave e profissional */
   --primary-foreground: hsl(0, 0%, 100%);
-  --primary-hover: hsl(177, 70%, 35%);  /* Versão mais escura para hover */
-  --primary-light: hsl(177, 60%, 85%);  /* Versão clara para backgrounds */
+  --primary-hover: hsl(177, 40%, 50%);  /* Hover sutil */
+  --primary-light: hsl(177, 25%, 92%);  /* Background muito suave */
+  --primary-pastel: hsl(177, 20%, 88%); /* Versão ainda mais pastel */
   
-  --secondary: hsl(3, 100%, 70%);       /* Coral/Salmon de destaque #FF6B7A */
+  --secondary: hsl(3, 45%, 75%);        /* Coral pastel suave */
   --secondary-foreground: hsl(0, 0%, 100%);
-  --secondary-hover: hsl(3, 100%, 65%); /* Versão mais escura para hover */
-  --secondary-light: hsl(3, 60%, 90%);  /* Versão clara para backgrounds */
+  --secondary-hover: hsl(3, 50%, 70%);  /* Hover discreto */
+  --secondary-light: hsl(3, 30%, 95%);  /* Background quase branco */
+  --secondary-pastel: hsl(3, 25%, 90%); /* Versão pastel ultra suave */
   
   /* Cores complementares baseadas na marca */
   --accent: hsl(186, 25%, 96%);
@@ -600,16 +602,18 @@
   --border: hsl(210, 15%, 20%);
   --input: hsl(210, 15%, 15%);
   
-  /* Cores principais da marca - modo escuro (mantém a identidade) */
-  --primary: hsl(177, 70%, 45%);        /* Verde-azulado mais vibrante para o escuro */
+  /* Cores principais da marca - modo escuro (suaves) */
+  --primary: hsl(177, 40%, 55%);        /* Verde-azulado suave para escuro */
   --primary-foreground: hsl(210, 15%, 8%);
-  --primary-hover: hsl(177, 70%, 50%);  /* Mais claro no hover para o escuro */
-  --primary-light: hsl(177, 50%, 25%);  /* Versão escura para backgrounds */
+  --primary-hover: hsl(177, 45%, 60%);  /* Hover sutil */
+  --primary-light: hsl(177, 35%, 30%);  /* Background escuro suave */
+  --primary-pastel: hsl(177, 25%, 35%); /* Pastel para escuro */
   
-  --secondary: hsl(3, 90%, 65%);        /* Coral menos intenso para o escuro */
+  --secondary: hsl(3, 50%, 70%);        /* Coral pastel para escuro */
   --secondary-foreground: hsl(210, 15%, 8%);
-  --secondary-hover: hsl(3, 90%, 70%);  /* Mais claro no hover */
-  --secondary-light: hsl(3, 40%, 25%);  /* Versão escura para backgrounds */
+  --secondary-hover: hsl(3, 55%, 75%);  /* Hover discreto */
+  --secondary-light: hsl(3, 35%, 30%);  /* Background escuro suave */
+  --secondary-pastel: hsl(3, 30%, 35%); /* Pastel escuro */
   
   /* Cores complementares - modo escuro */
   --accent: hsl(210, 15%, 15%);
@@ -687,6 +691,22 @@
   
   .bg-secondary-light {
     background-color: hsl(var(--secondary-light));
+  }
+  
+  .bg-primary-pastel {
+    background-color: hsl(var(--primary-pastel));
+  }
+  
+  .bg-secondary-pastel {
+    background-color: hsl(var(--secondary-pastel));
+  }
+  
+  .text-primary-pastel {
+    color: hsl(var(--primary-pastel));
+  }
+  
+  .text-secondary-pastel {
+    color: hsl(var(--secondary-pastel));
   }
 
   /* Gradientes da marca */

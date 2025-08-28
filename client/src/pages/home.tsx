@@ -143,38 +143,31 @@ export default function Home() {
       <OnboardingFlow page="home" />
       
       {/* Subscription Banner */}
-      <section className="py-16 bg-secondary">
+      <section className="py-12 bg-secondary-light border-y border-secondary-pastel">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="text-center md:text-left mb-8 md:mb-0">
-              <div className="flex items-center justify-center md:justify-start mb-4">
-                <Crown className="h-6 w-6 text-yellow-300 mr-3" />
-                <h3 className="text-2xl md:text-3xl font-bold text-white">
-                  Destaque seus anúncios
-                </h3>
-                <Sparkles className="h-5 w-5 text-yellow-300 ml-3" />
-              </div>
-              <p className="text-white/90 text-lg max-w-2xl leading-relaxed">
-                Com os planos Premium, seus veículos aparecem no topo das pesquisas e recebem 
-                <span className="text-yellow-300 font-semibold">até 10x mais visualizações</span>.
-                <br />
-                <span className="text-base">Maximize sua renda com maior visibilidade.</span>
+            <div className="text-center md:text-left mb-6 md:mb-0">
+              <h3 className="text-xl md:text-2xl font-medium text-gray-800 mb-3">
+                Planos Empresariais
+              </h3>
+              <p className="text-gray-600 text-base max-w-2xl leading-relaxed">
+                Aumente a visibilidade dos seus veículos com nossos planos de destaque. 
+                <span className="text-secondary font-medium">Resultados comprovados</span> em posicionamento e alcance.
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 items-center">
               <Link href="/subscription-plans">
                 <Button 
-                  size="lg" 
-                  className="bg-white text-secondary hover:bg-gray-100 font-semibold px-8 py-3 shadow-lg rounded-lg transition-colors duration-200"
+                  size="default" 
+                  className="bg-secondary hover:bg-secondary-hover text-white font-medium px-6 py-2 rounded-md transition-colors duration-200 border-0"
                 >
-                  <Crown className="h-5 w-5 mr-2" />
-                  Ver Planos
+                  Consultar Planos
                 </Button>
               </Link>
-              <div className="text-center bg-white/10 rounded-lg p-3 border border-white/20">
-                <div className="text-yellow-300 font-semibold text-sm">A partir de</div>
-                <div className="text-white font-bold text-2xl">R$ 29,90</div>
-                <div className="text-white/80 text-sm">/mês</div>
+              <div className="text-center bg-white rounded-md p-3 border border-gray-200 shadow-sm">
+                <div className="text-gray-500 text-xs font-medium">A partir de</div>
+                <div className="text-gray-800 font-semibold text-lg">R$ 29,90</div>
+                <div className="text-gray-500 text-xs">/mês</div>
               </div>
             </div>
           </div>
@@ -182,17 +175,17 @@ export default function Home() {
       </section>
       
       {/* Vehicle Listings Section */}
-      <section id="resultados" className="py-16 bg-gray-50">
+      <section id="resultados" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section Header */}
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
-              Carros disponíveis perto de você
+            <h2 className="text-2xl md:text-3xl font-medium text-gray-800 mb-4">
+              Veículos Disponíveis
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-base text-gray-600 max-w-2xl mx-auto">
               {totalCount > 0 && vehicles.length > 0 
-                ? `${vehicles.length} de ${totalCount} veículos disponíveis` 
-                : 'Escolha entre centenas de veículos verificados na sua região'}
+                ? `${vehicles.length} de ${totalCount} opções disponíveis em sua região` 
+                : 'Frota diversificada de veículos verificados e prontos para locação'}
             </p>
           </div>
 
@@ -284,54 +277,54 @@ export default function Home() {
       </section>
 
       {/* Owner CTA Section */}
-      <section className="py-16 bg-primary text-white">
+      <section className="py-16 bg-primary-light">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-6 leading-tight">
-                Transforme seu carro em uma fonte de renda
+              <h2 className="text-2xl md:text-3xl font-medium text-gray-800 mb-6 leading-tight">
+                Solução para Proprietários de Veículos
               </h2>
-              <p className="text-xl mb-8 text-white/90 leading-relaxed">
-                Alugue seu veículo quando não estiver usando e ganhe até 
-                <span className="text-secondary font-semibold">R$ 2.000 por mês</span>. 
-                É fácil, seguro e lucrativo.
+              <p className="text-lg mb-8 text-gray-600 leading-relaxed">
+                Monetize seu ativo com nossa plataforma de aluguel peer-to-peer. 
+                <span className="text-primary font-medium">Rentabilidade média de R$ 1.800/mês</span> 
+                com total segurança e controle.
               </p>
               
-              <div className="space-y-4 mb-8">
+              <div className="space-y-3 mb-8">
                 <div className="flex items-center">
-                  <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-4">
-                    <span className="text-white">✓</span>
+                  <div className="w-6 h-6 bg-primary rounded-sm flex items-center justify-center mr-3">
+                    <span className="text-white text-xs">✓</span>
                   </div>
-                  <span className="text-lg">Seguro completo incluso</span>
+                  <span className="text-base text-gray-700">Cobertura de seguro integral</span>
                 </div>
                 <div className="flex items-center">
-                  <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-4">
-                    <span className="text-white">✓</span>
+                  <div className="w-6 h-6 bg-primary rounded-sm flex items-center justify-center mr-3">
+                    <span className="text-white text-xs">✓</span>
                   </div>
-                  <span className="text-lg">Você define suas regras e preços</span>
+                  <span className="text-base text-gray-700">Autonomia na precificação e disponibilidade</span>
                 </div>
                 <div className="flex items-center">
-                  <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-4">
-                    <span className="text-white">✓</span>
+                  <div className="w-6 h-6 bg-primary rounded-sm flex items-center justify-center mr-3">
+                    <span className="text-white text-xs">✓</span>
                   </div>
-                  <span className="text-lg">Suporte 24/7 para proprietários</span>
+                  <span className="text-base text-gray-700">Atendimento especializado</span>
                 </div>
               </div>
               
               <Link href="/vehicles">
-                <Button variant="secondary" size="lg" className="bg-secondary text-white font-semibold hover:bg-secondary-hover px-8 py-3 rounded-lg shadow-lg transition-colors duration-200">
-                  Anunciar meu carro
+                <Button className="bg-primary hover:bg-primary-hover text-white font-medium px-6 py-2 rounded-md transition-colors duration-200">
+                  Cadastrar Veículo
                 </Button>
               </Link>
             </div>
             
             <div className="text-center lg:text-right">
-              <div className="bg-white text-gray-800 rounded-lg p-6 shadow-xl max-w-md mx-auto lg:mx-0">
+              <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm max-w-sm mx-auto lg:mx-0">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-secondary mb-2">R$ 1.800</div>
-                  <div className="text-sm text-gray-600">Ganho médio mensal</div>
-                  <div className="text-xs text-gray-500 mt-2">
-                    *Baseado em dados de proprietários ativos
+                  <div className="text-2xl font-semibold text-primary mb-1">R$ 1.800</div>
+                  <div className="text-sm text-gray-600 mb-3">Receita média mensal</div>
+                  <div className="text-xs text-gray-500 px-3 py-2 bg-gray-50 rounded">
+                    Dados baseados em proprietários ativos na plataforma
                   </div>
                 </div>
               </div>

@@ -5,82 +5,75 @@ import icone3 from "@assets/ALUGAE - ICONE 3_1756046864999.png";
 
 export default function HeroSection() {
   return (
-    <section className="relative bg-primary text-white py-20 sm:py-24 lg:py-28">
-      {/* Background */}
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{
-          backgroundImage: `url('${bannerImage}')`,
-        }}
-      ></div>
-      <div className="absolute inset-0 bg-black bg-opacity-65"></div>
+    <section className="relative bg-white py-16 sm:py-20 lg:py-24">
+      {/* Background muito sutil */}
+      <div className="absolute inset-0 bg-primary-light opacity-30"></div>
       
-      {/* Elementos visuais sutis */}
-      <div className="absolute top-20 left-10 w-12 h-12 bg-secondary rounded-full opacity-10"></div>
-      <div className="absolute bottom-20 right-10 w-8 h-8 bg-white rounded-full opacity-15"></div>
+      {/* Elementos visuais minímos */}
+      <div className="absolute top-16 right-20 w-6 h-6 bg-secondary-pastel rounded-full opacity-40"></div>
+      <div className="absolute bottom-16 left-20 w-4 h-4 bg-primary-pastel rounded-full opacity-30"></div>
 
       <div className="relative max-w-7xl mx-auto mobile-padding">
         <div className="text-center">
-          {/* Badge profissional */}
-          <div className="mb-8">
-            <span className="inline-flex items-center bg-white/10 backdrop-blur-sm text-white font-semibold px-5 py-2 rounded-full text-sm border border-white/20">
-              Plataforma de aluguel de carros
+          {/* Badge corporativo */}
+          <div className="mb-10">
+            <span className="inline-flex items-center bg-primary-light text-primary font-medium px-4 py-2 rounded-md text-sm border border-primary/10">
+              Solução em mobilidade urbana
             </span>
           </div>
           
-          <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-6 sm:mb-8 leading-tight">
-            Alugue o <span className="text-secondary">carro perfeito</span>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold mb-6 leading-tight text-gray-900">
+            Aluguel de veículos
             <br />
-            na sua cidade
+            <span className="text-primary">simples e seguro</span>
           </h1>
           
-          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 sm:p-8 mb-12 max-w-4xl mx-auto border border-white/10">
-            <p className="text-lg sm:text-xl md:text-2xl text-white font-medium leading-relaxed mb-4">
-              Encontre carros de{" "}
-              <span className="font-semibold text-secondary">pessoas reais</span>{" "}
-              na sua cidade - sem burocracia
+          <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 sm:p-8 mb-12 max-w-3xl mx-auto border border-gray-100 shadow-sm">
+            <p className="text-lg sm:text-xl text-gray-700 font-normal leading-relaxed mb-3">
+              Conectamos você a proprietários de veículos verificados em sua região, 
+              oferecendo uma experiência de aluguel transparente e confiável.
             </p>
-            <p className="text-base sm:text-lg text-white/90">
-              Seguro, confiável e com os melhores preços
+            <p className="text-base text-gray-600">
+              Processo digital completo • Segurança garantida • Preços competitivos
             </p>
           </div>
 
-          {/* Value Propositions profissionais */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mt-16 feature-cards">
-            <div className="text-center">
-              <div className="w-16 h-16 sm:w-18 sm:h-18 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/10">
-                <img src={icone1} alt="Sem Burocracia" className="h-10 w-10 sm:h-12 sm:w-12 object-contain" />
+          {/* Value Propositions corporativos */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mt-14">
+            <div className="text-center p-4">
+              <div className="w-14 h-14 bg-primary-light rounded-lg flex items-center justify-center mx-auto mb-4 border border-primary/10">
+                <img src={icone1} alt="Processo Digital" className="h-8 w-8 object-contain opacity-80" />
               </div>
-              <h3 className="text-lg sm:text-xl font-semibold mb-3 text-white">
-                Sem Burocracia
+              <h3 className="text-lg font-medium mb-2 text-gray-800">
+                Processo Digital
               </h3>
-              <p className="text-white/80 text-sm sm:text-base">
-                Todo o processo pelo app.
-                <br />Simples e direto.
+              <p className="text-gray-600 text-sm leading-relaxed">
+                Plataforma intuitiva para
+                <br />gestão completa do aluguel
               </p>
             </div>
-            <div className="text-center">
-              <div className="w-16 h-16 sm:w-18 sm:h-18 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/10">
-                <img src={icone2} alt="Fácil e Rápido" className="h-10 w-10 sm:h-12 sm:w-12 object-contain" />
+            <div className="text-center p-4">
+              <div className="w-14 h-14 bg-secondary-light rounded-lg flex items-center justify-center mx-auto mb-4 border border-secondary/10">
+                <img src={icone2} alt="Agilidade" className="h-8 w-8 object-contain opacity-80" />
               </div>
-              <h3 className="text-lg sm:text-xl font-semibold mb-3 text-white">
-                Fácil e Rápido
+              <h3 className="text-lg font-medium mb-2 text-gray-800">
+                Eficiência Operacional
               </h3>
-              <p className="text-white/80 text-sm sm:text-base">
-                Reserve em poucos cliques.
-                <br />Processo otimizado.
+              <p className="text-gray-600 text-sm leading-relaxed">
+                Reservas rápidas com
+                <br />confirmação instantânea
               </p>
             </div>
-            <div className="text-center">
-              <div className="w-16 h-16 sm:w-18 sm:h-18 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/10">
-                <img src={icone3} alt="Preços Justos" className="h-10 w-10 sm:h-12 sm:w-12 object-contain" />
+            <div className="text-center p-4">
+              <div className="w-14 h-14 bg-primary-light rounded-lg flex items-center justify-center mx-auto mb-4 border border-primary/10">
+                <img src={icone3} alt="Transparência" className="h-8 w-8 object-contain opacity-80" />
               </div>
-              <h3 className="text-lg sm:text-xl font-semibold mb-3 text-white">
-                Preços Transparentes
+              <h3 className="text-lg font-medium mb-2 text-gray-800">
+                Transparência
               </h3>
-              <p className="text-white/80 text-sm sm:text-base">
-                Valor fixo, sem surpresas.
-                <br />Transparência total.
+              <p className="text-gray-600 text-sm leading-relaxed">
+                Preços claros sem
+                <br />taxas ocultas
               </p>
             </div>
           </div>
