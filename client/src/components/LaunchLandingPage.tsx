@@ -358,6 +358,11 @@ export default function LaunchLandingPage() {
             </Card>
             
             <Card className="p-6">
+              <h3 className="font-semibold mb-2">2. Ter o nome negativado impede que eu use o Alugaê?</h3>
+              <p className="text-gray-600">Ter o nome negativado não impede que você cadastre seu carro ou alugue na Alugaê.</p>
+            </Card>
+            
+            <Card className="p-6">
               <h3 className="font-semibold mb-2">3. Posso anunciar mais de um carro?</h3>
               <p className="text-gray-600">Sim! Temos planos flexíveis para frotas de até 50 carros.</p>
             </Card>
