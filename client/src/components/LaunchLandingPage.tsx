@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import logoImage from '@/assets/logo.png';
+import peopleCarImage from "@assets/image_1756403531989.png";
+import carWheelImage from "@assets/image_1756403556168.png";
+import luxuryCarImage from "@assets/image_1756403580596.png";
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
@@ -88,8 +91,16 @@ export default function LaunchLandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+      <section className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        <div className="absolute inset-0">
+          <img 
+            src={peopleCarImage} 
+            alt="Pessoas felizes dirigindo" 
+            className="w-full h-full object-cover opacity-15"
+          />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-white/80 via-white/70 to-white/80"></div>
+        <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center">
             <Badge className="mb-4 bg-red-100 text-red-800 hover:bg-red-100">
               O Alugaê está chegando!
@@ -149,8 +160,16 @@ export default function LaunchLandingPage() {
       </section>
 
       {/* Como Funciona */}
-      <section id="como-funciona" className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="como-funciona" className="relative py-20 bg-white overflow-hidden">
+        <div className="absolute inset-0">
+          <img 
+            src={carWheelImage} 
+            alt="Detalhe roda de carro" 
+            className="w-full h-full object-cover opacity-8"
+          />
+        </div>
+        <div className="absolute inset-0 bg-white/90"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Como Funciona?</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
@@ -253,8 +272,16 @@ export default function LaunchLandingPage() {
       </section>
 
       {/* Para Locadores */}
-      <section id="locadores" className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="locadores" className="relative py-20 bg-white overflow-hidden">
+        <div className="absolute inset-0">
+          <img 
+            src={luxuryCarImage} 
+            alt="Carro de luxo" 
+            className="w-full h-full object-cover opacity-10"
+          />
+        </div>
+        <div className="absolute inset-0 bg-white/85"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="bg-teal-50 rounded-lg shadow-xl p-8 overflow-hidden relative">
               <div className="absolute inset-0 z-0">
