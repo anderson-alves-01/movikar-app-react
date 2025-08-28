@@ -23,10 +23,10 @@
 
 @keyframes glow {
   from {
-    box-shadow: 0 0 20px rgba(255, 193, 7, 0.5);
+    box-shadow: 0 0 20px hsl(177, 70%, 41%, 0.3);
   }
   to {
-    box-shadow: 0 0 30px rgba(255, 193, 7, 0.8), 0 0 40px rgba(255, 193, 7, 0.6);
+    box-shadow: 0 0 30px hsl(177, 70%, 41%, 0.6), 0 0 40px hsl(3, 100%, 70%, 0.4);
   }
 }
 
@@ -517,7 +517,7 @@
   left: -4px;
   right: -4px;
   bottom: -4px;
-  background: linear-gradient(45deg, #3b82f6, #8b5cf6);
+  background: var(--gradient-brand);
   border-radius: 8px;
   z-index: -1;
   animation: shimmer 2s infinite;
@@ -525,10 +525,10 @@
 
 @keyframes pulse-highlight {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 0 0 hsl(177, 70%, 41%, 0.4);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+    box-shadow: 0 0 0 8px hsl(177, 70%, 41%, 0);
   }
 }
 
@@ -546,55 +546,86 @@
 }
 
 :root {
+  /* Cores base do sistema */
   --background: hsl(0, 0%, 100%);
-  --foreground: hsl(20, 14.3%, 4.1%);
-  --muted: hsl(60, 4.8%, 95.9%);
-  --muted-foreground: hsl(25, 5.3%, 44.7%);
+  --foreground: hsl(210, 10%, 15%);
+  --muted: hsl(186, 25%, 96%);
+  --muted-foreground: hsl(210, 8%, 45%);
   --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(20, 14.3%, 4.1%);
+  --popover-foreground: hsl(210, 10%, 15%);
   --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(20, 14.3%, 4.1%);
-  --border: hsl(20, 5.9%, 90%);
-  --input: hsl(20, 5.9%, 90%);
-  --primary: hsl(355, 97%, 62%);
+  --card-foreground: hsl(210, 10%, 15%);
+  --border: hsl(186, 25%, 90%);
+  --input: hsl(186, 25%, 90%);
+  
+  /* Cores principais da marca alugae.mobi */
+  --primary: hsl(177, 70%, 41%);        /* Verde-azulado principal #20B2AA */
   --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(178, 100%, 32%);
+  --primary-hover: hsl(177, 70%, 35%);  /* Versão mais escura para hover */
+  --primary-light: hsl(177, 60%, 85%);  /* Versão clara para backgrounds */
+  
+  --secondary: hsl(3, 100%, 70%);       /* Coral/Salmon de destaque #FF6B7A */
   --secondary-foreground: hsl(0, 0%, 100%);
-  --accent: hsl(60, 4.8%, 95.9%);
-  --accent-foreground: hsl(24, 9.8%, 10%);
-  --destructive: hsl(0, 84.2%, 60.2%);
-  --destructive-foreground: hsl(60, 9.1%, 97.8%);
-  --ring: hsl(20, 14.3%, 4.1%);
+  --secondary-hover: hsl(3, 100%, 65%); /* Versão mais escura para hover */
+  --secondary-light: hsl(3, 60%, 90%);  /* Versão clara para backgrounds */
+  
+  /* Cores complementares baseadas na marca */
+  --accent: hsl(186, 25%, 96%);
+  --accent-foreground: hsl(177, 70%, 35%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(177, 70%, 41%);
   --radius: 0.5rem;
-  --success: hsl(140, 100%, 27%);
-  --warning: hsl(45, 100%, 51%);
-  --error: hsl(9, 100%, 43%);
+  
+  /* Estados e feedback */
+  --success: hsl(142, 76%, 36%);        /* Verde de sucesso */
+  --warning: hsl(45, 93%, 47%);         /* Amarelo de aviso */
+  --error: hsl(0, 84%, 60%);            /* Vermelho de erro */
+  
+  /* Gradientes da marca */
+  --gradient-brand: linear-gradient(135deg, hsl(177, 70%, 41%) 0%, hsl(3, 100%, 70%) 100%);
+  --gradient-brand-soft: linear-gradient(135deg, hsl(177, 60%, 85%) 0%, hsl(3, 60%, 90%) 100%);
 }
 
 .dark {
-  --background: hsl(240, 10%, 3.9%);
-  --foreground: hsl(0, 0%, 98%);
-  --muted: hsl(240, 3.7%, 15.9%);
-  --muted-foreground: hsl(240, 5%, 64.9%);
-  --popover: hsl(240, 10%, 3.9%);
-  --popover-foreground: hsl(0, 0%, 98%);
-  --card: hsl(240, 10%, 3.9%);
-  --card-foreground: hsl(0, 0%, 98%);
-  --border: hsl(240, 3.7%, 15.9%);
-  --input: hsl(240, 3.7%, 15.9%);
-  --primary: hsl(355, 97%, 62%);
-  --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(178, 100%, 32%);
-  --secondary-foreground: hsl(0, 0%, 100%);
-  --accent: hsl(240, 3.7%, 15.9%);
-  --accent-foreground: hsl(0, 0%, 98%);
-  --destructive: hsl(0, 62.8%, 30.6%);
+  /* Cores base do sistema - modo escuro */
+  --background: hsl(210, 15%, 8%);
+  --foreground: hsl(0, 0%, 95%);
+  --muted: hsl(210, 15%, 12%);
+  --muted-foreground: hsl(210, 8%, 65%);
+  --popover: hsl(210, 15%, 8%);
+  --popover-foreground: hsl(0, 0%, 95%);
+  --card: hsl(210, 15%, 10%);
+  --card-foreground: hsl(0, 0%, 95%);
+  --border: hsl(210, 15%, 20%);
+  --input: hsl(210, 15%, 15%);
+  
+  /* Cores principais da marca - modo escuro (mantém a identidade) */
+  --primary: hsl(177, 70%, 45%);        /* Verde-azulado mais vibrante para o escuro */
+  --primary-foreground: hsl(210, 15%, 8%);
+  --primary-hover: hsl(177, 70%, 50%);  /* Mais claro no hover para o escuro */
+  --primary-light: hsl(177, 50%, 25%);  /* Versão escura para backgrounds */
+  
+  --secondary: hsl(3, 90%, 65%);        /* Coral menos intenso para o escuro */
+  --secondary-foreground: hsl(210, 15%, 8%);
+  --secondary-hover: hsl(3, 90%, 70%);  /* Mais claro no hover */
+  --secondary-light: hsl(3, 40%, 25%);  /* Versão escura para backgrounds */
+  
+  /* Cores complementares - modo escuro */
+  --accent: hsl(210, 15%, 15%);
+  --accent-foreground: hsl(177, 70%, 50%);
+  --destructive: hsl(0, 80%, 55%);
   --destructive-foreground: hsl(0, 0%, 98%);
-  --ring: hsl(240, 4.9%, 83.9%);
-  --radius: 0.5rem;
-  --success: hsl(140, 100%, 27%);
-  --warning: hsl(45, 100%, 51%);
-  --error: hsl(9, 100%, 43%);
+  --ring: hsl(177, 70%, 45%);
+  
+  /* Estados e feedback - modo escuro */
+  --success: hsl(142, 70%, 40%);
+  --warning: hsl(45, 85%, 50%);
+  --error: hsl(0, 80%, 55%);
+  
+  /* Gradientes da marca - modo escuro */
+  --gradient-brand: linear-gradient(135deg, hsl(177, 70%, 45%) 0%, hsl(3, 90%, 65%) 100%);
+  --gradient-brand-soft: linear-gradient(135deg, hsl(177, 50%, 25%) 0%, hsl(3, 40%, 25%) 100%);
 }
 
 @layer base {
@@ -608,6 +639,7 @@
 }
 
 @layer utilities {
+  /* Estados e feedback */
   .text-success {
     color: hsl(var(--success));
   }
@@ -630,6 +662,70 @@
   
   .bg-error {
     background-color: hsl(var(--error));
+  }
+
+  /* Cores da marca alugae.mobi */
+  .text-primary-hover {
+    color: hsl(var(--primary-hover));
+  }
+  
+  .text-secondary-hover {
+    color: hsl(var(--secondary-hover));
+  }
+  
+  .bg-primary-hover {
+    background-color: hsl(var(--primary-hover));
+  }
+  
+  .bg-secondary-hover {
+    background-color: hsl(var(--secondary-hover));
+  }
+  
+  .bg-primary-light {
+    background-color: hsl(var(--primary-light));
+  }
+  
+  .bg-secondary-light {
+    background-color: hsl(var(--secondary-light));
+  }
+
+  /* Gradientes da marca */
+  .bg-gradient-brand {
+    background: var(--gradient-brand);
+  }
+  
+  .bg-gradient-brand-soft {
+    background: var(--gradient-brand-soft);
+  }
+  
+  /* Bordas da marca */
+  .border-primary {
+    border-color: hsl(var(--primary));
+  }
+  
+  .border-secondary {
+    border-color: hsl(var(--secondary));
+  }
+  
+  .border-primary-hover {
+    border-color: hsl(var(--primary-hover));
+  }
+  
+  .border-secondary-hover {
+    border-color: hsl(var(--secondary-hover));
+  }
+
+  /* Hover effects com cores da marca */
+  .hover-brand-primary:hover {
+    background-color: hsl(var(--primary-hover));
+    color: hsl(var(--primary-foreground));
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .hover-brand-secondary:hover {
+    background-color: hsl(var(--secondary-hover));
+    color: hsl(var(--secondary-foreground));
+    transition: all 0.2s ease-in-out;
   }
 }
 

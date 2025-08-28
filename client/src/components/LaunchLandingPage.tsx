@@ -75,7 +75,7 @@ export default function LaunchLandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-600 via-red-500 to-orange-500">
+    <div className="min-h-screen bg-gradient-brand">
       {/* Header */}
       <header className="bg-black/20 backdrop-blur-sm border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -105,21 +105,21 @@ export default function LaunchLandingPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/40"></div>
         
         {/* Elementos visuais de impacto */}
-        <div className="absolute top-10 left-10 w-20 h-20 bg-yellow-400 rounded-full opacity-20 animate-pulse"></div>
+        <div className="absolute top-10 left-10 w-20 h-20 bg-secondary rounded-full opacity-20 animate-pulse"></div>
         <div className="absolute top-1/4 right-20 w-16 h-16 bg-white rounded-full opacity-30 animate-bounce"></div>
-        <div className="absolute bottom-1/4 left-1/4 w-12 h-12 bg-orange-300 rounded-full opacity-25 animate-ping"></div>
+        <div className="absolute bottom-1/4 left-1/4 w-12 h-12 bg-primary-light rounded-full opacity-25 animate-ping"></div>
         
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center">
             <div className="mb-8 animate-pulse">
-              <Badge className="mb-4 bg-yellow-400 text-black hover:bg-yellow-300 text-lg font-bold px-6 py-2 shadow-2xl">
+              <Badge className="mb-4 bg-secondary text-white hover:bg-secondary-hover text-lg font-bold px-6 py-2 shadow-2xl">
                 🔥 LANÇAMENTO EXCLUSIVO!
               </Badge>
             </div>
             <h1 className="text-5xl md:text-8xl font-black text-white mb-8 drop-shadow-2xl leading-tight">
               REVOLUÇÃO NO
               <br />
-              <span className="text-yellow-400 animate-pulse">ALUGUEL DE CARROS</span>
+              <span className="text-secondary animate-pulse">ALUGUEL DE CARROS</span>
               <br />
               <span className="text-3xl md:text-5xl">EM BRASÍLIA!</span>
             </h1>

@@ -5,7 +5,7 @@ import icone3 from "@assets/ALUGAE - ICONE 3_1756046864999.png";
 
 export default function HeroSection() {
   return (
-    <section className="relative bg-gradient-to-br from-gray-900 to-gray-800 text-white py-12 sm:py-16 lg:py-20">
+    <section className="relative bg-gradient-brand text-white py-12 sm:py-16 lg:py-20">
       {/* Background */}
       <div
         className="absolute inset-0 bg-cover bg-center"
@@ -18,7 +18,7 @@ export default function HeroSection() {
       <div className="relative max-w-7xl mx-auto mobile-padding">
         <div className="text-center">
           <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
-            Alugue o <span className="text-red-500">carro perfeito</span>
+            Alugue o <span className="text-secondary">carro perfeito</span>
             <br />
             na sua cidade
           </h1>

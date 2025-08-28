@@ -389,7 +389,7 @@ export default function CoinsPage() {
       <div className="container mx-auto px-4 pt-20 pb-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
-          <Coins className="h-8 w-8 text-yellow-600" />
+          <Coins className="h-8 w-8 text-secondary" />
           <h1 className="text-3xl font-bold">Sistema de Moedas</h1>
         </div>
 
@@ -398,14 +398,14 @@ export default function CoinsPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Moedas Disponíveis</CardTitle>
-              <Coins className="h-4 w-4 text-yellow-600" />
+              <Coins className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600" data-testid="text-available-coins">
+              <div className="text-2xl font-bold text-primary" data-testid="text-available-coins">
                 <CoinCounterAnimation 
                   from={previousCoins || userCoins?.availableCoins || 0} 
                   to={userCoins?.availableCoins || 0}
-                  className="text-yellow-600"
+                  className="text-primary"
                 />
               </div>
               <p className="text-xs text-muted-foreground">
@@ -417,14 +417,14 @@ export default function CoinsPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total de Moedas</CardTitle>
-              <CreditCard className="h-4 w-4 text-green-600" />
+              <CreditCard className="h-4 w-4 text-secondary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600" data-testid="text-total-coins">
+              <div className="text-2xl font-bold text-secondary" data-testid="text-total-coins">
                 <CoinCounterAnimation 
                   from={userCoins?.totalCoins || 0} 
                   to={userCoins?.totalCoins || 0}
-                  className="text-green-600"
+                  className="text-secondary"
                 />
               </div>
               <p className="text-xs text-muted-foreground">

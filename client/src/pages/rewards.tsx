@@ -313,7 +313,7 @@ export default function Rewards() {
             <Coins className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-primary">
               {userCoins?.availableCoins || 0}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -328,7 +328,7 @@ export default function Rewards() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-secondary">
               {userCoins?.totalCoins || 0}
             </div>
             <p className="text-xs text-muted-foreground">

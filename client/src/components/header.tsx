@@ -221,7 +221,7 @@ export default function Header() {
                       variant="default"
                       size="sm"
                       title="Fazer upgrade do plano"
-                      className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white border-0 shadow-md p-2"
+                      className="bg-gradient-brand hover:opacity-90 text-white border-0 shadow-md p-2"
                     >
                       <Crown className="h-4 w-4" />
                     </Button>
