@@ -238,7 +238,7 @@ export default function LaunchLandingPage() {
       </section>
 
       {/* Para Motoristas */}
-      <section id="motoristas" className="py-24 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700">
+      <section id="motoristas" className="py-24 bg-primary">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
@@ -285,7 +285,7 @@ export default function LaunchLandingPage() {
               </div>
             </div>
             
-            <div className="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-3xl shadow-2xl p-10 overflow-hidden relative transform hover:scale-105 transition-all duration-300 border-4 border-white">
+            <div className="bg-secondary rounded-3xl shadow-2xl p-10 overflow-hidden relative transform hover:scale-105 transition-all duration-300 border-4 border-white">
               <div className="absolute inset-0 z-0">
                 <img 
                   src="https://images.unsplash.com/photo-1549317336-206569e8475c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80" 
