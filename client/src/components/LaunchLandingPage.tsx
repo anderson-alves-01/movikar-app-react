@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import logoImage from '@/assets/logo.png';
-import peopleCarImage from "@assets/people-car.png";
-import carWheelImage from "@assets/car-wheel.png";
-import luxuryCarImage from "@assets/luxury-car.png";
+import peopleCarImage from "@/assets/people-car.png";
+import carWheelImage from "@/assets/car-wheel.png";
+import luxuryCarImage from "@/assets/luxury-car.png";
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
