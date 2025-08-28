@@ -19,7 +19,10 @@ import {
   Users,
   CheckCircle,
   ArrowRight,
-  Star
+  Star,
+  Zap,
+  TrendingUp,
+  Award
 } from 'lucide-react';
 
 export default function LaunchLandingPage() {
@@ -121,26 +124,26 @@ export default function LaunchLandingPage() {
               <span className="text-3xl md:text-5xl">EM BRASÍLIA!</span>
             </h1>
             <p className="text-2xl md:text-3xl text-white/90 mb-12 max-w-4xl mx-auto font-bold drop-shadow-lg">
-              💰 Até 70% MAIS BARATO que locadoras tradicionais<br/>
-              ⚡ PROCESSO 100% DIGITAL em menos de 5 minutos
+              Até 70% MAIS BARATO que locadoras tradicionais<br/>
+              PROCESSO 100% DIGITAL em menos de 5 minutos
             </p>
             
             {/* Benefícios principais com impacto */}
             <div className="grid md:grid-cols-3 gap-8 mb-16 max-w-6xl mx-auto">
               <Card className="p-8 border-none shadow-2xl bg-gradient-to-br from-yellow-400 to-orange-500 text-white transform hover:scale-105 transition-all duration-300">
-                <DollarSign className="h-16 w-16 text-white mx-auto mb-6 drop-shadow-lg" />
-                <h3 className="font-black text-xl mb-4">ATÉ 70% MAIS BARATO</h3>
-                <p className="font-semibold">Economia real no seu bolso!</p>
+                <TrendingUp className="h-16 w-16 text-white mx-auto mb-6 drop-shadow-lg" />
+                <h3 className="font-black text-xl mb-4">70% MAIS BARATO</h3>
+                <p className="font-semibold">Economia real</p>
               </Card>
               <Card className="p-8 border-none shadow-2xl bg-gradient-to-br from-green-400 to-teal-500 text-white transform hover:scale-105 transition-all duration-300">
-                <Clock className="h-16 w-16 text-white mx-auto mb-6 drop-shadow-lg" />
+                <Zap className="h-16 w-16 text-white mx-auto mb-6 drop-shadow-lg" />
                 <h3 className="font-black text-xl mb-4">EM 5 MINUTOS</h3>
-                <p className="font-semibold">Zero burocracia, zero filas!</p>
+                <p className="font-semibold">Zero burocracia</p>
               </Card>
               <Card className="p-8 border-none shadow-2xl bg-gradient-to-br from-blue-400 to-purple-500 text-white transform hover:scale-105 transition-all duration-300">
                 <MapPin className="h-16 w-16 text-white mx-auto mb-6 drop-shadow-lg" />
                 <h3 className="font-black text-xl mb-4">NO SEU BAIRRO</h3>
-                <p className="font-semibold">Carros próximos de você!</p>
+                <p className="font-semibold">Carros próximos</p>
               </Card>
             </div>
 
@@ -151,7 +154,8 @@ export default function LaunchLandingPage() {
                 className="bg-yellow-400 hover:bg-yellow-300 text-black px-12 py-6 text-2xl font-black shadow-2xl transform hover:scale-110 transition-all duration-300 animate-pulse"
                 onClick={() => document.getElementById('cadastro')?.scrollIntoView({ behavior: 'smooth' })}
               >
-                🚗 QUERO ALUGAR AGORA!
+                <Car className="mr-3 h-8 w-8" />
+                QUERO ALUGAR AGORA!
                 <ArrowRight className="ml-3 h-8 w-8" />
               </Button>
               <Button 
@@ -159,19 +163,21 @@ export default function LaunchLandingPage() {
                 className="bg-white/20 hover:bg-white/30 text-white border-2 border-white px-12 py-6 text-2xl font-black shadow-2xl transform hover:scale-110 transition-all duration-300 backdrop-blur-sm"
                 onClick={() => document.getElementById('cadastro')?.scrollIntoView({ behavior: 'smooth' })}
               >
-                💰 GANHAR DINHEIRO COM MEU CARRO
+                <DollarSign className="mr-3 h-8 w-8" />
+                GANHAR DINHEIRO
               </Button>
             </div>
 
             {/* Contador de pessoas na lista com urgência */}
             <div className="flex flex-col items-center justify-center space-y-4">
               <div className="bg-gradient-to-r from-red-600 to-red-700 text-white px-8 py-4 rounded-2xl shadow-2xl inline-flex items-center space-x-3 animate-bounce border-4 border-yellow-400">
-                <span className="text-2xl">🔥</span>
+                <TrendingUp className="h-6 w-6" />
                 <span className="text-xl font-black">{waitlistCount.toLocaleString()}+ PESSOAS JÁ SE CADASTRARAM!</span>
-                <span className="text-2xl">🔥</span>
+                <TrendingUp className="h-6 w-6" />
               </div>
               <div className="text-white/90 text-lg font-bold animate-pulse">
-                ⏰ ÚLTIMAS HORAS PARA GARANTIR SEU LUGAR!
+                <Clock className="inline h-5 w-5 mr-2" />
+                ÚLTIMAS HORAS PARA GARANTIR SEU LUGAR!
               </div>
             </div>
           </div>
@@ -208,24 +214,24 @@ export default function LaunchLandingPage() {
               <div className="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-3xl w-32 h-32 flex items-center justify-center mx-auto mb-8 shadow-2xl border-4 border-white animate-bounce">
                 <span className="text-5xl font-black text-white drop-shadow-lg">1</span>
               </div>
-              <h3 className="text-2xl font-black text-white mb-4">📱 CADASTRO INSTANTÂNEO</h3>
-              <p className="text-xl text-yellow-400 font-bold">2 minutos e pronto!</p>
+              <h3 className="text-2xl font-black text-white mb-4">CADASTRO RÁPIDO</h3>
+              <p className="text-xl text-yellow-400 font-bold">2 minutos</p>
             </div>
             
             <div className="text-center transform hover:scale-110 transition-all duration-500">
               <div className="bg-gradient-to-br from-green-400 to-teal-500 rounded-3xl w-32 h-32 flex items-center justify-center mx-auto mb-8 shadow-2xl border-4 border-white animate-bounce" style={{animationDelay: '0.5s'}}>
                 <span className="text-5xl font-black text-white drop-shadow-lg">2</span>
               </div>
-              <h3 className="text-2xl font-black text-white mb-4">🚗 ESCOLHA SEU CARRO</h3>
-              <p className="text-xl text-yellow-400 font-bold">Centenas de opções!</p>
+              <h3 className="text-2xl font-black text-white mb-4">ESCOLHA O CARRO</h3>
+              <p className="text-xl text-yellow-400 font-bold">Centenas disponíveis</p>
             </div>
             
             <div className="text-center transform hover:scale-110 transition-all duration-500">
               <div className="bg-gradient-to-br from-purple-400 to-pink-500 rounded-3xl w-32 h-32 flex items-center justify-center mx-auto mb-8 shadow-2xl border-4 border-white animate-bounce" style={{animationDelay: '1s'}}>
                 <span className="text-5xl font-black text-white drop-shadow-lg">3</span>
               </div>
-              <h3 className="text-2xl font-black text-white mb-4">🎆 JÁ ESTÁ DIRIGINDO!</h3>
-              <p className="text-xl text-yellow-400 font-bold">Zero complicação!</p>
+              <h3 className="text-2xl font-black text-white mb-4">JÁ ESTÁ DIRIGINDO!</h3>
+              <p className="text-xl text-yellow-400 font-bold">Zero complicação</p>
             </div>
           </div>
         </div>
@@ -237,14 +243,15 @@ export default function LaunchLandingPage() {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
               <h2 className="text-4xl md:text-6xl font-black text-white mb-8 drop-shadow-2xl">
-                🚗 PARA VOCÊ QUE
+                <Car className="inline h-16 w-16 mr-4" />
+                PARA VOCÊ QUE
                 <br/>
                 <span className="text-yellow-400 animate-pulse">QUER DIRIGIR!</span>
               </h2>
               <p className="text-2xl text-white/90 mb-10 font-bold leading-relaxed">
-                💸 ECONOMIA REAL: Até 70% mais barato!<br/>
-                ⚡ ZERO BUROCRACIA: Sem filas nem papelada!<br/>
-                📍 PERTO DE VOCÊ: Carros no seu bairro!
+                ECONOMIA REAL: Até 70% mais barato!<br/>
+                ZERO BUROCRACIA: Sem filas nem papelada!<br/>
+                PERTO DE VOCÊ: Carros no seu bairro!
               </p>
               
               <div className="space-y-6">
@@ -253,8 +260,8 @@ export default function LaunchLandingPage() {
                     <CheckCircle className="h-8 w-8 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-black text-white">ECONOMIA BRUTAL!</h3>
-                    <p className="text-lg text-yellow-400 font-semibold">Preços que cabem no seu bolso</p>
+                    <h3 className="text-xl font-black text-white">ECONOMIA REAL!</h3>
+                    <p className="text-lg text-yellow-400 font-semibold">Preços justos</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-4 bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
@@ -263,7 +270,7 @@ export default function LaunchLandingPage() {
                   </div>
                   <div>
                     <h3 className="text-xl font-black text-white">RAPIDEZ TOTAL!</h3>
-                    <p className="text-lg text-yellow-400 font-semibold">Tudo pelo celular, zero estresse</p>
+                    <p className="text-lg text-yellow-400 font-semibold">Tudo pelo celular</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-4 bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
@@ -271,8 +278,8 @@ export default function LaunchLandingPage() {
                     <CheckCircle className="h-8 w-8 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-black text-white">SUPER CONVENIENTE!</h3>
-                    <p className="text-lg text-yellow-400 font-semibold">Carro na esquina da sua casa</p>
+                    <h3 className="text-xl font-black text-white">CONVENIENTE!</h3>
+                    <p className="text-lg text-yellow-400 font-semibold">Carro perto de você</p>
                   </div>
                 </div>
               </div>
@@ -290,15 +297,16 @@ export default function LaunchLandingPage() {
                 <div className="bg-white rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-8 shadow-xl animate-bounce">
                   <Car className="h-12 w-12 text-orange-500" />
                 </div>
-                <h3 className="text-3xl font-black text-white text-center mb-6 drop-shadow-lg">🎆 PRONTO PARA A LIBERDADE?</h3>
+                <h3 className="text-3xl font-black text-white text-center mb-6 drop-shadow-lg">PRONTO PARA A LIBERDADE?</h3>
                 <p className="text-xl text-white font-bold text-center mb-8">
-                  🚀 Cadastre-se AGORA e seja um dos primeiros!
+                  Cadastre-se AGORA e seja um dos primeiros!
                 </p>
                 <Button 
                   className="w-full bg-white hover:bg-gray-100 text-black py-4 text-xl font-black shadow-xl transform hover:scale-105 transition-all"
                   onClick={() => document.getElementById('cadastro')?.scrollIntoView({ behavior: 'smooth' })}
                 >
-                  🚗 QUERO DIRIGIR JÁ!
+                  <Car className="mr-2 h-6 w-6" />
+                  QUERO DIRIGIR JÁ!
                 </Button>
               </div>
             </div>
@@ -335,29 +343,31 @@ export default function LaunchLandingPage() {
                 <div className="bg-white rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-8 shadow-xl animate-spin-slow">
                   <DollarSign className="h-12 w-12 text-green-600" />
                 </div>
-                <h3 className="text-3xl font-black text-white text-center mb-6 drop-shadow-lg">💰 TRANSFORME SEU CARRO EM DINHEIRO!</h3>
+                <h3 className="text-3xl font-black text-white text-center mb-6 drop-shadow-lg">TRANSFORME SEU CARRO EM DINHEIRO!</h3>
                 <p className="text-xl text-white font-bold text-center mb-8">
-                  🚀 Ganhe até R$ 3.000/mês com seu carro parado!
+                  Ganhe até R$ 3.000/mês com seu carro parado!
                 </p>
                 <Button 
                   className="w-full bg-white hover:bg-gray-100 text-black py-4 text-xl font-black shadow-xl transform hover:scale-105 transition-all"
                   onClick={() => document.getElementById('cadastro')?.scrollIntoView({ behavior: 'smooth' })}
                 >
-                  💸 QUERO GANHAR DINHEIRO!
+                  <DollarSign className="mr-2 h-6 w-6" />
+                  QUERO GANHAR DINHEIRO!
                 </Button>
               </div>
             </div>
             
             <div>
               <h2 className="text-4xl md:text-6xl font-black text-white mb-8 drop-shadow-2xl">
-                💰 PARA VOCÊ QUE
+                <DollarSign className="inline h-16 w-16 mr-4" />
+                PARA VOCÊ QUE
                 <br/>
                 <span className="text-yellow-400 animate-pulse">TEM CARRO!</span>
               </h2>
               <p className="text-2xl text-white/90 mb-10 font-bold leading-relaxed">
-                🚗 CARRO PARADO = DINHEIRO PERDIDO!<br/>
-                💸 GANHE ATÉ R$ 3.000/MÊS!<br/>
-                ⚡ CADASTRO EM 5 MINUTOS!
+                CARRO PARADO = DINHEIRO PERDIDO!<br/>
+                GANHE ATÉ R$ 3.000/MÊS!<br/>
+                CADASTRO EM 5 MINUTOS!
               </p>
               
               <div className="space-y-6">
@@ -367,7 +377,7 @@ export default function LaunchLandingPage() {
                   </div>
                   <div>
                     <h3 className="text-xl font-black text-white">VISIBILIDADE MÁXIMA!</h3>
-                    <p className="text-lg text-yellow-400 font-semibold">Milhares de pessoas vão ver seu carro</p>
+                    <p className="text-lg text-yellow-400 font-semibold">Milhares veem seu carro</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-4 bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
@@ -376,7 +386,7 @@ export default function LaunchLandingPage() {
                   </div>
                   <div>
                     <h3 className="text-xl font-black text-white">VOCÊ MANDA!</h3>
-                    <p className="text-lg text-yellow-400 font-semibold">Seu preço, suas regras, seu lucro</p>
+                    <p className="text-lg text-yellow-400 font-semibold">Seu preço, seu lucro</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-4 bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
@@ -385,7 +395,7 @@ export default function LaunchLandingPage() {
                   </div>
                   <div>
                     <h3 className="text-xl font-black text-white">DINHEIRO TODO DIA!</h3>
-                    <p className="text-lg text-yellow-400 font-semibold">Transforme carro parado em grana</p>
+                    <p className="text-lg text-yellow-400 font-semibold">Carro parado em grana</p>
                   </div>
                 </div>
               </div>
@@ -438,19 +448,20 @@ export default function LaunchLandingPage() {
           <div className="text-center mb-16">
             <div className="mb-8">
               <Badge className="bg-yellow-400 text-black text-2xl font-black px-8 py-3 mb-6 animate-bounce">
-                🔥 ÚLTIMA CHANCE!
+                <Award className="inline h-6 w-6 mr-2" />
+                ÚLTIMA CHANCE!
               </Badge>
             </div>
             <h2 className="text-5xl md:text-7xl font-black text-white mb-8 drop-shadow-2xl leading-tight">
-              🚀 GARANTE SEU LUGAR
+              GARANTE SEU LUGAR
               <br/>
               <span className="text-yellow-400 animate-pulse">AGORA!</span>
             </h2>
             <div className="bg-black/30 backdrop-blur-sm border-2 border-yellow-400 rounded-3xl p-8 mb-8">
               <div className="flex items-center justify-center space-x-4 text-white">
-                <span className="text-4xl animate-spin">⏰</span>
+                <Clock className="h-8 w-8 animate-spin" />
                 <span className="text-2xl font-black">JÁ SÃO {waitlistCount.toLocaleString()}+ PESSOAS NA FILA!</span>
-                <span className="text-4xl animate-bounce">🔥</span>
+                <TrendingUp className="h-8 w-8 animate-bounce" />
               </div>
             </div>
           </div>
@@ -459,10 +470,11 @@ export default function LaunchLandingPage() {
             <Card className="max-w-3xl mx-auto p-12 bg-gradient-to-br from-white to-gray-50 shadow-2xl border-4 border-yellow-400 rounded-3xl">
               <div className="text-center mb-8">
                 <h3 className="text-3xl font-black text-gray-900 mb-4">
-                  🎆 CADASTRO INSTANTÂNEO!
+                  <Zap className="inline h-8 w-8 mr-2" />
+                  CADASTRO INSTANTÂNEO!
                 </h3>
                 <p className="text-xl text-gray-600 font-semibold">
-                  2 minutos e você estará na lista VIP!
+                  2 minutos na lista VIP!
                 </p>
               </div>
               <form onSubmit={handleSubmit} className="space-y-8">
@@ -544,7 +556,7 @@ export default function LaunchLandingPage() {
                   className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-black py-6 text-2xl font-black shadow-2xl transform hover:scale-105 transition-all duration-300 border-4 border-yellow-600"
                   disabled={!email || !name || registerMutation.isPending}
                 >
-                  {registerMutation.isPending ? '🚀 CADASTRANDO...' : '🎆 GARANTIR MINHA VAGA AGORA!'}
+                  {registerMutation.isPending ? 'CADASTRANDO...' : 'GARANTIR MINHA VAGA AGORA!'}
                   <ArrowRight className="ml-3 h-8 w-8" />
                 </Button>
               </form>
@@ -555,15 +567,18 @@ export default function LaunchLandingPage() {
                 <CheckCircle className="h-20 w-20 text-green-500" />
               </div>
               <h3 className="text-4xl font-black text-white mb-6 drop-shadow-lg">
-                🎉 PARABÉNS, {name.toUpperCase()}!
+                <Award className="inline h-12 w-12 mr-4" />
+                PARABÉNS, {name.toUpperCase()}!
               </h3>
               <p className="text-2xl text-white font-bold mb-8">
-                ✅ VOCÊ ESTÁ OFICIALMENTE NA LISTA VIP!<br/>
-                📧 Avisaremos você em <strong>{email}</strong>
+                <CheckCircle className="inline h-8 w-8 mr-2" />
+                VOCÊ ESTÁ OFICIALMENTE NA LISTA VIP!<br/>
+                Avisaremos você em <strong>{email}</strong>
               </p>
               <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 border-2 border-white">
                 <p className="text-xl text-white font-semibold">
-                  🚀 Prepare-se para a REVOLUÇÃO do aluguel de carros!
+                  <TrendingUp className="inline h-6 w-6 mr-2" />
+                  Prepare-se para a REVOLUÇÃO do aluguel de carros!
                 </p>
               </div>
             </Card>
