@@ -1091,6 +1091,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         password: hashedPassword,
       });
 
+      // Se for cadastro da landing page, dar 300 moedas
+      if (req.body.fromLandingPage) {
+        try {
+          await storage.addUserCoins(user.id, 300, 'Bônus de boas-vindas da landing page');
+        } catch (error) {
+          console.error('Erro ao adicionar moedas de boas-vindas:', error);
+        }
+      }
+
       // Process any pending referral rewards for this user
       try {
         // Find referrals where this user is the referred user (was invited)

@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import logoImage from '@/assets/logo.png';
+import { useMutation } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -20,17 +23,38 @@ export default function LaunchLandingPage() {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [userType, setUserType] = useState<'renter' | 'owner' | ''>('');
+  const [isRenter, setIsRenter] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const registerMutation = useMutation({
+    mutationFn: async (userData: any) => {
+      const response = await apiRequest('POST', '/api/auth/register', userData);
+      return response;
+    },
+    onSuccess: () => {
+      setIsSubmitted(true);
+    },
+    onError: (error) => {
+      console.error('Erro no cadastro:', error);
+    }
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Simular envio da lista de espera
     if (email && name) {
-      setIsSubmitted(true);
-      // Aqui você pode adicionar integração com API futuramente
-      console.log('Cadastro na lista de espera:', { name, email, phone, userType });
+      const userData = {
+        name,
+        email,
+        phone,
+        password: 'temp123',
+        isRenter,
+        isOwner,
+        fromLandingPage: true
+      };
+      
+      registerMutation.mutate(userData);
     }
   };
 
@@ -41,14 +65,13 @@ export default function LaunchLandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-2">
-              <Car className="h-8 w-8 text-teal-600" />
-              <span className="text-2xl font-bold text-gray-900">alugaê</span>
+              <img src={logoImage} alt="Alugaê" className="h-8 w-auto" />
             </div>
             <nav className="hidden md:flex space-x-8">
-              <a href="#como-funciona" className="text-gray-600 hover:text-teal-600">Como Funciona</a>
-              <a href="#motoristas" className="text-gray-600 hover:text-teal-600">Para Motoristas</a>
-              <a href="#locadores" className="text-gray-600 hover:text-teal-600">Para Locadores</a>
-              <a href="#cadastro" className="text-gray-600 hover:text-teal-600">Cadastre-se</a>
+              <a href="#como-funciona" className="text-gray-600 hover:text-red-500">Como Funciona</a>
+              <a href="#motoristas" className="text-gray-600 hover:text-red-500">Para Motoristas</a>
+              <a href="#locadores" className="text-gray-600 hover:text-red-500">Para Locadores</a>
+              <a href="#cadastro" className="text-gray-600 hover:text-red-500">Cadastre-se</a>
             </nav>
           </div>
         </div>
@@ -58,12 +81,12 @@ export default function LaunchLandingPage() {
       <section className="relative py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center">
-            <Badge className="mb-4 bg-teal-100 text-teal-800 hover:bg-teal-100">
+            <Badge className="mb-4 bg-red-100 text-red-800 hover:bg-red-100">
               O Alugaê está chegando!
             </Badge>
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
               O jeito inteligente de alugar e<br />
-              <span className="text-teal-600">compartilhar carros</span> em Brasília
+              <span className="text-red-500">compartilhar carros</span> em Brasília
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
               Conectamos quem tem carro disponível com quem precisa de um, de forma simples, rápida e segura.
@@ -72,15 +95,15 @@ export default function LaunchLandingPage() {
             {/* Benefícios principais */}
             <div className="grid md:grid-cols-3 gap-6 mb-12 max-w-4xl mx-auto">
               <Card className="p-6 border-none shadow-lg bg-white">
-                <DollarSign className="h-12 w-12 text-teal-600 mx-auto mb-4" />
+                <DollarSign className="h-12 w-12 text-red-500 mx-auto mb-4" />
                 <h3 className="font-semibold mb-2">Mais barato que locadoras tradicionais</h3>
               </Card>
               <Card className="p-6 border-none shadow-lg bg-white">
-                <Clock className="h-12 w-12 text-teal-600 mx-auto mb-4" />
+                <Clock className="h-12 w-12 text-red-500 mx-auto mb-4" />
                 <h3 className="font-semibold mb-2">Rápido: sem filas ou papelada</h3>
               </Card>
               <Card className="p-6 border-none shadow-lg bg-white">
-                <MapPin className="h-12 w-12 text-teal-600 mx-auto mb-4" />
+                <MapPin className="h-12 w-12 text-red-500 mx-auto mb-4" />
                 <h3 className="font-semibold mb-2">Próximo de você: carros disponíveis no seu bairro</h3>
               </Card>
             </div>
@@ -89,7 +112,7 @@ export default function LaunchLandingPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
               <Button 
                 size="lg" 
-                className="bg-teal-600 hover:bg-teal-700 text-white px-8 py-4 text-lg"
+                className="bg-red-500 hover:bg-red-600 text-white px-8 py-4 text-lg"
                 onClick={() => document.getElementById('cadastro')?.scrollIntoView({ behavior: 'smooth' })}
               >
                 Quero alugar um carro
@@ -98,7 +121,7 @@ export default function LaunchLandingPage() {
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="border-teal-600 text-teal-600 hover:bg-teal-50 px-8 py-4 text-lg"
+                className="border-red-500 text-red-500 hover:bg-red-50 px-8 py-4 text-lg"
                 onClick={() => document.getElementById('cadastro')?.scrollIntoView({ behavior: 'smooth' })}
               >
                 Tenho um carro para alugar
@@ -127,8 +150,8 @@ export default function LaunchLandingPage() {
           
           <div className="grid md:grid-cols-4 gap-8">
             <Card className="text-center p-6 border-none shadow-lg">
-              <div className="bg-teal-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <Users className="h-8 w-8 text-teal-600" />
+              <div className="bg-red-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                <Users className="h-8 w-8 text-red-500" />
               </div>
               <h3 className="font-semibold mb-2">Cadastro simples</h3>
               <p className="text-gray-600 text-sm">Crie sua conta em poucos minutos</p>
@@ -167,7 +190,7 @@ export default function LaunchLandingPage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-                Para <span className="text-teal-600">Motoristas</span>
+                Para <span className="text-red-500">Motoristas</span>
               </h2>
               <p className="text-xl text-gray-600 mb-8">
                 Alugue com liberdade, sem dor de cabeça. Aqui você tem acesso a carros de forma prática e sem burocracia, 
@@ -176,21 +199,21 @@ export default function LaunchLandingPage() {
               
               <div className="space-y-4">
                 <div className="flex items-start space-x-3">
-                  <CheckCircle className="h-6 w-6 text-teal-600 mt-1" />
+                  <CheckCircle className="h-6 w-6 text-red-500 mt-1" />
                   <div>
                     <h3 className="font-semibold">Mais barato que locadoras tradicionais</h3>
                     <p className="text-gray-600">Preços justos diretamente com os proprietários</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <CheckCircle className="h-6 w-6 text-teal-600 mt-1" />
+                  <CheckCircle className="h-6 w-6 text-red-500 mt-1" />
                   <div>
                     <h3 className="font-semibold">Processo 100% digital</h3>
                     <p className="text-gray-600">Alugue pelo app, sem filas ou papelada</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <CheckCircle className="h-6 w-6 text-teal-600 mt-1" />
+                  <CheckCircle className="h-6 w-6 text-red-500 mt-1" />
                   <div>
                     <h3 className="font-semibold">Carros próximos de você</h3>
                     <p className="text-gray-600">Encontre opções no seu bairro</p>
@@ -237,7 +260,7 @@ export default function LaunchLandingPage() {
             
             <div>
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-                Para <span className="text-teal-600">Locadores</span>
+                Para <span className="text-red-500">Locadores</span>
               </h2>
               <p className="text-xl text-gray-600 mb-8">
                 Transforme seu carro parado em renda extra. Você cadastra o carro em poucos minutos, 
@@ -246,21 +269,21 @@ export default function LaunchLandingPage() {
               
               <div className="space-y-4">
                 <div className="flex items-start space-x-3">
-                  <Star className="h-6 w-6 text-teal-600 mt-1" />
+                  <Star className="h-6 w-6 text-red-500 mt-1" />
                   <div>
                     <h3 className="font-semibold">Mais visibilidade</h3>
                     <p className="text-gray-600">Alcance quem quer alugar perto de você</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <Star className="h-6 w-6 text-teal-600 mt-1" />
+                  <Star className="h-6 w-6 text-red-500 mt-1" />
                   <div>
                     <h3 className="font-semibold">Controle total</h3>
                     <p className="text-gray-600">Você escolhe preço e quando alugar</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <Star className="h-6 w-6 text-teal-600 mt-1" />
+                  <Star className="h-6 w-6 text-red-500 mt-1" />
                   <div>
                     <h3 className="font-semibold">Renda extra</h3>
                     <p className="text-gray-600">Aproveite o tempo em que o carro ficaria parado</p>
@@ -304,7 +327,7 @@ export default function LaunchLandingPage() {
       </section>
 
       {/* Formulário de Cadastro */}
-      <section id="cadastro" className="py-20 bg-teal-600">
+      <section id="cadastro" className="py-20 bg-red-500">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
@@ -365,11 +388,9 @@ export default function LaunchLandingPage() {
                   <div className="grid md:grid-cols-2 gap-4">
                     <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
                       <input
-                        type="radio"
-                        name="userType"
-                        value="renter"
-                        checked={userType === 'renter'}
-                        onChange={(e) => setUserType(e.target.value as 'renter')}
+                        type="checkbox"
+                        checked={isRenter}
+                        onChange={(e) => setIsRenter(e.target.checked)}
                         className="mr-3"
                       />
                       <div>
@@ -380,11 +401,9 @@ export default function LaunchLandingPage() {
                     
                     <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
                       <input
-                        type="radio"
-                        name="userType"
-                        value="owner"
-                        checked={userType === 'owner'}
-                        onChange={(e) => setUserType(e.target.value as 'owner')}
+                        type="checkbox"
+                        checked={isOwner}
+                        onChange={(e) => setIsOwner(e.target.checked)}
                         className="mr-3"
                       />
                       <div>
@@ -397,10 +416,10 @@ export default function LaunchLandingPage() {
                 
                 <Button 
                   type="submit" 
-                  className="w-full bg-teal-600 hover:bg-teal-700 text-white py-3"
-                  disabled={!email || !name}
+                  className="w-full bg-red-500 hover:bg-red-600 text-white py-3"
+                  disabled={!email || !name || registerMutation.isPending}
                 >
-                  Entrar na lista de espera
+                  {registerMutation.isPending ? 'Cadastrando...' : 'Entrar na lista de espera'}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </form>
@@ -428,8 +447,7 @@ export default function LaunchLandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="flex items-center justify-center space-x-2 mb-4">
-              <Car className="h-8 w-8 text-teal-400" />
-              <span className="text-2xl font-bold">alugaê</span>
+              <img src={logoImage} alt="Alugaê" className="h-8 w-auto" />
             </div>
             <p className="text-gray-400 mb-6">alugae.mobi</p>
             <p className="text-gray-500 text-sm">
