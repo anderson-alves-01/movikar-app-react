@@ -19,10 +19,7 @@ import {
   Users,
   CheckCircle,
   ArrowRight,
-  Star,
-  Zap,
-  TrendingUp,
-  Award
+  Star
 } from 'lucide-react';
 
 export default function LaunchLandingPage() {
@@ -75,109 +72,87 @@ export default function LaunchLandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-brand">
+    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-blue-50">
       {/* Header */}
-      <header className="bg-black/20 backdrop-blur-sm border-b border-white/10">
+      <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-2">
-              <img src={logoImage} alt="Alugaê" className="h-10 w-auto brightness-0 invert" />
+              <img src={logoImage} alt="Alugaê" className="h-8 w-auto" />
             </div>
             <nav className="hidden md:flex space-x-8">
-              <a href="#como-funciona" className="text-white/90 hover:text-white font-medium transition-colors">Como Funciona</a>
-              <a href="#motoristas" className="text-white/90 hover:text-white font-medium transition-colors">Para Motoristas</a>
-              <a href="#locadores" className="text-white/90 hover:text-white font-medium transition-colors">Para Locadores</a>
-              <a href="#cadastro" className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-full font-semibold transition-all">Cadastre-se</a>
+              <a href="#como-funciona" className="text-gray-600 hover:text-red-500">Como Funciona</a>
+              <a href="#motoristas" className="text-gray-600 hover:text-red-500">Para Motoristas</a>
+              <a href="#locadores" className="text-gray-600 hover:text-red-500">Para Locadores</a>
+              <a href="#cadastro" className="text-gray-600 hover:text-red-500">Cadastre-se</a>
             </nav>
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="relative py-32 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <section className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="absolute inset-0">
           <img 
             src={peopleCarImage} 
             alt="Pessoas felizes dirigindo" 
-            className="w-full h-full object-cover opacity-20"
+            className="w-full h-full object-cover opacity-30"
           />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/40"></div>
-        
-        {/* Elementos visuais de impacto */}
-        <div className="absolute top-10 left-10 w-20 h-20 bg-secondary rounded-full opacity-20 animate-pulse"></div>
-        <div className="absolute top-1/4 right-20 w-16 h-16 bg-white rounded-full opacity-30 animate-bounce"></div>
-        <div className="absolute bottom-1/4 left-1/4 w-12 h-12 bg-primary-light rounded-full opacity-25 animate-ping"></div>
-        
+        <div className="absolute inset-0 bg-gradient-to-r from-white/60 via-white/50 to-white/60"></div>
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center">
-            <div className="mb-8 animate-pulse">
-              <Badge className="mb-4 bg-secondary text-white hover:bg-secondary-hover text-lg font-bold px-6 py-2 shadow-2xl">
-                🔥 LANÇAMENTO EXCLUSIVO!
-              </Badge>
-            </div>
-            <h1 className="text-5xl md:text-8xl font-black text-white mb-8 drop-shadow-2xl leading-tight">
-              REVOLUÇÃO NO
-              <br />
-              <span className="text-secondary animate-pulse">ALUGUEL DE CARROS</span>
-              <br />
-              <span className="text-3xl md:text-5xl">EM BRASÍLIA!</span>
+            <Badge className="mb-4 bg-red-100 text-red-800 hover:bg-red-100">
+              O Alugaê está chegando!
+            </Badge>
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+              O jeito inteligente de alugar e<br />
+              <span className="text-red-500">compartilhar carros</span> em Brasília
             </h1>
-            <p className="text-2xl md:text-3xl text-white/90 mb-12 max-w-4xl mx-auto font-bold drop-shadow-lg">
-              Até 70% MAIS BARATO que locadoras tradicionais<br/>
-              PROCESSO 100% DIGITAL em menos de 5 minutos
+            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+              Conectamos quem tem carro disponível com quem precisa de um, de forma simples, rápida e segura.
             </p>
             
-            {/* Benefícios principais com impacto */}
-            <div className="grid md:grid-cols-3 gap-8 mb-16 max-w-6xl mx-auto">
-              <Card className="p-8 border-none shadow-2xl bg-gradient-to-br from-yellow-400 to-orange-500 text-white transform hover:scale-105 transition-all duration-300">
-                <TrendingUp className="h-16 w-16 text-white mx-auto mb-6 drop-shadow-lg" />
-                <h3 className="font-black text-xl mb-4">70% MAIS BARATO</h3>
-                <p className="font-semibold">Economia real</p>
+            {/* Benefícios principais */}
+            <div className="grid md:grid-cols-3 gap-6 mb-12 max-w-4xl mx-auto">
+              <Card className="p-6 border-none shadow-lg bg-white">
+                <DollarSign className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <h3 className="font-semibold mb-2">Mais barato que locadoras tradicionais</h3>
               </Card>
-              <Card className="p-8 border-none shadow-2xl bg-gradient-to-br from-green-400 to-teal-500 text-white transform hover:scale-105 transition-all duration-300">
-                <Zap className="h-16 w-16 text-white mx-auto mb-6 drop-shadow-lg" />
-                <h3 className="font-black text-xl mb-4">EM 5 MINUTOS</h3>
-                <p className="font-semibold">Zero burocracia</p>
+              <Card className="p-6 border-none shadow-lg bg-white">
+                <Clock className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <h3 className="font-semibold mb-2">Rápido: sem filas ou papelada</h3>
               </Card>
-              <Card className="p-8 border-none shadow-2xl bg-gradient-to-br from-blue-400 to-purple-500 text-white transform hover:scale-105 transition-all duration-300">
-                <MapPin className="h-16 w-16 text-white mx-auto mb-6 drop-shadow-lg" />
-                <h3 className="font-black text-xl mb-4">NO SEU BAIRRO</h3>
-                <p className="font-semibold">Carros próximos</p>
+              <Card className="p-6 border-none shadow-lg bg-white">
+                <MapPin className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <h3 className="font-semibold mb-2">Próximo de você: carros disponíveis no seu bairro</h3>
               </Card>
             </div>
 
-            {/* CTAs principais com máximo impacto */}
-            <div className="flex flex-col sm:flex-row gap-6 justify-center mb-20">
+            {/* CTAs principais */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
               <Button 
                 size="lg" 
-                className="bg-yellow-400 hover:bg-yellow-300 text-black px-8 py-6 text-xl font-black shadow-2xl transform hover:scale-110 transition-all duration-300 animate-pulse"
+                className="bg-red-500 hover:bg-red-600 text-white px-8 py-4 text-lg"
                 onClick={() => document.getElementById('cadastro')?.scrollIntoView({ behavior: 'smooth' })}
               >
-                <Car className="mr-2 h-6 w-6" />
-                ALUGAR AGORA
-                <ArrowRight className="ml-2 h-6 w-6" />
+                Quero alugar um carro
+                <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               <Button 
                 size="lg" 
-                className="bg-white/20 hover:bg-white/30 text-white border-2 border-white px-8 py-6 text-xl font-black shadow-2xl transform hover:scale-110 transition-all duration-300 backdrop-blur-sm"
+                variant="outline" 
+                className="border-red-500 text-red-500 hover:bg-red-50 px-8 py-4 text-lg"
                 onClick={() => document.getElementById('cadastro')?.scrollIntoView({ behavior: 'smooth' })}
               >
-                <DollarSign className="mr-2 h-6 w-6" />
-                GANHAR RENDA
+                Tenho um carro para alugar
               </Button>
             </div>
 
-            {/* Contador de pessoas na lista com urgência */}
-            <div className="flex flex-col items-center justify-center space-y-4">
-              <div className="bg-gradient-to-r from-red-600 to-red-700 text-white px-8 py-4 rounded-2xl shadow-2xl inline-flex items-center space-x-3 animate-bounce border-4 border-yellow-400">
-                <TrendingUp className="h-6 w-6" />
-                <span className="text-xl font-black">{waitlistCount.toLocaleString()}+ PESSOAS JÁ SE CADASTRARAM!</span>
-                <TrendingUp className="h-6 w-6" />
-              </div>
-              <div className="text-white/90 text-lg font-bold animate-pulse">
-                <Clock className="inline h-5 w-5 mr-2" />
-                ÚLTIMAS HORAS PARA GARANTIR SEU LUGAR!
+            {/* Contador de pessoas na lista */}
+            <div className="flex items-center justify-center">
+              <div className="bg-gradient-to-r from-teal-500 to-teal-600 text-white px-6 py-3 rounded-full shadow-lg inline-flex items-center space-x-2 animate-pulse">
+                <span><strong>{waitlistCount.toLocaleString()}+</strong> pessoas já estão na lista de espera!</span>
               </div>
             </div>
           </div>
@@ -185,128 +160,110 @@ export default function LaunchLandingPage() {
       </section>
 
       {/* Como Funciona */}
-      <section id="como-funciona" className="relative py-24 bg-gradient-to-br from-gray-900 via-black to-gray-800 overflow-hidden">
+      <section id="como-funciona" className="relative py-20 bg-white overflow-hidden">
         <div className="absolute inset-0">
           <img 
             src={carWheelImage} 
             alt="Detalhe roda de carro" 
-            className="w-full h-full object-cover opacity-10"
+            className="w-full h-full object-cover opacity-20"
           />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/10 via-transparent to-red-500/10"></div>
-        
-        {/* Elementos de fundo animados */}
-        <div className="absolute top-20 right-10 w-32 h-32 bg-yellow-400/20 rounded-full animate-spin-slow"></div>
-        <div className="absolute bottom-20 left-10 w-24 h-24 bg-red-500/20 rounded-full animate-pulse"></div>
-        
+        <div className="absolute inset-0 bg-white/70"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-6xl font-black text-white mb-6 drop-shadow-2xl">
-              ⚡ SIMPLES ASSIM!
-            </h2>
-            <p className="text-2xl md:text-3xl text-yellow-400 max-w-4xl mx-auto font-bold">
-              3 PASSOS E VOCÊ ESTÁ DIRIGINDO!
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Como Funciona?</h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              No Alugaê, você se cadastra em poucos minutos, escolhe se quer disponibilizar seu carro ou alugar, e pronto! 
+              Todo o processo é digital, seguro e transparente.
             </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-12">
-            <div className="text-center transform hover:scale-110 transition-all duration-500">
-              <div className="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-3xl w-32 h-32 flex items-center justify-center mx-auto mb-8 shadow-2xl border-4 border-white animate-bounce">
-                <span className="text-5xl font-black text-white drop-shadow-lg">1</span>
+          <div className="grid md:grid-cols-3 gap-8">
+            <Card className="text-center p-6 border-none shadow-lg">
+              <div className="bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl w-16 h-16 flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Users className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-2xl font-black text-white mb-4">CADASTRO RÁPIDO</h3>
-              <p className="text-xl text-yellow-400 font-bold">2 minutos</p>
-            </div>
+              <h3 className="font-semibold mb-2">Cadastro simples</h3>
+              <p className="text-gray-600 text-sm">Crie sua conta em poucos minutos</p>
+            </Card>
             
-            <div className="text-center transform hover:scale-110 transition-all duration-500">
-              <div className="bg-gradient-to-br from-green-400 to-teal-500 rounded-3xl w-32 h-32 flex items-center justify-center mx-auto mb-8 shadow-2xl border-4 border-white animate-bounce" style={{animationDelay: '0.5s'}}>
-                <span className="text-5xl font-black text-white drop-shadow-lg">2</span>
+            <Card className="text-center p-6 border-none shadow-lg">
+              <div className="bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl w-16 h-16 flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Car className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-2xl font-black text-white mb-4">ESCOLHA O CARRO</h3>
-              <p className="text-xl text-yellow-400 font-bold">Centenas disponíveis</p>
-            </div>
+              <h3 className="font-semibold mb-2">Encontre ou ofereça um carro</h3>
+              <p className="text-gray-600 text-sm">Procure carros próximos ou anuncie o seu</p>
+            </Card>
             
-            <div className="text-center transform hover:scale-110 transition-all duration-500">
-              <div className="bg-gradient-to-br from-purple-400 to-pink-500 rounded-3xl w-32 h-32 flex items-center justify-center mx-auto mb-8 shadow-2xl border-4 border-white animate-bounce" style={{animationDelay: '1s'}}>
-                <span className="text-5xl font-black text-white drop-shadow-lg">3</span>
+            <Card className="text-center p-6 border-none shadow-lg">
+              <div className="bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl w-16 h-16 flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Shield className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-2xl font-black text-white mb-4">JÁ ESTÁ DIRIGINDO!</h3>
-              <p className="text-xl text-yellow-400 font-bold">Zero complicação</p>
-            </div>
+              <h3 className="font-semibold mb-2">Aluguel seguro e sem burocracia</h3>
+              <p className="text-gray-600 text-sm">Processo 100% digital e protegido</p>
+            </Card>
+            
           </div>
         </div>
       </section>
 
       {/* Para Motoristas */}
-      <section id="motoristas" className="py-24 bg-primary">
+      <section id="motoristas" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-4xl md:text-6xl font-black text-white mb-8 drop-shadow-2xl">
-                <Car className="inline h-16 w-16 mr-4" />
-                PARA VOCÊ QUE
-                <br/>
-                <span className="text-yellow-400 animate-pulse">QUER DIRIGIR!</span>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+                Para <span className="text-red-500">Motoristas</span>
               </h2>
-              <p className="text-2xl text-white/90 mb-10 font-bold leading-relaxed">
-                ECONOMIA REAL: Até 70% mais barato!<br/>
-                ZERO BUROCRACIA: Sem filas nem papelada!<br/>
-                PERTO DE VOCÊ: Carros no seu bairro!
+              <p className="text-xl text-gray-600 mb-8">
+                Alugue com liberdade, sem dor de cabeça. Aqui você tem acesso a carros de forma prática e sem burocracia, 
+                pagando um preço justo e com a flexibilidade que precisa.
               </p>
               
-              <div className="space-y-6">
-                <div className="flex items-start space-x-4 bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                  <div className="bg-green-400 rounded-full p-2">
-                    <CheckCircle className="h-8 w-8 text-white" />
-                  </div>
+              <div className="space-y-4">
+                <div className="flex items-start space-x-3">
+                  <CheckCircle className="h-6 w-6 text-red-500 mt-1" />
                   <div>
-                    <h3 className="text-xl font-black text-white">ECONOMIA REAL!</h3>
-                    <p className="text-lg text-yellow-400 font-semibold">Preços justos</p>
+                    <h3 className="font-semibold">Mais barato que locadoras tradicionais</h3>
+                    <p className="text-gray-600">Preços justos diretamente com os proprietários</p>
                   </div>
                 </div>
-                <div className="flex items-start space-x-4 bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                  <div className="bg-blue-400 rounded-full p-2">
-                    <CheckCircle className="h-8 w-8 text-white" />
-                  </div>
+                <div className="flex items-start space-x-3">
+                  <CheckCircle className="h-6 w-6 text-red-500 mt-1" />
                   <div>
-                    <h3 className="text-xl font-black text-white">RAPIDEZ TOTAL!</h3>
-                    <p className="text-lg text-yellow-400 font-semibold">Tudo pelo celular</p>
+                    <h3 className="font-semibold">Processo 100% digital</h3>
+                    <p className="text-gray-600">Alugue pelo app, sem filas ou papelada</p>
                   </div>
                 </div>
-                <div className="flex items-start space-x-4 bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                  <div className="bg-purple-400 rounded-full p-2">
-                    <CheckCircle className="h-8 w-8 text-white" />
-                  </div>
+                <div className="flex items-start space-x-3">
+                  <CheckCircle className="h-6 w-6 text-red-500 mt-1" />
                   <div>
-                    <h3 className="text-xl font-black text-white">CONVENIENTE!</h3>
-                    <p className="text-lg text-yellow-400 font-semibold">Carro perto de você</p>
+                    <h3 className="font-semibold">Carros próximos de você</h3>
+                    <p className="text-gray-600">Encontre opções no seu bairro</p>
                   </div>
                 </div>
               </div>
             </div>
             
-            <div className="bg-secondary rounded-3xl shadow-2xl p-10 overflow-hidden relative transform hover:scale-105 transition-all duration-300 border-4 border-white">
+            <div className="bg-white rounded-lg shadow-xl p-8 overflow-hidden relative">
               <div className="absolute inset-0 z-0">
                 <img 
                   src="https://images.unsplash.com/photo-1549317336-206569e8475c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80" 
                   alt="Pessoas felizes dirigindo" 
-                  className="w-full h-full object-cover opacity-10"
+                  className="w-full h-full object-cover opacity-20"
                 />
               </div>
               <div className="relative z-10">
-                <div className="bg-white rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-8 shadow-xl animate-bounce">
-                  <Car className="h-12 w-12 text-orange-500" />
-                </div>
-                <h3 className="text-3xl font-black text-white text-center mb-6 drop-shadow-lg">PRONTO PARA A LIBERDADE?</h3>
-                <p className="text-xl text-white font-bold text-center mb-8">
-                  Cadastre-se AGORA e seja um dos primeiros!
+                <Car className="h-16 w-16 text-teal-600 mx-auto mb-6" />
+                <h3 className="text-2xl font-bold text-center mb-4">Pronto para dirigir?</h3>
+                <p className="text-gray-600 text-center mb-6">
+                  Cadastre-se na lista de espera e seja um dos primeiros a usar o Alugaê.
                 </p>
                 <Button 
-                  className="w-full bg-white hover:bg-gray-100 text-black py-4 text-lg font-black shadow-xl transform hover:scale-105 transition-all"
+                  className="w-full bg-teal-600 hover:bg-teal-700"
                   onClick={() => document.getElementById('cadastro')?.scrollIntoView({ behavior: 'smooth' })}
                 >
-                  <Car className="mr-2 h-5 w-5" />
-                  DIRIGIR JÁ
+                  Quero alugar um carro
                 </Button>
               </div>
             </div>
@@ -315,87 +272,70 @@ export default function LaunchLandingPage() {
       </section>
 
       {/* Para Locadores */}
-      <section id="locadores" className="relative py-24 bg-gradient-to-br from-green-600 via-emerald-600 to-teal-700 overflow-hidden">
+      <section id="locadores" className="relative py-20 bg-white overflow-hidden">
         <div className="absolute inset-0">
           <img 
             src={luxuryCarImage} 
             alt="Carro de luxo" 
-            className="w-full h-full object-cover opacity-15"
+            className="w-full h-full object-cover opacity-25"
           />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/30"></div>
-        
-        {/* Elementos visuais de dinheiro */}
-        <div className="absolute top-10 left-1/4 text-6xl animate-bounce text-yellow-400 opacity-30">💰</div>
-        <div className="absolute bottom-20 right-1/4 text-5xl animate-pulse text-green-400 opacity-40">💵</div>
-        
+        <div className="absolute inset-0 bg-white/65"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div className="bg-gradient-to-br from-yellow-400 to-green-500 rounded-3xl shadow-2xl p-10 overflow-hidden relative transform hover:scale-105 transition-all duration-300 border-4 border-white">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="bg-teal-50 rounded-lg shadow-xl p-8 overflow-hidden relative">
               <div className="absolute inset-0 z-0">
                 <img 
                   src="https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80" 
                   alt="Carro elegante" 
-                  className="w-full h-full object-cover opacity-10"
+                  className="w-full h-full object-cover opacity-30"
                 />
               </div>
               <div className="relative z-10">
-                <div className="bg-white rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-8 shadow-xl animate-spin-slow">
-                  <DollarSign className="h-12 w-12 text-green-600" />
-                </div>
-                <h3 className="text-3xl font-black text-white text-center mb-6 drop-shadow-lg">TRANSFORME SEU CARRO EM DINHEIRO!</h3>
-                <p className="text-xl text-white font-bold text-center mb-8">
-                  Ganhe até R$ 3.000/mês com seu carro parado!
+                <DollarSign className="h-16 w-16 text-teal-600 mx-auto mb-6" />
+                <h3 className="text-2xl font-bold text-center mb-4">Transforme seu carro em renda</h3>
+                <p className="text-gray-600 text-center mb-6">
+                  Você cadastra o carro em poucos minutos, define a disponibilidade e recebe por cada aluguel.
                 </p>
                 <Button 
-                  className="w-full bg-white hover:bg-gray-100 text-black py-4 text-lg font-black shadow-xl transform hover:scale-105 transition-all"
+                  variant="outline" 
+                  className="w-full border-teal-600 text-teal-600 hover:bg-teal-50"
                   onClick={() => document.getElementById('cadastro')?.scrollIntoView({ behavior: 'smooth' })}
                 >
-                  <DollarSign className="mr-2 h-5 w-5" />
-                  GANHAR DINHEIRO
+                  Tenho um carro para alugar
                 </Button>
               </div>
             </div>
             
             <div>
-              <h2 className="text-4xl md:text-6xl font-black text-white mb-8 drop-shadow-2xl">
-                <DollarSign className="inline h-16 w-16 mr-4" />
-                PARA VOCÊ QUE
-                <br/>
-                <span className="text-yellow-400 animate-pulse">TEM CARRO!</span>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+                Para <span className="text-red-500">Locadores</span>
               </h2>
-              <p className="text-2xl text-white/90 mb-10 font-bold leading-relaxed">
-                CARRO PARADO = DINHEIRO PERDIDO!<br/>
-                GANHE ATÉ R$ 3.000/MÊS!<br/>
-                CADASTRO EM 5 MINUTOS!
+              <p className="text-xl text-gray-600 mb-8">
+                Transforme seu carro parado em renda extra. Você cadastra o carro em poucos minutos, 
+                define a disponibilidade e recebe por cada aluguel, sem se preocupar com burocracia.
               </p>
               
-              <div className="space-y-6">
-                <div className="flex items-start space-x-4 bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                  <div className="bg-yellow-400 rounded-full p-2">
-                    <Star className="h-8 w-8 text-white" />
-                  </div>
+              <div className="space-y-4">
+                <div className="flex items-start space-x-3">
+                  <Star className="h-6 w-6 text-red-500 mt-1" />
                   <div>
-                    <h3 className="text-xl font-black text-white">VISIBILIDADE MÁXIMA!</h3>
-                    <p className="text-lg text-yellow-400 font-semibold">Milhares veem seu carro</p>
+                    <h3 className="font-semibold">Mais visibilidade</h3>
+                    <p className="text-gray-600">Alcance quem quer alugar perto de você</p>
                   </div>
                 </div>
-                <div className="flex items-start space-x-4 bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                  <div className="bg-green-400 rounded-full p-2">
-                    <Star className="h-8 w-8 text-white" />
-                  </div>
+                <div className="flex items-start space-x-3">
+                  <Star className="h-6 w-6 text-red-500 mt-1" />
                   <div>
-                    <h3 className="text-xl font-black text-white">VOCÊ MANDA!</h3>
-                    <p className="text-lg text-yellow-400 font-semibold">Seu preço, seu lucro</p>
+                    <h3 className="font-semibold">Controle total</h3>
+                    <p className="text-gray-600">Você escolhe preço e quando alugar</p>
                   </div>
                 </div>
-                <div className="flex items-start space-x-4 bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                  <div className="bg-blue-400 rounded-full p-2">
-                    <Star className="h-8 w-8 text-white" />
-                  </div>
+                <div className="flex items-start space-x-3">
+                  <Star className="h-6 w-6 text-red-500 mt-1" />
                   <div>
-                    <h3 className="text-xl font-black text-white">DINHEIRO TODO DIA!</h3>
-                    <p className="text-lg text-yellow-400 font-semibold">Carro parado em grana</p>
+                    <h3 className="font-semibold">Renda extra</h3>
+                    <p className="text-gray-600">Aproveite o tempo em que o carro ficaria parado</p>
                   </div>
                 </div>
               </div>
@@ -436,48 +376,25 @@ export default function LaunchLandingPage() {
       </section>
 
       {/* Formulário de Cadastro */}
-      <section id="cadastro" className="py-32 bg-gradient-to-br from-red-600 via-pink-600 to-purple-700 relative overflow-hidden">
-        {/* Elementos de fundo animados */}
-        <div className="absolute top-0 left-0 w-full h-full">
-          <div className="absolute top-20 left-10 w-32 h-32 bg-yellow-400/20 rounded-full animate-pulse"></div>
-          <div className="absolute bottom-20 right-10 w-40 h-40 bg-white/10 rounded-full animate-bounce"></div>
-          <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-orange-400/30 rounded-full animate-ping"></div>
-        </div>
-        
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-16">
-            <div className="mb-8">
-              <Badge className="bg-yellow-400 text-black text-2xl font-black px-8 py-3 mb-6 animate-bounce">
-                <Award className="inline h-6 w-6 mr-2" />
-                ÚLTIMA CHANCE!
-              </Badge>
-            </div>
-            <h2 className="text-5xl md:text-7xl font-black text-white mb-8 drop-shadow-2xl leading-tight">
-              GARANTE SEU LUGAR
-              <br/>
-              <span className="text-yellow-400 animate-pulse">AGORA!</span>
+      <section id="cadastro" className="py-20 bg-red-500">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Cadastre-se e seja avisado em primeira mão!
             </h2>
-            <div className="bg-black/30 backdrop-blur-sm border-2 border-yellow-400 rounded-3xl p-8 mb-8">
-              <div className="flex items-center justify-center space-x-4 text-white">
-                <Clock className="h-8 w-8 animate-spin" />
-                <span className="text-2xl font-black">JÁ SÃO {waitlistCount.toLocaleString()}+ PESSOAS NA FILA!</span>
-                <TrendingUp className="h-8 w-8 animate-bounce" />
+            <p className="text-xl text-teal-100">
+              <div className="bg-teal-50 border border-teal-200 rounded-lg p-4 mb-6">
+                <div className="flex items-center justify-center space-x-2 text-teal-700">
+                  <Clock className="h-5 w-5" />
+                  <span className="font-semibold">Não fique de fora! Mais de <strong className="text-teal-600">{waitlistCount.toLocaleString()}</strong> pessoas já estão na lista de espera.</span>
+                </div>
               </div>
-            </div>
+            </p>
           </div>
 
           {!isSubmitted ? (
-            <Card className="max-w-3xl mx-auto p-12 bg-gradient-to-br from-white to-gray-50 shadow-2xl border-4 border-yellow-400 rounded-3xl">
-              <div className="text-center mb-8">
-                <h3 className="text-3xl font-black text-gray-900 mb-4">
-                  <Zap className="inline h-8 w-8 mr-2" />
-                  CADASTRO INSTANTÂNEO!
-                </h3>
-                <p className="text-xl text-gray-600 font-semibold">
-                  2 minutos na lista VIP!
-                </p>
-              </div>
-              <form onSubmit={handleSubmit} className="space-y-8">
+            <Card className="max-w-2xl mx-auto p-8">
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -553,34 +470,27 @@ export default function LaunchLandingPage() {
                 
                 <Button 
                   type="submit" 
-                  className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-black py-6 text-xl font-black shadow-2xl transform hover:scale-105 transition-all duration-300 border-4 border-yellow-600"
+                  className="w-full bg-red-500 hover:bg-red-600 text-white py-3"
                   disabled={!email || !name || registerMutation.isPending}
                 >
-                  {registerMutation.isPending ? 'CADASTRANDO...' : 'GARANTIR VAGA!'}
-                  <ArrowRight className="ml-2 h-6 w-6" />
+                  {registerMutation.isPending ? 'Cadastrando...' : 'Entrar na lista de espera'}
+                  <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </form>
             </Card>
           ) : (
-            <Card className="max-w-3xl mx-auto p-12 text-center bg-gradient-to-br from-green-400 to-teal-500 shadow-2xl border-4 border-white rounded-3xl">
-              <div className="bg-white rounded-full w-32 h-32 flex items-center justify-center mx-auto mb-8 shadow-xl animate-bounce">
-                <CheckCircle className="h-20 w-20 text-green-500" />
-              </div>
-              <h3 className="text-4xl font-black text-white mb-6 drop-shadow-lg">
-                <Award className="inline h-12 w-12 mr-4" />
-                PARABÉNS, {name.toUpperCase()}!
+            <Card className="max-w-2xl mx-auto p-8 text-center">
+              <CheckCircle className="h-16 w-16 text-teal-600 mx-auto mb-6" />
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                Cadastro realizado com sucesso!
               </h3>
-              <p className="text-2xl text-white font-bold mb-8">
-                <CheckCircle className="inline h-8 w-8 mr-2" />
-                VOCÊ ESTÁ OFICIALMENTE NA LISTA VIP!<br/>
-                Avisaremos você em <strong>{email}</strong>
+              <p className="text-gray-600 mb-6">
+                Obrigado por se cadastrar, <strong>{name}</strong>! 
+                Você receberá um email em <strong>{email}</strong> assim que o Alugaê estiver disponível.
               </p>
-              <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 border-2 border-white">
-                <p className="text-xl text-white font-semibold">
-                  <TrendingUp className="inline h-6 w-6 mr-2" />
-                  Prepare-se para a REVOLUÇÃO do aluguel de carros!
-                </p>
-              </div>
+              <p className="text-sm text-gray-500">
+                Enquanto isso, nos siga nas redes sociais para ficar por dentro das novidades.
+              </p>
             </Card>
           )}
         </div>

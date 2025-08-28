@@ -29,11 +29,11 @@ export function CoinAnimation({ type, amount, show, onComplete, className }: Coi
   const getAnimationStyles = () => {
     switch (type) {
       case "earn":
-        return "animate-bounce text-primary border-primary-light bg-primary-light";
+        return "animate-bounce text-green-500 border-green-200 bg-green-50";
       case "spend":
-        return "animate-pulse text-destructive border-red-200 bg-red-50";
+        return "animate-pulse text-red-500 border-red-200 bg-red-50";
       case "purchase":
-        return "animate-ping text-secondary border-secondary-light bg-secondary-light";
+        return "animate-ping text-yellow-500 border-yellow-200 bg-yellow-50";
       default:
         return "animate-pulse text-gray-500 border-gray-200 bg-gray-50";
     }

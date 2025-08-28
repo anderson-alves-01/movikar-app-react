@@ -5,75 +5,67 @@ import icone3 from "@assets/ALUGAE - ICONE 3_1756046864999.png";
 
 export default function HeroSection() {
   return (
-    <section className="relative bg-white py-16 sm:py-20 lg:py-24">
-      {/* Background muito sutil */}
-      <div className="absolute inset-0 bg-primary-light opacity-30"></div>
-      
-      {/* Elementos visuais minímos */}
-      <div className="absolute top-16 right-20 w-6 h-6 bg-secondary-pastel rounded-full opacity-40"></div>
-      <div className="absolute bottom-16 left-20 w-4 h-4 bg-primary-pastel rounded-full opacity-30"></div>
+    <section className="relative bg-gradient-to-br from-gray-900 to-gray-800 text-white py-12 sm:py-16 lg:py-20">
+      {/* Background */}
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{
+          backgroundImage: `url('${bannerImage}')`,
+        }}
+      ></div>
+      <div className="absolute inset-0 bg-black bg-opacity-60"></div>
 
       <div className="relative max-w-7xl mx-auto mobile-padding">
         <div className="text-center">
-          {/* Badge corporativo */}
-          <div className="mb-10">
-            <span className="inline-flex items-center bg-primary-light text-primary font-medium px-4 py-2 rounded-md text-sm border border-primary/10">
-              Solução em mobilidade urbana
-            </span>
-          </div>
-          
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold mb-6 leading-tight text-gray-900">
-            Aluguel de veículos
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
+            Alugue o <span className="text-red-500">carro perfeito</span>
             <br />
-            <span className="text-primary">simples e seguro</span>
+            na sua cidade
           </h1>
-          
-          <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 sm:p-8 mb-12 max-w-3xl mx-auto border border-gray-100 shadow-sm">
-            <p className="text-lg sm:text-xl text-gray-700 font-normal leading-relaxed mb-3">
-              Conectamos você a proprietários de veículos verificados em sua região, 
-              oferecendo uma experiência de aluguel transparente e confiável.
+          <div className="bg-black bg-opacity-30 backdrop-blur-sm rounded-2xl p-4 sm:p-6 mb-8 sm:mb-12 max-w-4xl mx-auto">
+            <p className="text-lg sm:text-xl md:text-2xl text-white font-semibold leading-relaxed mb-4">
+              Encontre carros de{" "}
+              <span className="font-bold">pessoas reais</span> na sua cidade -
+              sem burocracia.
             </p>
-            <p className="text-base text-gray-600">
-              Processo digital completo • Segurança garantida • Preços competitivos
+            <p className="text-lg sm:text-xl md:text-2xl text-white font-bold">
+              Seguro, confiável e sem complicações.
             </p>
           </div>
 
-          {/* Value Propositions corporativos */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mt-14">
-            <div className="text-center p-4">
-              <div className="w-14 h-14 bg-primary-light rounded-lg flex items-center justify-center mx-auto mb-4 border border-primary/10">
-                <img src={icone1} alt="Processo Digital" className="h-8 w-8 object-contain opacity-80" />
+          {/* Value Propositions */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 mt-12 sm:mt-16 feature-cards">
+            <div className="text-center">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <img src={icone1} alt="Sem Burocracia" className="h-10 w-10 sm:h-14 sm:w-14 object-contain" />
               </div>
-              <h3 className="text-lg font-medium mb-2 text-gray-800">
-                Processo Digital
+              <h3 className="text-lg sm:text-xl font-bold mb-2">
+                Sem Burocracia
               </h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                Plataforma intuitiva para
-                <br />gestão completa do aluguel
+              <p className="text-gray-300 text-sm sm:text-base">
+                Todo o processo pelo app. Simples e direto.
               </p>
             </div>
-            <div className="text-center p-4">
-              <div className="w-14 h-14 bg-secondary-light rounded-lg flex items-center justify-center mx-auto mb-4 border border-secondary/10">
-                <img src={icone2} alt="Agilidade" className="h-8 w-8 object-contain opacity-80" />
+            <div className="text-center">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <img src={icone2} alt="Fácil e Rápido" className="h-10 w-10 sm:h-14 sm:w-14 object-contain" />
               </div>
-              <h3 className="text-lg font-medium mb-2 text-gray-800">
-                Eficiência Operacional
+              <h3 className="text-lg sm:text-xl font-bold mb-2">
+                Fácil e Rápido
               </h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                Reservas rápidas com
-                <br />confirmação instantânea
+              <p className="text-gray-300 text-sm sm:text-base">
+                Contate o proprietário e reserve em poucos cliques.
               </p>
             </div>
-            <div className="text-center p-4">
-              <div className="w-14 h-14 bg-primary-light rounded-lg flex items-center justify-center mx-auto mb-4 border border-primary/10">
-                <img src={icone3} alt="Transparência" className="h-8 w-8 object-contain opacity-80" />
+            <div className="text-center">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <img src={icone3} alt="Preços Justos" className="h-10 w-10 sm:h-14 sm:w-14 object-contain" />
               </div>
-              <h3 className="text-lg font-medium mb-2 text-gray-800">
-                Transparência
+              <h3 className="text-lg sm:text-xl font-bold mb-2">
+                Preços Justos
               </h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                Preços claros sem
-                <br />taxas ocultas
+              <p className="text-gray-300 text-sm sm:text-base">
+                Valor fixo, com transparência e sem surpresas.
               </p>
             </div>
           </div>

@@ -2,45 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Animações impactantes personalizadas */
-@layer utilities {
-  .animate-spin-slow {
-    animation: spin 3s linear infinite;
-  }
-  
-  .animate-glow {
-    animation: glow 2s ease-in-out infinite alternate;
-  }
-  
-  .animate-shake {
-    animation: shake 0.5s ease-in-out infinite;
-  }
-  
-  .animate-float {
-    animation: float 3s ease-in-out infinite;
-  }
-}
-
-@keyframes glow {
-  from {
-    box-shadow: 0 0 20px hsl(177, 70%, 41%, 0.3);
-  }
-  to {
-    box-shadow: 0 0 30px hsl(177, 70%, 41%, 0.6), 0 0 40px hsl(3, 100%, 70%, 0.4);
-  }
-}
-
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-}
-
 /* Mobile Responsive Base Styles */
 @layer base {
   html {
@@ -517,7 +478,7 @@
   left: -4px;
   right: -4px;
   bottom: -4px;
-  background: var(--gradient-brand);
+  background: linear-gradient(45deg, #3b82f6, #8b5cf6);
   border-radius: 8px;
   z-index: -1;
   animation: shimmer 2s infinite;
@@ -525,10 +486,10 @@
 
 @keyframes pulse-highlight {
   0%, 100% {
-    box-shadow: 0 0 0 0 hsl(177, 70%, 41%, 0.4);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
   }
   50% {
-    box-shadow: 0 0 0 8px hsl(177, 70%, 41%, 0);
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
   }
 }
 
@@ -546,90 +507,55 @@
 }
 
 :root {
-  /* Cores base do sistema */
   --background: hsl(0, 0%, 100%);
-  --foreground: hsl(210, 10%, 15%);
-  --muted: hsl(186, 25%, 96%);
-  --muted-foreground: hsl(210, 8%, 45%);
+  --foreground: hsl(20, 14.3%, 4.1%);
+  --muted: hsl(60, 4.8%, 95.9%);
+  --muted-foreground: hsl(25, 5.3%, 44.7%);
   --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(210, 10%, 15%);
+  --popover-foreground: hsl(20, 14.3%, 4.1%);
   --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(210, 10%, 15%);
-  --border: hsl(186, 25%, 90%);
-  --input: hsl(186, 25%, 90%);
-  
-  /* Cores principais da marca alugae.mobi - Versões pastéis profissionais */
-  --primary: hsl(177, 35%, 55%);        /* Verde-azulado suave e profissional */
+  --card-foreground: hsl(20, 14.3%, 4.1%);
+  --border: hsl(20, 5.9%, 90%);
+  --input: hsl(20, 5.9%, 90%);
+  --primary: hsl(355, 97%, 62%);
   --primary-foreground: hsl(0, 0%, 100%);
-  --primary-hover: hsl(177, 40%, 50%);  /* Hover sutil */
-  --primary-light: hsl(177, 25%, 92%);  /* Background muito suave */
-  --primary-pastel: hsl(177, 20%, 88%); /* Versão ainda mais pastel */
-  
-  --secondary: hsl(3, 45%, 75%);        /* Coral pastel suave */
+  --secondary: hsl(178, 100%, 32%);
   --secondary-foreground: hsl(0, 0%, 100%);
-  --secondary-hover: hsl(3, 50%, 70%);  /* Hover discreto */
-  --secondary-light: hsl(3, 30%, 95%);  /* Background quase branco */
-  --secondary-pastel: hsl(3, 25%, 90%); /* Versão pastel ultra suave */
-  
-  /* Cores complementares baseadas na marca */
-  --accent: hsl(186, 25%, 96%);
-  --accent-foreground: hsl(177, 70%, 35%);
-  --destructive: hsl(0, 84%, 60%);
-  --destructive-foreground: hsl(0, 0%, 98%);
-  --ring: hsl(177, 70%, 41%);
+  --accent: hsl(60, 4.8%, 95.9%);
+  --accent-foreground: hsl(24, 9.8%, 10%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(60, 9.1%, 97.8%);
+  --ring: hsl(20, 14.3%, 4.1%);
   --radius: 0.5rem;
-  
-  /* Estados e feedback */
-  --success: hsl(142, 76%, 36%);        /* Verde de sucesso */
-  --warning: hsl(45, 93%, 47%);         /* Amarelo de aviso */
-  --error: hsl(0, 84%, 60%);            /* Vermelho de erro */
-  
-  /* Gradientes da marca */
-  --gradient-brand: linear-gradient(135deg, hsl(177, 70%, 41%) 0%, hsl(3, 100%, 70%) 100%);
-  --gradient-brand-soft: linear-gradient(135deg, hsl(177, 60%, 85%) 0%, hsl(3, 60%, 90%) 100%);
+  --success: hsl(140, 100%, 27%);
+  --warning: hsl(45, 100%, 51%);
+  --error: hsl(9, 100%, 43%);
 }
 
 .dark {
-  /* Cores base do sistema - modo escuro */
-  --background: hsl(210, 15%, 8%);
-  --foreground: hsl(0, 0%, 95%);
-  --muted: hsl(210, 15%, 12%);
-  --muted-foreground: hsl(210, 8%, 65%);
-  --popover: hsl(210, 15%, 8%);
-  --popover-foreground: hsl(0, 0%, 95%);
-  --card: hsl(210, 15%, 10%);
-  --card-foreground: hsl(0, 0%, 95%);
-  --border: hsl(210, 15%, 20%);
-  --input: hsl(210, 15%, 15%);
-  
-  /* Cores principais da marca - modo escuro (suaves) */
-  --primary: hsl(177, 40%, 55%);        /* Verde-azulado suave para escuro */
-  --primary-foreground: hsl(210, 15%, 8%);
-  --primary-hover: hsl(177, 45%, 60%);  /* Hover sutil */
-  --primary-light: hsl(177, 35%, 30%);  /* Background escuro suave */
-  --primary-pastel: hsl(177, 25%, 35%); /* Pastel para escuro */
-  
-  --secondary: hsl(3, 50%, 70%);        /* Coral pastel para escuro */
-  --secondary-foreground: hsl(210, 15%, 8%);
-  --secondary-hover: hsl(3, 55%, 75%);  /* Hover discreto */
-  --secondary-light: hsl(3, 35%, 30%);  /* Background escuro suave */
-  --secondary-pastel: hsl(3, 30%, 35%); /* Pastel escuro */
-  
-  /* Cores complementares - modo escuro */
-  --accent: hsl(210, 15%, 15%);
-  --accent-foreground: hsl(177, 70%, 50%);
-  --destructive: hsl(0, 80%, 55%);
+  --background: hsl(240, 10%, 3.9%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(240, 3.7%, 15.9%);
+  --muted-foreground: hsl(240, 5%, 64.9%);
+  --popover: hsl(240, 10%, 3.9%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(240, 10%, 3.9%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 3.7%, 15.9%);
+  --input: hsl(240, 3.7%, 15.9%);
+  --primary: hsl(355, 97%, 62%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(178, 100%, 32%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --accent: hsl(240, 3.7%, 15.9%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
   --destructive-foreground: hsl(0, 0%, 98%);
-  --ring: hsl(177, 70%, 45%);
-  
-  /* Estados e feedback - modo escuro */
-  --success: hsl(142, 70%, 40%);
-  --warning: hsl(45, 85%, 50%);
-  --error: hsl(0, 80%, 55%);
-  
-  /* Gradientes da marca - modo escuro */
-  --gradient-brand: linear-gradient(135deg, hsl(177, 70%, 45%) 0%, hsl(3, 90%, 65%) 100%);
-  --gradient-brand-soft: linear-gradient(135deg, hsl(177, 50%, 25%) 0%, hsl(3, 40%, 25%) 100%);
+  --ring: hsl(240, 4.9%, 83.9%);
+  --radius: 0.5rem;
+  --success: hsl(140, 100%, 27%);
+  --warning: hsl(45, 100%, 51%);
+  --error: hsl(9, 100%, 43%);
 }
 
 @layer base {
@@ -643,7 +569,6 @@
 }
 
 @layer utilities {
-  /* Estados e feedback */
   .text-success {
     color: hsl(var(--success));
   }
@@ -666,86 +591,6 @@
   
   .bg-error {
     background-color: hsl(var(--error));
-  }
-
-  /* Cores da marca alugae.mobi */
-  .text-primary-hover {
-    color: hsl(var(--primary-hover));
-  }
-  
-  .text-secondary-hover {
-    color: hsl(var(--secondary-hover));
-  }
-  
-  .bg-primary-hover {
-    background-color: hsl(var(--primary-hover));
-  }
-  
-  .bg-secondary-hover {
-    background-color: hsl(var(--secondary-hover));
-  }
-  
-  .bg-primary-light {
-    background-color: hsl(var(--primary-light));
-  }
-  
-  .bg-secondary-light {
-    background-color: hsl(var(--secondary-light));
-  }
-  
-  .bg-primary-pastel {
-    background-color: hsl(var(--primary-pastel));
-  }
-  
-  .bg-secondary-pastel {
-    background-color: hsl(var(--secondary-pastel));
-  }
-  
-  .text-primary-pastel {
-    color: hsl(var(--primary-pastel));
-  }
-  
-  .text-secondary-pastel {
-    color: hsl(var(--secondary-pastel));
-  }
-
-  /* Gradientes da marca */
-  .bg-gradient-brand {
-    background: var(--gradient-brand);
-  }
-  
-  .bg-gradient-brand-soft {
-    background: var(--gradient-brand-soft);
-  }
-  
-  /* Bordas da marca */
-  .border-primary {
-    border-color: hsl(var(--primary));
-  }
-  
-  .border-secondary {
-    border-color: hsl(var(--secondary));
-  }
-  
-  .border-primary-hover {
-    border-color: hsl(var(--primary-hover));
-  }
-  
-  .border-secondary-hover {
-    border-color: hsl(var(--secondary-hover));
-  }
-
-  /* Hover effects com cores da marca */
-  .hover-brand-primary:hover {
-    background-color: hsl(var(--primary-hover));
-    color: hsl(var(--primary-foreground));
-    transition: all 0.2s ease-in-out;
-  }
-  
-  .hover-brand-secondary:hover {
-    background-color: hsl(var(--secondary-hover));
-    color: hsl(var(--secondary-foreground));
-    transition: all 0.2s ease-in-out;
   }
 }
 
