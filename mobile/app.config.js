@@ -36,7 +36,15 @@ export default {
         backgroundColor: "#20B2AA"
       },
       package: "com.alugae.mobile",
-      versionCode: 2
+      permissions: [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION", 
+        "CAMERA",
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_EXTERNAL_STORAGE"
+      ]
     },
     web: {
       favicon: "./assets/favicon.png"
