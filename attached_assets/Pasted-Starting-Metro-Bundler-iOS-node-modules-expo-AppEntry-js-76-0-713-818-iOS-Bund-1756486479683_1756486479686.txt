@@ -1,0 +1,59 @@
+Starting Metro Bundler
+iOS node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 76.0% (713/818)
+iOS Bundling failed 4308ms node_modules/expo/AppEntry.js (1121 modules)
+Cannot find module '@react-native/polyfills/console.js'
+Require stack:
+- /Users/expo/workingdir/build/mobile/metro.config.js
+- /Users/expo/workingdir/build/mobile/node_modules/import-fresh/index.js
+- /Users/expo/workingdir/build/mobile/node_modules/cosmiconfig/dist/loaders.js
+- /Users/expo/workingdir/build/mobile/node_modules/cosmiconfig/dist/createExplorer.js
+- /Users/expo/workingdir/build/mobile/node_modules/cosmiconfig/dist/index.js
+- /Users/expo/workingdir/build/mobile/node_modules/metro-config/src/loadConfig.js
+- /Users/expo/workingdir/build/mobile/node_modules/metro-config/src/index.js
+- /Users/expo/workingdir/build/mobile/node_modules/@expo/cli/build/src/start/server/metro/instantiateMetro.js
+- /Users/expo/workingdir/build/mobile/node_modules/@expo/cli/build/src/start/server/metro/MetroBundlerDevServer.js
+- /Users/expo/workingdir/build/mobile/node_modules/@expo/cli/build/src/export/embed/exportEmbedAsync.js
+- /Users/expo/workingdir/build/mobile/node_modules/@expo/cli/build/src/export/embed/index.js
+- /Users/expo/workingdir/build/mobile/node_modules/@expo/cli/build/bin/cli
+- /Users/expo/workingdir/build/mobile/node_modules/expo/bin/cli
+Error: Cannot find module '@react-native/polyfills/console.js'
+Require stack:
+- /Users/expo/workingdir/build/mobile/metro.config.js
+- /Users/expo/workingdir/build/mobile/node_modules/import-fresh/index.js
+- /Users/expo/workingdir/build/mobile/node_modules/cosmiconfig/dist/loaders.js
+- /Users/expo/workingdir/build/mobile/node_modules/cosmiconfig/dist/createExplorer.js
+- /Users/expo/workingdir/build/mobile/node_modules/cosmiconfig/dist/index.js
+- /Users/expo/workingdir/build/mobile/node_modules/metro-config/src/loadConfig.js
+- /Users/expo/workingdir/build/mobile/node_modules/metro-config/src/index.js
+- /Users/expo/workingdir/build/mobile/node_modules/@expo/cli/build/src/start/server/metro/instantiateMetro.js
+- /Users/expo/workingdir/build/mobile/node_modules/@expo/cli/build/src/start/server/metro/MetroBundlerDevServer.js
+- /Users/expo/workingdir/build/mobile/node_modules/@expo/cli/build/src/export/embed/exportEmbedAsync.js
+- /Users/expo/workingdir/build/mobile/node_modules/@expo/cli/build/src/export/embed/index.js
+- /Users/expo/workingdir/build/mobile/node_modules/@expo/cli/build/bin/cli
+- /Users/expo/workingdir/build/mobile/node_modules/expo/bin/cli
+Error: Cannot find module '@react-native/polyfills/console.js'
+Require stack:
+- /Users/expo/workingdir/build/mobile/metro.config.js
+- /Users/expo/workingdir/build/mobile/node_modules/import-fresh/index.js
+- /Users/expo/workingdir/build/mobile/node_modules/cosmiconfig/dist/loaders.js
+- /Users/expo/workingdir/build/mobile/node_modules/cosmiconfig/dist/createExplorer.js
+- /Users/expo/workingdir/build/mobile/node_modules/cosmiconfig/dist/index.js
+- /Users/expo/workingdir/build/mobile/node_modules/metro-config/src/loadConfig.js
+- /Users/expo/workingdir/build/mobile/node_modules/metro-config/src/index.js
+- /Users/expo/workingdir/build/mobile/node_modules/@expo/cli/build/src/start/server/metro/instantiateMetro.js
+- /Users/expo/workingdir/build/mobile/node_modules/@expo/cli/build/src/start/server/metro/MetroBundlerDevServer.js
+- /Users/expo/workingdir/build/mobile/node_modules/@expo/cli/build/src/export/embed/exportEmbedAsync.js
+- /Users/expo/workingdir/build/mobile/node_modules/@expo/cli/build/src/export/embed/index.js
+- /Users/expo/workingdir/build/mobile/node_modules/@expo/cli/build/bin/cli
+- /Users/expo/workingdir/build/mobile/node_modules/expo/bin/cli
+    at Function.Module._resolveFilename (node:internal/modules/cjs/loader:1212:15)
+    at Function.resolve (node:internal/modules/helpers:193:19)
+    at Object.getModulesRunBeforeMainModule (/Users/expo/workingdir/build/mobile/metro.config.js:29:13)
+    at MetroBundlerDevServer._bundleDirectAsync (/Users/expo/workingdir/build/mobile/node_modules/@expo/cli/src/start/server/metro/MetroBundlerDevServer.ts:1619:50)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at MetroBundlerDevServer.metroLoadModuleContents (/Users/expo/workingdir/build/mobile/node_modules/@expo/cli/src/start/server/metro/MetroBundlerDevServer.ts:551:21)
+    at MetroBundlerDevServer.legacySinglePageExportBundleAsync (/Users/expo/workingdir/build/mobile/node_modules/@expo/cli/src/start/server/metro/MetroBundlerDevServer.ts:867:20)
+    at exportEmbedBundleAndAssetsAsync (/Users/expo/workingdir/build/mobile/node_modules/@expo/cli/src/export/embed/exportEmbedAsync.ts:206:21)
+    at exportEmbedInternalAsync (/Users/expo/workingdir/build/mobile/node_modules/@expo/cli/src/export/embed/exportEmbedAsync.ts:137:37)
+    at exportEmbedAsync (/Users/expo/workingdir/build/mobile/node_modules/@expo/cli/src/export/embed/exportEmbedAsync.ts:117:3)
+npx expo export:embed --eager --platform ios --dev false exited with non-zero code: 1
