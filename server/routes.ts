@@ -1075,7 +1075,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
   app.post("/api/auth/register", validateUser, handleValidationErrors, async (req: Request, res: Response) => {
     try {
-      const userData = insertUserSchema.parse(req.body);
+      // Extract fromLandingPage before parsing with schema
+      const { fromLandingPage, ...bodyData } = req.body;
+      const userData = insertUserSchema.parse(bodyData);
 
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(userData.email);
@@ -1092,9 +1094,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Se for cadastro da landing page, dar 300 moedas
-      if (req.body.fromLandingPage) {
+      if (fromLandingPage) {
         try {
-          await storage.addUserCoins(user.id, 300, 'Bônus de boas-vindas da landing page');
+          await storage.addCoins(user.id, 300, 'landing_page_bonus', 'Bônus de boas-vindas da landing page');
         } catch (error) {
           console.error('Erro ao adicionar moedas de boas-vindas:', error);
         }
