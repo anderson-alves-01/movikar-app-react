@@ -96,7 +96,7 @@ export default function LaunchLandingPage() {
           <img 
             src={peopleCarImage} 
             alt="Pessoas felizes dirigindo" 
-            className="w-full h-full object-cover opacity-60"
+            className="w-full h-full object-cover opacity-75"
           />
         </div>
         <div className="absolute inset-0 bg-gradient-to-r from-white/40 via-white/30 to-white/40"></div>
