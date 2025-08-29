@@ -1096,7 +1096,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Se for cadastro da landing page, dar 300 moedas
       if (fromLandingPage) {
         try {
-          await storage.addCoins(user.id, 300, 'landing_page_bonus', 'Bônus de boas-vindas da landing page');
+          await storage.addCoins(user.id, 300, 'landing_page_bonus', 'Bônus de boas-vindas');
         } catch (error) {
           console.error('Erro ao adicionar moedas de boas-vindas:', error);
         }
