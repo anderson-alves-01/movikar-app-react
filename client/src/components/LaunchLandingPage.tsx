@@ -290,8 +290,19 @@ export default function LaunchLandingPage() {
                   Cadastre-se na lista de espera e seja um dos primeiros a usar o Alugaê.
                 </p>
                 <Button 
+                  id="motoristas-cta"
                   className="w-full bg-teal-600 hover:bg-teal-700"
-                  onClick={() => document.getElementById('cadastro')?.scrollIntoView({ behavior: 'smooth' })}
+                  onClick={() => {
+                    if (window.fbq) {
+                      window.fbq("trackCustom", "BannerCTA", {
+                        button_id: "motoristas-cta",
+                        label: "Quero alugar um carro"
+                      });
+                    }
+                    setTimeout(() => {
+                      document.getElementById('cadastro')?.scrollIntoView({ behavior: 'smooth' });
+                    }, 150);
+                  }}
                 >
                   Quero alugar um carro
                 </Button>
@@ -354,8 +365,19 @@ export default function LaunchLandingPage() {
                   Você cadastra o carro em poucos minutos, define a disponibilidade e recebe por cada aluguel.
                 </p>
                 <Button 
+                  id="locadores-cta"
                   className="w-full bg-red-500 hover:bg-red-600 text-white"
-                  onClick={() => document.getElementById('cadastro')?.scrollIntoView({ behavior: 'smooth' })}
+                  onClick={() => {
+                    if (window.fbq) {
+                      window.fbq("trackCustom", "BannerCTA", {
+                        button_id: "locadores-cta",
+                        label: "Tenho um carro para alugar"
+                      });
+                    }
+                    setTimeout(() => {
+                      document.getElementById('cadastro')?.scrollIntoView({ behavior: 'smooth' });
+                    }, 150);
+                  }}
                 >
                   Tenho um carro para alugar
                 </Button>
