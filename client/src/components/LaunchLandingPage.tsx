@@ -3,7 +3,7 @@ import logoImage from '@/assets/logo.png';
 import peopleCarImage from "@/assets/people-car.png";
 import carWheelImage from "@/assets/car-wheel.png";
 import luxuryCarImage from "@/assets/luxury-car.png";
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,16 +29,15 @@ export default function LaunchLandingPage() {
   const [isRenter, setIsRenter] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [waitlistCount, setWaitlistCount] = useState(1247);
 
-  // Incrementar contador a cada minuto
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setWaitlistCount(prev => prev + Math.floor(Math.random() * 3) + 1); // Aumenta 1-3 pessoas por minuto
-    }, 60000); // 60 segundos
+  // Buscar dados do contador do banco de dados
+  const { data: featureToggles } = useQuery({
+    queryKey: ['/api/public/feature-toggles'],
+    staleTime: 30 * 1000, // Cache por 30 segundos
+    refetchInterval: 60 * 1000, // Atualizar a cada minuto
+  });
 
-    return () => clearInterval(interval);
-  }, []);
+  const waitlistCount = featureToggles?.waitlistCount || 1247;
 
   const registerMutation = useMutation({
     mutationFn: async (userData: any) => {

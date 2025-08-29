@@ -302,9 +302,36 @@ app.use((req, res, next) => {
     port,
     host: "0.0.0.0",
     reusePort: true,
-  }, () => {
+  }, async () => {
     log(`serving on port ${port}`);
     log(`Environment: ${process.env.NODE_ENV || 'development'}`);
     log(`Database connected: ${process.env.DATABASE_URL ? 'Yes' : 'No'}`);
+    
+    // Start waitlist counter service
+    try {
+      const { DatabaseStorage } = await import('./storage');
+      const storage = new DatabaseStorage();
+      
+      // Initialize counter with current count from landing page users
+      const landingPageUsers = await storage.getLandingPageUsers();
+      const initialCount = landingPageUsers.length + 1200; // Base + real users
+      
+      // Update initial counter if needed
+      const currentSettings = await storage.getAdminSettings();
+      if (!currentSettings || currentSettings.waitlistCount === 0) {
+        await storage.updateAdminSettings({ waitlistCount: initialCount });
+        log(`✅ Initialized waitlist counter with ${initialCount} users`);
+      }
+      
+      // Start periodic increment (every minute)
+      setInterval(async () => {
+        await storage.incrementWaitlistCount();
+      }, 60000); // 60 seconds
+      
+      log('🚀 Waitlist counter service started (increments every minute)');
+    } catch (error) {
+      log('⚠️ Failed to start waitlist counter service:', 'error');
+      console.error(error);
+    }
   });
 })();

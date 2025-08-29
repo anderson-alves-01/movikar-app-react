@@ -6268,7 +6268,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         enableInsuranceOption: dbSettings?.enableInsuranceOption || false,
         enableServiceFee: dbSettings?.enableServiceFee === true,
         contractSignatureEnabled: dbSettings?.enableContractSignature || false,
-        showLaunchPage: dbSettings?.showLaunchPage ?? true // Default true se não existir
+        showLaunchPage: dbSettings?.showLaunchPage ?? true, // Default true se não existir
+        waitlistCount: dbSettings?.waitlistCount || 1247 // Valor do contador da lista de espera
       };
       
       console.log("🔧 Public feature toggles:", publicToggles);

@@ -237,6 +237,7 @@ export interface IStorage {
   // Admin Settings
   getAdminSettings(): Promise<AdminSettings | null>;
   updateAdminSettings(settings: Partial<InsertAdminSettings>): Promise<AdminSettings>;
+  incrementWaitlistCount(): Promise<void>;
 
   // Coupon management
   getAllCoupons(): Promise<Coupon[]>;
@@ -2571,6 +2572,32 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error("Error updating admin settings:", error);
       throw new Error("Failed to update admin settings");
+    }
+  }
+
+  async incrementWaitlistCount(): Promise<void> {
+    try {
+      const existingSettings = await this.getAdminSettings();
+      
+      if (existingSettings) {
+        // Increment existing counter
+        await db
+          .update(adminSettings)
+          .set({
+            waitlistCount: sql`${adminSettings.waitlistCount} + ${Math.floor(Math.random() * 3) + 1}`, // Incrementa 1-3
+            updatedAt: new Date(),
+          })
+          .where(eq(adminSettings.id, existingSettings.id));
+      } else {
+        // Create initial settings with counter
+        await db
+          .insert(adminSettings)
+          .values({
+            waitlistCount: Math.floor(Math.random() * 3) + 1,
+          });
+      }
+    } catch (error) {
+      console.error("Error incrementing waitlist count:", error);
     }
   }
 
