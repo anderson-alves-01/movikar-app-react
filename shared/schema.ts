@@ -81,6 +81,15 @@ export const passwordResetTokens = pgTable("password_reset_tokens", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// User Landing Page table
+export const userLandingPage = pgTable("user_landingpage", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  phone: varchar("phone", { length: 20 }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Document verification table
 export const userDocuments = pgTable("user_documents", {
   id: serial("id").primaryKey(),
@@ -877,6 +886,7 @@ export const adminSettings = pgTable("admin_settings", {
   enableInsuranceOption: boolean("enable_insurance_option").default(true).notNull(),
   enableContractSignature: boolean("enable_contract_signature").default(false).notNull(), // Feature toggle para assinatura de contratos
   enableRentNowCheckout: boolean("enable_rent_now_checkout").default(false).notNull(), // Feature toggle para checkout "Aluga agora"
+  showLaunchPage: boolean("show_launch_page").default(true).notNull(), // Feature toggle para exibir landing page
   // Subscription plan pricing
   essentialPlanPrice: decimal("essential_plan_price", { precision: 8, scale: 2 }).default("29.90").notNull(),
   plusPlanPrice: decimal("plus_plan_price", { precision: 8, scale: 2 }).default("59.90").notNull(),
@@ -1554,6 +1564,9 @@ export type InsertContactUnlock = typeof contactUnlocks.$inferInsert;
 
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 export type InsertPasswordResetToken = z.infer<typeof insertPasswordResetTokenSchema>;
+
+export type UserLandingPage = typeof userLandingPage.$inferSelect;
+export type InsertUserLandingPage = typeof userLandingPage.$inferInsert;
 
 // Zod schemas for coin system
 export const insertUserCoinsSchema = createInsertSchema(userCoins).omit({

@@ -1,6 +1,23 @@
 // Componente para controlar se deve exibir a landing page ou o app normal
-// Para remover a landing page após o lançamento, simplesmente mude SHOW_LAUNCH_PAGE para false
+// Agora o valor é controlado através das configurações do admin no banco de dados
 
-const SHOW_LAUNCH_PAGE = false; // Altere para false após o lançamento
+import { useQuery } from "@tanstack/react-query";
+
+// Hook para buscar configurações públicas
+function usePublicFeatureToggles() {
+  return useQuery({
+    queryKey: ['/api/public/feature-toggles'],
+    staleTime: 5 * 60 * 1000, // Cache por 5 minutos
+  });
+}
+
+// Hook para determinar se deve mostrar a landing page
+export function useShowLaunchPage() {
+  const { data: featureToggles } = usePublicFeatureToggles();
+  return featureToggles?.showLaunchPage ?? true; // Default true se não conseguir carregar
+}
+
+// Versão síncrona para compatibilidade (deprecated)
+const SHOW_LAUNCH_PAGE = true; // Fallback padrão, use useShowLaunchPage() em componentes
 
 export { SHOW_LAUNCH_PAGE };

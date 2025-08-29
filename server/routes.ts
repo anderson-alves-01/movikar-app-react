@@ -1078,6 +1078,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Extract fromLandingPage before parsing with schema
       const { fromLandingPage, ...bodyData } = req.body;
+
+      // If it's from landing page, use the landing page table
+      if (fromLandingPage) {
+        // Check if user already exists in landing page table
+        const existingLandingUser = await storage.getLandingPageUserByEmail(bodyData.email);
+        if (existingLandingUser) {
+          return res.status(400).json({ message: "E-mail já cadastrado na lista de interesse" });
+        }
+
+        // Also check if email exists in main users table
+        const existingUser = await storage.getUserByEmail(bodyData.email);
+        if (existingUser) {
+          return res.status(400).json({ message: "Já existe uma conta com este e-mail" });
+        }
+
+        // Create landing page user (no password hashing needed for landing page)
+        const landingUser = await storage.createLandingPageUser({
+          name: bodyData.name,
+          email: bodyData.email,
+          phone: bodyData.phone || null,
+        });
+
+        return res.status(201).json({ 
+          success: true,
+          message: "Cadastro realizado com sucesso! Em breve você receberá novidades.",
+          user: landingUser 
+        });
+      }
+
+      // Regular user registration flow
       const userData = insertUserSchema.parse(bodyData);
 
       // Check if user already exists
@@ -1092,17 +1122,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.createUser({
         ...userData,
         password: hashedPassword,
-        fromLandingPage: fromLandingPage || false,
+        fromLandingPage: false,
       });
-
-      // Se for cadastro da landing page, dar 300 moedas
-      if (fromLandingPage) {
-        try {
-          await storage.addCoins(user.id, 300, 'landing_page_bonus', 'Bônus de boas-vindas');
-        } catch (error) {
-          console.error('Erro ao adicionar moedas de boas-vindas:', error);
-        }
-      }
 
       // Process any pending referral rewards for this user
       try {
@@ -6244,7 +6265,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         enableRentNowCheckout: dbSettings?.enableRentNowCheckout || false,
         enableInsuranceOption: dbSettings?.enableInsuranceOption || false,
         enableServiceFee: dbSettings?.enableServiceFee === true,
-        contractSignatureEnabled: dbSettings?.enableContractSignature || false
+        contractSignatureEnabled: dbSettings?.enableContractSignature || false,
+        showLaunchPage: dbSettings?.showLaunchPage ?? true // Default true se não existir
       };
       
       console.log("🔧 Public feature toggles:", publicToggles);

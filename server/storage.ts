@@ -1,5 +1,5 @@
 import { 
-  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity, adminSettings, savedVehicles, coupons, subscriptionPlans, userSubscriptions, vehicleInspections, payouts, ownerInspections, cnhValidation, deliveryPickupSettings, supportTickets, supportMessages, userDocuments, userCoins, coinTransactions, contactUnlocks,
+  users, vehicles, bookings, reviews, messages, contracts, contractTemplates, contractAuditLog, vehicleBrands, vehicleAvailability, waitingQueue, referrals, userRewards, rewardTransactions, userActivity, adminSettings, savedVehicles, coupons, subscriptionPlans, userSubscriptions, vehicleInspections, payouts, ownerInspections, cnhValidation, deliveryPickupSettings, supportTickets, supportMessages, userDocuments, userCoins, coinTransactions, contactUnlocks, userLandingPage,
   type User, type InsertUser, type Vehicle, type InsertVehicle, 
   type Booking, type InsertBooking, type Review, type InsertReview,
   type Message, type InsertMessage, type VehicleWithOwner, type BookingWithDetails,
@@ -16,7 +16,8 @@ import {
   type OwnerInspection, type InsertOwnerInspection,
   type UserCoins, type InsertUserCoins, type CoinTransaction, type InsertCoinTransaction,
   type ContactUnlock, type InsertContactUnlock, passwordResetTokens,
-  type PasswordResetToken, type InsertPasswordResetToken
+  type PasswordResetToken, type InsertPasswordResetToken,
+  type UserLandingPage, type InsertUserLandingPage
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, and, gte, lte, desc, asc, or, like, ilike, sql, lt, ne, inArray, not, isNull, isNotNull } from "drizzle-orm";
@@ -282,6 +283,11 @@ export interface IStorage {
   getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
   markTokenAsUsed(token: string): Promise<boolean>;
   cleanupExpiredTokens(): Promise<void>;
+
+  // Landing page methods
+  createLandingPageUser(user: InsertUserLandingPage): Promise<UserLandingPage>;
+  getLandingPageUsers(): Promise<UserLandingPage[]>;
+  getLandingPageUserByEmail(email: string): Promise<UserLandingPage | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -4152,6 +4158,30 @@ export class DatabaseStorage implements IStorage {
         eq(passwordResetTokens.used, true),
         lt(passwordResetTokens.expiresAt, new Date())
       ));
+  }
+
+  // Landing page methods
+  async createLandingPageUser(user: InsertUserLandingPage): Promise<UserLandingPage> {
+    const [createdUser] = await db
+      .insert(userLandingPage)
+      .values(user)
+      .returning();
+    return createdUser;
+  }
+
+  async getLandingPageUsers(): Promise<UserLandingPage[]> {
+    return await db
+      .select()
+      .from(userLandingPage)
+      .orderBy(desc(userLandingPage.createdAt));
+  }
+
+  async getLandingPageUserByEmail(email: string): Promise<UserLandingPage | undefined> {
+    const [user] = await db
+      .select()
+      .from(userLandingPage)
+      .where(eq(userLandingPage.email, email));
+    return user;
   }
 
 }

@@ -9,7 +9,7 @@ import VehicleComparison from "@/components/vehicle-comparison";
 import AuthProvider from "@/components/AuthProvider";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import LaunchLandingPage from "@/components/LaunchLandingPage";
-import { SHOW_LAUNCH_PAGE } from "@/components/LaunchSwitch";
+import { useShowLaunchPage } from "@/components/LaunchSwitch";
 import Home from "@/pages/home";
 import Auth from "@/pages/auth";
 import Profile from "@/pages/profile";
@@ -176,36 +176,42 @@ function Router() {
   );
 }
 
-function App() {
-  // Se SHOW_LAUNCH_PAGE for true, exibe apenas a landing page
-  if (SHOW_LAUNCH_PAGE) {
+function AppWrapper() {
+  const showLaunchPage = useShowLaunchPage();
+
+  // Se showLaunchPage for true, exibe apenas a landing page
+  if (showLaunchPage) {
     return (
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <LaunchLandingPage />
-        </TooltipProvider>
-      </QueryClientProvider>
+      <TooltipProvider>
+        <Toaster />
+        <LaunchLandingPage />
+      </TooltipProvider>
     );
   }
 
   // App normal após o lançamento
   return (
+    <OnboardingProvider>
+      <AuthProvider>
+        <SearchProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+            <VehicleComparison />
+            
+            {/* PWA Components */}
+            <OfflineIndicator />
+          </TooltipProvider>
+        </SearchProvider>
+      </AuthProvider>
+    </OnboardingProvider>
+  );
+}
+
+function App() {
+  return (
     <QueryClientProvider client={queryClient}>
-      <OnboardingProvider>
-        <AuthProvider>
-          <SearchProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Router />
-              <VehicleComparison />
-              
-              {/* PWA Components */}
-              <OfflineIndicator />
-            </TooltipProvider>
-          </SearchProvider>
-        </AuthProvider>
-      </OnboardingProvider>
+      <AppWrapper />
     </QueryClientProvider>
   );
 }
