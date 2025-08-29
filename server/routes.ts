@@ -1098,6 +1098,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name: bodyData.name,
           email: bodyData.email,
           phone: bodyData.phone || null,
+          wantsToRent: bodyData.wantsToRent || false,
+          isOwner: bodyData.isOwner || false,
         });
 
         return res.status(201).json({ 

@@ -62,8 +62,8 @@ export default function LaunchLandingPage() {
         email,
         phone,
         password: 'temp123',
-        isRenter,
-        isOwner,
+        wantsToRent: isRenter, // Mapear isRenter para wantsToRent
+        isOwner: isOwner,
         fromLandingPage: true
       };
       

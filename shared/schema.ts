@@ -87,6 +87,8 @@ export const userLandingPage = pgTable("user_landingpage", {
   name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   phone: varchar("phone", { length: 20 }),
+  wantsToRent: boolean("wants_to_rent").default(false), // "Quero alugar - Preciso de um carro"
+  isOwner: boolean("is_owner").default(false), // "Sou locador - Tenho carro para alugar"
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -1586,6 +1588,11 @@ export const insertContactUnlockSchema = createInsertSchema(contactUnlocks).omit
 });
 
 export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTokens).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserLandingPageSchema = createInsertSchema(userLandingPage).omit({
   id: true,
   createdAt: true,
 });
