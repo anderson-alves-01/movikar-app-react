@@ -51,6 +51,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import path from "path";
 import fs from "fs";
+import crypto from "crypto";
 import { db, pool } from "./db";
 import { sql, eq, lte, gte, desc, ilike, and, lt, asc, or } from "drizzle-orm";
 import Stripe from "stripe";
@@ -1091,6 +1092,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.createUser({
         ...userData,
         password: hashedPassword,
+        fromLandingPage: fromLandingPage || false,
       });
 
       // Se for cadastro da landing page, dar 300 moedas
@@ -1174,6 +1176,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUserByEmail(email);
       if (!user) {
         return res.status(500).json({ message: "Erro interno do servidor" });
+      }
+
+      // Check if user is from landing page and needs to update password
+      if (user.fromLandingPage && password === 'temp123') {
+        return res.status(200).json({ 
+          requiresPasswordUpdate: true,
+          message: "Primeiro acesso detectado. Por favor, atualize sua senha.",
+          email: user.email 
+        });
       }
 
       const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15m' });
@@ -1279,6 +1290,140 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
 
     res.json({ message: 'Logout realizado com sucesso' });
+  });
+
+  // Update password for landing page users
+  app.post("/api/auth/update-password", async (req, res) => {
+    try {
+      const { email, newPassword } = req.body;
+
+      if (!email || !newPassword) {
+        return res.status(400).json({ message: "Email e nova senha são obrigatórios" });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "Nova senha deve ter pelo menos 6 caracteres" });
+      }
+
+      // Get user
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      // Verify it's a landing page user
+      if (!user.fromLandingPage) {
+        return res.status(403).json({ message: "Operação não permitida para este usuário" });
+      }
+
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      // Update password and mark as no longer from landing page
+      await storage.updateUser(user.id, { 
+        password: hashedPassword,
+        fromLandingPage: false 
+      });
+
+      res.json({ message: "Senha atualizada com sucesso! Agora você pode fazer login." });
+    } catch (error) {
+      console.error("Update password error:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Forgot password endpoint
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ message: "E-mail é obrigatório" });
+      }
+
+      // Check if user exists
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        // Don't reveal if email exists for security
+        return res.json({ message: "Se o e-mail estiver cadastrado, você receberá instruções para redefinir sua senha." });
+      }
+
+      // Generate secure token
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+
+      // Save token to database
+      await storage.createPasswordResetToken({
+        userId: user.id,
+        token: resetToken,
+        expiresAt,
+        used: false
+      });
+
+      // Send email with reset link
+      const resetUrl = `${process.env.FRONTEND_URL || 'https://alugae.mobi'}/reset-password?token=${resetToken}`;
+      
+      const emailSent = await emailService.sendNotificationEmail(
+        user.email,
+        user.name,
+        {
+          title: "🔐 Redefinição de Senha - Alugae",
+          body: `Olá ${user.name}!\n\nRecebemos uma solicitação para redefinir sua senha.\n\nClique no link abaixo para criar uma nova senha:\n${resetUrl}\n\n⚠️ Este link expira em 1 hora por segurança.\n\nSe você não solicitou esta redefinição, pode ignorar este e-mail.`,
+          data: { resetUrl, userEmail: user.email }
+        }
+      );
+
+      if (!emailSent) {
+        console.error('Failed to send reset email to:', user.email);
+        return res.status(500).json({ message: "Erro ao enviar e-mail. Tente novamente." });
+      }
+
+      res.json({ message: "Se o e-mail estiver cadastrado, você receberá instruções para redefinir sua senha." });
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
+  // Reset password endpoint
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { token, newPassword } = req.body;
+
+      if (!token || !newPassword) {
+        return res.status(400).json({ message: "Token e nova senha são obrigatórios" });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "Nova senha deve ter pelo menos 6 caracteres" });
+      }
+
+      // Verify token
+      const resetToken = await storage.getPasswordResetToken(token);
+      if (!resetToken) {
+        return res.status(400).json({ message: "Token inválido ou expirado" });
+      }
+
+      // Get user
+      const user = await storage.getUser(resetToken.userId);
+      if (!user) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      // Update password
+      await storage.updateUser(resetToken.userId, { password: hashedPassword });
+
+      // Mark token as used
+      await storage.markTokenAsUsed(token);
+
+      res.json({ message: "Senha redefinida com sucesso! Agora você pode fazer login." });
+    } catch (error) {
+      console.error("Reset password error:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
   });
 
   app.post("/api/auth/refresh", async (req, res) => {

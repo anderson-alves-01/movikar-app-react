@@ -65,8 +65,20 @@ export const users = pgTable("users", {
   // Push notification fields
   pushToken: text("push_token"),
   pushPlatform: varchar("push_platform", { length: 10 }), // ios, android
+  // Landing page tracking
+  fromLandingPage: boolean("from_landingpage").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Password reset tokens table
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  token: varchar("token", { length: 255 }).notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  used: boolean("used").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Document verification table
@@ -1540,6 +1552,9 @@ export type InsertCoinTransaction = typeof coinTransactions.$inferInsert;
 export type ContactUnlock = typeof contactUnlocks.$inferSelect;
 export type InsertContactUnlock = typeof contactUnlocks.$inferInsert;
 
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type InsertPasswordResetToken = z.infer<typeof insertPasswordResetTokenSchema>;
+
 // Zod schemas for coin system
 export const insertUserCoinsSchema = createInsertSchema(userCoins).omit({
   id: true,
@@ -1553,6 +1568,11 @@ export const insertCoinTransactionSchema = createInsertSchema(coinTransactions).
 });
 
 export const insertContactUnlockSchema = createInsertSchema(contactUnlocks).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTokens).omit({
   id: true,
   createdAt: true,
 });
