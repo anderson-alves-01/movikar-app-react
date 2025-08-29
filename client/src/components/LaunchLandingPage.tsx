@@ -103,14 +103,16 @@ export default function LaunchLandingPage() {
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center">
             <Badge className="mb-4 bg-red-100 text-red-800 hover:bg-red-100">
-              O Alugaê está chegando!
+              LANÇAMENTO EXCLUSIVO!
             </Badge>
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-              O jeito inteligente de alugar e<br />
-              <span className="text-red-500">compartilhar carros</span> em Brasília
+              REVOLUÇÃO NO<br />
+              <span className="text-red-500">ALUGUEL DE CARROS</span><br />
+              EM BRASÍLIA!
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Conectamos quem tem carro disponível com quem precisa de um, de forma simples, rápida e segura.
+              Até 70% MAIS BARATO que locadoras tradicionais<br />
+              PROCESSO 100% DIGITAL em menos de 5 minutos
             </p>
             
             {/* Benefícios principais */}
