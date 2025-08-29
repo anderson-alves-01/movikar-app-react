@@ -2,7 +2,7 @@ export default {
   expo: {
     name: "alugae - Aluguel de Carros",
     slug: "alugae-mobile",
-    version: "1.0.1",
+    version: "1.0.2",
     orientation: "portrait",
     icon: "./assets/icon.png",
     userInterfaceStyle: "light",
@@ -18,7 +18,7 @@ export default {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.alugae.mobile",
-      buildNumber: "2",
+      buildNumber: "3",
       infoPlist: {
         NSLocationWhenInUseUsageDescription: "Este app precisa acessar sua localização para mostrar veículos próximos.",
         NSCameraUsageDescription: "Este app precisa acessar a câmera para capturar fotos dos veículos.",
