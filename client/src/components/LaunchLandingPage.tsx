@@ -37,7 +37,7 @@ export default function LaunchLandingPage() {
     refetchInterval: 60 * 1000, // Atualizar a cada minuto
   });
 
-  const waitlistCount = featureToggles?.waitlistCount || 1247;
+  const waitlistCount = (featureToggles as any)?.waitlistCount || 1247;
 
   const registerMutation = useMutation({
     mutationFn: async (userData: any) => {
@@ -379,14 +379,12 @@ export default function LaunchLandingPage() {
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Cadastre-se e seja avisado em primeira mão!
             </h2>
-            <p className="text-xl text-teal-100">
-              <div className="bg-teal-50 border border-teal-200 rounded-lg p-4 mb-6">
-                <div className="flex items-center justify-center space-x-2 text-teal-700">
-                  <Clock className="h-5 w-5" />
-                  <span className="font-semibold">Não fique de fora! Mais de <strong className="text-teal-600">{waitlistCount.toLocaleString()}</strong> pessoas já estão na lista de espera.</span>
-                </div>
+            <div className="bg-teal-50 border border-teal-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center justify-center space-x-2 text-teal-700">
+                <Clock className="h-5 w-5" />
+                <span className="font-semibold">Não fique de fora! Mais de <strong className="text-teal-600">{waitlistCount.toLocaleString()}</strong> pessoas já estão na lista de espera.</span>
               </div>
-            </p>
+            </div>
           </div>
 
           {!isSubmitted ? (
