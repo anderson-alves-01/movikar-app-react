@@ -49,10 +49,7 @@ export default {
     },
     plugins: [
       "expo-web-browser",
-      "expo-font",
-      [
-        "expo-apple-authentication"
-      ]
+      "expo-font"
     ],
     // Stability settings
     updates: {

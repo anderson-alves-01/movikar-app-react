@@ -2,8 +2,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as AuthSession from 'expo-auth-session';
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
-import * as AppleAuthentication from 'expo-apple-authentication';
+// Removed Google and Apple authentication - not available in this build
 import apiService from './apiService';
 
 const TOKEN_KEY = 'auth_token';
@@ -41,18 +40,7 @@ class AuthService {
 
   // Initialize auth service
   async initialize() {
-    // Configure Google Sign In
-    try {
-      GoogleSignin.configure({
-        webClientId: '474421653647-n4d2bdc4ca8bh4vvjl4bqn8e5t8lv0il.apps.googleusercontent.com', // Your web client ID from Google Console
-        iosClientId: '474421653647-your_ios_client_id_here.apps.googleusercontent.com', // Your iOS client ID
-        offlineAccess: true,
-        hostedDomain: '',
-        accountName: '',
-      });
-    } catch (error) {
-      console.error('Google Sign In configuration error:', error);
-    }
+    // Basic initialization without external auth providers
     try {
       const token = await AsyncStorage.getItem(TOKEN_KEY);
       const refreshToken = await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
@@ -230,138 +218,14 @@ class AuthService {
     return enabled === 'true';
   }
 
-  // Google Sign In
+  // Google Sign In (Not available in this build)
   async loginWithGoogle(): Promise<User> {
-    try {
-      // Check Google Play Services (Android)
-      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-      
-      // Get user info from Google
-      const userInfo = await GoogleSignin.signIn();
-      
-      if (userInfo.data?.user) {
-        const { user } = userInfo.data;
-        
-        // Send Google user data to your backend for verification and JWT token generation
-        const response = await fetch('https://alugae.mobi/api/auth/google-mobile', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            googleId: user.id,
-            email: user.email,
-            name: user.name,
-            photo: user.photo,
-            idToken: userInfo.data.idToken,
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Falha na autenticação com Google');
-        }
-
-        const data = await response.json();
-        
-        // Store tokens and user data
-        this.token = data.token;
-        this.refreshToken = data.refreshToken;
-        this.user = data.user;
-
-        if (this.token && this.user) {
-          await Promise.all([
-            AsyncStorage.setItem(TOKEN_KEY, this.token),
-            this.refreshToken && AsyncStorage.setItem(REFRESH_TOKEN_KEY, this.refreshToken),
-            AsyncStorage.setItem(USER_KEY, JSON.stringify(this.user)),
-          ].filter(Boolean));
-
-          return this.user;
-        } else {
-          throw new Error('Dados de autenticação Google inválidos');
-        }
-      }
-
-      throw new Error('Login cancelado');
-    } catch (error: any) {
-      console.error('Google login error:', error);
-      
-      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        throw new Error('Login cancelado pelo usuário');
-      } else if (error.code === statusCodes.IN_PROGRESS) {
-        throw new Error('Login em andamento');
-      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        throw new Error('Google Play Services não disponível');
-      } else {
-        throw error;
-      }
-    }
+    throw new Error('Google Sign In não está disponível nesta versão do app. Use email e senha para fazer login.');
   }
 
-  // Apple Sign In (iOS only)
+  // Apple Sign In (Not available in this build)
   async loginWithApple(): Promise<User> {
-    try {
-      // Check if Apple Authentication is available
-      const isAvailable = await AppleAuthentication.isAvailableAsync();
-      if (!isAvailable) {
-        throw new Error('Apple Sign In não está disponível neste dispositivo');
-      }
-
-      // Request Apple authentication
-      const credential = await AppleAuthentication.signInAsync({
-        requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL,
-        ],
-      });
-
-      // Send Apple user data to your backend for verification and JWT token generation
-      const response = await fetch('https://alugae.mobi/api/auth/apple-mobile', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          appleId: credential.user,
-          email: credential.email,
-          fullName: credential.fullName,
-          identityToken: credential.identityToken,
-          authorizationCode: credential.authorizationCode,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Falha na autenticação com Apple');
-      }
-
-      const data = await response.json();
-      
-      // Store tokens and user data
-      this.token = data.token;
-      this.refreshToken = data.refreshToken;
-      this.user = data.user;
-
-      if (this.token && this.user) {
-        await Promise.all([
-          AsyncStorage.setItem(TOKEN_KEY, this.token),
-          this.refreshToken && AsyncStorage.setItem(REFRESH_TOKEN_KEY, this.refreshToken),
-          AsyncStorage.setItem(USER_KEY, JSON.stringify(this.user)),
-        ].filter(Boolean));
-
-        return this.user;
-      } else {
-        throw new Error('Dados de autenticação Apple inválidos');
-      }
-    } catch (error: any) {
-      console.error('Apple login error:', error);
-      
-      if (error.code === 'ERR_CANCELED') {
-        throw new Error('Login cancelado pelo usuário');
-      } else {
-        throw error;
-      }
-    }
+    throw new Error('Apple Sign In não está disponível nesta versão do app. Use email e senha para fazer login.');
   }
 
   // Facebook Login
