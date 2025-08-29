@@ -1,4 +1,11 @@
 import { useState, useEffect } from 'react';
+
+// Definição de tipos para o Facebook Pixel
+declare global {
+  interface Window {
+    fbq?: (action: string, eventName: string, parameters?: any) => void;
+  }
+}
 import logoImage from '@/assets/logo.png';
 import peopleCarImage from "@/assets/people-car.png";
 import carWheelImage from "@/assets/car-wheel.png";
@@ -133,18 +140,40 @@ export default function LaunchLandingPage() {
             {/* CTAs principais */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
               <Button 
+                id="banner-cta-1"
                 size="lg" 
                 className="bg-red-500 hover:bg-red-600 text-white px-8 py-4 text-lg"
-                onClick={() => document.getElementById('cadastro')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => {
+                  if (window.fbq) {
+                    window.fbq("trackCustom", "BannerCTA", {
+                      button_id: "banner-cta-1",
+                      label: "Quero alugar um carro"
+                    });
+                  }
+                  setTimeout(() => {
+                    document.getElementById('cadastro')?.scrollIntoView({ behavior: 'smooth' });
+                  }, 150);
+                }}
               >
                 Quero alugar um carro
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               <Button 
+                id="banner-cta-2"
                 size="lg" 
                 variant="outline" 
                 className="border-red-500 text-red-500 hover:bg-red-50 px-8 py-4 text-lg"
-                onClick={() => document.getElementById('cadastro')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => {
+                  if (window.fbq) {
+                    window.fbq("trackCustom", "BannerCTA", {
+                      button_id: "banner-cta-2",
+                      label: "Tenho um carro para alugar"
+                    });
+                  }
+                  setTimeout(() => {
+                    document.getElementById('cadastro')?.scrollIntoView({ behavior: 'smooth' });
+                  }, 150);
+                }}
               >
                 Tenho um carro para alugar
               </Button>
