@@ -22,12 +22,4 @@ config.resolver = {
   platforms: ['ios', 'android', 'native', 'web'],
 };
 
-// Performance optimizations
-config.serializer = {
-  ...config.serializer,
-  getModulesRunBeforeMainModule: () => [
-    require.resolve('@react-native/polyfills/console.js'),
-  ],
-};
-
 module.exports = config;
