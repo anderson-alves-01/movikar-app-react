@@ -18,7 +18,6 @@ export default {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.alugae.mobile",
-      buildNumber: "3",
       infoPlist: {
         NSLocationWhenInUseUsageDescription: "Este app precisa acessar sua localização para mostrar veículos próximos.",
         NSCameraUsageDescription: "Este app precisa acessar a câmera para capturar fotos dos veículos.",
