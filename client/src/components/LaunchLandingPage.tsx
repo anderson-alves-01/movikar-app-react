@@ -110,7 +110,7 @@ export default function LaunchLandingPage() {
               <span className="text-red-500">ALUGUEL DE CARROS</span><br />
               EM BRASÍLIA!
             </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+            <p className="text-xl text-white mb-8 max-w-3xl mx-auto font-semibold" style={{textShadow: '2px 2px 4px rgba(0,0,0,0.8)'}}>
               Até 70% MAIS BARATO que locadoras tradicionais<br />
               PROCESSO 100% DIGITAL em menos de 5 minutos
             </p>
