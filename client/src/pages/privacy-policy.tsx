@@ -157,6 +157,25 @@ export default function PrivacyPolicyPage() {
                   Para exercer seus direitos, entre em contato através do email: 
                   <span className="font-semibold"> privacidade@alugae.mobi</span>
                 </p>
+
+                {/* Exclusão de Conta */}
+                <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <h4 className="font-semibold mb-2 flex items-center text-red-800">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Exclusão de Conta e Dados
+                  </h4>
+                  <p className="text-red-700 text-sm mb-3">
+                    Você pode solicitar a exclusão permanente da sua conta e de todos os seus dados pessoais a qualquer momento.
+                  </p>
+                  <a 
+                    href="mailto:privacidade@alugae.mobi?subject=Solicitação de Exclusão de Conta&body=Olá,%0D%0A%0D%0ADesejo solicitar a exclusão permanente da minha conta e de todos os meus dados pessoais da plataforma alugae.mobi.%0D%0A%0D%0ANome:%0D%0AEmail cadastrado:%0D%0ACPF:%0D%0A%0D%0AAtenciosamente"
+                    className="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 transition-colors"
+                    data-testid="link-account-deletion"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Solicitar Exclusão de Conta
+                  </a>
+                </div>
               </CardContent>
             </Card>
 

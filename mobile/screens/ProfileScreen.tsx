@@ -113,6 +113,28 @@ export default function ProfileScreen() {
     Alert.alert('Em Desenvolvimento', 'Termos de serviço serão implementados em breve');
   };
 
+  const handleAccountDeletion = () => {
+    Alert.alert(
+      'Exclusão de Conta',
+      'Deseja solicitar a exclusão permanente da sua conta e dados?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Solicitar Exclusão',
+          style: 'destructive',
+          onPress: () => {
+            // For mobile, we'll show instructions to send email
+            Alert.alert(
+              'Enviar Solicitação',
+              'Para solicitar a exclusão da sua conta, envie um email para:\n\nprivacidade@alugae.mobi\n\nIncluindo seu nome, email cadastrado e CPF.',
+              [{ text: 'Entendi', style: 'default' }]
+            );
+          }
+        }
+      ]
+    );
+  };
+
   const profileOptions: ProfileOption[] = [
     {
       icon: 'person-outline',
@@ -171,6 +193,12 @@ export default function ProfileScreen() {
       icon: 'document-text-outline',
       title: 'Termos de Serviço',
       onPress: handleTermsOfService,
+    },
+    {
+      icon: 'trash-outline',
+      title: 'Exclusão de Conta',
+      subtitle: 'Solicitar exclusão permanente dos dados',
+      onPress: handleAccountDeletion,
     },
   ];
 

@@ -31,7 +31,9 @@ import {
   Users,
   Eye,
   Zap,
-  Coins
+  Coins,
+  Shield,
+  Trash2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -880,6 +882,49 @@ export default function Profile() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Privacy and Account Settings */}
+        <Card className="border-red-200">
+          <CardHeader>
+            <CardTitle className="flex items-center text-red-800">
+              <Shield className="h-5 w-5 mr-2" />
+              Privacidade e Dados
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium text-gray-800">Política de Privacidade</h4>
+                  <p className="text-sm text-gray-600">Veja como tratamos seus dados pessoais</p>
+                </div>
+                <Button variant="outline" size="sm" asChild>
+                  <Link href="/privacy-policy">
+                    <Eye className="h-4 w-4 mr-2" />
+                    Ver Política
+                  </Link>
+                </Button>
+              </div>
+              
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium text-red-800">Exclusão de Conta</h4>
+                    <p className="text-sm text-red-600">Solicite a exclusão permanente de todos os seus dados</p>
+                  </div>
+                  <a 
+                    href="mailto:privacidade@alugae.mobi?subject=Solicitação de Exclusão de Conta&body=Olá,%0D%0A%0D%0ADesejo solicitar a exclusão permanente da minha conta e de todos os meus dados pessoais da plataforma alugae.mobi.%0D%0A%0D%0ANome:%0D%0AEmail cadastrado:%0D%0ACPF:%0D%0A%0D%0AAtenciosamente"
+                    className="inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 transition-colors"
+                    data-testid="button-account-deletion"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Solicitar Exclusão
+                  </a>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Contract Manager */}
         {selectedBookingId && (
