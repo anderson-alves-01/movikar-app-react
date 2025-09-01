@@ -1,0 +1,49 @@
+Require stack:
+- /home/expo/workingdir/build/mobile/metro.config.js
+- /home/expo/workingdir/build/mobile/node_modules/import-fresh/index.js
+- /home/expo/workingdir/build/mobile/node_modules/cosmiconfig/dist/loaders.js
+- /home/expo/workingdir/build/mobile/node_modules/cosmiconfig/dist/createExplorer.js
+- /home/expo/workingdir/build/mobile/node_modules/cosmiconfig/dist/index.js
+- /home/expo/workingdir/build/mobile/node_modules/metro-config/src/loadConfig.js
+- /home/expo/workingdir/build/mobile/node_modules/metro-config/src/index.js
+- /home/expo/workingdir/build/mobile/node_modules/@expo/cli/build/src/start/server/metro/instantiateMetro.js
+- /home/expo/workingdir/build/mobile/node_modules/@expo/cli/build/src/start/server/metro/MetroBundlerDevServer.js
+- /home/expo/workingdir/build/mobile/node_modules/@expo/cli/build/src/export/embed/exportEmbedAsync.js
+- /home/expo/workingdir/build/mobile/node_modules/@expo/cli/build/src/export/embed/index.js
+- /home/expo/workingdir/build/mobile/node_modules/@expo/cli/build/bin/cli
+- /home/expo/workingdir/build/mobile/node_modules/expo/bin/cli
+Error: Cannot find module '@react-native/polyfills/console.js'
+Require stack:
+- /home/expo/workingdir/build/mobile/metro.config.js
+- /home/expo/workingdir/build/mobile/node_modules/import-fresh/index.js
+- /home/expo/workingdir/build/mobile/node_modules/cosmiconfig/dist/loaders.js
+- /home/expo/workingdir/build/mobile/node_modules/cosmiconfig/dist/createExplorer.js
+- /home/expo/workingdir/build/mobile/node_modules/cosmiconfig/dist/index.js
+- /home/expo/workingdir/build/mobile/node_modules/metro-config/src/loadConfig.js
+- /home/expo/workingdir/build/mobile/node_modules/metro-config/src/index.js
+- /home/expo/workingdir/build/mobile/node_modules/@expo/cli/build/src/start/server/metro/instantiateMetro.js
+- /home/expo/workingdir/build/mobile/node_modules/@expo/cli/build/src/start/server/metro/MetroBundlerDevServer.js
+- /home/expo/workingdir/build/mobile/node_modules/@expo/cli/build/src/export/embed/exportEmbedAsync.js
+- /home/expo/workingdir/build/mobile/node_modules/@expo/cli/build/src/export/embed/index.js
+- /home/expo/workingdir/build/mobile/node_modules/@expo/cli/build/bin/cli
+- /home/expo/workingdir/build/mobile/node_modules/expo/bin/cli
+    at Function.Module._resolveFilename (node:internal/modules/cjs/loader:1212:15)
+    at Function.resolve (node:internal/modules/helpers:193:19)
+    at Object.getModulesRunBeforeMainModule (/home/expo/workingdir/build/mobile/metro.config.js:29:13)
+    at MetroBundlerDevServer._bundleDirectAsync (/home/expo/workingdir/build/mobile/node_modules/@expo/cli/src/start/server/metro/MetroBundlerDevServer.ts:1619:50)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at MetroBundlerDevServer.metroLoadModuleContents (/home/expo/workingdir/build/mobile/node_modules/@expo/cli/src/start/server/metro/MetroBundlerDevServer.ts:551:21)
+    at MetroBundlerDevServer.legacySinglePageExportBundleAsync (/home/expo/workingdir/build/mobile/node_modules/@expo/cli/src/start/server/metro/MetroBundlerDevServer.ts:867:20)
+    at exportEmbedBundleAndAssetsAsync (/home/expo/workingdir/build/mobile/node_modules/@expo/cli/src/export/embed/exportEmbedAsync.ts:206:21)
+    at exportEmbedInternalAsync (/home/expo/workingdir/build/mobile/node_modules/@expo/cli/src/export/embed/exportEmbedAsync.ts:137:37)
+    at exportEmbedAsync (/home/expo/workingdir/build/mobile/node_modules/@expo/cli/src/export/embed/exportEmbedAsync.ts:117:3)
+npx expo export:embed --eager --platform android --dev false exited with non-zero code: 1
+
+Fail job
+
+1s
+
+
+Build failed
+
+npx expo export:embed --eager --platform android --dev false exited with non-zero code: 1

@@ -48,57 +48,5 @@
     "@types/react": "~19.0.10",
     "typescript": "~5.8.3"
   },
-  "private": true,
-  "expo": {
-    "name": "alugae - Aluguel de Carros",
-    "slug": "alugae-mobile",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#20B2AA"
-    },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.alugae.mobile",
-      "buildNumber": "1",
-      "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Este app precisa acessar sua localização para mostrar veículos próximos.",
-        "NSCameraUsageDescription": "Este app precisa acessar a câmera para capturar fotos dos veículos."
-      }
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#20B2AA"
-      },
-      "package": "com.alugae.mobile",
-      "versionCode": 1,
-      "permissions": [
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION",
-        "CAMERA",
-        "WRITE_EXTERNAL_STORAGE",
-        "READ_EXTERNAL_STORAGE"
-      ]
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
-    "plugins": [
-      "expo-location",
-      "expo-notifications"
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "your-project-id-here"
-      }
-    }
-  }
+  "private": true
 }
