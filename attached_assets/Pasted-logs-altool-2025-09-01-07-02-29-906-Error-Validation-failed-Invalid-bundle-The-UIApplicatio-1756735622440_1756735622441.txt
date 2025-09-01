@@ -1,0 +1,27 @@
+logs] [altool] 2025-09-01 07:02:29.906 *** Error: Validation failed Invalid bundle. The UIApplicationExitsOnSuspend key in the Info.plist file for the “alugaeAlugueldeCarros.app” bundle isn't supported. Please remove the key and upload a new build. (ID: 4529c0f7-d134-43b1-ab8b-d0ad60e66dbb) (409)
+[logs] [altool]  {
+[logs] 
+[logs] [altool]     NSLocalizedDescription = "Validation failed";
+[logs] 
+[logs] [altool]     NSLocalizedFailureReason = "Invalid bundle. The UIApplicationExitsOnSuspend key in the Info.plist file for the \U201calugaeAlugueldeCarros.app\U201d bundle isn't supported. Please remove the key and upload a new build. (ID: 4529c0f7-d134-43b1-ab8b-d0ad60e66dbb)";
+[logs] 
+[logs] [altool]     NSUnderlyingError = "Error Domain=IrisAPI Code=-19241 \"Validation failed\" UserInfo={status=409, detail=Invalid bundle. The UIApplicationExitsOnSuspend key in the Info.plist file for the \U201calugaeAlugueldeCarros.app\U201d bundle isn't supported. Please remove the key and upload a new build., id=4529c0f7-d134-43b1-ab8b-d0ad60e66dbb, code=STATE_ERROR.VALIDATION_ERROR, title=Validation failed, NSLocalizedFailureReason=Invalid bundle. The UIApplicationExitsOnSuspend key in the Info.plist file for the \U201calugaeAlugueldeCarros.app\U201d bundle isn't supported. Please remove the key and upload a new build., NSLocalizedDescription=Validation failed}";
+[logs] 
+[logs] [altool]     "iris-code" = "STATE_ERROR.VALIDATION_ERROR";
+[logs] 
+[logs] [altool] }
+[logs] 
+[logs] Application Loader output above ^
+[logs] [ContentDelivery.Uploader.60000076C140] Validation failed (409) Invalid bundle. The UIApplicationExitsOnSuspend key in the Info.plist file for the “alugaeAlugueldeCarros.app” bundle isn't supported. Please remove the key and upload a new build. (ID: 4529c0f7-d134-43b1-ab8b-d0ad60e66dbb)
+[logs] Error uploading '/var/folders/m1/8_w9962s3b79dqm00nnlm85m0000gn/T/6cc36024-dfe3-4b91-ae43-e79002ba4aa8.ipa'.
+[logs] Validation failed Invalid bundle. The UIApplicationExitsOnSuspend key in the Info.plist file for the “alugaeAlugueldeCarros.app” bundle isn't supported. Please remove the key and upload a new build. (ID: 4529c0f7-d134-43b1-ab8b-d0ad60e66dbb) (409)
+[logs] The call to the altool completed with a non-zero exit status: 1. This indicates a failure.
+[logs] Could not download/upload from App Store Connect!
+[logs] [!] Error uploading ipa file: 
+[logs]  [Application Loader Error Output]: [ContentDelivery.Uploader.60000076C140] Validation failed (409) Invalid bundle. The UIApplicationExitsOnSuspend key in the Info.plist file for the “alugaeAlugueldeCarros.app” bundle isn't supported. Please remove the key and upload a new build. (ID: 4529c0f7-d134-43b1-ab8b-d0ad60e66dbb)
+[logs] [Application Loader Error Output]: Error uploading '/var/folders/m1/8_w9962s3b79dqm00nnlm85m0000gn/T/6cc36024-dfe3-4b91-ae43-e79002ba4aa8.ipa'.
+[logs] [Application Loader Error Output]: Validation failed Invalid bundle. The UIApplicationExitsOnSuspend key in the Info.plist file for the “alugaeAlugueldeCarros.app” bundle isn't supported. Please remove the key and upload a new build. (ID: 4529c0f7-d134-43b1-ab8b-d0ad60e66dbb) (409)
+[logs] [Application Loader Error Output]: The call to the altool completed with a non-zero exit status: 1. This indicates a failure.
+[logs] Fastlane pilot failed
+[logs] Failed to submit the app to the store
+[logs] End phase: SUBMIT_TO_APP_STORE
