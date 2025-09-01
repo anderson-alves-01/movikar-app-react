@@ -26,7 +26,6 @@ export default {
         UIRequiredDeviceCapabilities: ["armv7"],
         LSRequiresIPhoneOS: true,
         // Crash prevention settings
-        UIApplicationExitsOnSuspend: false,
         UIFileSharingEnabled: false
       }
     },
