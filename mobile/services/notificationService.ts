@@ -28,6 +28,8 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
@@ -158,7 +160,7 @@ class NotificationService {
           sound: notificationData.sound !== false,
           priority: this.convertPriority(notificationData.priority || 'normal'),
         },
-        trigger: triggerSeconds ? { seconds: triggerSeconds } : null,
+        trigger: triggerSeconds ? { type: 'timeInterval', seconds: triggerSeconds } : null,
       });
 
       return identifier;
@@ -201,6 +203,7 @@ class NotificationService {
           sound: true,
         },
         trigger: {
+          type: 'date',
           date: triggerTime,
         },
       });

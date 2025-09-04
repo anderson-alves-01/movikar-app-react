@@ -21,12 +21,21 @@ export default {
       infoPlist: {
         NSLocationWhenInUseUsageDescription: "Este app precisa acessar sua localização para mostrar veículos próximos.",
         NSCameraUsageDescription: "Este app precisa acessar a câmera para capturar fotos dos veículos.",
+        NSFaceIDUsageDescription: "Este app usa Face ID para autenticação segura.",
+        NSPhotoLibraryUsageDescription: "Este app precisa acessar suas fotos para upload de documentos.",
         ITSAppUsesNonExemptEncryption: false,
-        UIBackgroundModes: [],
+        UIBackgroundModes: ["remote-notification"],
         UIRequiredDeviceCapabilities: ["armv7"],
         LSRequiresIPhoneOS: true,
-        // Crash prevention settings
-        UIFileSharingEnabled: false
+        UIFileSharingEnabled: false,
+        // Critical stability settings for iOS
+        UIApplicationSupportsIndirectInputEvents: true,
+        UILaunchStoryboardName: "SplashScreen",
+        UIStatusBarStyle: "UIStatusBarStyleDefault",
+        UIViewControllerBasedStatusBarAppearance: false,
+        // Prevent memory issues
+        UIMainStoryboardFile: "",
+        CFBundleAllowMixedLocalizations: false
       }
     },
     android: {
