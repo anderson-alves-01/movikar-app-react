@@ -1,19 +1,26 @@
 import { useState, useEffect } from 'react';
-import authService, { AuthState } from '../services/authService';
+import authService from '../services/authService';
 
 export const useAuth = () => {
-  const [authState, setAuthState] = useState<AuthState>(authService.getAuthState());
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = authService.subscribe(setAuthState);
-    return unsubscribe;
+    // Check initial auth state
+    setIsAuthenticated(authService.isAuthenticated());
+    if (authService.isAuthenticated()) {
+      setUser(authService.getCurrentUser());
+    }
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (credentials: { email: string; password: string }) => {
     setIsLoading(true);
     try {
-      await authService.login(email, password);
+      const user = await authService.login(credentials);
+      setUser(user);
+      setIsAuthenticated(true);
+      return user;
     } catch (error) {
       throw error;
     } finally {
@@ -42,6 +49,8 @@ export const useAuth = () => {
     setIsLoading(true);
     try {
       await authService.logout();
+      setUser(null);
+      setIsAuthenticated(false);
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -52,7 +61,9 @@ export const useAuth = () => {
   const updateProfile = async (profileData: any) => {
     setIsLoading(true);
     try {
-      await authService.updateProfile(profileData);
+      const updatedUser = await authService.updateProfile(profileData);
+      setUser(updatedUser);
+      return updatedUser;
     } catch (error) {
       throw error;
     } finally {
@@ -61,7 +72,8 @@ export const useAuth = () => {
   };
 
   return {
-    ...authState,
+    isAuthenticated,
+    user,
     isLoading,
     login,
     register,
