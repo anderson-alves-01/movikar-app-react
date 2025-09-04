@@ -1,0 +1,36 @@
+Starting the submit process
+Downloading archive
+Preparing artifact
+Submitting Android app to Play Store...
+Submitting the app with fastlane supply
++-------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                           Summary for supply 2.220.0                                                            |
++------------------------------------+------------------------------------------------------------------------------------------------------------+
+| aab                                | /tmp/submissions/cdd42349-47c1-4ac8-89da-f4bc019075ab/application_f8498db2_ea20_4b24_859f_8926c5ff8823.aab |
+| track                              | internal                                                                                                   |
+| json_key                           | /tmp/submissions/cdd42349-47c1-4ac8-89da-f4bc019075ab/service-account.json                                 |
+| package_name                       | com.alugae.mobile                                                                                          |
+| changes_not_sent_for_review        | false                                                                                                      |
+| release_status                     | completed                                                                                                  |
+| skip_upload_apk                    | false                                                                                                      |
+| skip_upload_aab                    | false                                                                                                      |
+| skip_upload_metadata               | false                                                                                                      |
+| skip_upload_changelogs             | false                                                                                                      |
+| skip_upload_images                 | false                                                                                                      |
+| skip_upload_screenshots            | false                                                                                                      |
+| sync_image_upload                  | false                                                                                                      |
+| track_promote_release_status       | completed                                                                                                  |
+| validate_only                      | false                                                                                                      |
+| check_superseded_tracks            | false                                                                                                      |
+| timeout                            | 300                                                                                                        |
+| deactivate_on_promote              | true                                                                                                       |
+| rescue_changes_not_sent_for_review | true                                                                                                       |
+| ack_bundle_installation_warning    | false                                                                                                      |
++------------------------------------+------------------------------------------------------------------------------------------------------------+
+Google Api Error: Invalid request - The caller does not have permission - Retrying...
+Google Api Error: Invalid request - The caller does not have permission - Retrying...
+Google Api Error: Invalid request - The caller does not have permission - Retrying...
+Google Api Error: Invalid request - The caller does not have permission - Retrying...
+Google Api Error: Invalid request - The caller does not have permission - Retrying...
+[!] Google Api Error: Invalid request - The caller does not have permission
+Failed to submit the app to the store
