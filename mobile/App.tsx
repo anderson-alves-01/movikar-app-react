@@ -10,9 +10,24 @@ import { View, Text, StyleSheet, LogBox, Platform } from 'react-native';
 // Critical: Ignore ALL warnings that could cause crashes on iOS
 LogBox.ignoreAllLogs(true);
 
+// Type definitions for safety
+type ScreenComponent = React.ComponentType<any>;
+type ServiceComponent = {
+  isAuthenticated?: () => boolean;
+  initialize?: () => Promise<void>;
+  getCurrentUser?: () => any;
+  connect?: () => Promise<void>;
+};
+
 // Screens - Import with error boundaries
-let HomeScreen, SearchScreen, BookingsScreen, ProfileScreen;
-let VehicleDetailScreen, LoginScreen, ChatScreen, BiometricSetupScreen;
+let HomeScreen: ScreenComponent | null = null;
+let SearchScreen: ScreenComponent | null = null;
+let BookingsScreen: ScreenComponent | null = null;
+let ProfileScreen: ScreenComponent | null = null;
+let VehicleDetailScreen: ScreenComponent | null = null;
+let LoginScreen: ScreenComponent | null = null;
+let ChatScreen: ScreenComponent | null = null;
+let BiometricSetupScreen: ScreenComponent | null = null;
 
 try {
   HomeScreen = require('./screens/HomeScreen').default;
@@ -29,41 +44,46 @@ try {
 }
 
 // Services - Import with error handling
-let authService, notificationService, chatService;
+let authService: ServiceComponent = {
+  isAuthenticated: () => false,
+  initialize: () => Promise.resolve(),
+  getCurrentUser: () => null
+};
+
+let notificationService: ServiceComponent = {
+  initialize: () => Promise.resolve()
+};
+
+let chatService: ServiceComponent = {
+  connect: () => Promise.resolve()
+};
+
 try {
-  authService = require('./services/authService').default;
+  const auth = require('./services/authService').default;
+  if (auth) authService = auth;
 } catch (error) {
   console.warn('AuthService not available:', error);
-  authService = {
-    isAuthenticated: () => false,
-    initialize: () => Promise.resolve(),
-    getCurrentUser: () => null
-  };
 }
 
 try {
-  notificationService = require('./services/notificationService').default;
+  const notification = require('./services/notificationService').default;
+  if (notification) notificationService = notification;
 } catch (error) {
   console.warn('NotificationService not available:', error);
-  notificationService = {
-    initialize: () => Promise.resolve()
-  };
 }
 
 try {
-  chatService = require('./services/chatService').default;
+  const chat = require('./services/chatService').default;
+  if (chat) chatService = chat;
 } catch (error) {
   console.warn('ChatService not available:', error);
-  chatService = {
-    connect: () => Promise.resolve()
-  };
 }
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
 // Fallback Screen Component for iOS stability
-const FallbackScreen = ({ title = 'Loading...' }) => (
+const FallbackScreen: React.FC<{ title?: string }> = ({ title = 'Loading...' }) => (
   <View style={styles.loadingContainer}>
     <Text style={styles.loadingText}>{title}</Text>
     <Text style={styles.errorMessage}>

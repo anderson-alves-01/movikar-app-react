@@ -18,6 +18,7 @@ export default {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.alugae.mobile",
+      buildNumber: "3",
       infoPlist: {
         NSLocationWhenInUseUsageDescription: "Este app precisa acessar sua localização para mostrar veículos próximos.",
         NSCameraUsageDescription: "Este app precisa acessar a câmera para capturar fotos dos veículos.",
@@ -28,14 +29,21 @@ export default {
         UIRequiredDeviceCapabilities: ["armv7"],
         LSRequiresIPhoneOS: true,
         UIFileSharingEnabled: false,
-        // Critical stability settings for iOS
+        // Critical crash prevention settings
         UIApplicationSupportsIndirectInputEvents: true,
-        UILaunchStoryboardName: "SplashScreen",
         UIStatusBarStyle: "UIStatusBarStyleDefault",
         UIViewControllerBasedStatusBarAppearance: false,
-        // Prevent memory issues
         UIMainStoryboardFile: "",
-        CFBundleAllowMixedLocalizations: false
+        CFBundleAllowMixedLocalizations: false,
+        // Memory and stability improvements
+        UIPrerenderedIcon: false,
+        UIStatusBarHidden: false,
+        UISupportedInterfaceOrientations: [
+          "UIInterfaceOrientationPortrait",
+          "UIInterfaceOrientationPortraitUpsideDown"
+        ],
+        // Disable problematic features that can crash
+        UIUserInterfaceStyle: "Light"
       }
     },
     android: {
