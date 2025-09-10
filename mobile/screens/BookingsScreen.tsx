@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import apiService from '../services/apiService';
+import authService from '../services/authService';
 
 interface Booking {
   id: number;
@@ -65,10 +66,29 @@ export default function BookingsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'renter' | 'owner'>('renter');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    loadBookings();
-  }, [activeTab]);
+    checkAuthentication();
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadBookings();
+    }
+  }, [activeTab, isAuthenticated]);
+
+  const checkAuthentication = () => {
+    const authenticated = authService.isAuthenticated();
+    setIsAuthenticated(authenticated);
+    if (!authenticated) {
+      setLoading(false);
+    }
+  };
+
+  const handleLoginPress = () => {
+    navigation.navigate('Login' as never);
+  };
 
   const loadBookings = async () => {
     try {
@@ -118,7 +138,7 @@ export default function BookingsScreen() {
         { text: 'Fechar', style: 'cancel' },
         {
           text: 'Ver Veículo',
-          onPress: () => navigation.navigate('VehicleDetail' as never, { vehicleId: booking.vehicleId } as never)
+          onPress: () => (navigation as any).navigate('VehicleDetail', { vehicleId: booking.vehicleId })
         }
       ]
     );
@@ -207,6 +227,27 @@ export default function BookingsScreen() {
       </TouchableOpacity>
     );
   };
+
+  // Show login required screen if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loginRequiredContainer}>
+          <Ionicons name="calendar-outline" size={80} color="#ccc" />
+          <Text style={styles.loginRequiredTitle}>Login Necessário</Text>
+          <Text style={styles.loginRequiredSubtitle}>
+            Você precisa estar logado para ver suas reservas.
+          </Text>
+          <TouchableOpacity 
+            style={styles.loginButton} 
+            onPress={handleLoginPress}
+          >
+            <Text style={styles.loginButtonText}>Fazer Login</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -328,6 +369,39 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     lineHeight: 24,
+  },
+  loginRequiredContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  loginRequiredTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 20,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  loginRequiredSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 30,
+  },
+  loginButton: {
+    backgroundColor: '#20B2AA',
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  loginButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   bookingsList: {
     paddingBottom: 20,
