@@ -79,8 +79,5 @@ export default {
       fallbackToCacheTimeout: 0
     },
     // Memory and performance optimization
-    packagerOpts: {
-      config: "metro.config.js"
-    }
   }
 };
