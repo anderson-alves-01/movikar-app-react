@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import authService from '../services/authService';
 
 interface User {
   id: number;
@@ -40,10 +41,25 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [locationEnabled, setLocationEnabled] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    loadUserProfile();
+    checkAuthentication();
   }, []);
+
+  const checkAuthentication = () => {
+    const authenticated = authService.isAuthenticated();
+    setIsAuthenticated(authenticated);
+    if (authenticated) {
+      loadUserProfile();
+    } else {
+      setLoading(false);
+    }
+  };
+
+  const handleLoginPress = () => {
+    (navigation as any).navigate('Login');
+  };
 
   const loadUserProfile = async () => {
     try {
@@ -241,6 +257,27 @@ export default function ProfileScreen() {
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#20B2AA" />
           <Text style={styles.loadingText}>Carregando perfil...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show login required screen if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loginRequiredContainer}>
+          <Ionicons name="person-outline" size={80} color="#ccc" />
+          <Text style={styles.loginRequiredTitle}>Login Necessário</Text>
+          <Text style={styles.loginRequiredSubtitle}>
+            Você precisa estar logado para acessar seu perfil.
+          </Text>
+          <TouchableOpacity 
+            style={styles.loginButton} 
+            onPress={handleLoginPress}
+          >
+            <Text style={styles.loginButtonText}>Fazer Login</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -460,5 +497,38 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 8,
+  },
+  loginRequiredContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  loginRequiredTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 20,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  loginRequiredSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 30,
+  },
+  loginButton: {
+    backgroundColor: '#20B2AA',
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  loginButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

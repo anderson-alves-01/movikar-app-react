@@ -102,7 +102,7 @@ export default function SearchScreen() {
   };
 
   const navigateToVehicleDetail = (vehicle: Vehicle) => {
-    navigation.navigate('VehicleDetail' as never, { vehicleId: vehicle.id } as never);
+    (navigation as any).navigate('VehicleDetail', { vehicleId: vehicle.id });
   };
 
   const formatPrice = (price: number) => {
