@@ -1,5 +1,6 @@
 export default {
   expo: {
+    entryPoint: './index.js',
     name: "alugae - Aluguel de Carros",
     slug: "alugae-mobile",
     version: "1.0.2",
