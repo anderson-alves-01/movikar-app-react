@@ -157,7 +157,7 @@ function TabNavigator() {
 function AppNavigator({ isAuthenticated }: { isAuthenticated: boolean }) {
   return (
     <Stack.Navigator 
-      initialRouteName={isAuthenticated ? "Main" : "Login"}
+      initialRouteName="Main"
       screenOptions={{
         headerStyle: {
           backgroundColor: '#20B2AA',
@@ -247,11 +247,12 @@ export default function App() {
       const initTimeout = setTimeout(() => {
         console.warn('Initialization timeout - continuing without services');
         setIsLoading(false);
+        // Allow access even without authentication
         setIsAuthenticated(false);
       }, 3000);
 
       // Skip ALL async service initialization that could crash
-      // Just check basic auth state synchronously
+      // Just check basic auth state synchronously for background functionality
       let authenticated = false;
       try {
         if (authService && typeof authService.isAuthenticated === 'function') {
@@ -273,7 +274,7 @@ export default function App() {
       }, 1000);
     } catch (error) {
       console.warn('App initialization error:', error);
-      // Always continue with basic functionality
+      // Always continue with basic functionality - allow navigation without auth
       setIsAuthenticated(false);
       setIsLoading(false);
     }
