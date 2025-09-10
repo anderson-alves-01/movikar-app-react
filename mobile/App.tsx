@@ -19,15 +19,25 @@ type ServiceComponent = {
   connect?: () => Promise<void>;
 };
 
+// Fallback Screen Component for iOS stability - define early
+const FallbackScreen: React.FC<{ title?: string }> = ({ title = 'Loading...' }) => (
+  <View style={styles.loadingContainer}>
+    <Text style={styles.loadingText}>{title}</Text>
+    <Text style={styles.errorMessage}>
+      Em desenvolvimento. Funcionalidade será adicionada em breve.
+    </Text>
+  </View>
+);
+
 // Screens - Import with error boundaries
-let HomeScreen: ScreenComponent | null = null;
-let SearchScreen: ScreenComponent | null = null;
-let BookingsScreen: ScreenComponent | null = null;
-let ProfileScreen: ScreenComponent | null = null;
-let VehicleDetailScreen: ScreenComponent | null = null;
-let LoginScreen: ScreenComponent | null = null;
-let ChatScreen: ScreenComponent | null = null;
-let BiometricSetupScreen: ScreenComponent | null = null;
+let HomeScreen: ScreenComponent = FallbackScreen;
+let SearchScreen: ScreenComponent = FallbackScreen;
+let BookingsScreen: ScreenComponent = FallbackScreen;
+let ProfileScreen: ScreenComponent = FallbackScreen;
+let VehicleDetailScreen: ScreenComponent = FallbackScreen;
+let LoginScreen: ScreenComponent = FallbackScreen;
+let ChatScreen: ScreenComponent = FallbackScreen;
+let BiometricSetupScreen: ScreenComponent = FallbackScreen;
 
 try {
   HomeScreen = require('./screens/HomeScreen').default;
@@ -81,26 +91,6 @@ try {
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
-
-// Fallback Screen Component for iOS stability
-const FallbackScreen: React.FC<{ title?: string }> = ({ title = 'Loading...' }) => (
-  <View style={styles.loadingContainer}>
-    <Text style={styles.loadingText}>{title}</Text>
-    <Text style={styles.errorMessage}>
-      Em desenvolvimento. Funcionalidade será adicionada em breve.
-    </Text>
-  </View>
-);
-
-// Ensure all screens are available with fallbacks
-if (!HomeScreen) HomeScreen = () => <FallbackScreen title="Início" />;
-if (!SearchScreen) SearchScreen = () => <FallbackScreen title="Buscar" />;
-if (!BookingsScreen) BookingsScreen = () => <FallbackScreen title="Reservas" />;
-if (!ProfileScreen) ProfileScreen = () => <FallbackScreen title="Perfil" />;
-if (!VehicleDetailScreen) VehicleDetailScreen = () => <FallbackScreen title="Detalhes" />;
-if (!LoginScreen) LoginScreen = () => <FallbackScreen title="Login" />;
-if (!ChatScreen) ChatScreen = () => <FallbackScreen title="Chat" />;
-if (!BiometricSetupScreen) BiometricSetupScreen = () => <FallbackScreen title="Biometria" />;
 
 // Tab Navigator
 function TabNavigator() {
