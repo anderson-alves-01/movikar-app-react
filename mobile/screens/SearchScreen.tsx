@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import apiService from '../services/apiService';
+import { formatCurrencyBRL } from '../utils/currency';
 
 interface Vehicle {
   id: number;
@@ -105,8 +106,8 @@ export default function SearchScreen() {
     (navigation as any).navigate('VehicleDetail', { vehicleId: vehicle.id });
   };
 
-  const formatPrice = (price: number) => {
-    return `R$ ${price.toFixed(2).replace('.', ',')}/dia`;
+  const formatPrice = (price: unknown) => {
+    return formatCurrencyBRL(price);
   };
 
   const renderVehicleItem = ({ item }: { item: Vehicle }) => {

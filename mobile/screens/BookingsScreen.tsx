@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import apiService from '../services/apiService';
 import authService from '../services/authService';
+import { formatCurrencyBRLTotal } from '../utils/currency';
 
 interface Booking {
   id: number;
@@ -118,8 +119,8 @@ export default function BookingsScreen() {
     });
   };
 
-  const formatPrice = (price: number) => {
-    return `R$ ${price.toFixed(2).replace('.', ',')}`;
+  const formatPrice = (price: unknown) => {
+    return formatCurrencyBRLTotal(price);
   };
 
   const calculateDays = (startDate: string, endDate: string) => {

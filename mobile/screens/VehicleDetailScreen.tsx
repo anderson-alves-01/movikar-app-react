@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import apiService from '../services/apiService';
+import { formatCurrencyBRL } from '../utils/currency';
 
 const { width } = Dimensions.get('window');
 
@@ -116,8 +117,8 @@ export default function VehicleDetailScreen() {
     }
   };
 
-  const formatPrice = (price: number) => {
-    return `R$ ${price.toFixed(2).replace('.', ',')}/dia`;
+  const formatPrice = (price: unknown) => {
+    return formatCurrencyBRL(price);
   };
 
   const renderImagePagination = () => {
