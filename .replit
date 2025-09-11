@@ -46,7 +46,7 @@ args = "cd mobile"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm start"
+args = "npx expo start --tunnel --host 0.0.0.0"
 
 [[ports]]
 localPort = 5000
