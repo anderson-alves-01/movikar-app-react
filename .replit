@@ -48,6 +48,19 @@ args = "cd mobile"
 task = "shell.exec"
 args = "npx expo start --tunnel --host 0.0.0.0"
 
+[[workflows.workflow]]
+name = "Start Expo Fast"
+author = 45484050
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd mobile"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm start -- --clear --host 0.0.0.0"
+
 [[ports]]
 localPort = 5000
 externalPort = 80

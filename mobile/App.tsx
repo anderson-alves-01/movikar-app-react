@@ -7,8 +7,13 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { View, Text, StyleSheet, LogBox, Platform } from 'react-native';
 
-// Critical: Ignore ALL warnings that could cause crashes on iOS
-LogBox.ignoreAllLogs(true);
+// Enable warnings to debug performance issues
+LogBox.ignoreAllLogs(false);
+LogBox.ignoreLogs([
+  'Sending `onAnimatedValueUpdate`',
+  'Warning: componentWillReceiveProps',
+  'Warning: componentWillMount',
+]);
 
 // Type definitions for safety
 type ScreenComponent = React.ComponentType<any>;
@@ -232,27 +237,18 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 }
 
 export default function App() {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // Start with false for immediate load
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    // Initialize app immediately without blocking UI
     initializeApp();
   }, []);
 
   const initializeApp = async () => {
-    // Ultra-safe initialization for iOS stability
     try {
-      // Set a timeout to prevent infinite loading
-      const initTimeout = setTimeout(() => {
-        console.warn('Initialization timeout - continuing without services');
-        setIsLoading(false);
-        // Allow access even without authentication
-        setIsAuthenticated(false);
-      }, 3000);
-
-      // Skip ALL async service initialization that could crash
-      // Just check basic auth state synchronously for background functionality
+      // Quick synchronous check only - no delays
       let authenticated = false;
       try {
         if (authService && typeof authService.isAuthenticated === 'function') {
@@ -263,50 +259,44 @@ export default function App() {
         authenticated = false;
       }
 
-      // Clear timeout and set state
-      clearTimeout(initTimeout);
+      // Set state immediately - no loading screen
       setIsAuthenticated(authenticated);
-      setIsLoading(false);
-
-      // Initialize services in background after app is running
+      
+      // All service initialization happens in background - never blocks UI
       setTimeout(() => {
         initializeServicesInBackground();
-      }, 1000);
+      }, 100); // Very short delay
     } catch (error) {
       console.warn('App initialization error:', error);
-      // Always continue with basic functionality - allow navigation without auth
       setIsAuthenticated(false);
-      setIsLoading(false);
     }
   };
 
   const initializeServicesInBackground = async () => {
-    // Background initialization - never crash the app
-    try {
-      if (authService && typeof authService.initialize === 'function') {
-        await authService.initialize();
-      }
-    } catch (error) {
-      console.warn('Background auth init failed:', error);
+    // Background initialization - completely non-blocking
+    const initPromises = [];
+    
+    if (authService && typeof authService.initialize === 'function') {
+      initPromises.push(
+        authService.initialize().catch(error => 
+          console.warn('Background auth init failed:', error)
+        )
+      );
     }
 
-    try {
-      if (notificationService && typeof notificationService.initialize === 'function') {
-        await notificationService.initialize();
-      }
-    } catch (error) {
-      console.warn('Background notification init failed:', error);
+    if (notificationService && typeof notificationService.initialize === 'function') {
+      initPromises.push(
+        notificationService.initialize().catch(error => 
+          console.warn('Background notification init failed:', error)
+        )
+      );
     }
+
+    // Run all initializations in parallel without blocking
+    Promise.allSettled(initPromises);
   };
 
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Carregando...</Text>
-      </View>
-    );
-  }
-
+  // No loading screen - immediate app load
   if (error) {
     return (
       <View style={styles.errorContainer}>
