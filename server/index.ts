@@ -29,8 +29,8 @@ app.use(cors({
       return callback(null, true);
     }
     
-    // Allow Replit domains
-    if (origin.includes('replit.app') || origin.includes('replit.dev')) {
+    // Allow Replit domains (including new picard domains)
+    if (origin.includes('replit.app') || origin.includes('replit.dev') || origin.includes('picard.replit.dev')) {
       return callback(null, true);
     }
     
@@ -298,11 +298,7 @@ app.use((req, res, next) => {
   process.on('SIGTERM', gracefulShutdown);
   process.on('SIGINT', gracefulShutdown);
 
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, async () => {
+  server.listen(port, "0.0.0.0", async () => {
     log(`serving on port ${port}`);
     log(`Environment: ${process.env.NODE_ENV || 'development'}`);
     log(`Database connected: ${process.env.DATABASE_URL ? 'Yes' : 'No'}`);
