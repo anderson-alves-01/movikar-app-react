@@ -1,0 +1,32 @@
+Por favor, revise e atualize a seção "Para você que tem carro" da landing page `alugae.mobi` (ou crie uma nova seção se for mais adequado) com base nas seguintes diretrizes:
+
+1.  **Aprofundamento dos Benefícios com Provas e Exemplos:**
+    *   **"Mais Visibilidade":** Detalhar como o Alugaê garante visibilidade. Mencionar a base de usuários (ex: "Conecte-se a milhares de motoristas em Brasília que buscam um carro no seu bairro.") e a segmentação geográfica.
+    *   **"Controle Total":** Esclarecer o que significa esse controle. Explicar que o locador define o preço da diária, os dias de disponibilidade e as regras de uso do veículo, com gestão facilitada pelo aplicativo.
+    *   **"Renda Extra":** Tornar a promessa de renda mais tangível. Incluir uma estimativa de ganhos potenciais (ex: "Locadores de carros populares em Brasília estão faturando em média R$800 por mês alugando apenas 10 dias.") ou sugerir um "Simulador de Ganhos" interativo.
+
+2.  **Abordagem de Segurança e Confiança:**
+    *   Criar uma subseção ou destaque proeminente sobre a segurança do veículo e do locador. Detalhar:
+        *   **Seguro Abrangente:** Informações claras sobre a cobertura de seguro para o veículo durante o aluguel (danos, roubo, responsabilidade civil) e o processo de acionamento.
+        *   **Verificação de Motoristas:** Descrever o rigoroso processo de verificação de antecedentes dos motoristas (CNH, histórico, identidade).
+        *   **Tecnologia de Rastreamento:** Mencionar se há sistemas de rastreamento/monitoramento do veículo.
+        *   **Suporte 24/7:** Garantir a disponibilidade de suporte em caso de emergências.
+
+3.  **Chamada para Ação (CTA) Mais Forte e Específica:**
+    *   Revisar o CTA atual ("Tenho um carro para alugar") para algo mais impactante e focado no benefício, como "Comece a Gerar Renda com Seu Carro", "Anuncie Grátis e Ganhe Dinheiro" ou "Seu Carro Parado? Transforme em Lucro!". O CTA deve levar diretamente a um formulário de cadastro simplificado para locadores.
+
+4.  **Inclusão de Prova Social e Histórias de Sucesso:**
+    *   Integrar depoimentos ou vídeos curtos de locadores reais que já utilizam o Alugaê e estão satisfeitos com a renda gerada e a experiência. Isso deve aparecer de forma visível na seção.
+
+6.  **Conteúdo Visual Estratégico:**
+    *   Sugestão de uso de imagens e vídeos que representem locadores reais (ou modelos) interagindo com o aplicativo, recebendo pagamentos, ou desfrutando da renda extra. Mostrar carros bem cuidados sendo entregues e devolvidos.
+
+7.  **Destaque para Diferenciais Competitivos:**
+    *   Enfatizar os pontos que diferenciam o Alugaê de outras opções (ex: taxas mais baixas, maior flexibilidade, suporte local em Brasília, tecnologia exclusiva).
+
+**Tom de Voz:**
+Profissional, confiável, empático e motivador. Deve transmitir segurança e oportunidade de forma clara e direta.
+
+**Formato:**
+Integrar essas melhorias de forma fluida na estrutura existente da landing page, garantindo uma experiência de usuário coesa e intuitiva. Priorizar a clareza e a facilidade de leitura.
+
