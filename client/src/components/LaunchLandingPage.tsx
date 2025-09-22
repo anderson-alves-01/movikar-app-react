@@ -379,23 +379,32 @@ export default function LaunchLandingPage() {
               Para <span className="text-red-500">você que tem carro</span>
             </h2>
             <p className="text-xl text-gray-600 mb-8 max-w-4xl mx-auto">
-              Transforme seu carro parado em uma fonte real de renda extra. 
-              Conecte-se a <strong className="text-red-500">milhares de motoristas em Brasília</strong> que buscam um carro no seu bairro.
+              Transforme seu carro parado em uma fonte real de renda extra.
+              Conecte-se a{" "}
+              <strong className="text-red-500">
+                milhares de motoristas em Brasília
+              </strong>{" "}
+              que buscam um carro no seu bairro ou na sua cidade.
             </p>
-            
+
             {/* Destaque de ganhos potenciais */}
             <div className="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-xl p-6 mb-12 max-w-4xl mx-auto">
               <div className="flex items-center justify-center space-x-2 mb-4">
                 <DollarSign className="h-8 w-8 text-green-600" />
-                <span className="text-2xl font-bold text-green-800">Potencial de Renda</span>
+                <span className="text-2xl font-bold text-green-800">
+                  Potencial de Renda
+                </span>
               </div>
               <p className="text-lg text-green-700 font-semibold">
-                Locadores de carros populares em Brasília estão faturando em média
-                <span className="text-2xl font-bold text-green-600 mx-2">R$ 800/mês</span>
+                Locadores de carros populares em Brasília estão faturando em
+                média
+                <span className="text-2xl font-bold text-green-600 mx-2">
+                  R$ 800/mês
+                </span>
                 alugando apenas 10 dias por mês
               </p>
               <p className="text-sm text-green-600 mt-2">
-                *Baseado em dados de locadores ativos na plataforma
+                *Baseado em dados estatísticos
               </p>
             </div>
           </div>
@@ -410,13 +419,16 @@ export default function LaunchLandingPage() {
                 <h3 className="text-xl font-bold">Mais Visibilidade</h3>
               </div>
               <p className="text-gray-600 mb-4">
-                Conecte-se a milhares de motoristas em Brasília que buscam um carro no seu bairro. Nossa plataforma usa segmentação geográfica inteligente.
+                Conecte-se a milhares de motoristas em Brasília que buscam um
+                carro no seu bairro. Nossa plataforma usa segmentação geográfica
+                inteligente.
               </p>
               <div className="bg-gray-50 rounded-lg p-3">
                 <p className="text-sm font-semibold text-gray-700">
-                  ✓ Base ativa de 20.000+ usuários cadastrados<br/>
-                  ✓ Busca por proximidade<br/>
-                  ✓ Notificações automáticas para interessados
+                  ✓ Base ativa de 20.000+ usuários cadastrados
+                  <br />
+                  ✓ Busca por proximidade
+                  <br />✓ Notificações automáticas para interessados
                 </p>
               </div>
             </Card>
@@ -429,13 +441,16 @@ export default function LaunchLandingPage() {
                 <h3 className="text-xl font-bold">Controle Total</h3>
               </div>
               <p className="text-gray-600 mb-4">
-                Você define TUDO: o preço da diária, os dias de disponibilidade e as regras de uso do seu veículo. Gestão facilitada pelo aplicativo.
+                Você define TUDO: o preço da diária, os dias de disponibilidade
+                e as regras de uso do seu veículo. Gestão facilitada pelo
+                aplicativo.
               </p>
               <div className="bg-gray-50 rounded-lg p-3">
                 <p className="text-sm font-semibold text-gray-700">
-                  ✓ Você define o preço por dia<br/>
-                  ✓ Calendário de disponibilidade flexível<br/>
-                  ✓ Regras personalizadas de uso
+                  ✓ Você define o preço por dia
+                  <br />
+                  ✓ Calendário de disponibilidade flexível
+                  <br />✓ Regras personalizadas de uso
                 </p>
               </div>
             </Card>
@@ -448,13 +463,15 @@ export default function LaunchLandingPage() {
                 <h3 className="text-xl font-bold">Renda Extra Garantida</h3>
               </div>
               <p className="text-gray-600 mb-4">
-                Aproveite o tempo em que seu carro ficaria parado. Receba pagamentos seguros e automáticos a cada locação.
+                Aproveite o tempo em que seu carro ficaria parado. Receba
+                pagamentos seguros e automáticos a cada locação.
               </p>
               <div className="bg-green-50 rounded-lg p-3">
                 <p className="text-sm font-semibold text-green-700">
-                  ✓ Pagamento garantido via plataforma<br/>
-                  ✓ Transferência automática em 24h<br/>
-                  ✓ Histórico financeiro completo
+                  ✓ Pagamento garantido via plataforma
+                  <br />
+                  ✓ Transferência automática em 24h
+                  <br />✓ Histórico financeiro completo
                 </p>
               </div>
             </Card>
@@ -471,102 +488,43 @@ export default function LaunchLandingPage() {
                 Sistema completo de proteção para você e seu veículo
               </p>
             </div>
-            
+
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="bg-white rounded-lg p-4 shadow-md">
                 <Shield className="h-8 w-8 text-blue-600 mb-3" />
                 <h4 className="font-semibold mb-2">Seguro Abrangente</h4>
                 <p className="text-sm text-gray-600">
-                  Cobertura completa contra danos, roubo e responsabilidade civil durante todo o período de locação.
+                  Cobertura completa contra danos, roubo e responsabilidade
+                  civil durante todo o período de locação.
                 </p>
               </div>
-              
+
               <div className="bg-white rounded-lg p-4 shadow-md">
                 <CheckCircle className="h-8 w-8 text-green-600 mb-3" />
                 <h4 className="font-semibold mb-2">Motoristas Verificados</h4>
                 <p className="text-sm text-gray-600">
-                  Verificação rigorosa de CNH, histórico de condução e identidade de todos os locatários.
+                  Verificação rigorosa de CNH, histórico de condução e
+                  identidade de todos os locatários.
                 </p>
               </div>
-              
+
               <div className="bg-white rounded-lg p-4 shadow-md">
                 <MapPin className="h-8 w-8 text-purple-600 mb-3" />
                 <h4 className="font-semibold mb-2">Rastreamento 24h</h4>
                 <p className="text-sm text-gray-600">
-                  Monitoramento em tempo real da localização do seu veículo durante a locação.
+                  Monitoramento em tempo real da localização do seu veículo
+                  durante a locação.
                 </p>
               </div>
-              
+
               <div className="bg-white rounded-lg p-4 shadow-md">
                 <Clock className="h-8 w-8 text-red-600 mb-3" />
                 <h4 className="font-semibold mb-2">Suporte 24/7</h4>
                 <p className="text-sm text-gray-600">
-                  Atendimento especializado disponível a qualquer momento para emergências.
+                  Atendimento especializado disponível a qualquer momento para
+                  emergências.
                 </p>
               </div>
-            </div>
-          </div>
-
-          {/* Prova Social */}
-          <div className="mb-16">
-            <h3 className="text-2xl font-bold text-center text-gray-900 mb-8">
-              Histórias de Sucesso dos Nossos Locadores
-            </h3>
-            
-            <div className="grid md:grid-cols-3 gap-6">
-              <Card className="p-6 border-none shadow-lg">
-                <div className="flex items-center mb-4">
-                  <div className="bg-gray-300 rounded-full w-12 h-12 flex items-center justify-center mr-4">
-                    <span className="font-bold text-gray-600">MC</span>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Maria Clara</h4>
-                    <p className="text-sm text-gray-500">Asa Norte - Honda Civic</p>
-                  </div>
-                </div>
-                <div className="flex mb-3">
-                  {[1,2,3,4,5].map(i => <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />)}
-                </div>
-                <p className="text-gray-600 text-sm">
-                  "Em 3 meses já faturei R$ 2.400! O processo é super simples e me sinto segura com todo o suporte da plataforma."
-                </p>
-              </Card>
-              
-              <Card className="p-6 border-none shadow-lg">
-                <div className="flex items-center mb-4">
-                  <div className="bg-gray-300 rounded-full w-12 h-12 flex items-center justify-center mr-4">
-                    <span className="font-bold text-gray-600">RS</span>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Roberto Silva</h4>
-                    <p className="text-sm text-gray-500">Taguatinga - Toyota Corolla</p>
-                  </div>
-                </div>
-                <div className="flex mb-3">
-                  {[1,2,3,4,5].map(i => <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />)}
-                </div>
-                <p className="text-gray-600 text-sm">
-                  "Meu carro ficava parado no fim de semana. Agora ganho R$ 600-900 por mês só alugando nos sábados e domingos!"
-                </p>
-              </Card>
-              
-              <Card className="p-6 border-none shadow-lg">
-                <div className="flex items-center mb-4">
-                  <div className="bg-gray-300 rounded-full w-12 h-12 flex items-center justify-center mr-4">
-                    <span className="font-bold text-gray-600">AF</span>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Ana Flávia</h4>
-                    <p className="text-sm text-gray-500">Águas Claras - Nissan March</p>
-                  </div>
-                </div>
-                <div className="flex mb-3">
-                  {[1,2,3,4,5].map(i => <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />)}
-                </div>
-                <p className="text-gray-600 text-sm">
-                  "A renda extra me ajudou a quitar o financiamento mais rápido. Super recomendo para quem tem carro parado!"
-                </p>
-              </Card>
             </div>
           </div>
 
@@ -575,7 +533,7 @@ export default function LaunchLandingPage() {
             <h3 className="text-2xl font-bold text-center text-gray-900 mb-8">
               Por que escolher o Alugaê?
             </h3>
-            
+
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="text-center">
                 <div className="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
@@ -586,7 +544,7 @@ export default function LaunchLandingPage() {
                   Apenas 5% de comissão vs 15-25% de outras plataformas
                 </p>
               </div>
-              
+
               <div className="text-center">
                 <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                   <Clock className="h-8 w-8 text-blue-600" />
@@ -596,7 +554,7 @@ export default function LaunchLandingPage() {
                   Defina horários, preços e regras como quiser
                 </p>
               </div>
-              
+
               <div className="text-center">
                 <div className="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                   <MapPin className="h-8 w-8 text-purple-600" />
@@ -606,7 +564,7 @@ export default function LaunchLandingPage() {
                   Especialistas em Brasília com suporte presencial
                 </p>
               </div>
-              
+
               <div className="text-center">
                 <div className="bg-red-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                   <Shield className="h-8 w-8 text-red-600" />
@@ -628,9 +586,10 @@ export default function LaunchLandingPage() {
               </h3>
               <p className="text-xl mb-6 opacity-90">
                 Comece a gerar renda com seu carro em menos de 24 horas.
-                <br/>Cadastro 100% gratuito e sem compromisso.
+                <br />
+                Cadastro 100% gratuito e sem compromisso.
               </p>
-              
+
               <Button
                 id="locadores-cta-improved"
                 size="lg"
@@ -649,10 +608,10 @@ export default function LaunchLandingPage() {
                   }, 150);
                 }}
               >
-                🚗💰 Comece a Gerar Renda com Seu Carro
+                💰 Comece a Gerar Renda com Seu Carro
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-              
+
               <p className="text-sm mt-4 opacity-75">
                 ⏰ Cadastro gratuito • 💰 Sem taxas de adesão • 🔒 100% seguro
               </p>
