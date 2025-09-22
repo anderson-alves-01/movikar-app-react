@@ -142,11 +142,6 @@ app.use((req, res, next) => {
   });
 
   let server;
-  let registerRoutes;
-  
-  // Initialize HTTP server first for deployment stability
-  const http = await import('http');
-  server = http.createServer(app);
   
   // Register routes with robust error handling
   try {
@@ -156,7 +151,7 @@ app.use((req, res, next) => {
     log('Database connection verified');
     
     const routesModule = await import("./routes");
-    registerRoutes = routesModule.registerRoutes;
+    const registerRoutes = routesModule.registerRoutes;
     server = await registerRoutes(app);
     log('Routes registered successfully');
   } catch (error) {
