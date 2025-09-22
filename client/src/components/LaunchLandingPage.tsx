@@ -373,95 +373,47 @@ export default function LaunchLandingPage() {
 
       {/* Para você que tem carro */}
       <section id="locadores" className="py-12 md:py-20 bg-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8 md:mb-12">
-            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 md:mb-6">
-              Para <span className="text-red-500">você que tem carro</span>
-            </h2>
-            <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
-              Transforme seu carro parado em uma fonte real de renda extra. 
-              Conecte-se a <strong className="text-red-500">milhares de motoristas em Brasília</strong> que buscam um carro no seu bairro.
-            </p>
-          </div>
-
-          {/* Destaque principal */}
-          <div className="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-xl p-6 md:p-8 mb-8 md:mb-12">
-            <div className="text-center">
-              <div className="flex items-center justify-center mb-4">
-                <DollarSign className="h-10 w-10 md:h-12 md:w-12 text-green-600" />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Benefícios em lista */}
+          <div className="mb-8">
+            <div className="space-y-3 text-center md:text-left">
+              <div className="flex items-center justify-center md:justify-start">
+                <span className="text-green-600 mr-3">✓</span>
+                <span className="text-gray-700">Pagamento garantido</span>
               </div>
-              <h3 className="text-xl md:text-2xl font-bold text-green-800 mb-2">
-                Potencial de Renda
-              </h3>
-              <p className="text-base md:text-lg text-green-700 font-semibold">
-                Locadores de carros populares em Brasília estão faturando em média
-                <span className="block md:inline text-2xl md:text-3xl font-bold text-green-600 my-2 md:mx-2">R$ 800/mês</span>
-                alugando apenas 10 dias por mês
-              </p>
-              <p className="text-sm text-green-600 mt-2">
-                *Baseado em dados de locadores ativos na plataforma
-              </p>
-            </div>
-          </div>
-
-          {/* Benefícios simplificados */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-8 md:mb-12">
-            <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
-              <h3 className="text-lg md:text-xl font-bold mb-3">Mais Visibilidade</h3>
-              <p className="text-gray-600 text-sm md:text-base">
-                Conecte-se a milhares de motoristas em Brasília que buscam um carro no seu bairro.
-              </p>
-              <ul className="mt-3 space-y-1 text-sm text-gray-700">
-                <li>✓ Base ativa de 20.000+ usuários</li>
-                <li>✓ Busca por proximidade</li>
-                <li>✓ Notificações automáticas</li>
-              </ul>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
-              <h3 className="text-lg md:text-xl font-bold mb-3">Controle Total</h3>
-              <p className="text-gray-600 text-sm md:text-base">
-                Você define tudo: preço, disponibilidade e regras de uso do seu veículo.
-              </p>
-              <ul className="mt-3 space-y-1 text-sm text-gray-700">
-                <li>✓ Preço por dia personalizado</li>
-                <li>✓ Calendário flexível</li>
-                <li>✓ Regras de uso definidas por você</li>
-              </ul>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
-              <h3 className="text-lg md:text-xl font-bold mb-3">Renda Garantida</h3>
-              <p className="text-gray-600 text-sm md:text-base">
-                Receba pagamentos seguros e automáticos a cada locação.
-              </p>
-              <ul className="mt-3 space-y-1 text-sm text-green-700">
-                <li>✓ Pagamento garantido</li>
-                <li>✓ Transferência em 24h</li>
-                <li>✓ Histórico completo</li>
-              </ul>
+              <div className="flex items-center justify-center md:justify-start">
+                <span className="text-green-600 mr-3">✓</span>
+                <span className="text-gray-700">Transferência em 24h</span>
+              </div>
+              <div className="flex items-center justify-center md:justify-start">
+                <span className="text-green-600 mr-3">✓</span>
+                <span className="text-gray-700">Histórico completo</span>
+              </div>
             </div>
           </div>
 
           {/* CTA Principal */}
           <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-2xl p-6 md:p-8 text-white text-center">
-            <div className="max-w-2xl mx-auto">
-              <DollarSign className="h-12 w-12 md:h-16 md:w-16 mx-auto mb-4 md:mb-6" />
+            <div className="max-w-md mx-auto">
+              <DollarSign className="h-16 w-16 mx-auto mb-6" />
               
-              <h3 className="text-2xl md:text-3xl font-bold mb-3 md:mb-4">
-                Seu Carro Parado? Transforme em Lucro!
+              <h3 className="text-2xl md:text-3xl font-bold mb-4 leading-tight">
+                Seu Carro Parado?<br/>Transforme em Lucro!
               </h3>
               
-              <p className="text-base md:text-xl mb-6 opacity-90">
+              <p className="text-base md:text-lg mb-2 opacity-90 leading-relaxed">
                 Comece a gerar renda com seu carro em menos de 24 horas.
-                <span className="block mt-2">Cadastro 100% gratuito e sem compromisso.</span>
+              </p>
+              
+              <p className="text-base md:text-lg mb-6 opacity-90 leading-relaxed">
+                Cadastro 100% gratuito e sem compromisso.
               </p>
               
               <Button
                 data-testid="button-locadores-cta"
                 id="locadores-cta-improved"
                 size="lg"
-                className="w-full md:w-auto bg-white text-red-600 hover:bg-gray-100 px-6 md:px-10 py-3 md:py-4 text-base md:text-lg font-semibold rounded-xl shadow-lg transform hover:scale-105 transition-all"
+                className="w-full bg-white text-red-600 hover:bg-gray-100 px-6 py-3 text-base md:text-lg font-semibold rounded-xl shadow-lg transition-all mb-4"
                 onClick={() => {
                   if (window.fbq) {
                     window.fbq("trackCustom", "Locatario", {
@@ -477,11 +429,10 @@ export default function LaunchLandingPage() {
                 }}
               >
                 Comece a Gerar Renda com Seu Carro
-                <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
               </Button>
               
-              <div className="flex flex-wrap justify-center items-center gap-4 mt-4 text-xs md:text-sm opacity-75">
-                <span>⏰ Cadastro gratuito</span>
+              <div className="flex flex-wrap justify-center items-center gap-2 md:gap-4 text-xs md:text-sm opacity-75">
+                <span>Cadastro gratuito</span>
                 <span>•</span>
                 <span>Sem taxas de adesão</span>
                 <span>•</span>
