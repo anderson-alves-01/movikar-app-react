@@ -234,23 +234,22 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
       return false;
     }
 
-    // Convert to date strings for comparison (YYYY-MM-DD format)
-    const startDate = bookingData.startDate;
-    const endDate = bookingData.endDate;
-    
-    console.log('🔍 Debug hasDateConflict:');
-    console.log('  startDate:', startDate, typeof startDate);
-    console.log('  endDate:', endDate, typeof endDate);
-    console.log('  unavailableDates:', unavailableDates);
+    // Convert to Date objects for proper comparison
+    const startDate = new Date(bookingData.startDate);
+    const endDate = new Date(bookingData.endDate);
     
     // Check if any unavailable date falls within the selected range (inclusive)
     const hasConflict = unavailableDates.some(unavailableDate => {
-      const isConflict = unavailableDate >= startDate && unavailableDate <= endDate;
-      console.log(`  ${unavailableDate} >= ${startDate} && ${unavailableDate} <= ${endDate} = ${isConflict}`);
-      return isConflict;
+      const unavailable = new Date(unavailableDate);
+      
+      // Compare only dates (ignore time) by setting all to same time
+      const startOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+      const endOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+      const unavailableOnly = new Date(unavailable.getFullYear(), unavailable.getMonth(), unavailable.getDate());
+      
+      return unavailableOnly >= startOnly && unavailableOnly <= endOnly;
     });
     
-    console.log('  Final conflict result:', hasConflict);
     return hasConflict;
   };
 
