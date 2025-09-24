@@ -1,5 +1,4 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { createServer } from "http";
 import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -19,39 +18,23 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 
-// CORS Configuration - Environment-aware security
+// CORS Configuration - More permissive for development
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, server-to-server)
+    // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
     
-    // Development mode - allow localhost and development domains
-    if (process.env.NODE_ENV === 'development') {
-      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-        return callback(null, true);
-      }
-      
-      // Allow Replit domains for development
-      if (origin.includes('replit.app') || origin.includes('replit.dev') || origin.includes('picard.replit.dev')) {
-        return callback(null, true);
-      }
-      
-      // Allow all in development (fallback)
+    // Allow any localhost origin for development
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
       return callback(null, true);
     }
     
-    // Production mode - restrict to allowed origins
-    const allowedOrigins = [
-      'https://alugae.mobi',
-      'https://www.alugae.mobi'
-    ];
-    
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      log(`CORS rejected origin: ${origin}`, 'warning');
-      callback(null, false);
+    // Allow Replit domains (including new picard domains)
+    if (origin.includes('replit.app') || origin.includes('replit.dev') || origin.includes('picard.replit.dev')) {
+      return callback(null, true);
     }
+    
+    callback(null, true); // Allow all in development
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -118,73 +101,25 @@ app.use((req, res, next) => {
 
 (async () => {
   // Add health check endpoint BEFORE other routes for quick response
-  app.get('/health', async (_req, res) => {
-    try {
-      // Quick database status check (non-blocking)
-      const { getDatabaseStatus } = await import("./db");
-      const dbStatus = await Promise.race([
-        getDatabaseStatus(),
-        new Promise<{ connected: boolean; error: string }>(resolve => 
-          setTimeout(() => resolve({ connected: false, error: 'Health check timeout' }), 3000)
-        )
-      ]);
-      
-      res.status(200).json({ 
-        status: 'ok', 
-        timestamp: new Date().toISOString(),
-        service: 'alugae.mobi',
-        version: '1.0.0',
-        database: {
-          connected: dbStatus.connected,
-          latency: dbStatus.latency || null,
-          error: dbStatus.error || null
-        }
-      });
-    } catch (error) {
-      // Always return 200 for health checks to prevent deployment failure
-      res.status(200).json({ 
-        status: 'ok', 
-        timestamp: new Date().toISOString(),
-        service: 'alugae.mobi',
-        version: '1.0.0',
-        database: {
-          connected: false,
-          error: 'Health check failed'
-        }
-      });
-    }
+  app.get('/health', (_req, res) => {
+    res.status(200).json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      service: 'alugae.mobi',
+      version: '1.0.0'
+    });
   });
 
   // Add deployment-specific health checks
-  app.get('/status', async (_req, res) => {
-    try {
-      const { getDatabaseStatus } = await import("./db");
-      const dbStatus = await getDatabaseStatus();
-      
-      res.status(200).json({
-        status: 'healthy',
-        service: 'alugae car rental platform',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        env: process.env.NODE_ENV || 'development',
-        port: process.env.PORT || '5000',
-        database: dbStatus,
-        memory: {
-          used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB',
-          total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + 'MB'
-        }
-      });
-    } catch (error) {
-      res.status(200).json({
-        status: 'healthy',
-        service: 'alugae car rental platform',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        env: process.env.NODE_ENV || 'development',
-        port: process.env.PORT || '5000',
-        database: { connected: false, error: 'Status check failed' }
-      });
-    }
+  app.get('/status', (_req, res) => {
+    res.status(200).json({
+      status: 'healthy',
+      service: 'alugae car rental platform',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      env: process.env.NODE_ENV || 'development',
+      port: process.env.PORT || '5000'
+    });
   });
 
   // Add root health check endpoint that responds quickly in production
@@ -206,9 +141,50 @@ app.use((req, res, next) => {
     next();
   });
 
-  // Create HTTP server immediately so health endpoints are always available
-  const server = createServer(app);
+  let server;
   
+  // Register routes with robust error handling
+  try {
+    // Test database connection first
+    const { pool } = await import("./db");
+    await pool.query('SELECT 1');
+    log('Database connection verified');
+    
+    const routesModule = await import("./routes");
+    const registerRoutes = routesModule.registerRoutes;
+    server = await registerRoutes(app);
+    log('Routes registered successfully');
+  } catch (error) {
+    log(`Warning: Route registration failed, continuing with limited functionality: ${error}`, "error");
+    
+    // Add essential fallback routes that work without database
+    app.get('/api/health', (_req, res) => {
+      res.status(200).json({ 
+        status: 'ok', 
+        message: 'Server running with limited API functionality',
+        timestamp: new Date().toISOString(),
+        error: String(error).substring(0, 200) // Include error info for debugging
+      });
+    });
+
+    // Add basic auth route fallback
+    app.get('/api/auth/user', (_req, res) => {
+      res.status(503).json({ 
+        message: 'Database connection unavailable',
+        status: 'service_unavailable'
+      });
+    });
+
+    // Add vehicles route fallback
+    app.get('/api/vehicles', (_req, res) => {
+      res.status(503).json({ 
+        message: 'Database connection unavailable',
+        status: 'service_unavailable',
+        data: []
+      });
+    });
+  }
+
   // Add error handling to prevent crashes during static file serving
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -230,6 +206,7 @@ app.use((req, res, next) => {
   });
 
   // Setup Vite in development or serve static files in production
+  // Remove restrictive environment checks to allow proper static file serving
   if (process.env.NODE_ENV === "development") {
     try {
       await setupVite(app, server);
@@ -238,6 +215,7 @@ app.use((req, res, next) => {
       log(`Vite setup failed: ${error}`, "error");
     }
   } else {
+    // Always attempt to serve static files in production
     try {
       serveStatic(app);
       log('Static files setup completed');
@@ -290,7 +268,7 @@ app.use((req, res, next) => {
             status: 'ok', 
             message: 'alugae API server is running',
             timestamp: new Date().toISOString(),
-            note: 'Frontend unavailable, API endpoints accessible'
+            note: 'Static files not found - API-only mode'
           });
         });
       }
@@ -302,89 +280,49 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
+  
+  // Add graceful shutdown handling
+  const gracefulShutdown = () => {
+    log('Received shutdown signal, closing server gracefully...');
+    server.close(() => {
+      log('Server closed successfully');
+      process.exit(0);
+    });
+  };
 
-  server.listen(port, "0.0.0.0", () => {
+  process.on('SIGTERM', gracefulShutdown);
+  process.on('SIGINT', gracefulShutdown);
+
+  server.listen(port, "0.0.0.0", async () => {
     log(`serving on port ${port}`);
     log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-    log(`Database configured: ${process.env.DATABASE_URL ? 'Yes' : 'No'}`);
-  });
-
-  // Perform database connection validation asynchronously after server starts
-  (async () => {
-    let databaseAvailable = false;
+    log(`Database connected: ${process.env.DATABASE_URL ? 'Yes' : 'No'}`);
     
+    // Start waitlist counter service
     try {
-      log('🔄 Validating database connection asynchronously...');
-      const { validateDatabaseConnection } = await import("./db");
+      const { DatabaseStorage } = await import('./storage');
+      const storage = new DatabaseStorage();
       
-      // Reduced timeout to prevent long blocking
-      databaseAvailable = await validateDatabaseConnection(2, 1000); // 2 retries, 1s delay
+      // Initialize counter with current count from landing page users
+      const landingPageUsers = await storage.getLandingPageUsers();
+      const initialCount = landingPageUsers.length + 1200; // Base + real users
       
-      if (databaseAvailable) {
-        log('✅ Database connection validated - registering full routes');
-        
-        // Register full routes after successful database connection
-        const routesModule = await import("./routes");
-        const registerRoutes = routesModule.registerRoutes;
-        await registerRoutes(app);
-        log('✅ Full routes registered successfully with database support');
-        
-      } else {
-        throw new Error('Database validation failed - using degraded mode');
+      // Update initial counter if needed
+      const currentSettings = await storage.getAdminSettings();
+      if (!currentSettings || currentSettings.waitlistCount === 0) {
+        await storage.updateAdminSettings({ waitlistCount: initialCount });
+        log(`✅ Initialized waitlist counter with ${initialCount} users`);
       }
       
+      // Start periodic increment (every minute)
+      setInterval(async () => {
+        await storage.incrementWaitlistCount();
+      }, 60000); // 60 seconds
+      
+      log('🚀 Waitlist counter service started (increments every minute)');
     } catch (error) {
-      databaseAvailable = false;
-      log(`⚠️ Database connection failed, running in degraded mode: ${error instanceof Error ? error.message : String(error)}`, "error");
-      
-      // Register degraded fallback routes
-      const fallbackRoutes = [
-        '/api/auth/user',
-        '/api/auth/login', 
-        '/api/auth/register',
-        '/api/vehicles',
-        '/api/bookings',
-        '/api/users/profile'
-      ];
-      
-      fallbackRoutes.forEach(route => {
-        app.get(route, (_req, res) => {
-          res.status(503).json({ 
-            message: 'Database connection temporarily unavailable. Please try again in a few moments.',
-            status: 'service_unavailable',
-            timestamp: new Date().toISOString(),
-            retryAfter: '30'
-          });
-        });
-      });
-      
-      // Add fallback for POST routes 
-      app.post('/api/auth/login', (_req, res) => {
-        res.status(503).json({
-          message: 'Authentication temporarily unavailable during deployment',
-          status: 'service_unavailable',
-          timestamp: new Date().toISOString()
-        });
-      });
+      log('⚠️ Failed to start waitlist counter service:', 'error');
+      console.error(error);
     }
-  })().catch(error => {
-    log(`Database validation async error: ${error}`, "error");
-  });
-
-  // Add graceful shutdown handling
-  process.on('SIGTERM', async () => {
-    log('Received SIGTERM, shutting down gracefully...');
-    server?.close(() => {
-      log('HTTP server closed');
-      process.exit(0);
-    });
-  });
-
-  process.on('SIGINT', async () => {
-    log('Received SIGINT, shutting down gracefully...');
-    server?.close(() => {
-      log('HTTP server closed');
-      process.exit(0);
-    });
   });
 })();
