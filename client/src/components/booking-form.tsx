@@ -570,10 +570,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
                     {unavailableDates.length > 0 ? (
                       <>
                         <p className="text-blue-700">
-                          Datas reservadas: {unavailableDates.length > 5 
-                            ? `${unavailableDates.slice(0, 5).map(date => new Date(date).toLocaleDateString('pt-BR')).join(', ')} e mais ${unavailableDates.length - 5} datas`
-                            : unavailableDates.map(date => new Date(date).toLocaleDateString('pt-BR')).join(', ')
-                          }
+                          Datas reservadas: {unavailableDates.map(date => new Date(date).toLocaleDateString('pt-BR')).join(', ')}
                         </p>
                         <p className="text-blue-600 text-xs mt-1">
                           Escolha datas que não estão na lista acima para sua reserva.
@@ -598,7 +595,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
                     <p className="text-orange-800 font-semibold mb-3">
                       📅 Datas já reservadas (indisponíveis):
                     </p>
-                    <div className="grid grid-cols-4 gap-2 text-xs">
+                    <div className="grid grid-cols-5 gap-2 text-xs">
                       {unavailableDates.map((date, index) => {
                         const dateObj = new Date(date);
                         const formattedDate = dateObj.toLocaleDateString('pt-BR', {
