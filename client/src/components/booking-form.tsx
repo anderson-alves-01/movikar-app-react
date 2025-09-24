@@ -184,18 +184,35 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
     
     const total = subtotal + serviceFee + insuranceFee;
 
-    console.log('💰 Calculating pricing with admin settings:', {
+    console.log('💰 DEBUGGING PRICING CALCULATION:', {
+      // Feature toggles
+      enableServiceFee: adminSettings?.enableServiceFee,
+      enableInsuranceOption: adminSettings?.enableInsuranceOption,
+      
+      // Raw admin settings
       serviceFeePercentage: adminSettings?.serviceFeePercentage,
       insuranceFeePercentage: adminSettings?.insuranceFeePercentage,
+      
+      // Vehicle data
+      vehiclePricePerDay: vehicle.pricePerDay,
       securityDepositValue,
       securityDepositType,
-      serviceRate,
-      insuranceRate,
+      
+      // Calculated values
+      days,
+      dailyRate,
       subtotal,
+      serviceRate,
       serviceFee,
+      insuranceRate, 
       insuranceFee,
       securityDeposit,
-      total
+      
+      // Final result
+      total,
+      
+      // What should total be
+      expectedTotal: subtotal + (adminSettings?.enableServiceFee ? serviceFee : 0) + (bookingData.includeInsurance ? insuranceFee : 0)
     });
 
     return {
