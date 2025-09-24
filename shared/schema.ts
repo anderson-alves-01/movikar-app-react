@@ -681,6 +681,10 @@ export const insertVehicleSchema = createInsertSchema(vehicles).omit({
   pricePerDay: z.union([z.string(), z.number()]).transform(val => String(val)),
   pricePerWeek: z.union([z.string(), z.number()]).optional().transform(val => val ? String(val) : undefined),
   pricePerMonth: z.union([z.string(), z.number()]).optional().transform(val => val ? String(val) : undefined),
+  // Security deposit fields - handle number to string conversion
+  securityDepositPercentage: z.union([z.string(), z.number()]).optional().transform(val => val ? String(val) : undefined),
+  securityDepositValue: z.union([z.string(), z.number()]).optional().transform(val => val ? String(val) : undefined),
+  securityDepositType: z.string().optional(),
   licensePlate: z.string()
     .min(7, "Placa deve ter pelo menos 7 caracteres")
     .max(8, "Placa deve ter no máximo 8 caracteres")
