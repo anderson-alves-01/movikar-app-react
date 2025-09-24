@@ -230,26 +230,35 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
   };
 
   const hasDateConflict = () => {
+    console.warn("🚨 CHECKING DATE CONFLICT - START");
+    
     if (!bookingData.startDate || !bookingData.endDate || unavailableDates.length === 0) {
+      console.warn("🚨 No conflict - missing data:", {
+        startDate: bookingData.startDate,
+        endDate: bookingData.endDate, 
+        unavailableDatesLength: unavailableDates.length
+      });
       return false;
     }
 
-    // Convert to Date objects for proper comparison
-    const startDate = new Date(bookingData.startDate);
-    const endDate = new Date(bookingData.endDate);
+    // Use string comparison directly to avoid timezone issues
+    const selectedStart = bookingData.startDate; // Should be YYYY-MM-DD string
+    const selectedEnd = bookingData.endDate;     // Should be YYYY-MM-DD string
+    
+    console.warn("🚨 Date comparison data:", {
+      selectedStart,
+      selectedEnd,
+      unavailableDates
+    });
     
     // Check if any unavailable date falls within the selected range (inclusive)
     const hasConflict = unavailableDates.some(unavailableDate => {
-      const unavailable = new Date(unavailableDate);
-      
-      // Compare only dates (ignore time) by setting all to same time
-      const startOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-      const endOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-      const unavailableOnly = new Date(unavailable.getFullYear(), unavailable.getMonth(), unavailable.getDate());
-      
-      return unavailableOnly >= startOnly && unavailableOnly <= endOnly;
+      const isWithinRange = unavailableDate >= selectedStart && unavailableDate <= selectedEnd;
+      console.warn(`🚨 Checking: ${unavailableDate} between ${selectedStart} and ${selectedEnd} = ${isWithinRange}`);
+      return isWithinRange;
     });
     
+    console.warn("🚨 Final conflict result:", hasConflict);
     return hasConflict;
   };
 
