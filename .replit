@@ -101,5 +101,13 @@ externalPort = 5000
 localPort = 24678
 externalPort = 6000
 
+[[ports]]
+localPort = 34721
+externalPort = 8000
+
+[[ports]]
+localPort = 40987
+externalPort = 6800
+
 [agent]
 integrations = ["javascript_stripe:1.0.0"]

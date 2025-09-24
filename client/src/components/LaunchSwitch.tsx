@@ -3,9 +3,19 @@
 
 import { useQuery } from "@tanstack/react-query";
 
+// Tipo para as configurações públicas retornadas pela API
+interface PublicFeatureToggles {
+  showLaunchPage: boolean;
+  enableRentNowCheckout: boolean;
+  enableInsuranceOption: boolean;
+  enableServiceFee: boolean;
+  contractSignatureEnabled: boolean;
+  waitlistCount: number;
+}
+
 // Hook para buscar configurações públicas
 function usePublicFeatureToggles() {
-  return useQuery({
+  return useQuery<PublicFeatureToggles>({
     queryKey: ['/api/public/feature-toggles'],
     staleTime: 5 * 60 * 1000, // Cache por 5 minutos
   });
