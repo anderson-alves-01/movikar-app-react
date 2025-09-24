@@ -238,10 +238,20 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
     const startDate = bookingData.startDate;
     const endDate = bookingData.endDate;
     
+    console.log('🔍 Debug hasDateConflict:');
+    console.log('  startDate:', startDate, typeof startDate);
+    console.log('  endDate:', endDate, typeof endDate);
+    console.log('  unavailableDates:', unavailableDates);
+    
     // Check if any unavailable date falls within the selected range (inclusive)
-    return unavailableDates.some(unavailableDate => {
-      return unavailableDate >= startDate && unavailableDate <= endDate;
+    const hasConflict = unavailableDates.some(unavailableDate => {
+      const isConflict = unavailableDate >= startDate && unavailableDate <= endDate;
+      console.log(`  ${unavailableDate} >= ${startDate} && ${unavailableDate} <= ${endDate} = ${isConflict}`);
+      return isConflict;
     });
+    
+    console.log('  Final conflict result:', hasConflict);
+    return hasConflict;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
