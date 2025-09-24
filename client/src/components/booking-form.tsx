@@ -477,7 +477,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
             <span>{vehicle.rating}</span>
             <span className="mx-2">•</span>
-            <span>23 avaliações</span>
+            <span>{vehicle.reviewCount || 0} avaliações</span>
           </div>
         </CardContent>
       </Card>
