@@ -76,7 +76,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
   });
 
   // Debug logging for unavailable dates
-  React.useEffect(() => {
+  useEffect(() => {
     console.warn("🚨 FRONTEND RECEIVED unavailableDates:", unavailableDates);
     console.warn("🚨 FRONTEND Array length:", unavailableDates.length);
     if (unavailableDates.length > 0) {
