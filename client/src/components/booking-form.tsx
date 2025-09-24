@@ -60,7 +60,9 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
 
   // Fetch unavailable dates for the vehicle
   const { data: unavailableDates = [], isLoading: loadingDates } = useQuery({
-    queryKey: ['/api/vehicles', vehicle.id, 'unavailable-dates'],
+    queryKey: ['/api/vehicles', vehicle.id, 'unavailable-dates', Date.now()],
+    staleTime: 0,
+    gcTime: 0,
     queryFn: async () => {
       const response = await fetch(`/api/vehicles/${vehicle.id}/unavailable-dates`);
       if (!response.ok) {
