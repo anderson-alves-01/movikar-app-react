@@ -620,8 +620,11 @@ export class DatabaseStorage implements IStorage {
     return (result?.count || 0) > 0;
   }
 
-  // Get unavailable dates for a vehicle based on existing bookings
+  // Get unavailable dates for a vehicle based on existing bookings AND availability blocks
   async getVehicleUnavailableDates(vehicleId: number): Promise<string[]> {
+    const unavailableDates: string[] = [];
+
+    // 1. Get dates from confirmed bookings
     const confirmedBookings = await db
       .select({
         startDate: bookings.startDate,
@@ -642,8 +645,7 @@ export class DatabaseStorage implements IStorage {
         )
       );
 
-    const unavailableDates: string[] = [];
-
+    // Add booking dates to unavailable list
     confirmedBookings.forEach(booking => {
       const start = new Date(booking.startDate);
       const end = new Date(booking.endDate);
@@ -654,7 +656,33 @@ export class DatabaseStorage implements IStorage {
       }
     });
 
-    return unavailableDates;
+    // 2. Get dates from vehicle availability blocks (manually configured by owner)
+    const availabilityBlocks = await db
+      .select({
+        startDate: vehicleAvailability.startDate,
+        endDate: vehicleAvailability.endDate,
+      })
+      .from(vehicleAvailability)
+      .where(
+        and(
+          eq(vehicleAvailability.vehicleId, vehicleId),
+          eq(vehicleAvailability.isAvailable, false) // Only unavailable periods
+        )
+      );
+
+    // Add availability block dates to unavailable list
+    availabilityBlocks.forEach(block => {
+      const start = new Date(block.startDate);
+      const end = new Date(block.endDate);
+
+      // Add all dates in the range (inclusive)
+      for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+        unavailableDates.push(date.toISOString().split('T')[0]);
+      }
+    });
+
+    // Remove duplicates and return sorted list
+    return [...new Set(unavailableDates)].sort();
   }
 
   // Bookings
