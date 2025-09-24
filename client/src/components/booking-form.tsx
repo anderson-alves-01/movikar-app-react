@@ -171,7 +171,8 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
     const serviceRate = (adminSettings?.serviceFeePercentage || 10) / 100; // Convert percentage to decimal
     const insuranceRate = (adminSettings?.insuranceFeePercentage || 15) / 100; // Convert percentage to decimal
     
-    const serviceFee = subtotal * serviceRate;
+    // Only apply service fee if enabled via feature toggle
+    const serviceFee = adminSettings?.enableServiceFee ? subtotal * serviceRate : 0;
     const insuranceFee = bookingData.includeInsurance ? subtotal * insuranceRate : 0;
     
     // Calculate security deposit (caução)
@@ -505,6 +506,29 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
               </div>
             )}
 
+            {/* Available/Unavailable Dates Calendar Info */}
+            {unavailableDates.length > 0 && (
+              <div className="border border-orange-200 bg-orange-50 rounded-lg p-3">
+                <div className="flex items-start gap-2">
+                  <Calendar className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm">
+                    <p className="text-orange-800 font-medium mb-1">
+                      📅 Datas indisponíveis para este veículo
+                    </p>
+                    <p className="text-orange-700">
+                      As seguintes datas já estão reservadas: {unavailableDates.length > 5 
+                        ? `${unavailableDates.slice(0, 5).map(date => new Date(date).toLocaleDateString('pt-BR')).join(', ')} e mais ${unavailableDates.length - 5} datas`
+                        : unavailableDates.map(date => new Date(date).toLocaleDateString('pt-BR')).join(', ')
+                      }
+                    </p>
+                    <p className="text-orange-600 text-xs mt-1">
+                      Escolha datas que não estão na lista acima para sua reserva.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Show unavailable dates - enhanced visual display */}
             {!loadingDates && unavailableDates.length > 0 && (
               <div className="border border-orange-300 bg-orange-50 rounded-lg p-4">
@@ -593,10 +617,12 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
                   </span>
                   <span className="text-gray-800">{formatCurrency(pricing.subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Taxa de serviço</span>
-                  <span className="text-gray-800">{formatCurrency(pricing.serviceFee)}</span>
-                </div>
+                {adminSettings?.enableServiceFee && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Taxa de serviço</span>
+                    <span className="text-gray-800">{formatCurrency(pricing.serviceFee)}</span>
+                  </div>
+                )}
                 {bookingData.includeInsurance && adminSettings?.enableInsuranceOption && (
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Seguro</span>
