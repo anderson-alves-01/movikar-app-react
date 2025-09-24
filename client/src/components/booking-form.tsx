@@ -234,13 +234,13 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
       return false;
     }
 
-    const start = new Date(bookingData.startDate);
-    const end = new Date(bookingData.endDate);
+    // Convert to date strings for comparison (YYYY-MM-DD format)
+    const startDate = bookingData.startDate;
+    const endDate = bookingData.endDate;
     
-    // Check if any unavailable date falls within the selected range
+    // Check if any unavailable date falls within the selected range (inclusive)
     return unavailableDates.some(unavailableDate => {
-      const unavailable = new Date(unavailableDate);
-      return unavailable >= start && unavailable <= end;
+      return unavailableDate >= startDate && unavailableDate <= endDate;
     });
   };
 
