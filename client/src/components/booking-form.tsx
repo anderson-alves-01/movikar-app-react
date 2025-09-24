@@ -60,9 +60,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
 
   // Fetch unavailable dates for the vehicle
   const { data: unavailableDates = [], isLoading: loadingDates } = useQuery({
-    queryKey: ['/api/vehicles', vehicle.id, 'unavailable-dates', Date.now()],
-    staleTime: 0,
-    gcTime: 0,
+    queryKey: ['/api/vehicles', vehicle.id, 'unavailable-dates'],
     queryFn: async () => {
       const response = await fetch(`/api/vehicles/${vehicle.id}/unavailable-dates`);
       if (!response.ok) {
@@ -479,7 +477,7 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
             <span>{vehicle.rating}</span>
             <span className="mx-2">•</span>
-            <span>0 avaliações</span>
+            <span>{vehicle.reviewCount || 0} avaliações</span>
           </div>
         </CardContent>
       </Card>
@@ -550,10 +548,76 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
               </div>
             </div>
 
-            {/* Simple Unavailable Dates List */}
+            {/* Unavailable Dates Display */}
+            {loadingDates && (
+              <div className="border border-blue-200 bg-blue-50 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />
+                  <span className="text-sm text-blue-700">Carregando datas indisponíveis...</span>
+                </div>
+              </div>
+            )}
+
+            {/* Available/Unavailable Dates Calendar Info - Always show if we have data */}
+            {!loadingDates && (
+              <div className="border border-blue-200 bg-blue-50 rounded-lg p-3">
+                <div className="flex items-start gap-2">
+                  <Calendar className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm">
+                    <p className="text-blue-800 font-medium mb-1">
+                      📅 Calendário de Disponibilidade
+                    </p>
+                    {unavailableDates.length > 0 ? (
+                      <>
+                        <p className="text-blue-700">
+                          Datas reservadas: {unavailableDates.length > 5 
+                            ? `${unavailableDates.slice(0, 5).map(date => new Date(date).toLocaleDateString('pt-BR')).join(', ')} e mais ${unavailableDates.length - 5} datas`
+                            : unavailableDates.map(date => new Date(date).toLocaleDateString('pt-BR')).join(', ')
+                          }
+                        </p>
+                        <p className="text-blue-600 text-xs mt-1">
+                          Escolha datas que não estão na lista acima para sua reserva.
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-blue-700">
+                        🎉 Ótimas notícias! Este veículo não possui datas reservadas. Todas as datas estão disponíveis para locação.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Show unavailable dates - enhanced visual display */}
             {!loadingDates && unavailableDates.length > 0 && (
-              <div className="text-sm text-gray-700">
-                <p><strong>Datas indisponíveis:</strong> {unavailableDates.map(date => new Date(date).toLocaleDateString('pt-BR')).join(', ')}</p>
+              <div className="border border-orange-300 bg-orange-50 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <Calendar className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm">
+                    <p className="text-orange-800 font-semibold mb-3">
+                      📅 Datas já reservadas (indisponíveis):
+                    </p>
+                    <div className="grid grid-cols-4 gap-2 text-xs">
+                      {unavailableDates.map((date, index) => {
+                        const dateObj = new Date(date);
+                        const formattedDate = dateObj.toLocaleDateString('pt-BR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: '2-digit'
+                        });
+                        return (
+                          <span key={index} className="bg-red-200 text-red-900 px-2 py-1.5 rounded-md text-center font-medium border border-red-300">
+                            {formattedDate}
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <p className="text-orange-700 text-xs mt-2 italic">
+                      ℹ️ Total: {unavailableDates.length} dia(s) indisponível(is)
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
 
