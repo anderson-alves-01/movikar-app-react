@@ -182,7 +182,10 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
       ? dailyRate * (securityDepositValue / 100)
       : securityDepositValue;
     
-    const total = subtotal + serviceFee + insuranceFee;
+    // Conditional total calculation based on feature toggles
+    const total = subtotal + 
+      (adminSettings?.enableServiceFee ? serviceFee : 0) + 
+      (adminSettings?.enableInsuranceOption && bookingData.includeInsurance ? insuranceFee : 0);
 
     console.log('💰 DEBUGGING PRICING CALCULATION:', {
       // Feature toggles
@@ -523,24 +526,32 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
               </div>
             )}
 
-            {/* Available/Unavailable Dates Calendar Info */}
-            {unavailableDates.length > 0 && (
-              <div className="border border-orange-200 bg-orange-50 rounded-lg p-3">
+            {/* Available/Unavailable Dates Calendar Info - Always show if we have data */}
+            {!loadingDates && (
+              <div className="border border-blue-200 bg-blue-50 rounded-lg p-3">
                 <div className="flex items-start gap-2">
-                  <Calendar className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                  <Calendar className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                   <div className="text-sm">
-                    <p className="text-orange-800 font-medium mb-1">
-                      📅 Datas indisponíveis para este veículo
+                    <p className="text-blue-800 font-medium mb-1">
+                      📅 Calendário de Disponibilidade
                     </p>
-                    <p className="text-orange-700">
-                      As seguintes datas já estão reservadas: {unavailableDates.length > 5 
-                        ? `${unavailableDates.slice(0, 5).map(date => new Date(date).toLocaleDateString('pt-BR')).join(', ')} e mais ${unavailableDates.length - 5} datas`
-                        : unavailableDates.map(date => new Date(date).toLocaleDateString('pt-BR')).join(', ')
-                      }
-                    </p>
-                    <p className="text-orange-600 text-xs mt-1">
-                      Escolha datas que não estão na lista acima para sua reserva.
-                    </p>
+                    {unavailableDates.length > 0 ? (
+                      <>
+                        <p className="text-blue-700">
+                          Datas reservadas: {unavailableDates.length > 5 
+                            ? `${unavailableDates.slice(0, 5).map(date => new Date(date).toLocaleDateString('pt-BR')).join(', ')} e mais ${unavailableDates.length - 5} datas`
+                            : unavailableDates.map(date => new Date(date).toLocaleDateString('pt-BR')).join(', ')
+                          }
+                        </p>
+                        <p className="text-blue-600 text-xs mt-1">
+                          Escolha datas que não estão na lista acima para sua reserva.
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-blue-700">
+                        🎉 Ótimas notícias! Este veículo não possui datas reservadas. Todas as datas estão disponíveis para locação.
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
