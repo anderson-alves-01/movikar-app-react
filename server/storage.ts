@@ -2338,9 +2338,28 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUserAdmin(id: number, data: Partial<InsertUser>): Promise<User | undefined> {
+    // Se o status verificado está sendo mudado para true, atualizar campos relacionados
+    let updateData: any = { ...data };
+    
+    if (data.isVerified === true) {
+      const now = new Date();
+      updateData = {
+        ...updateData,
+        isVerified: true,
+        verificationStatus: 'verified',
+        documentsSubmitted: true,
+        documentsSubmittedAt: now,
+        canRentVehicles: true,
+        verifiedAt: now,
+        updatedAt: now
+      };
+    } else {
+      updateData.updatedAt = new Date();
+    }
+
     const [result] = await db
       .update(users)
-      .set(data)
+      .set(updateData)
       .where(eq(users.id, id))
       .returning();
     return result || undefined;
