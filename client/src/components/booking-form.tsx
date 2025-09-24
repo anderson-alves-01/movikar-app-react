@@ -67,9 +67,23 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
         throw new Error('Failed to fetch unavailable dates');
       }
       const data = await response.json();
+      console.warn("🚨 RAW API DATA FROM BACKEND:", data);
+      console.warn("🚨 Array length:", data.length);
+      console.warn("🚨 First date:", data[0]);
+      console.warn("🚨 Last date:", data[data.length - 1]);
       return data as string[];
     },
   });
+
+  // Debug logging for unavailable dates
+  React.useEffect(() => {
+    console.warn("🚨 FRONTEND RECEIVED unavailableDates:", unavailableDates);
+    console.warn("🚨 FRONTEND Array length:", unavailableDates.length);
+    if (unavailableDates.length > 0) {
+      console.warn("🚨 FRONTEND First date:", unavailableDates[0]);
+      console.warn("🚨 FRONTEND Last date:", unavailableDates[unavailableDates.length - 1]);
+    }
+  }, [unavailableDates]);
 
   // Check rental access (coins availability)
   const { data: rentalAccess, isLoading: loadingRentalAccess } = useQuery({
