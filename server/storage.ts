@@ -1183,7 +1183,9 @@ export class DatabaseStorage implements IStorage {
 
   async getUserWithPushToken(userId: number): Promise<(User & { pushToken?: string }) | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, userId));
-    return user ? { ...user, pushToken: user.pushToken || undefined } : undefined;
+    if (!user) return undefined;
+    const { pushToken: token, password, ...safeUser } = user;
+    return { ...safeUser, pushToken: token || undefined } as (User & { pushToken?: string });
   }
 
   async getUsersWithPushTokens(userIds: number[]): Promise<(User & { pushToken?: string })[]> {
@@ -2135,14 +2137,12 @@ export class DatabaseStorage implements IStorage {
     console.log(`🎁 Processing reward for referral ${referralId}`);
 
     // Award 100 coins to referrer using the coin system
-    await this.addCoinTransaction({
-      userId: referral.referrerId,
-      type: 'bonus',
-      amount: 100,
-      description: 'Recompensa por convite de amigo',
-      source: 'referral_bonus',
-      status: 'completed'
-    });
+    await this.addCoins(
+      referral.referrerId,
+      100,
+      'referral_bonus',
+      'Recompensa por convite de amigo'
+    );
 
     // Update referral status
     await this.updateReferral(referralId, {
@@ -2165,12 +2165,18 @@ export class DatabaseStorage implements IStorage {
       searchQuery: activity.searchQuery ? String(activity.searchQuery).slice(0, 255) : null,
       sessionId: activity.sessionId ? String(activity.sessionId).slice(0, 255) : null,
       ipAddress: activity.ipAddress ? String(activity.ipAddress).slice(0, 45) : null,
-      filters: activity.filters ? JSON.stringify(activity.filters) : null
+      filters: activity.filters ? {
+        category: activity.filters.category || undefined,
+        priceMin: activity.filters.priceMin || undefined,
+        priceMax: activity.filters.priceMax || undefined,
+        location: activity.filters.location || undefined,
+        features: activity.filters.features || undefined,
+      } : null
     };
 
     const [newActivity] = await db
       .insert(userActivity)
-      .values(sanitizedActivity)
+      .values([sanitizedActivity])
       .returning();
     return newActivity;
   }
@@ -3870,17 +3876,17 @@ export class DatabaseStorage implements IStorage {
           year: booking.vehicleYear,
           images: booking.vehicleImages || [],
           licensePlate: booking.vehicleLicensePlate,
-        },
+        } as any,
         renter: {
           id: booking.renterId,
-          name: booking.renterName,
-          email: booking.renterEmail,
-        },
+          name: booking.renterName || '',
+          email: booking.renterEmail || '',
+        } as any,
         owner: {
           id: booking.ownerId,
-          name: booking.ownerName,
-          email: booking.ownerEmail,
-        },
+          name: booking.ownerName || '',
+          email: booking.ownerEmail || '',
+        } as any,
       }));
 
       console.log(`📋 Found ${completedBookings.length} completed bookings for user ${userId}`);
