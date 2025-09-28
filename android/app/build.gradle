@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.anonymous.restexpress'
+    namespace 'com.alugae.mobile'
     defaultConfig {
-        applicationId 'com.anonymous.restexpress'
+        applicationId 'com.alugae.mobile'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

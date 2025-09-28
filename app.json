@@ -1,6 +1,6 @@
 {
   "android": {
-    "package": "com.anonymous.restexpress"
+    "package": "com.alugae.mobile"
   },
   "extra": {
     "eas": {
@@ -9,7 +9,7 @@
   },
   "expo": {
     "ios": {
-      "bundleIdentifier": "com.anonymous.restexpress",
+      "bundleIdentifier": "com.alugae.mobile",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
