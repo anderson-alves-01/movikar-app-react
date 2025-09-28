@@ -61,7 +61,15 @@ export default {
         "ACCESS_NETWORK_STATE",
         "WRITE_EXTERNAL_STORAGE",
         "READ_EXTERNAL_STORAGE"
-      ]
+      ],
+      // Hermes engine stability fixes
+      enableHermes: true,
+      // TurboModule crash prevention
+      enableProguardInReleaseBuilds: false,
+      // Memory allocation fixes for crash prevention
+      largeHeap: true,
+      // Prevent crashes on startup
+      softwareKeyboardLayoutMode: "adjustResize"
     },
     web: {
       favicon: "./assets/favicon.png"
