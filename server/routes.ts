@@ -4851,6 +4851,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Auto pricing batch - manual trigger for admin
+  app.post("/api/admin/auto-pricing/run-batch", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      console.log("🤖 Admin triggered auto pricing batch process");
+      
+      const { autoPricingBatchService } = await import('./services/auto-pricing-batch');
+      await autoPricingBatchService.updateVehiclePrices();
+      
+      res.json({ 
+        message: "Processo de atualização automática de preços executado com sucesso",
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error running auto pricing batch:", error);
+      res.status(500).json({ message: "Erro ao executar processo de atualização de preços" });
+    }
+  });
+
   // Admin routes
   app.get("/api/admin/contracts", authenticateToken, requireAdmin, async (req, res) => {
     try {

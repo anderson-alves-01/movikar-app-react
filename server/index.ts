@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import cron from "node-cron";
 import { setupVite, serveStatic, log } from "./vite";
 import { sanitizeInput } from "./middleware/validation";
 
@@ -322,6 +323,32 @@ app.use((req, res, next) => {
       log('🚀 Waitlist counter service started (increments every minute)');
     } catch (error) {
       log('⚠️ Failed to start waitlist counter service:', 'error');
+      console.error(error);
+    }
+    
+    // Start auto pricing batch service (runs at midnight)
+    try {
+      const { autoPricingBatchService } = await import('./services/auto-pricing-batch');
+      
+      // Schedule task to run every day at midnight (00:00)
+      cron.schedule('0 0 * * *', async () => {
+        log('🤖 Executando processo batch de atualização automática de preços...');
+        try {
+          await autoPricingBatchService.updateVehiclePrices();
+          log('✅ Processo batch de preços concluído com sucesso');
+        } catch (error) {
+          log('❌ Erro no processo batch de preços:', 'error');
+          console.error(error);
+        }
+      });
+      
+      log('⏰ Auto pricing batch service agendado para rodar às 00:00 (meia-noite)');
+      
+      // Para desenvolvimento/teste: executar imediatamente se necessário
+      // Descomente a linha abaixo para testar
+      // await autoPricingBatchService.updateVehiclePrices();
+    } catch (error) {
+      log('⚠️ Failed to start auto pricing batch service:', 'error');
       console.error(error);
     }
   });
