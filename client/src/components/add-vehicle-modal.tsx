@@ -38,8 +38,9 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
     pricePerDay: '',
     pricePerWeek: '',
     pricePerMonth: '',
+    securityDepositType: 'percentage', // percentage ou fixed
     securityDepositPercentage: '20.00', // Padrão de 20%
-    securityDepositFixedAmount: '0', // Valor fixo adicional
+    securityDepositFixedAmount: '0', // Valor fixo
     paymentMethods: ['pix', 'credit_card', 'debit_card'] as string[], // Formas de pagamento
     autoPricingEnabled: false, // Varredura automática de preços
     competitionPercentage: '0', // Percentual de concorrência
@@ -113,6 +114,7 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
       pricePerDay: '',
       pricePerWeek: '',
       pricePerMonth: '',
+      securityDepositType: 'percentage',
       securityDepositPercentage: '20.00',
       securityDepositFixedAmount: '0',
       paymentMethods: ['pix', 'credit_card', 'debit_card'] as string[],
@@ -668,9 +670,40 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
           <Card>
             <CardContent className="pt-6">
               <Label className="block text-sm font-medium text-gray-700 mb-4">Caução *</Label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
+              {/* Tipo de Caução */}
+              <div className="mb-4">
+                <Label className="block text-sm font-medium text-gray-600 mb-2">Tipo de Caução</Label>
+                <div className="flex gap-4">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="securityDepositType"
+                      value="percentage"
+                      checked={vehicleData.securityDepositType === 'percentage'}
+                      onChange={(e) => setVehicleData(prev => ({ ...prev, securityDepositType: e.target.value }))}
+                      className="w-4 h-4 text-primary"
+                    />
+                    <span className="text-sm">Percentual</span>
+                  </label>
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="securityDepositType"
+                      value="fixed"
+                      checked={vehicleData.securityDepositType === 'fixed'}
+                      onChange={(e) => setVehicleData(prev => ({ ...prev, securityDepositType: e.target.value }))}
+                      className="w-4 h-4 text-primary"
+                    />
+                    <span className="text-sm">Valor Fixo</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Campo baseado no tipo selecionado */}
+              {vehicleData.securityDepositType === 'percentage' ? (
                 <div>
-                  <Label className="block text-sm font-medium text-gray-600 mb-2">Percentual</Label>
+                  <Label className="block text-sm font-medium text-gray-600 mb-2">Percentual da Caução</Label>
                   <div className="relative">
                     <Input 
                       type="number" 
@@ -685,28 +718,29 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
                     <span className="absolute right-3 top-3 text-gray-500">%</span>
                   </div>
                   <p className="text-sm text-gray-500 mt-1">
-                    Percentual do valor do aluguel
+                    Percentual do valor do aluguel que será retido como caução
                   </p>
                 </div>
+              ) : (
                 <div>
-                  <Label className="block text-sm font-medium text-gray-600 mb-2">Valor Fixo Adicional</Label>
+                  <Label className="block text-sm font-medium text-gray-600 mb-2">Valor Fixo da Caução</Label>
                   <div className="relative">
                     <span className="absolute left-3 top-3 text-gray-500">R$</span>
                     <Input 
                       type="number" 
                       min="0" 
                       step="0.01"
-                      placeholder="0.00"
+                      placeholder="500.00"
                       className="pl-10"
                       value={vehicleData.securityDepositFixedAmount}
                       onChange={(e) => setVehicleData(prev => ({ ...prev, securityDepositFixedAmount: e.target.value }))}
                     />
                   </div>
                   <p className="text-sm text-gray-500 mt-1">
-                    Valor fixo somado ao percentual
+                    Valor fixo em reais que será retido como caução
                   </p>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 

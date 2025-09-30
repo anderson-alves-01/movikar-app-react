@@ -20,10 +20,15 @@ interface BookingFormProps {
     model: string;
     year: number;
     pricePerDay: string;
+    pricePerWeek?: string;
+    pricePerMonth?: string;
     rating: string;
+    reviewCount?: number;
     images?: string[];
     securityDepositValue?: string | number;
     securityDepositType?: string;
+    securityDepositPercentage?: string | number;
+    securityDepositFixedAmount?: string | number;
     owner: {
       id: number;
       name: string;
@@ -210,16 +215,15 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
     const serviceFee = adminSettings?.enableServiceFee ? subtotal * serviceRate : 0;
     const insuranceFee = bookingData.includeInsurance ? subtotal * insuranceRate : 0;
     
-    // Calculate security deposit (caução) - com valor fixo adicional
+    // Calculate security deposit (caução)
+    const securityDepositType = String(vehicle.securityDepositType || 'percentage');
     const securityDepositPercentage = parseFloat(String(vehicle.securityDepositPercentage || vehicle.securityDepositValue || '20'));
     const securityDepositFixedAmount = parseFloat(String(vehicle.securityDepositFixedAmount || '0'));
-    const securityDepositType = String(vehicle.securityDepositType || 'percentage');
     
-    // Caução = percentual do valor diário + valor fixo adicional
-    const percentageDeposit = securityDepositType === 'percentage' || securityDepositType === 'both'
+    // Caução = OU percentual OU valor fixo (não ambos)
+    const securityDeposit = securityDepositType === 'percentage' 
       ? dailyRate * (securityDepositPercentage / 100)
-      : 0;
-    const securityDeposit = percentageDeposit + securityDepositFixedAmount;
+      : securityDepositFixedAmount;
     
     // Conditional total calculation based on feature toggles
     const total = subtotal + 
@@ -237,8 +241,9 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
       
       // Vehicle data
       vehiclePricePerDay: vehicle.pricePerDay,
-      securityDepositValue,
       securityDepositType,
+      securityDepositPercentage,
+      securityDepositFixedAmount,
       
       // Calculated values
       days,
@@ -490,8 +495,8 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
                 <span>Caução:</span>
                 <span className="font-medium text-gray-800">
                   {(String(vehicle.securityDepositType) || 'percentage') === 'percentage' 
-                    ? `${formatCurrency(parseFloat(vehicle.pricePerDay) * parseFloat(String(vehicle.securityDepositValue || '20')) / 100)} (${vehicle.securityDepositValue || 20}%)`
-                    : `${formatCurrency(parseFloat(String(vehicle.securityDepositValue || '20')))} (valor fixo)`
+                    ? `${formatCurrency(parseFloat(vehicle.pricePerDay) * parseFloat(String(vehicle.securityDepositPercentage || vehicle.securityDepositValue || '20')) / 100)} (${vehicle.securityDepositPercentage || vehicle.securityDepositValue || 20}%)`
+                    : `${formatCurrency(parseFloat(String(vehicle.securityDepositFixedAmount || '0')))} (valor fixo)`
                   }
                 </span>
               </div>
