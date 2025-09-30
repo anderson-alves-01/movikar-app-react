@@ -4328,6 +4328,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `chat_${vehicleId}_${userId}_${Date.now()}`
       );
 
+      // Send email notification to owner if this is for chat
+      if (vehicleId && ownerId && description.includes('Chat')) {
+        try {
+          const renter = await storage.getUser(userId);
+          const vehicle = await storage.getVehicle(vehicleId);
+          
+          if (renter && vehicle && vehicle.owner?.email) {
+            await emailService.sendChatStartNotificationToOwner(
+              vehicle.owner.email,
+              vehicle.owner.name,
+              {
+                renterName: renter.name,
+                vehicleBrand: vehicle.brand,
+                vehicleModel: vehicle.model,
+                vehicleYear: vehicle.year
+              }
+            );
+            console.log(`📧 Email de início de conversa enviado para ${vehicle.owner.email}`);
+          }
+        } catch (emailError) {
+          console.error('❌ Erro ao enviar email de início de conversa:', emailError);
+        }
+      }
+
       // Get updated coin balance
       const updatedCoins = await storage.getUserCoins(userId);
 
