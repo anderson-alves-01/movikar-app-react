@@ -158,10 +158,18 @@ export const vehicles = pgTable("vehicles", {
   highlightType: varchar("highlight_type", { length: 20 }), // prata, diamante
   highlightExpiresAt: timestamp("highlight_expires_at"),
   highlightUsageCount: integer("highlight_usage_count").default(0).notNull(),
-  // Caução (security deposit) - valor ou percentual
+  // Caução (security deposit) - valor fixo e/ou percentual
   securityDepositPercentage: decimal("security_deposit_percentage", { precision: 5, scale: 2 }).default('20.00'),
-  securityDepositValue: decimal("security_deposit_value", { precision: 8, scale: 2 }).default('20.00'),
-  securityDepositType: varchar("security_deposit_type", { length: 10 }).default('percentage').notNull(), // percentage, fixed
+  securityDepositValue: decimal("security_deposit_value", { precision: 8, scale: 2 }).default('0'),
+  securityDepositType: varchar("security_deposit_type", { length: 10 }).default('percentage').notNull(), // percentage, fixed, both
+  securityDepositFixedAmount: decimal("security_deposit_fixed_amount", { precision: 8, scale: 2 }).default('0'), // Valor fixo adicional à caução
+  // Formas de pagamento aceitas
+  paymentMethods: jsonb("payment_methods").$type<string[]>().default(['pix', 'credit_card', 'debit_card']), // pix, credit_card, debit_card, bank_transfer
+  // Varredura automática de preços baseada na concorrência
+  autoPricingEnabled: boolean("auto_pricing_enabled").default(false),
+  competitionPercentage: decimal("competition_percentage", { precision: 5, scale: 2 }).default('0'), // Percentual de ajuste para competir (ex: -5.00 para 5% abaixo da média)
+  basePriceForAuto: decimal("base_price_for_auto", { precision: 8, scale: 2 }).default('0'), // Preço base antes do ajuste automático
+  lastPriceUpdate: timestamp("last_price_update"), // Última atualização automática de preço
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -685,6 +693,14 @@ export const insertVehicleSchema = createInsertSchema(vehicles).omit({
   securityDepositPercentage: z.union([z.string(), z.number()]).optional().transform(val => val ? String(val) : undefined),
   securityDepositValue: z.union([z.string(), z.number()]).optional().transform(val => val ? String(val) : undefined),
   securityDepositType: z.string().optional(),
+  securityDepositFixedAmount: z.union([z.string(), z.number()]).optional().transform(val => val ? String(val) : undefined),
+  // Payment methods
+  paymentMethods: z.array(z.string()).optional(),
+  // Auto pricing fields
+  autoPricingEnabled: z.boolean().optional(),
+  competitionPercentage: z.union([z.string(), z.number()]).optional().transform(val => val ? String(val) : undefined),
+  basePriceForAuto: z.union([z.string(), z.number()]).optional().transform(val => val ? String(val) : undefined),
+  lastPriceUpdate: z.string().optional(),
   licensePlate: z.string()
     .min(7, "Placa deve ter pelo menos 7 caracteres")
     .max(8, "Placa deve ter no máximo 8 caracteres")
