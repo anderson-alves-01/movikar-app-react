@@ -817,6 +817,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const booking = await storage.createBooking(bookingData);
 
+      // Send email notification to owner
+      if (vehicle.owner?.email) {
+        try {
+          await emailService.sendBookingNotificationToOwner(
+            vehicle.owner.email,
+            vehicle.owner.name,
+            {
+              bookingId: booking.id.toString(),
+              vehicleBrand: vehicle.brand,
+              vehicleModel: vehicle.model,
+              vehicleYear: vehicle.year,
+              startDate: new Date(startDate).toLocaleDateString('pt-BR'),
+              endDate: new Date(endDate).toLocaleDateString('pt-BR'),
+              totalPrice: parseFloat(totalPrice),
+              renterName: req.user!.name,
+              renterEmail: req.user!.email
+            }
+          );
+          console.log(`📧 Email de nova reserva enviado para ${vehicle.owner.email}`);
+        } catch (emailError) {
+          console.error('❌ Erro ao enviar email de reserva:', emailError);
+        }
+      }
+
       // Create contract automatically
       try {
         await storage.createContract({
@@ -924,6 +948,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       const booking = await storage.createBooking(bookingData);
+
+      // Send email notification to owner
+      const renter = await storage.getUser(parseInt(userId));
+      if (vehicle.owner?.email && renter) {
+        try {
+          await emailService.sendBookingNotificationToOwner(
+            vehicle.owner.email,
+            vehicle.owner.name,
+            {
+              bookingId: booking.id.toString(),
+              vehicleBrand: vehicle.brand,
+              vehicleModel: vehicle.model,
+              vehicleYear: vehicle.year,
+              startDate: new Date(startDate).toLocaleDateString('pt-BR'),
+              endDate: new Date(endDate).toLocaleDateString('pt-BR'),
+              totalPrice: parseFloat(totalPrice),
+              renterName: renter.name,
+              renterEmail: renter.email
+            }
+          );
+          console.log(`📧 Email de nova reserva enviado para ${vehicle.owner.email}`);
+        } catch (emailError) {
+          console.error('❌ Erro ao enviar email de reserva:', emailError);
+        }
+      }
 
       // Create contract for preview (not auto-signed anymore)
       try {
