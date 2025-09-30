@@ -45,7 +45,8 @@ Preferred communication style: Simple, everyday language.
 - **Database ORM**: Drizzle ORM (PostgreSQL dialect)
 - **Authentication**: JWT tokens, bcrypt for password hashing, hybrid cookie/Authorization header support
 - **API Design**: RESTful API
-- **File Uploads**: Multer configuration for secure file upload processing.
+- **File Uploads**: Multer configuration for secure file upload processing
+- **Email Service**: Resend API integration for automated email notifications with professional HTML templates
 
 ### Database Design
 - PostgreSQL with entities for Users, Vehicles, Bookings, Reviews, Messages, Admin Settings, User Documents, Payouts, and Referral/Suggestions.
@@ -68,6 +69,7 @@ Preferred communication style: Simple, everyday language.
 - **Points Usage System**: Allows points to be used for discounts during vehicle rental and subscription checkouts (1 point = R$ 0.01). Includes real-time discount preview, visual confirmation, transaction tracking, and cache invalidation.
 - **Checkout URL Optimization**: Implemented temporary server-side data storage to resolve HTTP 431 errors caused by long URLs, reducing URL length significantly.
 - **Coupon System**: Integration into subscription plans page with real-time validation and discount application. **100% discount coupons automatically activate subscriptions without payment processing** - fully implemented and working.
+- **Email Notification System**: Comprehensive automated email notifications using Resend API with professional HTML templates. Vehicle owners receive instant email notifications for ALL renter interactions: contact information unlock, chat initiation, waiting queue joins, and booking requests. All notifications include relevant details (vehicle info, renter info, dates, prices) and are sent asynchronously to prevent blocking API responses.
 - **Mobile App (React Native)**: **COMPLETE IMPLEMENTATION** - Full React Native application with Expo SDK 50, 6 main screens (Home, Search, Bookings, Profile, VehicleDetail, Login), React Navigation 6, full TypeScript support, real API integration, JWT token management with secure storage and automatic token refresh, custom API service architecture, custom storage abstraction, EAS Build setup.
 
 ### Mobile Services Architecture (Real Implementations)
@@ -93,4 +95,5 @@ Preferred communication style: Simple, everyday language.
 - **Authentication**: jsonwebtoken, bcrypt
 - **Digital Signature**: DocuSign SDK (docusign-esign)
 - **PDF Generation**: Puppeteer
+- **Email Service**: Resend
 - **Rate Limiting**: express-rate-limit
