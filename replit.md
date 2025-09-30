@@ -14,11 +14,12 @@ Preferred communication style: Simple, everyday language.
 - **Test Runner**: Unified test execution with detailed reporting.
 - **Coverage**: Authentication, vehicle management, booking system, admin functions, payment integration.
 
-### Current Status (August 21, 2025)
+### Current Status (September 30, 2025)
 - **Backend**: ✅ Fully operational with clean LSP diagnostics
 - **100% Discount Coupons**: ✅ Automatic subscription activation working
 - **Vehicle Inspection System**: ✅ Fixed schema alignment and query issues
 - **Stripe Integration**: ✅ Configured and functional
+- **Auto Pricing System**: ✅ Automated price optimization with midnight cron jobs
 - **Mobile App Complete**: ✅ **MAJOR MILESTONE** - Full React Native implementation with real functionality
 - **Mobile Services**: ✅ All 8 core services implemented with actual React Native packages
 - **Mobile Authentication**: ✅ Real biometric authentication using Expo Local Authentication
@@ -52,7 +53,8 @@ Preferred communication style: Simple, everyday language.
 
 ### Core Features
 - **Authentication**: JWT-based cookie authentication, role-based access, protected routes, using httpOnly cookies.
-- **Vehicle Management**: Comprehensive listings with images, location-based search, dynamic pricing, availability calendar, waiting queue, automatic vehicle release, vehicle approval workflow with CRLV document upload and administrative review, vehicle validation for models, license plates, and RENAVAM.
+- **Vehicle Management**: Comprehensive listings with images, location-based search, dynamic pricing, availability calendar, waiting queue, automatic vehicle release, vehicle approval workflow with CRLV document upload and administrative review, vehicle validation for models, license plates, and RENAVAM. **Automated price optimization** with competitive market analysis, scheduled batch updates at midnight (00:00), and manual admin trigger endpoint.
+- **Auto Pricing System**: Market-based competitive pricing with automatic daily updates for vehicles with autoPricingEnabled flag, location-aware price adjustments, category mapping to market standards, configurable competition percentage (-50% to +50%), parallel processing for performance optimization, admin endpoint for manual batch execution (POST /api/admin/auto-pricing/run-batch).
 - **Booking System**: Real-time availability, status workflow, payment tracking, booking history, automatic date blocking upon contract signing, intelligent date blocking, visual conflict warnings, dual inspection system for renters and owners.
 - **Search & Filtering**: Location, category, price, features, transmission, date-based availability, advanced search modal with history and filters, infinite scroll pagination.
 - **Messaging**: Real-time, booking-specific threads, read/unread status.

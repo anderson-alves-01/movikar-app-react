@@ -28,7 +28,10 @@ export class AutoPricingBatchService {
       let updatedCount = 0;
       let errorCount = 0;
 
-      for (const [location, locationVehicles] of Object.entries(vehiclesByLocation)) {
+      // Processar localizações em paralelo para otimizar performance
+      const locationPromises = Object.entries(vehiclesByLocation).map(async ([location, locationVehicles]) => {
+        const results = { updated: 0, errors: 0 };
+        
         try {
           // Buscar preços do mercado para esta localização
           const marketPrices = await priceScraperService.getLocalizaPrices(location);
@@ -44,8 +47,14 @@ export class AutoPricingBatchService {
                 continue;
               }
 
-              // Calcular novo preço baseado no percentual de competição
-              const competitionPercentage = parseFloat(vehicle.competitionPercentage || '0');
+              // Validar e limitar percentual de competição entre -50% e +50%
+              let competitionPercentage = parseFloat(vehicle.competitionPercentage || '0');
+              if (isNaN(competitionPercentage)) {
+                console.warn(`⚠️ Percentual de competição inválido para veículo ${vehicle.id}, usando 0%`);
+                competitionPercentage = 0;
+              }
+              competitionPercentage = Math.max(-50, Math.min(50, competitionPercentage));
+              
               const newPrice = priceScraperService.calculateCompetitivePrice(
                 marketPrice.pricePerDay,
                 competitionPercentage
@@ -64,21 +73,32 @@ export class AutoPricingBatchService {
                   `R$ ${currentPrice.toFixed(2)} → R$ ${newPrice.toFixed(2)} ` +
                   `(Mercado: R$ ${marketPrice.pricePerDay}, Ajuste: ${competitionPercentage}%)`
                 );
-                updatedCount++;
+                results.updated++;
               } else {
                 console.log(`ℹ️ Veículo ${vehicle.id}: preço sem alteração`);
               }
 
             } catch (error) {
               console.error(`❌ Erro ao atualizar veículo ${vehicle.id}:`, error);
-              errorCount++;
+              results.errors++;
             }
           }
         } catch (error) {
           console.error(`❌ Erro ao processar localização ${location}:`, error);
-          errorCount++;
+          results.errors++;
         }
-      }
+        
+        return results;
+      });
+      
+      // Aguardar processamento de todas as localizações
+      const allResults = await Promise.all(locationPromises);
+      
+      // Somar totais
+      allResults.forEach(result => {
+        updatedCount += result.updated;
+        errorCount += result.errors;
+      });
 
       const duration = Date.now() - startTime;
       console.log(
