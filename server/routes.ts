@@ -4515,6 +4515,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const queueEntry = await storage.addToWaitingQueue(queueData);
+
+      // Send email notification to vehicle owner
+      try {
+        const renter = await storage.getUser(req.user!.id);
+        const vehicle = await storage.getVehicle(vehicleId);
+        
+        if (renter && vehicle && vehicle.owner?.email) {
+          await emailService.sendWaitingQueueNotificationToOwner(
+            vehicle.owner.email,
+            vehicle.owner.name,
+            {
+              renterName: renter.name,
+              vehicleBrand: vehicle.brand,
+              vehicleModel: vehicle.model,
+              vehicleYear: vehicle.year,
+              startDate: new Date(queueData.startDate).toLocaleDateString('pt-BR'),
+              endDate: new Date(queueData.endDate).toLocaleDateString('pt-BR')
+            }
+          );
+          console.log(`📧 Email de entrada na fila de espera enviado para ${vehicle.owner.email}`);
+        }
+      } catch (emailError) {
+        console.error('❌ Erro ao enviar email de fila de espera:', emailError);
+      }
+
       res.status(201).json(queueEntry);
     } catch (error) {
       console.error("Add to waiting queue error:", error);
