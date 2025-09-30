@@ -303,6 +303,65 @@ Para não receber mais emails, acesse suas configurações no app.
 
     return this.sendNotificationEmail(userEmail, userName, emailData);
   }
+
+  async sendContactUnlockNotificationToOwner(
+    ownerEmail: string,
+    ownerName: string,
+    unlockData: {
+      renterName: string;
+      vehicleBrand: string;
+      vehicleModel: string;
+      vehicleYear?: number;
+    }
+  ): Promise<boolean> {
+    const emailData: EmailNotificationData = {
+      title: `💬 Novo Interesse - ${unlockData.renterName} desbloqueou seu contato`,
+      body: `Olá ${ownerName}!\n\nBoas notícias! ${unlockData.renterName} demonstrou interesse em seu veículo e desbloqueou suas informações de contato.\n\nDetalhes:\n• Veículo: ${unlockData.vehicleBrand} ${unlockData.vehicleModel}${unlockData.vehicleYear ? ' ' + unlockData.vehicleYear : ''}\n• Interessado: ${unlockData.renterName}\n• Data: ${new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}\n\n📞 ${unlockData.renterName} agora tem acesso ao seu telefone e email. Aguarde o contato ou entre em contato diretamente para discutir os detalhes do aluguel.\n\nAcesse o app para ver mais informações sobre este interessado.`,
+      data: unlockData
+    };
+
+    return this.sendNotificationEmail(ownerEmail, ownerName, emailData);
+  }
+
+  async sendChatStartNotificationToOwner(
+    ownerEmail: string,
+    ownerName: string,
+    chatData: {
+      renterName: string;
+      vehicleBrand: string;
+      vehicleModel: string;
+      vehicleYear?: number;
+    }
+  ): Promise<boolean> {
+    const emailData: EmailNotificationData = {
+      title: `💬 Nova Conversa - ${chatData.renterName} quer falar com você`,
+      body: `Olá ${ownerName}!\n\n${chatData.renterName} iniciou uma conversa sobre seu veículo.\n\nDetalhes:\n• Veículo: ${chatData.vehicleBrand} ${chatData.vehicleModel}${chatData.vehicleYear ? ' ' + chatData.vehicleYear : ''}\n• Interessado: ${chatData.renterName}\n• Data: ${new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}\n\n💬 Responda rapidamente para aumentar suas chances de fechar o aluguel!\n\nAcesse o app para ver a mensagem e responder.`,
+      data: chatData
+    };
+
+    return this.sendNotificationEmail(ownerEmail, ownerName, emailData);
+  }
+
+  async sendWaitingQueueNotificationToOwner(
+    ownerEmail: string,
+    ownerName: string,
+    queueData: {
+      renterName: string;
+      vehicleBrand: string;
+      vehicleModel: string;
+      vehicleYear?: number;
+      startDate: string;
+      endDate: string;
+    }
+  ): Promise<boolean> {
+    const emailData: EmailNotificationData = {
+      title: `⏰ Lista de Espera - ${queueData.renterName} entrou na fila`,
+      body: `Olá ${ownerName}!\n\n${queueData.renterName} entrou na lista de espera do seu veículo.\n\nDetalhes:\n• Veículo: ${queueData.vehicleBrand} ${queueData.vehicleModel}${queueData.vehicleYear ? ' ' + queueData.vehicleYear : ''}\n• Interessado: ${queueData.renterName}\n• Período desejado: ${queueData.startDate} até ${queueData.endDate}\n• Data de entrada na fila: ${new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}\n\n📋 Este cliente demonstrou grande interesse! Quando o período ficar disponível, ele será notificado automaticamente.\n\nAcesse o app para gerenciar sua lista de espera.`,
+      data: queueData
+    };
+
+    return this.sendNotificationEmail(ownerEmail, ownerName, emailData);
+  }
 }
 
 export default new EmailService();
