@@ -4221,6 +4221,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: "Erro ao desbloquear contato" });
       }
 
+      // Send email notification to owner
+      const renter = await storage.getUser(userId);
+      if (renter && vehicle.owner?.email) {
+        try {
+          await emailService.sendContactUnlockNotificationToOwner(
+            vehicle.owner.email,
+            vehicle.owner.name,
+            {
+              renterName: renter.name,
+              vehicleBrand: vehicle.brand,
+              vehicleModel: vehicle.model,
+              vehicleYear: vehicle.year
+            }
+          );
+          console.log(`📧 Email de desbloqueio de contato enviado para ${vehicle.owner.email}`);
+        } catch (emailError) {
+          console.error('❌ Erro ao enviar email de desbloqueio:', emailError);
+        }
+      }
+
       res.json({
         success: true,
         contactInfo: unlock.contactInfo,
