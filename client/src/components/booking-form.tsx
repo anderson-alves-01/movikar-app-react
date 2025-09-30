@@ -226,9 +226,11 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
       : securityDepositFixedAmount;
     
     // Conditional total calculation based on feature toggles
+    // Total includes: subtotal + service fee (if enabled) + insurance (if enabled and selected) + security deposit
     const total = subtotal + 
       (adminSettings?.enableServiceFee ? serviceFee : 0) + 
-      (adminSettings?.enableInsuranceOption && bookingData.includeInsurance ? insuranceFee : 0);
+      (adminSettings?.enableInsuranceOption && bookingData.includeInsurance ? insuranceFee : 0) +
+      securityDeposit;
 
     console.log('💰 DEBUGGING PRICING CALCULATION:', {
       // Feature toggles
