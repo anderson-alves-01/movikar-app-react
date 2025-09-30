@@ -179,7 +179,28 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
   const calculatePricing = () => {
     const days = calculateDays();
     const dailyRate = parseFloat(vehicle.pricePerDay);
-    const subtotal = days * dailyRate;
+    const weeklyRate = vehicle.pricePerWeek ? parseFloat(vehicle.pricePerWeek) : null;
+    const monthlyRate = vehicle.pricePerMonth ? parseFloat(vehicle.pricePerMonth) : null;
+    
+    // Calcular preço baseado na duração
+    let subtotal = 0;
+    
+    // Se tiver preço mensal e a duração for >= 30 dias
+    if (monthlyRate && days >= 30) {
+      const months = Math.floor(days / 30);
+      const remainingDays = days % 30;
+      subtotal = (months * monthlyRate) + (remainingDays * dailyRate);
+    }
+    // Se tiver preço semanal e a duração for >= 7 dias
+    else if (weeklyRate && days >= 7) {
+      const weeks = Math.floor(days / 7);
+      const remainingDays = days % 7;
+      subtotal = (weeks * weeklyRate) + (remainingDays * dailyRate);
+    }
+    // Caso contrário, usar preço diário
+    else {
+      subtotal = days * dailyRate;
+    }
     
     // Use dynamic rates from admin settings
     const serviceRate = (adminSettings?.serviceFeePercentage || 10) / 100; // Convert percentage to decimal
@@ -189,12 +210,16 @@ export default function BookingForm({ vehicle }: BookingFormProps) {
     const serviceFee = adminSettings?.enableServiceFee ? subtotal * serviceRate : 0;
     const insuranceFee = bookingData.includeInsurance ? subtotal * insuranceRate : 0;
     
-    // Calculate security deposit (caução)
-    const securityDepositValue = parseFloat(String(vehicle.securityDepositValue || '20'));
+    // Calculate security deposit (caução) - com valor fixo adicional
+    const securityDepositPercentage = parseFloat(String(vehicle.securityDepositPercentage || vehicle.securityDepositValue || '20'));
+    const securityDepositFixedAmount = parseFloat(String(vehicle.securityDepositFixedAmount || '0'));
     const securityDepositType = String(vehicle.securityDepositType || 'percentage');
-    const securityDeposit = securityDepositType === 'percentage' 
-      ? dailyRate * (securityDepositValue / 100)
-      : securityDepositValue;
+    
+    // Caução = percentual do valor diário + valor fixo adicional
+    const percentageDeposit = securityDepositType === 'percentage' || securityDepositType === 'both'
+      ? dailyRate * (securityDepositPercentage / 100)
+      : 0;
+    const securityDeposit = percentageDeposit + securityDepositFixedAmount;
     
     // Conditional total calculation based on feature toggles
     const total = subtotal + 

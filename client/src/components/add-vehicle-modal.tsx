@@ -843,7 +843,7 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
               <div className="flex items-start space-x-3">
                 <Checkbox 
                   checked={termsAccepted}
-                  onCheckedChange={setTermsAccepted}
+                  onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
                   required 
                 />
                 <span className="text-sm text-gray-700">
