@@ -3018,11 +3018,25 @@ export class DatabaseStorage implements IStorage {
       .where(eq(vehicles.ownerId, userId));
 
     const vehicleCount = currentVehicles[0]?.count || 0;
-    const maxVehicles = user.maxVehicleListings || 2;
+    
+    // Handle maxVehicleListings correctly
+    // -1 means unlimited, null/undefined defaults to 1 (free plan), positive numbers are the actual limit
+    let maxVehicles: number;
+    if (user.maxVehicleListings === -1) {
+      // Unlimited
+      maxVehicles = -1;
+    } else if (user.maxVehicleListings === null || user.maxVehicleListings === undefined) {
+      // Default to 1 for free plan
+      maxVehicles = 1;
+    } else {
+      // Use the actual value
+      maxVehicles = user.maxVehicleListings;
+    }
+    
     const highlightsAvailable = user.highlightsAvailable || 0;
 
     return {
-      canCreateVehicle: vehicleCount < maxVehicles,
+      canCreateVehicle: maxVehicles === -1 ? true : vehicleCount < maxVehicles,
       currentVehicles: vehicleCount,
       maxVehicles,
       highlightsAvailable
