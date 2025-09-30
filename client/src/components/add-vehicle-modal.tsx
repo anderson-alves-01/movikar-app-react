@@ -39,6 +39,10 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
     pricePerWeek: '',
     pricePerMonth: '',
     securityDepositPercentage: '20.00', // Padrão de 20%
+    securityDepositFixedAmount: '0', // Valor fixo adicional
+    paymentMethods: ['pix', 'credit_card', 'debit_card'] as string[], // Formas de pagamento
+    autoPricingEnabled: false, // Varredura automática de preços
+    competitionPercentage: '0', // Percentual de concorrência
     description: '',
     licensePlate: '',
     renavam: '',
@@ -110,6 +114,10 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
       pricePerWeek: '',
       pricePerMonth: '',
       securityDepositPercentage: '20.00',
+      securityDepositFixedAmount: '0',
+      paymentMethods: ['pix', 'credit_card', 'debit_card'] as string[],
+      autoPricingEnabled: false,
+      competitionPercentage: '0',
       description: '',
       licensePlate: '',
       renavam: '',
@@ -657,25 +665,166 @@ export default function AddVehicleModal({ open, onOpenChange }: AddVehicleModalP
           </div>
 
           {/* Security Deposit */}
-          <div>
-            <Label className="block text-sm font-medium text-gray-700 mb-2">Percentual de Caução *</Label>
-            <div className="relative">
-              <Input 
-                type="number" 
-                min="0" 
-                max="100"
-                step="0.01"
-                placeholder="20.00"
-                className="pr-8"
-                value={vehicleData.securityDepositPercentage}
-                onChange={(e) => setVehicleData(prev => ({ ...prev, securityDepositPercentage: e.target.value }))}
-              />
-              <span className="absolute right-3 top-3 text-gray-500">%</span>
-            </div>
-            <p className="text-sm text-gray-500 mt-1">
-              Percentual da diária que será retido como caução. Use 0% para sem caução. Recomendado: 20%
-            </p>
-          </div>
+          <Card>
+            <CardContent className="pt-6">
+              <Label className="block text-sm font-medium text-gray-700 mb-4">Caução *</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="block text-sm font-medium text-gray-600 mb-2">Percentual</Label>
+                  <div className="relative">
+                    <Input 
+                      type="number" 
+                      min="0" 
+                      max="100"
+                      step="0.01"
+                      placeholder="20.00"
+                      className="pr-8"
+                      value={vehicleData.securityDepositPercentage}
+                      onChange={(e) => setVehicleData(prev => ({ ...prev, securityDepositPercentage: e.target.value }))}
+                    />
+                    <span className="absolute right-3 top-3 text-gray-500">%</span>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Percentual do valor do aluguel
+                  </p>
+                </div>
+                <div>
+                  <Label className="block text-sm font-medium text-gray-600 mb-2">Valor Fixo Adicional</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-3 text-gray-500">R$</span>
+                    <Input 
+                      type="number" 
+                      min="0" 
+                      step="0.01"
+                      placeholder="0.00"
+                      className="pl-10"
+                      value={vehicleData.securityDepositFixedAmount}
+                      onChange={(e) => setVehicleData(prev => ({ ...prev, securityDepositFixedAmount: e.target.value }))}
+                    />
+                  </div>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Valor fixo somado ao percentual
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Payment Methods */}
+          <Card>
+            <CardContent className="pt-6">
+              <Label className="block text-sm font-medium text-gray-700 mb-4">Formas de Pagamento Aceitas *</Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="pix"
+                    checked={vehicleData.paymentMethods.includes('pix')}
+                    onCheckedChange={(checked) => {
+                      setVehicleData(prev => ({
+                        ...prev,
+                        paymentMethods: checked 
+                          ? [...prev.paymentMethods, 'pix']
+                          : prev.paymentMethods.filter(m => m !== 'pix')
+                      }));
+                    }}
+                  />
+                  <Label htmlFor="pix" className="text-sm">PIX</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="credit_card"
+                    checked={vehicleData.paymentMethods.includes('credit_card')}
+                    onCheckedChange={(checked) => {
+                      setVehicleData(prev => ({
+                        ...prev,
+                        paymentMethods: checked 
+                          ? [...prev.paymentMethods, 'credit_card']
+                          : prev.paymentMethods.filter(m => m !== 'credit_card')
+                      }));
+                    }}
+                  />
+                  <Label htmlFor="credit_card" className="text-sm">Cartão de Crédito</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="debit_card"
+                    checked={vehicleData.paymentMethods.includes('debit_card')}
+                    onCheckedChange={(checked) => {
+                      setVehicleData(prev => ({
+                        ...prev,
+                        paymentMethods: checked 
+                          ? [...prev.paymentMethods, 'debit_card']
+                          : prev.paymentMethods.filter(m => m !== 'debit_card')
+                      }));
+                    }}
+                  />
+                  <Label htmlFor="debit_card" className="text-sm">Cartão de Débito</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="bank_transfer"
+                    checked={vehicleData.paymentMethods.includes('bank_transfer')}
+                    onCheckedChange={(checked) => {
+                      setVehicleData(prev => ({
+                        ...prev,
+                        paymentMethods: checked 
+                          ? [...prev.paymentMethods, 'bank_transfer']
+                          : prev.paymentMethods.filter(m => m !== 'bank_transfer')
+                      }));
+                    }}
+                  />
+                  <Label htmlFor="bank_transfer" className="text-sm">Transferência</Label>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Auto Pricing */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-start space-x-3 mb-4">
+                <Checkbox 
+                  id="autoPricing"
+                  checked={vehicleData.autoPricingEnabled}
+                  onCheckedChange={(checked) => {
+                    setVehicleData(prev => ({ ...prev, autoPricingEnabled: checked as boolean }));
+                  }}
+                />
+                <div className="flex-1">
+                  <Label htmlFor="autoPricing" className="block text-sm font-medium text-gray-700 mb-1">
+                    Varredura Automática de Preços
+                  </Label>
+                  <p className="text-sm text-gray-500">
+                    O sistema ajustará automaticamente seus preços baseado na concorrência da região
+                  </p>
+                </div>
+              </div>
+              
+              {vehicleData.autoPricingEnabled && (
+                <div>
+                  <Label className="block text-sm font-medium text-gray-600 mb-2">
+                    Percentual de Ajuste Competitivo
+                  </Label>
+                  <div className="relative">
+                    <Input 
+                      type="number" 
+                      min="-50" 
+                      max="50"
+                      step="0.5"
+                      placeholder="0"
+                      className="pr-8"
+                      value={vehicleData.competitionPercentage}
+                      onChange={(e) => setVehicleData(prev => ({ ...prev, competitionPercentage: e.target.value }))}
+                    />
+                    <span className="absolute right-3 top-3 text-gray-500">%</span>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Use valores negativos para ficar abaixo da média (ex: -5% = 5% mais barato). Valores positivos para ficar acima.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Description */}
           <div>
