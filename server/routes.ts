@@ -1636,6 +1636,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Find or create user
       let user = await storage.getUserByEmail(userInfo.email);
+      let isNewUser = false;
 
       if (!user) {
         // Create new user
@@ -1649,6 +1650,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
 
         console.log('✅ New OAuth user created:', user.email);
+        isNewUser = true;
+
+        // Credit initial welcome coins for new OAuth users (300 coins)
+        try {
+          await storage.addCoins(
+            user.id,
+            300,
+            'oauth_registration',
+            'Bônus de boas-vindas - 300 moedas por cadastro via OAuth',
+            `oauth_welcome_${user.id}`
+          );
+          console.log(`✅ Awarded 300 welcome coins to new OAuth user ${user.id}`);
+        } catch (coinError) {
+          console.error('❌ Error awarding welcome coins to OAuth user:', coinError);
+          // Don't fail the login if coins fail
+        }
       } else {
         // Update existing user info if needed
         if (userInfo.picture && !user.avatar) {
