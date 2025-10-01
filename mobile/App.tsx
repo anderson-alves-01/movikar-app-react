@@ -237,76 +237,11 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 }
 
 export default function App() {
-  const [isLoading, setIsLoading] = useState(false); // Start with false for immediate load
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // Initialize app immediately without blocking UI
-    initializeApp();
+    console.log('App initialized - alugae.mobi mobile v1.0.3');
   }, []);
-
-  const initializeApp = async () => {
-    try {
-      // Quick synchronous check only - no delays
-      let authenticated = false;
-      try {
-        if (authService && typeof authService.isAuthenticated === 'function') {
-          authenticated = authService.isAuthenticated();
-        }
-      } catch (error) {
-        console.warn('Auth check failed:', error);
-        authenticated = false;
-      }
-
-      // Set state immediately - no loading screen
-      setIsAuthenticated(authenticated);
-      
-      // All service initialization happens in background - never blocks UI
-      setTimeout(() => {
-        initializeServicesInBackground();
-      }, 100); // Very short delay
-    } catch (error) {
-      console.warn('App initialization error:', error);
-      setIsAuthenticated(false);
-    }
-  };
-
-  const initializeServicesInBackground = async () => {
-    // Background initialization - completely non-blocking
-    const initPromises = [];
-    
-    if (authService && typeof authService.initialize === 'function') {
-      initPromises.push(
-        authService.initialize().catch(error => 
-          console.warn('Background auth init failed:', error)
-        )
-      );
-    }
-
-    if (notificationService && typeof notificationService.initialize === 'function') {
-      initPromises.push(
-        notificationService.initialize().catch(error => 
-          console.warn('Background notification init failed:', error)
-        )
-      );
-    }
-
-    // Run all initializations in parallel without blocking
-    Promise.allSettled(initPromises);
-  };
-
-  // No loading screen - immediate app load
-  if (error) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorTitle}>Erro de Inicialização</Text>
-        <Text style={styles.errorMessage}>
-          Não foi possível inicializar o aplicativo. Tente novamente.
-        </Text>
-      </View>
-    );
-  }
 
   return (
     <ErrorBoundary>
