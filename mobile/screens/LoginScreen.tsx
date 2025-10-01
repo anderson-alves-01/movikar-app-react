@@ -33,28 +33,18 @@ export default function LoginScreen({ navigation }: Props) {
   const [isBiometricAvailable, setIsBiometricAvailable] = useState(false);
 
   useEffect(() => {
-    initializeAuth();
+    checkBiometric();
   }, []);
 
-  const initializeAuth = async () => {
+  const checkBiometric = async () => {
     try {
-      await authService.initialize();
-      
-      // Check if user is already authenticated
-      if (authService.isAuthenticated()) {
-        navigation.replace('Main');
-        return;
-      }
-
-      // Check if biometric authentication is available and enabled
+      // Only check biometric availability, don't redirect
       const biometricEnabled = await authService.isBiometricEnabled();
       if (biometricEnabled) {
         setIsBiometricAvailable(true);
-        // Auto-trigger biometric auth if enabled
-        handleBiometricLogin();
       }
     } catch (error) {
-      console.error('Auth initialization error:', error);
+      console.error('Biometric check error:', error);
     }
   };
 
