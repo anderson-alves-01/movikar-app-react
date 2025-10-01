@@ -42,7 +42,7 @@ export default function LoginScreen({ navigation }: Props) {
       
       // Check if user is already authenticated
       if (authService.isAuthenticated()) {
-        navigation.replace('Home');
+        navigation.replace('Main');
         return;
       }
 
@@ -68,7 +68,7 @@ export default function LoginScreen({ navigation }: Props) {
     try {
       const credentials: LoginCredentials = { email, password };
       await authService.login(credentials);
-      navigation.replace('Home');
+      navigation.replace('Main');
     } catch (error: any) {
       Alert.alert('Erro no Login', error.message || 'Erro ao fazer login');
     } finally {
@@ -102,7 +102,7 @@ export default function LoginScreen({ navigation }: Props) {
         ddi,
       };
       await authService.register(userData);
-      navigation.replace('Home');
+      navigation.replace('Main');
     } catch (error: any) {
       Alert.alert('Erro no Cadastro', error.message || 'Erro ao criar conta');
     } finally {
@@ -114,7 +114,7 @@ export default function LoginScreen({ navigation }: Props) {
     try {
       const success = await authService.authenticateWithBiometrics();
       if (success) {
-        navigation.replace('Home');
+        navigation.replace('Main');
       }
     } catch (error: any) {
       Alert.alert('Erro', error.message || 'Erro na autenticação biométrica');
@@ -125,7 +125,7 @@ export default function LoginScreen({ navigation }: Props) {
     setLoading(true);
     try {
       await authService.loginWithGoogle();
-      navigation.replace('Home');
+      navigation.replace('Main');
     } catch (error: any) {
       Alert.alert('Erro', error.message || 'Erro no login com Google');
     } finally {
@@ -137,7 +137,7 @@ export default function LoginScreen({ navigation }: Props) {
     setLoading(true);
     try {
       await authService.loginWithApple();
-      navigation.replace('Home');
+      navigation.replace('Main');
     } catch (error: any) {
       Alert.alert('Erro', error.message || 'Erro no login com Apple');
     } finally {
