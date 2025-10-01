@@ -13,7 +13,12 @@
     "submit:android": "eas submit --platform android",
     "submit:ios": "eas submit --platform ios",
     "preview:android": "eas build --platform android --profile preview",
-    "preview:ios": "eas build --platform ios --profile preview"
+    "preview:ios": "eas build --platform ios --profile preview",
+    "logs:android": "adb logcat *:S ReactNative:V ReactNativeJS:V",
+    "logs:android-all": "adb logcat",
+    "logs:android-errors": "adb logcat *:E",
+    "logs:clear": "adb logcat -c",
+    "devices": "adb devices"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.0",
