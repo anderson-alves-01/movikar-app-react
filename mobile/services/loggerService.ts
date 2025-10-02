@@ -1,11 +1,11 @@
-import { logger } from 'react-native-logs';
 import { Platform } from 'react-native';
-import DeviceInfo from 'react-native-device-info';
 
 // Configuração do Google Cloud Logging (via backend)
 const LOGGING_ENDPOINT = 'https://alugae.mobi/api/logs';
 const LOG_BUFFER_SIZE = 10;
 const LOG_BUFFER_TIMEOUT = 5000; // 5 segundos
+const APP_VERSION = '1.0.7';
+const APP_BUILD = '1';
 
 interface LogEntry {
   '@timestamp': string;
@@ -46,31 +46,15 @@ class LoggerService {
   }
 
   private async initializeDeviceInfo() {
-    try {
-      this.deviceInfo = {
-        app: 'alugae-mobile',
-        version: await DeviceInfo.getVersion(),
-        build: await DeviceInfo.getBuildNumber(),
-        platform: Platform.OS,
-        os_version: Platform.Version.toString(),
-        device_model: await DeviceInfo.getModel(),
-        device_id: await DeviceInfo.getUniqueId(),
-        device_brand: await DeviceInfo.getBrand(),
-        device_manufacturer: await DeviceInfo.getManufacturer(),
-        is_emulator: await DeviceInfo.isEmulator(),
-      };
-    } catch (error) {
-      console.warn('Failed to get device info:', error);
-      this.deviceInfo = {
-        app: 'alugae-mobile',
-        version: '1.0.6',
-        build: '1',
-        platform: Platform.OS,
-        os_version: 'unknown',
-        device_model: 'unknown',
-        device_id: 'unknown',
-      };
-    }
+    this.deviceInfo = {
+      app: 'alugae-mobile',
+      version: APP_VERSION,
+      build: APP_BUILD,
+      platform: Platform.OS,
+      os_version: Platform.Version.toString(),
+      device_model: Platform.OS === 'ios' ? 'iOS Device' : 'Android Device',
+      device_id: this.sessionId,
+    };
   }
 
   setUserId(userId: string) {

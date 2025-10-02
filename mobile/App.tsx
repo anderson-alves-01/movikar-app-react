@@ -199,7 +199,7 @@ export default function App() {
 
   useEffect(() => {
     loggerService.info('App initialized', {
-      version: '1.0.6',
+      version: '1.0.7',
       environment: __DEV__ ? 'development' : 'production',
     });
 

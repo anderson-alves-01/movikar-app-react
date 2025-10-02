@@ -1,0 +1,40 @@
+  Unknown option "server.host" with value "0.0.0.0" was found. Did you mean "port"?
+  This is probably a typing mistake. Fixing it will remove this message.
+Starting Metro Bundler
+Android ./index.js ▓▓▓▓░░░░░░░░░░░░ 28.5% (290/543)
+WARN  The package /home/expo/workingdir/build/mobile/node_modules/use-latest-callback contains an invalid package.json configuration. Consider raising this issue with the package maintainer(s).
+Reason: The resolution for "/home/expo/workingdir/build/mobile/node_modules/use-latest-callback" defined in "exports" is /home/expo/workingdir/build/mobile/node_modules/use-latest-callback/esm.mjs, however this file does not exist. Falling back to file-based resolution.
+Android ./index.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 86.6% (870/935)
+Android Bundling failed 7654ms index.js (1123 modules)
+Error: Unable to resolve module react-native-device-info from /home/expo/workingdir/build/mobile/services/loggerService.ts: react-native-device-info could not be found within the project or in these directories:
+  node_modules
+  1 | import { logger } from 'react-native-logs';
+  2 | import { Platform } from 'react-native';
+> 3 | import DeviceInfo from 'react-native-device-info';
+    |                         ^
+  4 |
+  5 | // Configuração do Google Cloud Logging (via backend)
+  6 | const LOGGING_ENDPOINT = 'https://alugae.mobi/api/logs';
+Error: Unable to resolve module react-native-device-info from /home/expo/workingdir/build/mobile/services/loggerService.ts: react-native-device-info could not be found within the project or in these directories:
+  node_modules
+  1 | import { logger } from 'react-native-logs';
+  2 | import { Platform } from 'react-native';
+> 3 | import DeviceInfo from 'react-native-device-info';
+    |                         ^
+  4 |
+  5 | // Configuração do Google Cloud Logging (via backend)
+  6 | const LOGGING_ENDPOINT = 'https://alugae.mobi/api/logs';
+    at ModuleResolver.resolveDependency (/home/expo/workingdir/build/mobile/node_modules/metro/src/node-haste/DependencyGraph/ModuleResolution.js:150:15)
+    at DependencyGraph.resolveDependency (/home/expo/workingdir/build/mobile/node_modules/metro/src/node-haste/DependencyGraph.js:239:43)
+    at /home/expo/workingdir/build/mobile/node_modules/metro/src/lib/transformHelpers.js:161:21
+    at resolveDependencies (/home/expo/workingdir/build/mobile/node_modules/metro/src/DeltaBundler/buildSubgraph.js:43:25)
+    at visit (/home/expo/workingdir/build/mobile/node_modules/metro/src/DeltaBundler/buildSubgraph.js:81:30)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Promise.all (index 11)
+    at visit (/home/expo/workingdir/build/mobile/node_modules/metro/src/DeltaBundler/buildSubgraph.js:90:5)
+    at async Promise.all (index 3)
+    at visit (/home/expo/workingdir/build/mobile/node_modules/metro/src/DeltaBundler/buildSubgraph.js:90:5)
+npx expo export:embed --eager --platform android --dev false exited with non-zero code: 1
+
+Fail job
+
