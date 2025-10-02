@@ -8782,6 +8782,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Mobile App Logging Endpoint - Logstash Integration
+  app.post("/api/logs", async (req, res) => {
+    try {
+      const { logs, batch_size, batch_timestamp } = req.body;
+
+      if (!logs || !Array.isArray(logs)) {
+        return res.status(400).json({ message: "Invalid logs format" });
+      }
+
+      console.log(`📊 Received ${logs.length} logs from mobile app`);
+
+      // Enriquecer logs com informações do servidor
+      const enrichedLogs = logs.map(log => ({
+        ...log,
+        server_timestamp: new Date().toISOString(),
+        server_ip: req.ip,
+        server_environment: process.env.NODE_ENV || 'production',
+      }));
+
+      // Tentar enviar para Logstash
+      const logstashEndpoint = process.env.LOGSTASH_ENDPOINT;
+      
+      if (logstashEndpoint) {
+        try {
+          const logstashResponse = await fetch(logstashEndpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              logs: enrichedLogs,
+              source: 'alugae-mobile',
+              batch_size,
+              batch_timestamp,
+            }),
+          });
+
+          if (logstashResponse.ok) {
+            console.log(`✅ Sent ${logs.length} logs to Logstash`);
+          } else {
+            console.warn(`⚠️ Logstash responded with status ${logstashResponse.status}`);
+            // Salvar localmente se Logstash falhar
+            saveLogsLocally(enrichedLogs);
+          }
+        } catch (logstashError) {
+          console.error('❌ Failed to send logs to Logstash:', logstashError);
+          // Salvar localmente se Logstash não estiver disponível
+          saveLogsLocally(enrichedLogs);
+        }
+      } else {
+        // Se não há endpoint do Logstash configurado, salvar localmente
+        console.log('💾 Saving logs locally (no Logstash endpoint configured)');
+        saveLogsLocally(enrichedLogs);
+      }
+
+      res.json({ 
+        message: "Logs received successfully",
+        count: logs.length,
+      });
+
+    } catch (error) {
+      console.error("Logs endpoint error:", error);
+      res.status(500).json({ message: "Failed to process logs" });
+    }
+  });
+
+  // Função auxiliar para salvar logs localmente
+  function saveLogsLocally(logs: any[]) {
+    try {
+      const logDir = path.join(process.cwd(), 'logs', 'mobile');
+      if (!fs.existsSync(logDir)) {
+        fs.mkdirSync(logDir, { recursive: true });
+      }
+
+      const logFile = path.join(logDir, `mobile-logs-${new Date().toISOString().split('T')[0]}.jsonl`);
+      
+      // Append logs em formato JSONL (JSON Lines)
+      const logLines = logs.map(log => JSON.stringify(log)).join('\n') + '\n';
+      fs.appendFileSync(logFile, logLines, 'utf8');
+      
+      console.log(`💾 Saved ${logs.length} logs to ${logFile}`);
+    } catch (error) {
+      console.error('Failed to save logs locally:', error);
+    }
+  }
+
   const httpServer = createServer(app);
   
   // Setup WebSocket server for real-time messaging

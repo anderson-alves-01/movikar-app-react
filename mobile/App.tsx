@@ -6,6 +6,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { View, Text, StyleSheet, LogBox } from 'react-native';
+import ErrorBoundary from './components/ErrorBoundary';
+import loggerService from './services/loggerService';
 
 // Suppress all warnings to prevent crashes
 LogBox.ignoreAllLogs(true);
@@ -192,50 +194,19 @@ function AppNavigator({ isAuthenticated }: { isAuthenticated: boolean }) {
   );
 }
 
-// Error Boundary Component
-interface ErrorBoundaryState {
-  hasError: boolean;
-}
-
-interface ErrorBoundaryProps {
-  children: React.ReactNode;
-}
-
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorTitle}>Algo deu errado</Text>
-          <Text style={styles.errorMessage}>
-            Ocorreu um erro inesperado. Por favor, reinicie o aplicativo.
-          </Text>
-        </View>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    console.log('App initialized - alugae.mobi mobile v1.0.3');
+    loggerService.info('App initialized', {
+      version: '1.0.5',
+      environment: __DEV__ ? 'development' : 'production',
+    });
+
+    // Flush logs quando o app for fechado
+    return () => {
+      loggerService.flush();
+    };
   }, []);
 
   return (

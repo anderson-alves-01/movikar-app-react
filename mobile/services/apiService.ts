@@ -1,4 +1,6 @@
 // API Service for alugae mobile app
+import loggerService from './loggerService';
+
 const API_BASE_URL = 'https://alugae.mobi/api';
 
 interface ApiResponse<T> {
@@ -28,6 +30,7 @@ class ApiService {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
+    const startTime = Date.now();
     
     const defaultHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -47,10 +50,30 @@ class ApiService {
 
     try {
       const response = await fetch(url, config);
+      const duration = Date.now() - startTime;
       
+      // Log API call com sucesso
+      loggerService.logApiCall(
+        options.method || 'GET',
+        endpoint,
+        response.status,
+        duration
+      );
+
       if (!response.ok) {
         const errorData = await response.text();
-        throw new Error(`HTTP ${response.status}: ${errorData}`);
+        const error = new Error(`HTTP ${response.status}: ${errorData}`);
+        
+        // Log erro da API
+        loggerService.logApiCall(
+          options.method || 'GET',
+          endpoint,
+          response.status,
+          duration,
+          error
+        );
+        
+        throw error;
       }
 
       const contentType = response.headers.get('content-type');
@@ -60,7 +83,17 @@ class ApiService {
       
       return await response.text() as T;
     } catch (error) {
-      console.error(`API Error [${endpoint}]:`, error);
+      const duration = Date.now() - startTime;
+      
+      // Log erro de rede/timeout
+      loggerService.logApiCall(
+        options.method || 'GET',
+        endpoint,
+        undefined,
+        duration,
+        error
+      );
+      
       throw error;
     }
   }
