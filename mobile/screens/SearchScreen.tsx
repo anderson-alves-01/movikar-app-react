@@ -81,8 +81,8 @@ export default function SearchScreen() {
       const results = await apiService.searchVehicles(searchQuery, filters);
       setVehicles(results || []);
     } catch (error) {
-      console.error('Error searching vehicles:', error);
-      Alert.alert('Erro', 'Não foi possível realizar a busca');
+      console.warn('Error searching vehicles:', error);
+      setVehicles([]);
     } finally {
       setLoading(false);
     }

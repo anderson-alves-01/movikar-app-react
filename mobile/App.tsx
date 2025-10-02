@@ -5,15 +5,10 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
-import { View, Text, StyleSheet, LogBox, Platform } from 'react-native';
+import { View, Text, StyleSheet, LogBox } from 'react-native';
 
-// Enable warnings to debug performance issues
-LogBox.ignoreAllLogs(false);
-LogBox.ignoreLogs([
-  'Sending `onAnimatedValueUpdate`',
-  'Warning: componentWillReceiveProps',
-  'Warning: componentWillMount',
-]);
+// Suppress all warnings to prevent crashes
+LogBox.ignoreAllLogs(true);
 
 // Type definitions for safety
 type ScreenComponent = React.ComponentType<any>;

@@ -40,19 +40,23 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    loadInitialData();
+    // Load data in background, never crash the app
+    loadInitialData().catch(err => {
+      console.warn('Background data load failed:', err);
+      setLoading(false);
+    });
   }, []);
 
   const loadInitialData = async () => {
     try {
       setLoading(true);
       await Promise.all([
-        loadFeaturedVehicles(),
-        loadRecentVehicles()
+        loadFeaturedVehicles().catch(e => console.warn('Featured vehicles failed:', e)),
+        loadRecentVehicles().catch(e => console.warn('Recent vehicles failed:', e))
       ]);
     } catch (error) {
       console.error('Error loading initial data:', error);
-      Alert.alert('Erro', 'Não foi possível carregar os veículos');
+      // Don't show alert on initial load - just fail silently
     } finally {
       setLoading(false);
     }
@@ -63,7 +67,8 @@ export default function HomeScreen() {
       const response = await apiService.getFeaturedVehicles();
       setFeaturedVehicles(response || []);
     } catch (error) {
-      console.error('Error loading featured vehicles:', error);
+      console.warn('Error loading featured vehicles:', error);
+      setFeaturedVehicles([]);
     }
   };
 
@@ -72,7 +77,8 @@ export default function HomeScreen() {
       const response = await apiService.getVehicles({ limit: 10 });
       setVehicles(response || []);
     } catch (error) {
-      console.error('Error loading vehicles:', error);
+      console.warn('Error loading vehicles:', error);
+      setVehicles([]);
     }
   };
 

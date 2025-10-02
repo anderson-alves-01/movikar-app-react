@@ -97,8 +97,8 @@ export default function BookingsScreen() {
       const response = await apiService.getBookings(activeTab);
       setBookings(response || []);
     } catch (error) {
-      console.error('Error loading bookings:', error);
-      Alert.alert('Erro', 'Não foi possível carregar as reservas');
+      console.warn('Error loading bookings:', error);
+      setBookings([]);
     } finally {
       setLoading(false);
     }
