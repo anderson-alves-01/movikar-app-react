@@ -1,5 +1,12 @@
-import { initStripe, useStripe } from '@stripe/stripe-react-native';
 import apiService from './apiService';
+
+// Stripe React Native will be installed separately
+let StripeModule: any = null;
+try {
+  StripeModule = require('@stripe/stripe-react-native');
+} catch (e) {
+  console.warn('Stripe React Native not available. Payment features will be limited.');
+}
 
 export interface PaymentMethod {
   id: string;
@@ -34,9 +41,14 @@ class PaymentService {
 
   async initialize(publishableKey: string): Promise<boolean> {
     try {
+      if (!StripeModule || !StripeModule.initStripe) {
+        console.warn('Stripe module not available');
+        return false;
+      }
+
       this.stripePublishableKey = publishableKey;
       
-      await initStripe({
+      await StripeModule.initStripe({
         publishableKey,
         urlScheme: 'alugae-mobile',
         setUrlSchemeOnAndroid: true,
@@ -241,8 +253,8 @@ class PaymentService {
 
   async checkPixPaymentStatus(paymentId: string): Promise<{ status: string; paid: boolean }> {
     try {
-      const response = await apiService.get(`/payments/pix/status/${paymentId}`);
-      return response.data;
+      const response = await apiService.makeRequest<{ status: string; paid: boolean }>(`/payments/pix/status/${paymentId}`);
+      return response;
     } catch (error) {
       console.error('Error checking PIX payment status:', error);
       return { status: 'unknown', paid: false };
@@ -252,11 +264,14 @@ class PaymentService {
   // Coupon functionality
   async applyCoupon(couponCode: string, planType?: string): Promise<{ valid: boolean; discount?: number; message?: string }> {
     try {
-      const response = await apiService.post('/coupons/validate', {
-        code: couponCode,
-        planType,
+      const response = await apiService.makeRequest<{ valid: boolean; discount?: number; message?: string }>('/coupons/validate', {
+        method: 'POST',
+        body: JSON.stringify({
+          code: couponCode,
+          planType,
+        })
       });
-      return response.data;
+      return response;
     } catch (error) {
       console.error('Error applying coupon:', error);
       return { valid: false, message: 'Erro ao validar cupom' };

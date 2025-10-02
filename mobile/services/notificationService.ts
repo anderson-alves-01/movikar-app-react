@@ -152,7 +152,7 @@ class NotificationService {
 
   async scheduleLocalNotification(notificationData: NotificationData, triggerSeconds?: number): Promise<string | null> {
     try {
-      const identifier = await Notifications.scheduleNotificationAsync({
+      const notificationConfig: any = {
         content: {
           title: notificationData.title,
           body: notificationData.body,
@@ -160,9 +160,15 @@ class NotificationService {
           sound: notificationData.sound !== false,
           priority: this.convertPriority(notificationData.priority || 'normal'),
         },
-        trigger: triggerSeconds ? { type: 'timeInterval', seconds: triggerSeconds } : null,
-      });
+      };
+      
+      if (triggerSeconds) {
+        notificationConfig.trigger = { seconds: triggerSeconds };
+      } else {
+        notificationConfig.trigger = null;
+      }
 
+      const identifier = await Notifications.scheduleNotificationAsync(notificationConfig);
       return identifier;
     } catch (error) {
       console.error('Error scheduling local notification:', error);
@@ -203,9 +209,8 @@ class NotificationService {
           sound: true,
         },
         trigger: {
-          type: 'date',
           date: triggerTime,
-        },
+        } as any,
       });
 
       return true;
