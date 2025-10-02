@@ -8782,7 +8782,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Mobile App Logging Endpoint - Logstash Integration
+  // Mobile App Logging Endpoint - Google Cloud Logging Integration
   app.post("/api/logs", async (req, res) => {
     try {
       const { logs, batch_size, batch_timestamp } = req.body;
@@ -8801,39 +8801,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         server_environment: process.env.NODE_ENV || 'production',
       }));
 
-      // Tentar enviar para Logstash
-      const logstashEndpoint = process.env.LOGSTASH_ENDPOINT;
+      // Enviar para Google Cloud Logging
+      const gcpEnabled = process.env.GCP_PROJECT_ID && process.env.GOOGLE_APPLICATION_CREDENTIALS;
       
-      if (logstashEndpoint) {
+      if (gcpEnabled) {
         try {
-          const logstashResponse = await fetch(logstashEndpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              logs: enrichedLogs,
-              source: 'alugae-mobile',
-              batch_size,
-              batch_timestamp,
-            }),
-          });
-
-          if (logstashResponse.ok) {
-            console.log(`✅ Sent ${logs.length} logs to Logstash`);
-          } else {
-            console.warn(`⚠️ Logstash responded with status ${logstashResponse.status}`);
-            // Salvar localmente se Logstash falhar
-            saveLogsLocally(enrichedLogs);
-          }
-        } catch (logstashError) {
-          console.error('❌ Failed to send logs to Logstash:', logstashError);
-          // Salvar localmente se Logstash não estiver disponível
+          await sendLogsToGoogleCloud(enrichedLogs);
+          console.log(`✅ Sent ${logs.length} logs to Google Cloud Logging`);
+        } catch (gcpError) {
+          console.error('❌ Failed to send logs to Google Cloud:', gcpError);
+          // Salvar localmente se Google Cloud falhar
           saveLogsLocally(enrichedLogs);
         }
       } else {
-        // Se não há endpoint do Logstash configurado, salvar localmente
-        console.log('💾 Saving logs locally (no Logstash endpoint configured)');
+        // Se Google Cloud não estiver configurado, salvar localmente
+        console.log('💾 Saving logs locally (Google Cloud Logging not configured)');
         saveLogsLocally(enrichedLogs);
       }
 
@@ -8848,7 +8830,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Função auxiliar para salvar logs localmente
+  // Função para enviar logs para Google Cloud Logging
+  async function sendLogsToGoogleCloud(logs: any[]) {
+    const { Logging } = await import('@google-cloud/logging');
+    
+    const logging = new Logging({
+      projectId: process.env.GCP_PROJECT_ID,
+      keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+    });
+
+    const log = logging.log('alugae-mobile-app');
+
+    // Mapear severity levels
+    const severityMap: Record<string, string> = {
+      debug: 'DEBUG',
+      info: 'INFO',
+      warn: 'WARNING',
+      error: 'ERROR',
+      fatal: 'CRITICAL',
+    };
+
+    // Criar entries para Google Cloud Logging
+    const entries = logs.map(logEntry => {
+      const severity = severityMap[logEntry.level] || 'DEFAULT';
+      
+      return log.entry({
+        resource: {
+          type: 'global',
+          labels: {
+            project_id: process.env.GCP_PROJECT_ID || 'alugae',
+          },
+        },
+        severity,
+        timestamp: logEntry['@timestamp'],
+        labels: {
+          app: logEntry.app || 'alugae-mobile',
+          platform: logEntry.platform || 'unknown',
+          version: logEntry.version || 'unknown',
+          user_id: logEntry.user_id || 'anonymous',
+          session_id: logEntry.session_id || 'unknown',
+        },
+      }, {
+        message: logEntry.message,
+        ...logEntry.context,
+        error: logEntry.error,
+        device: {
+          model: logEntry.device_model,
+          os_version: logEntry.os_version,
+          device_id: logEntry.device_id,
+        },
+        tags: logEntry.tags || [],
+      });
+    });
+
+    // Enviar em lote
+    await log.write(entries);
+  }
+
+  // Função auxiliar para salvar logs localmente (fallback)
   function saveLogsLocally(logs: any[]) {
     try {
       const logDir = path.join(process.cwd(), 'logs', 'mobile');

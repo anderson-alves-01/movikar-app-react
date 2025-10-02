@@ -2,8 +2,8 @@ import { logger } from 'react-native-logs';
 import { Platform } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
 
-// Configuração do Logstash
-const LOGSTASH_ENDPOINT = process.env.LOGSTASH_ENDPOINT || 'https://alugae.mobi/api/logs';
+// Configuração do Google Cloud Logging (via backend)
+const LOGGING_ENDPOINT = 'https://alugae.mobi/api/logs';
 const LOG_BUFFER_SIZE = 10;
 const LOG_BUFFER_TIMEOUT = 5000; // 5 segundos
 
@@ -63,7 +63,7 @@ class LoggerService {
       console.warn('Failed to get device info:', error);
       this.deviceInfo = {
         app: 'alugae-mobile',
-        version: '1.0.5',
+        version: '1.0.6',
         build: '1',
         platform: Platform.OS,
         os_version: 'unknown',
@@ -101,11 +101,11 @@ class LoggerService {
     };
   }
 
-  private async sendLogsToLogstash(logs: LogEntry[]) {
+  private async sendLogsToGoogleCloud(logs: LogEntry[]) {
     if (logs.length === 0) return;
 
     try {
-      const response = await fetch(LOGSTASH_ENDPOINT, {
+      const response = await fetch(LOGGING_ENDPOINT, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -118,12 +118,12 @@ class LoggerService {
       });
 
       if (!response.ok) {
-        console.warn('Failed to send logs to Logstash:', response.status);
+        console.warn('Failed to send logs to Google Cloud:', response.status);
       } else {
-        console.debug(`Sent ${logs.length} logs to Logstash`);
+        console.debug(`Sent ${logs.length} logs to Google Cloud Logging`);
       }
     } catch (error) {
-      console.warn('Error sending logs to Logstash:', error);
+      console.warn('Error sending logs to Google Cloud:', error);
       // Em produção, você pode querer salvar localmente para tentar enviar depois
     }
   }
@@ -160,7 +160,7 @@ class LoggerService {
     if (this.logBuffer.length > 0) {
       const logsToSend = [...this.logBuffer];
       this.logBuffer = [];
-      this.sendLogsToLogstash(logsToSend);
+      this.sendLogsToGoogleCloud(logsToSend);
     }
   }
 
