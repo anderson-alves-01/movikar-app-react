@@ -8834,11 +8834,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   async function sendLogsToGoogleCloud(logs: any[]) {
     const { Logging } = await import('@google-cloud/logging');
     
-    const logging = new Logging({
+    // Suportar tanto arquivo quanto JSON direto
+    let loggingConfig: any = {
       projectId: process.env.GCP_PROJECT_ID,
-      keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
-    });
+    };
 
+    const credentialsEnv = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    
+    if (credentialsEnv) {
+      // Verificar se é um caminho de arquivo ou JSON
+      if (credentialsEnv.startsWith('{')) {
+        // É JSON direto
+        try {
+          loggingConfig.credentials = JSON.parse(credentialsEnv);
+          console.log('✅ Using Google Cloud credentials from JSON');
+        } catch (e) {
+          console.error('❌ Failed to parse GOOGLE_APPLICATION_CREDENTIALS JSON:', e);
+          throw e;
+        }
+      } else {
+        // É caminho de arquivo
+        loggingConfig.keyFilename = credentialsEnv;
+        console.log('✅ Using Google Cloud credentials from file:', credentialsEnv);
+      }
+    }
+
+    const logging = new Logging(loggingConfig);
     const log = logging.log('alugae-mobile-app');
 
     // Mapear severity levels
