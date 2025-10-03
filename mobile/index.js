@@ -1,20 +1,13 @@
 import { registerRootComponent } from 'expo';
 import { LogBox } from 'react-native';
 
-// Initialize logger BEFORE anything else to capture early crashes
-import loggerService from './services/loggerService';
-
-// Log app boot
-console.log('=== ALUGAE MOBILE APP STARTING ===');
-loggerService.info('App boot sequence started', { stage: 'index.js' });
-
-import App from './App';
-
-// Ignore warnings for stability
+// Suppress warnings FIRST
 LogBox.ignoreAllLogs(true);
 
-// Log successful boot
-loggerService.info('App boot sequence completed', { stage: 'pre-registration' });
+// Simple console logging (no external services during boot)
+console.log('=== ALUGAE v1.0.9 STARTING (JSC Engine) ===');
+
+import App from './App';
 
 // Register the app
 registerRootComponent(App);
