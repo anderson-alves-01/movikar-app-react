@@ -3,7 +3,7 @@ export default {
     entryPoint: './index.js',
     name: "alugae - Aluguel de Carros",
     slug: "alugae-mobile",
-    version: "1.0.9",
+    version: "1.0.10",
     orientation: "portrait",
     icon: "./assets/icon.png",
     userInterfaceStyle: "light",

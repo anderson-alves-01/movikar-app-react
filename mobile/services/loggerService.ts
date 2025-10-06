@@ -1,10 +1,16 @@
 import { Platform } from 'react-native';
 
+// ErrorUtils é um global do React Native, não precisa ser importado
+declare const ErrorUtils: {
+  setGlobalHandler: (handler: (error: Error, isFatal?: boolean) => void) => void;
+  getGlobalHandler: () => ((error: Error, isFatal?: boolean) => void) | undefined;
+};
+
 // Configuração do Google Cloud Logging (via backend)
 const LOGGING_ENDPOINT = 'https://alugae.mobi/api/logs';
 const LOG_BUFFER_SIZE = 10;
 const LOG_BUFFER_TIMEOUT = 5000; // 5 segundos
-const APP_VERSION = '1.0.7';
+const APP_VERSION = '1.0.10';
 const APP_BUILD = '1';
 
 interface LogEntry {

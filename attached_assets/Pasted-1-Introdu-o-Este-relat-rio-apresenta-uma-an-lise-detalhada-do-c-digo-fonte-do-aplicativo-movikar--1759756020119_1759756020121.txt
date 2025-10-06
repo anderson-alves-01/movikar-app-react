@@ -1,0 +1,204 @@
+1. Introdução
+
+Este relatório apresenta uma análise detalhada do código-fonte do aplicativo movikar-app-react, com o objetivo de diagnosticar e resolver um crash que ocorre na plataforma Android imediatamente após a tela de splash. A análise abrange a estrutura do projeto, as dependências, as configurações nativas do Android e o código JavaScript/TypeScript.
+
+2. Diagnóstico dos Problemas
+
+A investigação revelou múltiplos fatores que, isoladamente ou em conjunto, podem levar à instabilidade e ao crash do aplicativo. Os problemas foram categorizados por nível de severidade.
+
+Severidade
+Problema
+Arquivo Afetado
+Descrição do Risco
+Crítico
+useState não importado no HomeScreen
+mobile/screens/HomeScreen.tsx
+Causa um ReferenceError fatal quando a tela principal tenta ser renderizada, resultando em crash imediato.
+Crítico
+ErrorUtils não importado no loggerService
+mobile/services/loggerService.ts
+Causa um ReferenceError ao tentar configurar o manipulador de erros global, levando a um crash na inicialização.
+Alto
+newArchEnabled=true (Nova Arquitetura)
+mobile/android/gradle.properties
+A Nova Arquitetura do React Native, embora promissora, ainda apresenta instabilidade com certas bibliotecas.
+Alto
+Versão experimental do React (19.0.0)
+mobile/package.json
+O React 19 é muito recente e sua compatibilidade com o ecossistema do React Native 0.79.5 não é garantida.
+Médio
+Falta de tratamento de erro na inicialização (index.js)
+mobile/index.js
+Uma falha em qualquer importação inicial (como no loggerService) pode quebrar o app sem um erro claro.
+Médio
+MainActivity.kt com super.onCreate(null)
+mobile/android/app/src/main/java/com/alugae/mobile/MainActivity.kt
+Passar null para super.onCreate é uma prática perigosa que pode contornar a restauração de estado e causar crashes.
+Baixo
+LogBox.ignoreAllLogs(true)
+mobile/App.tsx, mobile/index.js
+Suprimir todos os avisos e logs dificulta a depuração de problemas não fatais que podem levar a erros futuros.
+
+
+3. Causa Raiz Provável do Crash
+
+O crash imediato após o splash screen é muito provavelmente causado por uma cascata de erros fatais que ocorrem durante a inicialização do aplicativo. A sequência mais provável é a seguinte:
+
+1.
+Falha na Inicialização do Logger: O arquivo mobile/index.js tenta inicializar o loggerService primeiro. No entanto, o loggerService.ts tenta usar ErrorUtils sem importá-lo, o que causa um ReferenceError fatal. Como não há um bloco try...catch em index.js, o aplicativo encerra abruptamente.
+
+2.
+Falha na Renderização da Tela Principal: Se o problema do logger fosse contornado, o aplicativo ainda assim travaria. O React Navigation tentaria renderizar a rota inicial (HomeScreen), mas o componente HomeScreen.tsx utiliza a função useState sem importá-la do pacote react. Isso geraria outro ReferenceError fatal, causando o crash.
+
+A combinação da Nova Arquitetura (newArchEnabled=true) com a versão experimental do React 19 agrava a situação, criando um ambiente instável onde a recuperação de erros é menos previsível e as incompatibilidades com bibliotecas nativas são mais prováveis.
+
+4. Recomendações de Correção
+
+Para restaurar a estabilidade do aplicativo, recomendamos a aplicação das seguintes correções, em ordem de prioridade.
+
+4.1. Correção Crítica: Importar useState e useEffect
+
+•
+Arquivo: mobile/screens/HomeScreen.tsx
+
+•
+Ação: Adicione useState e useEffect à lista de importações do React.
+
+TypeScript
+
+
+// ANTES
+import React from 'react';
+
+// DEPOIS
+import React, { useState, useEffect } from 'react';
+
+
+4.2. Correção Crítica: Importar ErrorUtils
+
+•
+Arquivo: mobile/services/loggerService.ts
+
+•
+Ação: Importe ErrorUtils do react-native.
+
+TypeScript
+
+
+// ANTES
+import { Platform } from 'react-native';
+
+// DEPOIS
+import { Platform, ErrorUtils } from 'react-native';
+
+
+4.3. Correção de Estabilidade: Desabilitar a Nova Arquitetura
+
+Para garantir a compatibilidade com o ecossistema atual de bibliotecas, é prudente desabilitar a Nova Arquitetura temporariamente.
+
+•
+Arquivo: mobile/android/gradle.properties
+
+•
+Ação: Altere a propriedade newArchEnabled para false.
+
+Plain Text
+
+
+# ANTES
+newArchEnabled=true
+
+# DEPOIS
+newArchEnabled=false
+
+
+4.4. Correção de Estabilidade: Passar savedInstanceState em MainActivity.kt
+
+•
+Arquivo: mobile/android/app/src/main/java/com/alugae/mobile/MainActivity.kt
+
+•
+Ação: Passe o savedInstanceState recebido para super.onCreate em vez de null.
+
+Kotlin
+
+
+// ANTES
+override fun onCreate(savedInstanceState: Bundle?) {
+  setTheme(R.style.AppTheme);
+  super.onCreate(null)
+}
+
+// DEPOIS
+override fun onCreate(savedInstanceState: Bundle?) {
+  setTheme(R.style.AppTheme);
+  super.onCreate(savedInstanceState)
+}
+
+
+4.5. Melhoria: Adicionar Tratamento de Erro na Inicialização
+
+•
+Arquivo: mobile/index.js
+
+•
+Ação: Envolva o código de inicialização em um bloco try...catch para capturar erros fatais e exibir uma tela de erro mínima.
+
+JavaScript
+
+
+import { registerRootComponent } from 'expo';
+import { LogBox, View, Text, StyleSheet } from 'react-native';
+
+try {
+  // Initialize logger BEFORE anything else to capture early crashes
+  const loggerService = require('./services/loggerService').default;
+  console.log('=== ALUGAE MOBILE APP STARTING ===');
+  loggerService.info('App boot sequence started', { stage: 'index.js' });
+
+  const App = require('./App').default;
+
+  // Ignore warnings for stability
+  LogBox.ignoreAllLogs(true);
+
+  loggerService.info('App boot sequence completed', { stage: 'pre-registration' });
+
+  // Register the app
+  registerRootComponent(App);
+} catch (error) {
+  console.error('FATAL: Failed to initialize app', error);
+  
+  // Fallback: register a minimal error component
+  const ErrorFallback = () => (
+    <View style={styles.container}>
+      <Text style={styles.text}>Ocorreu um erro fatal ao iniciar o aplicativo.</Text>
+    </View>
+  );
+
+  const styles = StyleSheet.create({
+    container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#20B2AA' },
+    text: { color: 'white', fontSize: 16, textAlign: 'center', padding: 20 }
+  });
+
+  registerRootComponent(ErrorFallback);
+}
+
+
+5. Melhores Práticas para Estabilidade Futura
+
+•
+Downgrade do React: Considere fazer o downgrade do React para uma versão mais estável, como a 18.2.0, que é amplamente testada com o React Native, até que o React 19 se torne mais maduro no ecossistema mobile.
+
+•
+Remover LogBox.ignoreAllLogs: Em ambiente de desenvolvimento, remova esta linha para visualizar avisos importantes que podem indicar problemas futuros.
+
+•
+Implementar Crash Reporting: Integre um serviço como Sentry ou Firebase Crashlytics. Eles fornecem relatórios detalhados de crashes que ocorrem em produção, facilitando a depuração.
+
+•
+Limpeza de Cache e Build: Após aplicar as correções, execute uma limpeza completa do projeto:
+
+6. Conclusão
+
+A análise indica que o crash do aplicativo é resultado de erros críticos de programação e do uso de tecnologias experimentais em um ambiente de produção. A aplicação das correções recomendadas, começando pelas críticas, deve resolver o problema de inicialização e restaurar a funcionalidade do aplicativo no Android. A adoção das melhores práticas sugeridas ajudará a garantir a estabilidade e a manutenibilidade do projeto a longo prazo.
+

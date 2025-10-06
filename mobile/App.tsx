@@ -12,7 +12,7 @@ import loggerService from './services/loggerService';
 // Suppress all warnings to prevent crashes
 LogBox.ignoreAllLogs(true);
 
-console.log('=== App.tsx loading - v1.0.9 JSC ===');
+console.log('=== App.tsx loading - v1.0.10 (Stable Arch) ===');
 
 // Type definitions for safety
 type ScreenComponent = React.ComponentType<any>;
@@ -200,15 +200,16 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    console.log('App initialized - v1.0.9');
+    console.log('App initialized - v1.0.10');
     
     // Initialize logger in background (non-blocking)
     setTimeout(() => {
       try {
         loggerService.info('App initialized', {
-          version: '1.0.9',
+          version: '1.0.10',
           environment: __DEV__ ? 'development' : 'production',
           jsEngine: 'jsc',
+          architecture: 'stable',
         });
       } catch (e) {
         console.warn('Logger initialization failed:', e);
