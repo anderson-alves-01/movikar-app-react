@@ -8,7 +8,6 @@ config.resolver.assetExts.push('db', 'mp3', 'ttf', 'obj', 'png', 'jpg');
 // Replit-specific configurations for better performance
 config.server = {
   ...config.server,
-  host: '0.0.0.0',
   port: 8081
 };
 

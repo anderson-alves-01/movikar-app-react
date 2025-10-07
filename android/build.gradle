@@ -1,37 +1,30 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
+plugins {
+  id("com.facebook.react.rootproject")
+  id("expo-root")
+}
 
-buildscript {
+android {
+  namespace "com.alugae.mobile"
+
+  compileSdkVersion 34
+
+  defaultConfig {
+    applicationId "com.alugae.mobile"
+    minSdkVersion 24
+    targetSdkVersion 34
+    versionCode 1
+    versionName "1.0"
+  }
+}
+
+dependencyResolutionManagement {
   repositories {
     google()
     mavenCentral()
   }
-  dependencies {
-    classpath('com.android.tools.build:gradle')
-    classpath('com.facebook.react:react-native-gradle-plugin')
-    classpath('org.jetbrains.kotlin:kotlin-gradle-plugin')
-  }
 }
 
-def reactNativeAndroidDir = new File(
-  providers.exec {
-    workingDir(rootDir)
-    commandLine("node", "--print", "require.resolve('react-native/package.json')")
-  }.standardOutput.asText.get().trim(),
-  "../android"
-)
+rootProject.name = "android"
+include(":app")
 
-allprojects {
-  repositories {
-    maven {
-      // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
-      url(reactNativeAndroidDir)
-    }
-
-    google()
-    mavenCentral()
-    maven { url 'https://www.jitpack.io' }
-  }
-}
-
-apply plugin: "expo-root-project"
-apply plugin: "com.facebook.react.rootproject"
