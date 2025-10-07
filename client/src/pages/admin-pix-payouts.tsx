@@ -493,8 +493,8 @@ export default function AdminPixPayouts() {
               {approvalData.approved ? 'Aprovar' : 'Rejeitar'}
             </Button>
           </DialogFooter>
+        </DialogContent>
         </Dialog>
-      )}
     </div>
   );
 }
