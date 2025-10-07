@@ -1,7 +1,7 @@
 // API Service for alugae mobile app
 import loggerService from './loggerService';
 
-const API_BASE_URL = 'https://alugae.mobi/api';
+const API_BASE_URL = 'https://644ab8d0-655e-4dd9-989a-218db554bb65-00-rwokssygfm5r.picard.replit.dev/api';
 
 interface ApiResponse<T> {
   data?: T;
