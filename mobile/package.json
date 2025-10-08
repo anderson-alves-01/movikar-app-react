@@ -18,7 +18,9 @@
     "logs:android-all": "adb logcat",
     "logs:android-errors": "adb logcat *:E",
     "logs:clear": "adb logcat -c",
-    "devices": "adb devices"
+    "devices": "adb devices",
+    "validate:android": "node validate-android-config.js",
+    "prepare:android": "./prepare-android-build.sh"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.0",
