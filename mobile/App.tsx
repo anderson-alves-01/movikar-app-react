@@ -44,16 +44,39 @@ let ChatScreen: ScreenComponent = FallbackScreen;
 let BiometricSetupScreen: ScreenComponent = FallbackScreen;
 
 try {
+  console.log('📱 Loading HomeScreen...');
   HomeScreen = require('./screens/HomeScreen').default;
+  console.log('✅ HomeScreen loaded');
+  
+  console.log('📱 Loading SearchScreen...');
   SearchScreen = require('./screens/SearchScreen').default;
+  console.log('✅ SearchScreen loaded');
+  
+  console.log('📱 Loading BookingsScreen...');
   BookingsScreen = require('./screens/BookingsScreen').default;
+  console.log('✅ BookingsScreen loaded');
+  
+  console.log('📱 Loading ProfileScreen...');
   ProfileScreen = require('./screens/ProfileScreen').default;
+  console.log('✅ ProfileScreen loaded');
+  
+  console.log('📱 Loading VehicleDetailScreen...');
   VehicleDetailScreen = require('./screens/VehicleDetailScreen').default;
+  console.log('✅ VehicleDetailScreen loaded');
+  
+  console.log('📱 Loading LoginScreen...');
   LoginScreen = require('./screens/LoginScreen').default;
+  console.log('✅ LoginScreen loaded');
+  
+  console.log('📱 Loading ChatScreen...');
   ChatScreen = require('./screens/ChatScreen').default;
+  console.log('✅ ChatScreen loaded');
+  
+  console.log('📱 Loading BiometricSetupScreen...');
   BiometricSetupScreen = require('./screens/BiometricSetupScreen').default;
+  console.log('✅ BiometricSetupScreen loaded');
 } catch (error) {
-  console.warn('Error loading screens:', error);
+  console.error('❌ Error loading screens:', error);
   // Fallback screens will be used
 }
 
