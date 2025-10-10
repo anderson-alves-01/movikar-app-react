@@ -87,6 +87,12 @@ function Router() {
             <OnboardingFlow page="home" />
           </>
         </Route>
+        <Route path="/landing">
+          <>
+            <Home />
+            <OnboardingFlow page="home" />
+          </>
+        </Route>
         <Route path="/auth" component={Auth} />
         <Route path="/login" component={Auth} />
         <Route path="/register" component={Auth} />
