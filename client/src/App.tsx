@@ -8,8 +8,6 @@ import { OnboardingProvider } from "@/contexts/OnboardingContext";
 import VehicleComparison from "@/components/vehicle-comparison";
 import AuthProvider from "@/components/AuthProvider";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import LaunchLandingPage from "@/components/LaunchLandingPage";
-import { useShowLaunchPage } from "@/components/LaunchSwitch";
 import Home from "@/pages/home";
 import LandingPage from "@/pages/landing";
 import Auth from "@/pages/auth";
@@ -178,46 +176,23 @@ function Router() {
   );
 }
 
-function AppWrapper() {
-  const showLaunchPage = useShowLaunchPage();
-  
-  // Permitir acesso à rota /landing independente da flag showLaunchPage
-  const currentPath = window.location.pathname;
-  const isLandingRoute = currentPath === '/landing';
-
-  // Se showLaunchPage for true E não estiver na rota /landing, exibe a launch page
-  if (showLaunchPage && !isLandingRoute) {
-    return (
-      <TooltipProvider>
-        <Toaster />
-        <LaunchLandingPage />
-      </TooltipProvider>
-    );
-  }
-
-  // App normal após o lançamento OU quando está na rota /landing
-  return (
-    <OnboardingProvider>
-      <AuthProvider>
-        <SearchProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-            <VehicleComparison />
-            
-            {/* PWA Components */}
-            <OfflineIndicator />
-          </TooltipProvider>
-        </SearchProvider>
-      </AuthProvider>
-    </OnboardingProvider>
-  );
-}
-
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppWrapper />
+      <OnboardingProvider>
+        <AuthProvider>
+          <SearchProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+              <VehicleComparison />
+              
+              {/* PWA Components */}
+              <OfflineIndicator />
+            </TooltipProvider>
+          </SearchProvider>
+        </AuthProvider>
+      </OnboardingProvider>
     </QueryClientProvider>
   );
 }
