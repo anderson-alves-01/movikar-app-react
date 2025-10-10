@@ -11,6 +11,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import LaunchLandingPage from "@/components/LaunchLandingPage";
 import { useShowLaunchPage } from "@/components/LaunchSwitch";
 import Home from "@/pages/home";
+import LandingPage from "@/pages/landing";
 import Auth from "@/pages/auth";
 import Profile from "@/pages/profile";
 import VehicleDetail from "@/pages/vehicle-detail";
@@ -81,12 +82,7 @@ function Router() {
   return (
     <>
       <Switch>
-        <Route path="/landing">
-          <>
-            <Home />
-            <OnboardingFlow page="home" />
-          </>
-        </Route>
+        <Route path="/landing" component={LandingPage} />
         <Route path="/">
           <>
             <Home />
