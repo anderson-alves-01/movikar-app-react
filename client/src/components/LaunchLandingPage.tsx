@@ -112,7 +112,7 @@ export default function LaunchLandingPage() {
 
       {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 hidden sm:block">
           <img
             src={peopleCarImage}
             alt="Pessoas felizes dirigindo"
