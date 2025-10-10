@@ -180,9 +180,13 @@ function Router() {
 
 function AppWrapper() {
   const showLaunchPage = useShowLaunchPage();
+  
+  // Permitir acesso à rota /landing independente da flag showLaunchPage
+  const currentPath = window.location.pathname;
+  const isLandingRoute = currentPath === '/landing';
 
-  // Se showLaunchPage for true, exibe apenas a landing page
-  if (showLaunchPage) {
+  // Se showLaunchPage for true E não estiver na rota /landing, exibe a launch page
+  if (showLaunchPage && !isLandingRoute) {
     return (
       <TooltipProvider>
         <Toaster />
@@ -191,7 +195,7 @@ function AppWrapper() {
     );
   }
 
-  // App normal após o lançamento
+  // App normal após o lançamento OU quando está na rota /landing
   return (
     <OnboardingProvider>
       <AuthProvider>
