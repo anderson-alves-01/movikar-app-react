@@ -81,13 +81,13 @@ function Router() {
   return (
     <>
       <Switch>
-        <Route path="/">
+        <Route path="/landing">
           <>
             <Home />
             <OnboardingFlow page="home" />
           </>
         </Route>
-        <Route path="/landing">
+        <Route path="/">
           <>
             <Home />
             <OnboardingFlow page="home" />
