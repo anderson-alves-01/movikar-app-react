@@ -8,8 +8,8 @@ import { OnboardingProvider } from "@/contexts/OnboardingContext";
 import VehicleComparison from "@/components/vehicle-comparison";
 import AuthProvider from "@/components/AuthProvider";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import LaunchLandingPage from "@/components/LaunchLandingPage";
 import Home from "@/pages/home";
-import LandingPage from "@/pages/landing";
 import Auth from "@/pages/auth";
 import Profile from "@/pages/profile";
 import VehicleDetail from "@/pages/vehicle-detail";
@@ -80,7 +80,7 @@ function Router() {
   return (
     <>
       <Switch>
-        <Route path="/landing" component={LandingPage} />
+        <Route path="/landing" component={LaunchLandingPage} />
         <Route path="/">
           <>
             <Home />
