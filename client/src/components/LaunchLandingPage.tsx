@@ -609,7 +609,7 @@ export default function LaunchLandingPage() {
                   }, 150);
                 }}
               >
-                💰 Comece a Gerar Renda com Seu Carro
+                💰 Comece a Gerar Renda <br />com Seu Carro
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
 
