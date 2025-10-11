@@ -582,7 +582,8 @@ export default function LaunchLandingPage() {
             <div className="max-w-3xl mx-auto">
               <DollarSign className="h-16 w-16 mx-auto mb-6 opacity-90" />
               <h3 className="text-3xl font-bold mb-4">
-                Seu Carro Parado? Transforme em Lucro!
+                Seu Carro Parado? <br className="sm:hidden" />
+                Transforme em Lucro!
               </h3>
               <p className="text-xl mb-6 opacity-90">
                 Comece a gerar renda com seu carro em menos de 24 horas.
