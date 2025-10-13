@@ -8,11 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Upload, X, CameraIcon, Save } from "lucide-react";
+import { ArrowLeft, Upload, X, CameraIcon, Save, Crop } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import Header from "@/components/header";
 import { Link } from "wouter";
+import { ImageCropModal } from "@/components/image-crop-modal";
 
 export default function VehicleEdit() {
   const [, params] = useRoute("/vehicle/:id/edit");
@@ -42,6 +43,10 @@ export default function VehicleEdit() {
     images: [] as string[],
     features: [] as string[]
   });
+
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+  const [cropImageIndex, setCropImageIndex] = useState<number | null>(null);
 
   // Fetch current vehicle data
   const { data: vehicle, isLoading } = useQuery({
@@ -130,14 +135,38 @@ export default function VehicleEdit() {
         const reader = new FileReader();
         reader.onload = (e) => {
           const result = e.target?.result as string;
-          setVehicleData(prev => ({
-            ...prev,
-            images: [...prev.images, result]
-          }));
+          setImageToCrop(result);
+          setCropImageIndex(null); // null means new image
+          setCropModalOpen(true);
         };
         reader.readAsDataURL(file);
       }
     });
+    
+    // Reset input value
+    e.target.value = '';
+  };
+
+  const handleCropImage = (index: number) => {
+    setImageToCrop(vehicleData.images[index]);
+    setCropImageIndex(index);
+    setCropModalOpen(true);
+  };
+
+  const handleCropComplete = (croppedImage: string) => {
+    if (cropImageIndex !== null) {
+      // Update existing image
+      setVehicleData(prev => ({
+        ...prev,
+        images: prev.images.map((img, idx) => idx === cropImageIndex ? croppedImage : img)
+      }));
+    } else {
+      // Add new image
+      setVehicleData(prev => ({
+        ...prev,
+        images: [...prev.images, croppedImage]
+      }));
+    }
   };
 
   const removeImage = (index: number) => {
@@ -258,15 +287,28 @@ export default function VehicleEdit() {
                             alt={`Preview ${index + 1}`}
                             className="w-full h-32 object-cover rounded-lg border-2 border-blue-200"
                           />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => removeImage(index)}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
+                          <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              className="h-7 w-7 rounded-full p-0 bg-white/90 hover:bg-white"
+                              onClick={() => handleCropImage(index)}
+                              data-testid={`button-edit-image-${index}`}
+                            >
+                              <Crop className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              className="h-7 w-7 rounded-full p-0"
+                              onClick={() => removeImage(index)}
+                              data-testid={`button-remove-image-${index}`}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
                           {index === 0 && (
                             <div className="absolute bottom-1 left-1 bg-blue-500 text-white text-xs px-2 py-1 rounded">
                               Principal
@@ -543,6 +585,20 @@ export default function VehicleEdit() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Image Crop Modal */}
+      {imageToCrop && (
+        <ImageCropModal
+          isOpen={cropModalOpen}
+          onClose={() => {
+            setCropModalOpen(false);
+            setImageToCrop(null);
+            setCropImageIndex(null);
+          }}
+          imageSrc={imageToCrop}
+          onCropComplete={handleCropComplete}
+        />
+      )}
     </div>
   );
 }
