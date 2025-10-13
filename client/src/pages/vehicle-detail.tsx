@@ -343,7 +343,11 @@ export default function VehicleDetail() {
                 {vehicle.description && (
                   <div>
                     <h3 className="text-xl font-semibold text-gray-800 mb-4">Descrição</h3>
-                    <p className="text-gray-700 leading-relaxed">{vehicle.description}</p>
+                    <div 
+                      className="prose prose-sm max-w-none text-gray-700 leading-relaxed"
+                      dangerouslySetInnerHTML={{ __html: vehicle.description }}
+                      data-testid="vehicle-description"
+                    />
                   </div>
                 )}
 

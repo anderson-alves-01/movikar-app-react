@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Upload, X, CameraIcon, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -508,11 +508,11 @@ export default function VehicleEdit() {
               {/* Description */}
               <div>
                 <Label>Descrição</Label>
-                <Textarea
+                <RichTextEditor
                   value={vehicleData.description}
-                  onChange={(e) => setVehicleData(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(value) => setVehicleData(prev => ({ ...prev, description: value }))}
                   placeholder="Descreva seu veículo, condições especiais, etc."
-                  rows={4}
+                  data-testid="editor-description"
                 />
               </div>
 

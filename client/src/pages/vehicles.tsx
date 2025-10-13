@@ -17,6 +17,13 @@ import { TableSkeleton, Loading } from "@/components/ui/loading";
 
 import type { Vehicle } from "@/types";
 
+// Helper function to strip HTML tags from description
+const stripHtml = (html: string) => {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
+};
+
 export default function Vehicles() {
   const { user } = useAuthStore();
   const { toast } = useToast();
@@ -247,7 +254,7 @@ export default function Vehicles() {
 
                   {vehicle.description && (
                     <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-                      {vehicle.description}
+                      {stripHtml(vehicle.description)}
                     </p>
                   )}
 

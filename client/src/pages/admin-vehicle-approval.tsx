@@ -135,7 +135,10 @@ function VehicleDetailsDialog({ vehicle, onApprove, onReject, isApproving, isRej
               <CardTitle className="text-sm">Descrição</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600">{vehicle.description}</p>
+              <div 
+                className="prose prose-sm max-w-none text-sm text-gray-600"
+                dangerouslySetInnerHTML={{ __html: vehicle.description }}
+              />
             </CardContent>
           </Card>
         )}
