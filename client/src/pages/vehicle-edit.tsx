@@ -345,6 +345,7 @@ export default function VehicleEdit() {
                 <div>
                   <Label>Transmissão *</Label>
                   <Select 
+                    key={`transmission-${vehicleId}-${vehicleData.transmission}`}
                     value={vehicleData.transmission} 
                     onValueChange={(value) => setVehicleData(prev => ({ ...prev, transmission: value }))}
                   >
@@ -361,6 +362,7 @@ export default function VehicleEdit() {
                 <div>
                   <Label>Combustível *</Label>
                   <Select 
+                    key={`fuel-${vehicleId}-${vehicleData.fuel}`}
                     value={vehicleData.fuel} 
                     onValueChange={(value) => setVehicleData(prev => ({ ...prev, fuel: value }))}
                   >
@@ -379,6 +381,7 @@ export default function VehicleEdit() {
                 <div>
                   <Label>Categoria *</Label>
                   <Select 
+                    key={`category-${vehicleId}-${vehicleData.category}`}
                     value={vehicleData.category} 
                     onValueChange={(value) => setVehicleData(prev => ({ ...prev, category: value }))}
                   >
@@ -446,6 +449,7 @@ export default function VehicleEdit() {
                 <div>
                   <Label>Tipo de Caução</Label>
                   <Select
+                    key={`security-${vehicleId}-${vehicleData.securityDepositType}`}
                     value={vehicleData.securityDepositType}
                     onValueChange={(value: 'percentage' | 'fixed') => 
                       setVehicleData(prev => ({ ...prev, securityDepositType: value }))
@@ -509,6 +513,7 @@ export default function VehicleEdit() {
               <div>
                 <Label>Descrição</Label>
                 <RichTextEditor
+                  key={`description-${vehicleId}`}
                   value={vehicleData.description}
                   onChange={(value) => setVehicleData(prev => ({ ...prev, description: value }))}
                   placeholder="Descreva seu veículo, condições especiais, etc."
