@@ -1,0 +1,62 @@
+📌 Diagnóstico provável (baseado no histórico de issues)
+A issue #11 - App não inicializa (trava na splash) indica:
+
+Android: crash no início com java.lang.IllegalArgumentException: No icon provided for notification.
+iOS: splash fica eternamente, sem erro visível no terminal.
+Comum: o uso do react-native-notifications (ou react-native-push-notification) sem as configurações obrigatórias do AndroidManifest e AppDelegate.
+✅ Solução direta e eficaz
+A causa quase sempre é o módulo de notificações push que exige ícone no Android e configurações explícitas no iOS. Vamos corrigi-lo por partes:
+
+🔧 Passo-a-Passo Corretivo (Android)
+Abra seu android/app/src/main/AndroidManifest.xml e adicione dentro de <application …>:
+xml
+copiar
+baixar
+<meta-data
+  android:name="com.google.firebase.messaging.default_notification_icon"
+  android:resource="@drawable/ic_notification" />
+<meta-data
+  android:name="com.google.firebase.messaging.default_notification_color"
+  android:resource="@color/colorAccent" />
+Crie o ícone de notificação:
+
+Baixe um PNG monocromático (ex.: ic_notification.png), branco com fundo transparente, versões para mdpi, hdpi, xhdpi, xxhdpi.
+Insira os arquivos em:
+swift
+copiar
+baixar
+android/app/src/main/res/drawable-mdpi/ic_notification.png
+android/app/src/main/res/drawable-hdpi/ic_notification.png
+...
+Certifique-se de que existe um colors.xml com colorAccent:
+
+Arquivo: android/app/src/main/res/values/colors.xml
+
+xml
+copiar
+baixar
+<resources>
+  <color name="colorAccent">#FF9800</color>
+</resources>
+(Opcional mas recomendado) Adicione google-services.json na raiz de android/app, mesmo que não use Firebase, pois o react-native-notifications busca esse arquivo.
+
+🔧 Passo-a-Passo Corretivo (iOS)
+No seu ios/movikar/AppDelegate.mm ou AppDelegate.m, adicione o import (verifique seu caso):
+objc
+copiar
+baixar
+#import <RNNotifications.h>
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+  [RNNotifications startMonitorNotifications];
+  ...
+}
+No ios/Podfile, verifique se está presente:
+ruby
+copiar
+baixar
+pod 'RNNotifications', :path => '../node_modules/react-native-notifications'
+Rode no terminal na pasta ios:
+bash
+copiar
+baixar
+cd ios && pod install && cd ..

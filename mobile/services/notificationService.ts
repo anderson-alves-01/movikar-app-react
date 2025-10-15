@@ -22,16 +22,20 @@ export interface MessageNotification extends NotificationData {
   messagePreview: string;
 }
 
-// Configure notification behavior
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+// Configure notification behavior with error handling
+try {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+} catch (error) {
+  console.warn('Could not set notification handler:', error);
+}
 
 class NotificationService {
   private expoPushToken: string | null = null;
@@ -40,72 +44,94 @@ class NotificationService {
 
   async initialize(): Promise<boolean> {
     try {
-      // Check if device supports notifications (placeholder for Device.isDevice)
-      // This check would normally use expo-device but package is not available
-      // if (!Device.isDevice) {
-      //   console.warn('Push notifications require a physical device');
-      //   return false;
-      // }
+      console.log('🔔 Initializing notification service...');
 
-      // Request permissions
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-      
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
+      // Request permissions with error handling
+      let finalStatus = 'undetermined';
+      try {
+        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        finalStatus = existingStatus;
+        
+        if (existingStatus !== 'granted') {
+          const { status } = await Notifications.requestPermissionsAsync();
+          finalStatus = status;
+        }
+      } catch (permError) {
+        console.warn('Error requesting notification permissions:', permError);
+        return false;
       }
       
       if (finalStatus !== 'granted') {
-        console.warn('Failed to get push token for push notification!');
+        console.warn('Notification permissions not granted');
         return false;
       }
 
-      // Get push token
-      const token = await Notifications.getExpoPushTokenAsync({
-        projectId: 'alugae-mobile-app',
-      });
-      
-      this.expoPushToken = token.data;
-      console.log('Expo push token:', token.data);
+      // Get push token with error handling
+      try {
+        const token = await Notifications.getExpoPushTokenAsync({
+          projectId: 'alugae-mobile-app',
+        });
+        
+        this.expoPushToken = token.data;
+        console.log('✅ Expo push token obtained:', token.data);
+      } catch (tokenError) {
+        console.warn('Could not get push token (non-critical):', tokenError);
+        // Continue initialization even without token
+      }
 
-      // Configure Android notification channel
+      // Configure Android notification channels with error handling
       if (Platform.OS === 'android') {
-        await Notifications.setNotificationChannelAsync('default', {
-          name: 'default',
-          importance: Notifications.AndroidImportance.MAX,
-          vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#FF231F7C',
-        });
+        try {
+          await Notifications.setNotificationChannelAsync('default', {
+            name: 'default',
+            importance: Notifications.AndroidImportance.MAX,
+            vibrationPattern: [0, 250, 250, 250],
+            lightColor: '#20B2AA',
+          });
 
-        // Booking notifications channel
-        await Notifications.setNotificationChannelAsync('bookings', {
-          name: 'Reservas',
-          description: 'Notificações sobre suas reservas',
-          importance: Notifications.AndroidImportance.HIGH,
-          vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#FF231F7C',
-        });
+          // Booking notifications channel
+          await Notifications.setNotificationChannelAsync('bookings', {
+            name: 'Reservas',
+            description: 'Notificações sobre suas reservas',
+            importance: Notifications.AndroidImportance.HIGH,
+            vibrationPattern: [0, 250, 250, 250],
+            lightColor: '#20B2AA',
+          });
 
-        // Message notifications channel
-        await Notifications.setNotificationChannelAsync('messages', {
-          name: 'Mensagens',
-          description: 'Novas mensagens de chat',
-          importance: Notifications.AndroidImportance.DEFAULT,
-          vibrationPattern: [0, 250],
-          lightColor: '#FF231F7C',
-        });
+          // Message notifications channel
+          await Notifications.setNotificationChannelAsync('messages', {
+            name: 'Mensagens',
+            description: 'Novas mensagens de chat',
+            importance: Notifications.AndroidImportance.DEFAULT,
+            vibrationPattern: [0, 250],
+            lightColor: '#20B2AA',
+          });
+          
+          console.log('✅ Android notification channels configured');
+        } catch (channelError) {
+          console.warn('Could not configure notification channels:', channelError);
+        }
       }
 
       // Set up notification listeners
-      this.setupNotificationListeners();
+      try {
+        this.setupNotificationListeners();
+        console.log('✅ Notification listeners set up');
+      } catch (listenerError) {
+        console.warn('Could not set up notification listeners:', listenerError);
+      }
 
       // Register token with backend
-      await this.registerTokenWithBackend();
+      try {
+        await this.registerTokenWithBackend();
+      } catch (backendError) {
+        console.warn('Could not register token with backend:', backendError);
+      }
 
+      console.log('✅ Notification service initialized successfully');
       return true;
     } catch (error) {
-      console.error('Error initializing notification service:', error);
+      console.error('❌ Error initializing notification service:', error);
       return false;
     }
   }
