@@ -26,9 +26,9 @@ Preferred communication style: Simple, everyday language.
 - **Mobile Chat**: ✅ Real-time messaging with Socket.IO integration
 - **Mobile Payments**: ✅ Stripe React Native integration for mobile payments
 - **Mobile Location**: ✅ GPS tracking and location services using Expo Location
-- **Mobile Notifications**: ✅ Push notifications with Expo Notifications - **Android initialization crash FIXED**
+- **Mobile Notifications**: ✅ Push notifications with Expo Notifications - **Android initialization crash FIXED (v2 - namespace correto)**
 - **Mobile Rating**: ✅ Complete rating and review system
-- **Mobile App Initialization**: ✅ **FIXED** - Android crash "No icon provided for notification" resolved with proper manifest configuration
+- **Mobile App Initialization**: ✅ **FIXED (v2)** - Android crash "No icon provided for notification" resolved with correct expo.modules.notifications.* namespace and expo prebuild workflow
 - **Business Logic**: ✅ Free plan allows 1 vehicle listing, enforced correctly
 - **Database**: ✅ PostgreSQL with clean schema and relations
 
@@ -73,7 +73,7 @@ Preferred communication style: Simple, everyday language.
 - **Email Notification System**: Comprehensive automated email notifications using Resend API with professional HTML templates. Vehicle owners receive instant email notifications for ALL renter interactions: contact information unlock, chat initiation, waiting queue joins, and booking requests. All notifications include relevant details (vehicle info, renter info, dates, prices) and are sent asynchronously to prevent blocking API responses.
 - **Mobile App (React Native)**: **COMPLETE IMPLEMENTATION** - Full React Native application with Expo SDK 53, 6 main screens (Home, Search, Bookings, Profile, VehicleDetail, Login), React Navigation 6, full TypeScript support, real API integration, JWT token management with secure storage and automatic token refresh, custom API service architecture, custom storage abstraction, EAS Build setup.
 - **Mobile Observability**: ✅ **Google Cloud Logging** - Complete logging system with error boundaries, automatic API logging, centralized Google Cloud Logging via backend proxy. 50GB/month free tier with local JSONL fallback.
-- **Mobile App Troubleshooting**: ✅ Comprehensive documentation created (TROUBLESHOOTING.md, INICIO-RAPIDO.md) with solutions for Android initialization issues, notification configuration, and local testing guides.
+- **Mobile App Troubleshooting**: ✅ Comprehensive documentation created (TROUBLESHOOTING.md, INICIO-RAPIDO.md, SOLUCAO-FINAL-SIMPLIFICADA.md) with correct solution using expo prebuild for Android initialization issues.
 
 ### Mobile Services Architecture (Real Implementations)
 - **Authentication Service**: Real biometric authentication with Expo Local Authentication, secure token storage with AsyncStorage, automatic token refresh, fingerprint/face recognition support
