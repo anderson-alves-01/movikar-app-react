@@ -62,6 +62,10 @@ export default {
         "WRITE_EXTERNAL_STORAGE",
         "READ_EXTERNAL_STORAGE"
       ],
+      notification: {
+        icon: "./assets/adaptive-icon.png",
+        color: "#20B2AA"
+      },
       // Hermes engine stability fixes
       enableHermes: true,
       // TurboModule crash prevention

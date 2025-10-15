@@ -1,28 +1,39 @@
 # 🔧 Troubleshooting - App Mobile alugae
 
-## Problema Resolvido: App não inicializa (trava na splash)
+## ⚠️ ATUALIZAÇÃO IMPORTANTE
 
-### ✅ Solução Implementada
+**Se o erro "No icon provided for notification" AINDA persiste**, leia:  
+📄 **`SOLUCAO-DEFINITIVA.md`** - Contém a solução completa e correta!
 
-O problema foi causado pela falta de configurações obrigatórias do sistema de notificações Expo.
+## Problema: App não inicializa (trava na splash)
 
-#### **Correções Aplicadas:**
+### 🎯 Causa Raiz Identificada
 
-1. **AndroidManifest.xml** ✅
-   - Adicionado meta-data para ícone de notificação
-   - Adicionado meta-data para cor de notificação
+O problema NÃO era apenas falta de ícone. A causa real:
 
-2. **Ícone de Notificação** ✅
-   - Criado `ic_notification.xml` (ícone de sino branco)
-   - Localização: `android/app/src/main/res/drawable/`
+1. **Namespace Errado**: AndroidManifest usava `com.google.firebase.messaging.*` mas Expo usa `expo.modules.notifications.*`
+2. **Ícone Incompatível**: Expo NÃO aceita XML vetorial, precisa de PNG monocromático
+3. **Build Necessário**: Mudanças no manifesto exigem novo build nativo
 
-3. **Colors.xml** ✅
-   - Adicionada cor `colorAccent` (#20B2AA)
+### ✅ Correções Aplicadas (v2)
 
-4. **NotificationService** ✅
-   - Melhorado tratamento de erros
-   - Logs detalhados de inicialização
-   - Não trava mais o app se permissões falharem
+1. **AndroidManifest.xml** ✅ CORRIGIDO
+   - Meta-data AGORA usa `expo.modules.notifications.*`
+   - Aponta para ícone PNG (não XML)
+
+2. **app.config.js** ✅ NOVO
+   - Configurado `android.notification.icon` e `color`
+   - Expo vai gerar ícones automaticamente
+
+3. **index.js** ✅ MELHORADO
+   - Logs detalhados de inicialização (5 etapas)
+   - Error boundary visual
+   - Debug information completa
+
+4. **NotificationService** ✅ ROBUSTO
+   - Try/catch em todas as operações
+   - App continua sem permissões
+   - Logs informativos
 
 ---
 
@@ -159,33 +170,34 @@ Antes de rodar o app, verifique:
 
 ---
 
-## 🚀 Como Rodar Após Correções
+## 🚀 Como Resolver DEFINITIVAMENTE
 
-### 1. **Instalar dependências**
+### ⚠️ IMPORTANTE: Expo Go NÃO Funciona!
+Mudanças no AndroidManifest exigem build nativo.
+
+### Método 1: Expo Prebuild (RECOMENDADO)
 ```bash
 cd mobile
-npm install
+npx expo prebuild --clean
+npx expo run:android
 ```
+✅ Gera todos os ícones automaticamente!
 
-### 2. **Iniciar o servidor**
+### Método 2: EAS Build (APK na nuvem)
 ```bash
-npm start
-```
-
-### 3. **Testar no dispositivo**
-
-**Opção A - Expo Go (mais fácil):**
-- Escanear QR code com app Expo Go
-
-**Opção B - Emulador Android:**
-```bash
-npm run android
-```
-
-**Opção C - Build standalone:**
-```bash
+cd mobile
+eas login
 eas build --platform android --profile preview
 ```
+Aguarde 5-10 min, baixe e instale o APK.
+
+### Método 3: Ícones Manuais
+1. Acesse: https://romannurik.github.io/AndroidAssetStudio/icons-notification.html
+2. Gere ícone de sino branco
+3. Extraia para `android/app/src/main/res/`
+4. Execute: `npx expo run:android`
+
+📄 **Veja instruções detalhadas em `SOLUCAO-DEFINITIVA.md`**
 
 ---
 
